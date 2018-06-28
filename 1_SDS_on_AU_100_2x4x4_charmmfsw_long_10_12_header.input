@@ -1,0 +1,70 @@
+# variable dataFile       string  "1_SDS_on_AU_100_2x4x4_psfgen.data"
+# variable baseName       string  "1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12"
+
+log ${baseName}.log
+
+variable nvtEqSteps     equal   2500    # 5 ps
+variable nptEqSteps     equal   2500    # 5 ps
+# variable nveProdSteps   equal   5000    # 10 ps
+
+variable temperatureT   equal    298    # K
+variable pressureP      equal      1    # atm
+variable angleIdWater   equal     11
+
+# Intialization
+units          real
+# http://lammps.sandia.gov/doc/units.html
+    #mass = grams/mole
+    #distance = Angstroms
+    #time = femtoseconds
+    #energy = Kcal/mole
+    #velocity = Angstroms/femtosecond
+    #force = Kcal/mole-Angstrom, compared to gmx: kJ mol^-1 nm^-1,
+        # conversion F_lmp = F_gmx * 0.1 [nm/Ang] / 4.184 [kJ/kcal] ~ gmx / 41.81
+        # 1000 kJ / (mol*nm) ~ 25 kCal/(mol*Ang)
+    #torque = Kcal/mole
+    #temperature = Kelvin
+    #pressure = atmospheres, 1 atm = 1013 hPa ~ 100 kPa
+    #dynamic viscosity = Poise
+    #charge = multiple of electron charge (1.0 is a proton)
+    #dipole = charge*Angstroms
+    #electric field = volts/Angstrom
+    #density = gram/cm^dim
+
+neigh_modify    delay 2 every 1
+# This command sets parameters that affect the building and use of pairwise
+# neighbor lists. Depending on what pair interactions and other commands 
+# are defined, a simulation may require one or more neighbor lists.
+
+atom_style      full
+bond_style      harmonic
+angle_style     charmm
+dihedral_style  charmmfsw
+improper_style  harmonic
+pair_style      lj/charmmfsw/coul/long 10 12
+pair_modify     mix arithmetic
+kspace_style    pppm 1e-6
+
+# read_data       1_SDS_on_AU_100_2x4x4_psfgen.data
+read_data       ${dataFile}
+
+special_bonds   charmm
+
+timestep       2.0 # 0.002 ps = 2 fs
+
+group          water      type  9 10  #  9 - H, 10 - O
+group          surface    type  8     #  8 - Au
+group          ion        type 12     # 12 - Na+
+group          surfactant subtract all water surface ion
+group          nonwater   subtract all water
+
+
+# fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
+#   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
+#   c_thermo_edihed c_thermo_eimp c_thermo_epair c_thermo_evdwl c_thermo_ecoul  &
+#   c_thermo_elong c_thermo_etail c_thermo_vol &
+#   mode scalar file ${baseName}_thermo.out
+thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+  edihed eimp epair evdwl ecoul elong etail vol
+thermo         100
+thermo_modify  norm no
