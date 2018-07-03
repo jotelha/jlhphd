@@ -1,9 +1,17 @@
 ################
-# NVE production
-###############
+# NPT production
+################
 
-fix             production all nve
-fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix             rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix             nptProduction all npt temp ${temperatureT} ${temperatureT} &
+                  100 iso ${pressureP} ${pressureP} 100 tchain 1 pchain 1
+#                                           ^                     Tstart / K
+#                                                           ^     Tstop
+#                 ^                                               Tdamp/steps
+#                         ^                                       Pstart/atm
+#                                      ^                          Pstop
+#                                                   ^             Pdamp/steps
+
 # Quote from http://lammps.sandia.gov/doc/fix_shake.html
 # If you use a tolerance that is too large or a max-iteration count that is too
 # small, the constraints will not be enforced very strongly, which can lead to
@@ -19,10 +27,10 @@ fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # script after any other fixes which add or change forces (to atoms that fix
 # shake operates on).
 
-dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
+dump            dumpTraj all atom 100 ${baseName}_nptProduction.dump
 
 fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
-  c_thermo_press file ${baseName}_thermo.out mode scalar
+  c_thermo_press file ${baseName}_nptProduction_thermo.out mode scalar
 #                             ^        use every step for everaging
 #                               ^      use only 500 step = 1ps to construct average
 #                                   ^  average every 1000 step = 2ps
@@ -31,6 +39,7 @@ fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
 
 # Run the simulation
-log            ${baseName}_04_nveProduction.log
-run            ${nveProdSteps}
+log            ${baseName}_01_nptProduction.log
+run            ${nptProdSteps}
 write_data     ${baseName}_final_config.lammps
+
