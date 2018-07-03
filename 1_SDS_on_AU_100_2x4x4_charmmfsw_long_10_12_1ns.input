@@ -1,7 +1,7 @@
 variable baseName       string  "1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12_1ns"
-variable dataFile       string  "1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12_10ps_final_config.lammps"
+variable dataFile       string  "1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12_nvtEquilibrated.lammps"
 
-variable nveProdSteps   equal   500000    # 1 ps
+variable nveProdSteps   equal   500000    # 1 ns
 
 include                 1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12_header.input
 include                 1_SDS_on_AU_100_2x4x4_charmmfsw_long_10_12_production.input

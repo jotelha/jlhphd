@@ -3,13 +3,12 @@
 ###############
 
 fix             production all nve
-fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+# fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # dump            movie nonwater movie 8 ${baseName}_nveProduction.mp4 type type size 640 480
 # dump_modify     movie framerate 24
-dump            dumpPng    nonwater image ${nveProdSteps} ${baseName}_nveProduction.*.png type type
-dump            dumpNetCDF all netcdf 100 ${baseName}_nveProduction.nc id mol &
-                  type x y z vx vy vz
+# dump            dumpPng    nonwater image ${nveProdSteps} ${baseName}_nveProduction.*.png type type
+dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
 # fix             RigidOHBonds all shake 1e-6 20 0 b 1 a 1
 # http://lammps.sandia.gov/doc/fix_shake.html
 # If you use a tolerance that is too large or a max-iteration count that is too
@@ -26,128 +25,6 @@ dump            dumpNetCDF all netcdf 100 ${baseName}_nveProduction.nc id mol &
 # script after any other fixes which add or change forces (to atoms that fix
 # shake operates on).
 
-# Compute diffusivity by Einstein relation:
-
-# mean-squared displacement:
-# Define a computation that calculates the mean-squared displacement (MSD) of
-# the group of atoms, including all effects due to atoms passing thru periodic
-# boundaries.
-
-compute         msd surfactant msd com yes
-# http://lammps.sandia.gov/doc/compute_msd.html
-# ID, group-ID are documented in compute command
-# msd = style name of this compute command
-# zero or more keyword/value pairs may be appended
-# keyword = com or average
-# A vector of four quantities is calculated by this compute.
-# The first 3 elements of the vector are the squared dx,dy,dz displacements,
-# summed and averaged over atoms in the group. The 4th element is the total
-# squared displacement, i.e. (dx*dx + dy*dy + dz*dz), summed and averaged
-# over atoms in the group.
-# The vector values are intensive. The vector values will be in distance^2 units.
-
-# Define "chunks" to determine MSD and D molecule-wise:
-compute         moleculeChunks surfactant chunk/atom molecule nchunk once &
-                                            ids once compress yes 
-# the number of atoms in each "chunk" (we expect 1 chunk with 42 atoms, the SDS):
-compute         chunkCount     surfactant property/chunk moleculeChunks count
-
-# COM position and MSD for each "chunk":
-compute         molecularCOM   surfactant com/chunk moleculeChunks
-compute         molecularMSD   surfactant msd/chunk moleculeChunks
-
-# Compute spatial MSD for 1st molecule in defined chunk:
-variable        molmsdx        equal c_molecularMSD[1][1]
-variable        molmsdy        equal c_molecularMSD[1][2]
-variable        molmsdz        equal c_molecularMSD[1][3]
-variable        molmsd         equal c_molecularMSD[1][4]
-
-# http://lammps.sandia.gov/doc/compute_msd_chunk.html
-# This compute calculates a global array where the number of rows = the number 
-# of chunks Nchunk as calculated by the specified compute chunk/atom command. 
-# The number of columns = 4 for dx,dy,dz and the total displacement. These 
-# values can be accessed by any command that uses global array values from 
-# a compute as input. See this section for an overview of LAMMPS output options.
-## test:
-
-fix vectorOut surfactant ave/time 100 1 100 c_chunkCount c_molecularCOM[*] c_molecularMSD[*] & 
-  file ${baseName}_moleculeProperties.out mode vector
-
-# Einstein relation: 6Dt ~= <|r(t)-r(0)|>^2
-# factor of 6 in 2 variables is for 3d
-
-# dt = 2fs
-variable        Dtwopoint       equal c_msd[4]/6/(step*dt+1e-15)
-variable        DmolTwopoint    equal v_molmsd/6/(step*dt+1e-15)
-variable        DxMolTwopoint   equal v_molmsdx/2/(step*dt+1e-15)
-variable        DyMolTwopoint   equal v_molmsdy/2/(step*dt+1e-15)
-variable        DzMolTwopoint   equal v_molmsdz/2/(step*dt+1e-15)
-
-# store Dtwopoint every 10 step = 20fs
-fix             gather_Dtwopoint     surfactant vector 1 c_msd[4]
-fix             gather_DmolTwopoint  surfactant vector 1 v_molmsd
-fix             gather_DxMolTwopoint surfactant vector 1 v_molmsdx
-fix             gather_DyMolTwopoint surfactant vector 1 v_molmsdy
-fix             gather_DzMolTwopoint surfactant vector 1 v_molmsdz
-
-# http://lammps.sandia.gov/doc/fix_vector.html
-# Use one or more global values as inputs every few timesteps, and simply store
-# them. For a single specified value, the values are stored as a global vector
-# of growing length
-variable        Dfitslope       equal slope(f_gather_Dtwopoint)/6/(1*dt)
-variable        DmolFitslope    equal slope(f_gather_DmolTwopoint)/6/(1*dt)
-variable        DxMolFitslope   equal slope(f_gather_DxMolTwopoint)/2/(1*dt)
-variable        DyMolFitslope   equal slope(f_gather_DyMolTwopoint)/2/(1*dt)
-variable        DzMolFitslope   equal slope(f_gather_DzMolTwopoint)/2/(1*dt)
-
-# http://lammps.sandia.gov/doc/variable.html
-# The slope() function uses linear regression to fit a line to the set of
-# points, equally spaced by 1 in their x coordinate:
-# (1,V1), (2,V2), ..., (N,VN), where the Vi are the values in the global vector
-# of length N. The returned value is the slope of the line. If the line has a
-# single point or is vertical, it returns 1.0e20.
-
-# Compute diffusivity by VACF
-compute         vacf surfactant vacf
-# http://lammps.sandia.gov/doc/compute_vacf.html
-# A vector of four quantities is calculated by this compute.
-# The first 3 elements of the vector are vx * vx0 (and similarly for the y and z
-# (components), summed and averaged over atoms in the group. Vx is the current
-# x-component of velocity for the atom, vx0 is the initial x-component of
-# velocity for the atom. The 4th element of the vector is the total VACF, i.e.
-# (vx*vx0 + vy*vy0 + vz*vz0), summed and averaged over atoms in the group.
-
-fix             gather_vacf surfactant vector 1 c_vacf[4] # computes v(0)*v(t)
-fix             gather_xvacf surfactant vector 1 c_vacf[1] # computes v(0)*v(t)
-fix             gather_yvacf surfactant vector 1 c_vacf[2] # computes v(0)*v(t)
-fix             gather_zvacf surfactant vector 1 c_vacf[3] # computes v(0)*v(t)
-
-variable        Dvacf equal 1/3*dt*trap(f_gather_vacf) 
-variable        Dxvacf equal dt*trap(f_gather_xvacf) 
-variable        Dyvacf equal dt*trap(f_gather_yvacf) 
-variable        Dzvacf equal dt*trap(f_gather_zvacf) 
-# factor 1/3 due to 3d, 3 components summed in c_vacf[4]
-# http://lammps.sandia.gov/doc/variable.html
-# The trap() function is the same as sum() except the first and last elements
-# are multiplied by a weighting factor of 1/2 when performing the sum.
-# This effectively implements an integration via the trapezoidal rule on the
-# global vector of data. I.e. consider a set of points, equally spaced by 1 in
-# their x coordinate: (1,V1), (2,V2), ..., (N,VN), where the Vi are the values
-# in the global vector of length N. The integral from 1 to N of these points is
-# trap(). When appropriately normalized by the timestep size, this function is
-# useful for calculating integrals of time-series data, like that generated by
-# the fix ave/correlate command.
-
-# The integral of the VACF versus time is proportional to the diffusion
-# coefficient of the diffusing atoms.
-
-fix scalarOut all ave/time 10 1 10 v_Dtwopoint v_DmolTwopoint &
-  v_DxMolTwopoint v_DyMolTwopoint v_DzMolTwopoint &
-  v_Dfitslope v_DmolFitslope v_DxMolFitslope v_DyMolFitslope v_DzMolFitslope &
-  v_Dvacf v_Dxvacf v_Dyvacf v_Dzvacf &
-  file ${baseName}_diffusivities.out mode scalar
-
-info all
 fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
   c_thermo_press file ${baseName}_thermo.out mode scalar
 #                             ^        use every step for everaging
