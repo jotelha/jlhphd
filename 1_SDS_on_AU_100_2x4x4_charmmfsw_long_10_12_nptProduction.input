@@ -1,0 +1,36 @@
+################
+# NVE production
+###############
+
+fix             production all nve
+fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+# Quote from http://lammps.sandia.gov/doc/fix_shake.html
+# If you use a tolerance that is too large or a max-iteration count that is too
+# small, the constraints will not be enforced very strongly, which can lead to
+# poor energy conservation. You can test for this in your system by running a
+# constant NVE simulation with a particular set of SHAKE parameters and
+# monitoring the energy versus time.
+# If both bonds in the angle are constrained then the angle will also be
+# constrained if its type is in the list.
+# If you define fixes (e.g. fix efield) that add additional force to the atoms
+# after fix shake operates, then this fix will not take them into account and
+# the time integration will typically not satisfy the SHAKE constraints.
+# The solution for this is to make sure that fix shake is defined in your input
+# script after any other fixes which add or change forces (to atoms that fix
+# shake operates on).
+
+dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
+
+fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
+  c_thermo_press file ${baseName}_thermo.out mode scalar
+#                             ^        use every step for everaging
+#                               ^      use only 500 step = 1ps to construct average
+#                                   ^  average every 1000 step = 2ps
+#  c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
+#  c_thermo_edihed c_thermo_eimp c_thermo_epair c_thermo_evdwl c_thermo_ecoul  &
+#   c_thermo_elong c_thermo_etail c_thermo_vol &
+
+# Run the simulation
+log            ${baseName}_04_nveProduction.log
+run            ${nveProdSteps}
+write_data     ${baseName}_final_config.lammps

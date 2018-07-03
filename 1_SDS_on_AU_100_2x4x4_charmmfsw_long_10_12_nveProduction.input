@@ -3,14 +3,8 @@
 ###############
 
 fix             production all nve
-# fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
-
-# dump            movie nonwater movie 8 ${baseName}_nveProduction.mp4 type type size 640 480
-# dump_modify     movie framerate 24
-# dump            dumpPng    nonwater image ${nveProdSteps} ${baseName}_nveProduction.*.png type type
-dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
-# fix             RigidOHBonds all shake 1e-6 20 0 b 1 a 1
-# http://lammps.sandia.gov/doc/fix_shake.html
+fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+# Quote from http://lammps.sandia.gov/doc/fix_shake.html
 # If you use a tolerance that is too large or a max-iteration count that is too
 # small, the constraints will not be enforced very strongly, which can lead to
 # poor energy conservation. You can test for this in your system by running a
@@ -25,8 +19,10 @@ dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
 # script after any other fixes which add or change forces (to atoms that fix
 # shake operates on).
 
+dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
+
 fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
-  c_thermo_press file ${baseName}_thermo.out mode scalar
+  c_thermo_press file ${baseName}_nveProduction_thermo.out mode scalar
 #                             ^        use every step for everaging
 #                               ^      use only 500 step = 1ps to construct average
 #                                   ^  average every 1000 step = 2ps
@@ -35,5 +31,6 @@ fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
 
 # Run the simulation
+log            ${baseName}_04_nveProduction.log
 run            ${nveProdSteps}
 write_data     ${baseName}_final_config.lammps

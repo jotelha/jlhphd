@@ -1,0 +1,6 @@
+# Time-averaged data for fix thermoAveOut
+# TimeStep c_thermo_pe c_thermo_temp c_thermo_press
+100 -6570.6 300.977 -703.619
+200 -6595.05 316.664 2284.43
+300 -6589.51 313.128 4618.47
+400 -6576.31 304.677 2899.25
