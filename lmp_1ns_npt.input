@@ -1,0 +1,9 @@
+variable baseName       string  "1_SDS_on_AU_100_1x4x4_1ns_npt"
+variable dataFile       string  "1_SDS_on_AU_100_1x4x4_nptEquilibrated.lammps"
+
+log                     ${baseName}_00.log
+
+variable nptProdSteps   equal   50000    # 1 ns
+
+include                 lmp_header.input
+include                 lmp_nptProduction.input
