@@ -1,5 +1,5 @@
-variable dataFile       string  "1_SDS_on_AU_100_1x4x4_psfgen.data"
-variable baseName       string  "1_SDS_on_AU_100_1x4x4"
+variable dataFile       string  "1_SDS_on_AU_100_2x4x4_psfgen.data"
+variable baseName       string  "1_SDS_on_AU_100_2x4x4"
 
 log                     ${baseName}_00.log
 
