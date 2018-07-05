@@ -1,0 +1,10 @@
+variable dataFile       string  "1_SDS_on_AU_100_2x6x6_nptEquilibrated.lammps"
+
+# log                     ${baseName}_00.log
+
+# variable nptProdSteps   equal   5000    # 10 ps
+
+include                 lmp_header.input
+#include                 lmp_nptProduction.input
+read_dump               1_SDS_on_AU_100_2x6x6_1ns_npt_nptProduction.dump 4000 x y z vx vy vz
+write_data              1_SDS_on_AU_100_2x6x6_at_800ps_npt.lammps

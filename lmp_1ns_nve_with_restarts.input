@@ -1,0 +1,10 @@
+variable baseName       string  "1_SDS_on_AU_100_2x6x6_1ns_nve_with_restarts"
+variable dataFile       string  "1_SDS_on_AU_100_2x6x6_nptEquilibrated.lammps"
+
+log                     ${baseName}_00.log
+
+variable nveProdSteps   equal   500000    # 1 ns
+
+include                 lmp_header.input
+restart                 50000 ${baseName}.restart # every 100 ps
+include                 lmp_nveProduction.input

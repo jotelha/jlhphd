@@ -2,7 +2,7 @@
 # NVE production
 ###############
 
-fix             production all nve
+fix             nveProduction all nve
 fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # Quote from http://lammps.sandia.gov/doc/fix_shake.html
 # If you use a tolerance that is too large or a max-iteration count that is too
@@ -31,6 +31,6 @@ fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
 
 # Run the simulation
-log            ${baseName}_04_nveProduction.log
+log            ${baseName}_01_nveProduction.log
 run            ${nveProdSteps}
 write_data     ${baseName}_final_config.lammps
