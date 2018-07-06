@@ -1,5 +1,5 @@
-variable baseName       string  "1_SDS_on_AU_100_2x6x6_10ps_npt"
-variable dataFile       string  "1_SDS_on_AU_100_2x6x6_nptEquilibrated.lammps"
+variable baseName       string  "1_SDS_on_AU_111_6x4x1_10ps_npt"
+variable dataFile       string  "1_SDS_on_AU_111_6x4x1_nptEquilibrated.lammps"
 
 log                     ${baseName}_00.log
 
