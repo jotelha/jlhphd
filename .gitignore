@@ -14,8 +14,8 @@
 # except lammps-related
 !*.input
 !*.data
-!*.lammps
-!*.out
+#!*.lammps
+#!*.out
 
 log.lammps
 
