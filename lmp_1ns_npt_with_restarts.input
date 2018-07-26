@@ -1,10 +1,13 @@
-variable baseName       string  "1_SDS_on_AU_111_6x4x1_1ns_npt_with_restarts"
-variable dataFile       string  "1_SDS_on_AU_111_6x4x1_nptEquilibrated.lammps"
+variable baseName       string  "1_CTAB_on_AU_111_21x12x2_1ns_npt"
+variable dataFile       string  "1_CTAB_on_AU_111_21x12x2_nptEquilibrated.lammps"
 
 log                     ${baseName}_00.log
 
 variable nptProdSteps   equal   500000    # 1 ns
 
 include                 lmp_header.input
-restart                 50000 ${baseName}.restart # every 100 ps
+# consecutively numbered restart files ...
+# restart                 50000 ${baseName}.restart # every 100 ps
+# ... or two alternating files ...
+restart         50000 ${baseName}.restart1 ${baseName}.restart2
 include                 lmp_nptProduction.input

@@ -27,7 +27,11 @@ fix             nptProduction all npt temp ${temperatureT} ${temperatureT} &
 # script after any other fixes which add or change forces (to atoms that fix
 # shake operates on).
 
-dump            dumpTraj all atom 100 ${baseName}_nptProduction.dump
+# dump            dumpTraj all atom 100 ${baseName}_nptProduction.dump
+dump            dumpPng    nonwater image ${nptProdSteps} &
+                  ${baseName}_nptProduction.*.png type type
+dump            dumpNetCDF all netcdf 100 ${baseName}_nptProduction.nc &
+                  id mol type x y z vx vy vz
 
 fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
   c_thermo_press file ${baseName}_nptProduction_thermo.out mode scalar

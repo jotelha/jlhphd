@@ -7,7 +7,7 @@ variable pressureP      equal      1    # atm
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
 # Look it up within the data file.
-variable angleIdWater   equal     11
+variable angleIdWater   equal     16
 
 # Intialization
 units          real
@@ -60,6 +60,31 @@ pair_style      lj/charmmfsw/coul/long 10 12
 # (Steinbach) Steinbach, Brooks, J Comput Chem, 15, 667 (1994).
 # (Brooks)    Brooks, et al, J Comput Chem, 30, 1545 (2009).
 
+# #
+# Storm, S., Jakobtorweihen, S., Smirnova, I., Panagiotopoulos, A.Z., 2013. 
+# Molecular dynamics simulation of SDS and CTAB micellization and prediction 
+# of partition equilibria with COSMOmic. Langmuir 29, 11582-11592.
+#
+# recommend an 8 Ang inner cutoff:
+#
+# "Recently, Piggot el al. compared different force fields for lipids. Although 
+# "their recommendations for CHARMM36 force field (CHARMM TIP3P water model, 
+# "0.8 nm Lennard-Jones switching) are based on bilayer simulations, they were 
+# "followed here 
+#
+# #
+# http://www.gromacs.org/Documentation/Terminology/Force_Fields/CHARMM
+#
+# notes
+#
+# Please also note that the switching distance is a matter of some debate in 
+# lipid bilayer simulations, and it is dependent to some extent on the nature 
+# of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
+# appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
+# 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+# literature for their chosen lipid(s) before beginning a simulation!
+#
+
 pair_modify     mix arithmetic
 kspace_style    pppm 1e-6
 # Quote from http://lammps.sandia.gov/doc/kspace_style.html:
@@ -93,7 +118,7 @@ timestep       2.0 # 0.002 ps = 2 fs
 
 group          water      type  9 10  #  9 - H, 10 - O
 group          surface    type  8     #  8 - Au
-group          ion        type 12     # 12 - Na+
+group          ion        type  11 12 # 11 - Br-, 12 - Na+
 group          surfactant subtract all water surface ion
 group          nonwater   subtract all water
 

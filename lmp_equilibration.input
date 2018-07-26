@@ -1,5 +1,5 @@
-variable dataFile       string  "1_SDS_on_AU_111_6x4x1_psfgen.data"
-variable baseName       string  "1_SDS_on_AU_111_6x4x1"
+variable dataFile       string  "1_CTAB_on_AU_111_21x12x2_psfgen_CLA2BR.data"
+variable baseName       string  "1_CTAB_on_AU_111_21x12x2"
 
 log                     ${baseName}_00.log
 
@@ -10,12 +10,12 @@ include                 lmp_header.input
 ##############
 # fix restraint surfactant spring/self 10.0
 # http://lammps.sandia.gov/doc/fix_spring_self.html
-# Apply a spring force independently to each atom in the group to tether it to 
-# its initial position. The initial position for each atom is its location at 
-# the time the fix command was issued. At each timestep, the magnitude of the 
-# force on each atom is -Kr, where r is the displacement of the atom from its 
+# Apply a spring force independently to each atom in the group to tether it to
+# its initial position. The initial position for each atom is its location at
+# the time the fix command was issued. At each timestep, the magnitude of the
+# force on each atom is -Kr, where r is the displacement of the atom from its
 # current position to its initial position. The distance r correctly takes into
-# account any crossings of periodic boundary by the atom since it was in its 
+# account any crossings of periodic boundary by the atom since it was in its
 # initial position.
 
 
@@ -76,7 +76,17 @@ velocity        all create ${temperatureT} 29061988 rot yes mom yes dist gaussia
 # of the newly created ensemble of velocities is zeroed; if rot = yes, the
 # angular momentum is zeroed.
 
-dump            dumpTraj all atom 100 ${baseName}_nvtEquilibration.dump
+# dump            dumpTraj all atom 100 ${baseName}_nvtEquilibration.dump
+
+# dump movie nonwater movie 4 ${baseName}_nvtEqulibration.mp4 type type size 640 480
+# dump_modify movie framerate 24
+
+# automatically create image of first and last config
+dump            dumpPng nonwater image ${nvtEqSteps} &
+                ${baseName}_nvtEquilibration.*.png type type
+dump            dumpNetCDF all netcdf 100 ${baseName}_nvtEquilibration.nc &
+                  id mol type x y z vx vy vz
+
 log             ${baseName}_02_nvtEquilibration.log
 
 run             ${nvtEqSteps}
@@ -84,9 +94,11 @@ run             ${nvtEqSteps}
 log             ${baseName}_00.log append
 write_data      ${baseName}_nvtEquilibrated.lammps
 
-undump          dumpTraj
 unfix           equilibrateNVT
 unfix           rigidHbonds
+# undump          dumpTraj
+undump          dumpPng
+undump          dumpNetCDF
 
 ###################
 # NPT equilibration
@@ -100,7 +112,12 @@ fix             equilibrateNPT all npt temp ${temperatureT} ${temperatureT} &
 #                         ^                                       Pstart/atm
 #                                      ^                          Pstop
 #                                                   ^             Pdamp/steps
-dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
+# dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
+dump            dumpPng nonwater image ${nptEqSteps} &
+                ${baseName}_nptEquilibration.*.png type type
+dump            dumpNetCDF all netcdf 100 ${baseName}_nptEquilibration.nc &
+                  id mol type x y z vx vy vz
+
 log             ${baseName}_03_nptEquilibration.log
 
 run             ${nptEqSteps}

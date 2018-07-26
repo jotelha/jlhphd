@@ -19,7 +19,11 @@ fix             rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # script after any other fixes which add or change forces (to atoms that fix
 # shake operates on).
 
-dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
+# dump            dumpTraj all atom 100 ${baseName}_nveProduction.dump
+dump            dumpPng    nonwater image ${nveProdSteps} &
+                  ${baseName}_nveProduction.*.png type type
+dump            dumpNetCDF all netcdf 100 ${baseName}_nveProduction.nc &
+                  id mol type x y z vx vy vz
 
 fix thermoAveOut all ave/time 1 100 100 c_thermo_pe c_thermo_temp &
   c_thermo_press file ${baseName}_nveProduction_thermo.out mode scalar
