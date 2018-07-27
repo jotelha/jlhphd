@@ -166,9 +166,15 @@ module purge
 module load lammps/16Mar18-gnu-5.2-openmpi-2.1
 
 cd ${MOAB_SUBMITDIR}
-export EXECUTABLE="lmp -in ${INFILE} -sf omp"
+EXECUTABLE="lmp -in ${INFILE}"
+if [[ -n "${OMP_NUM_THREADS}" ]] && [[ "${OMP_NUM_THREADS}" -gt "1" ]] ; then
+   EXECUTABLE="${EXECUTABLE} -sf omp"
+fi
+export EXECUTABLE
 echo "${EXECUTABLE} running on ${MOAB_NODECOUNT} and ${MOAB_PROCCOUNT} cores " \
-  "with ${TASK_COUNT} tasks and ${OMP_NUM_THREADS} threads in ${PBS_O_WORKDIR}"
+  "with ${TASK_COUNT} mpi tasks and ${OMP_NUM_THREADS} omp threads " \
+  "in ${PBS_O_WORKDIR}"
+
 
 # http://lammps.sandia.gov/doc/accelerate_omp.html
 # Run with the USER-OMP package from the command line:

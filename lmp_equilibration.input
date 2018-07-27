@@ -84,8 +84,8 @@ velocity        all create ${temperatureT} 29061988 rot yes mom yes dist gaussia
 # automatically create image of first and last config
 dump            dumpPng nonwater image ${nvtEqSteps} &
                 ${baseName}_nvtEquilibration.*.png type type
-dump            dumpNetCDF all netcdf 100 ${baseName}_nvtEquilibration.nc &
-                  id mol type x y z vx vy vz
+dump            dumpNetCDF all netcdf/mpiio 100 ${baseName}_nvtEquilibration.nc &
+                  id mol type x y z
 
 log             ${baseName}_02_nvtEquilibration.log
 
@@ -115,8 +115,8 @@ fix             equilibrateNPT all npt temp ${temperatureT} ${temperatureT} &
 # dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
 dump            dumpPng nonwater image ${nptEqSteps} &
                 ${baseName}_nptEquilibration.*.png type type
-dump            dumpNetCDF all netcdf 100 ${baseName}_nptEquilibration.nc &
-                  id mol type x y z vx vy vz
+dump            dumpNetCDF all netcdf/mpiio 100 ${baseName}_nptEquilibration.nc &
+                  id mol type x y z
 
 log             ${baseName}_03_nptEquilibration.log
 
