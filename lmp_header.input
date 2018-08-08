@@ -1,5 +1,5 @@
-variable nvtEqSteps     equal   2500    # 5 ps
-variable nptEqSteps     equal   2500    # 5 ps
+variable nvtEqSteps     equal  100000    # 200 ps
+variable nptEqSteps     equal  100000    # 200 ps
 
 variable temperatureT   equal    298    # K
 variable pressureP      equal      1    # atm
@@ -29,7 +29,7 @@ units          real
     #electric field = volts/Angstrom
     #density = gram/cm^dim
 
-neigh_modify    delay 2 every 1
+# neigh_modify    delay 2 every 1
 # This command sets parameters that affect the building and use of pairwise
 # neighbor lists. Depending on what pair interactions and other commands
 # are defined, a simulation may require one or more neighbor lists.
@@ -49,7 +49,7 @@ dihedral_style  charmmfsw
 #             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
 
 improper_style  harmonic
-pair_style      lj/charmmfsw/coul/long 10 12
+pair_style      lj/charmmfsw/coul/long 8 12
 # Quote from http://lammps.sandia.gov/doc/pair_charmm.html
 # The newer styles with charmmfsw or charmmfsh in their name replace the
 # energy switching with force switching (fsw) and force shifting (fsh)
@@ -86,8 +86,12 @@ pair_style      lj/charmmfsw/coul/long 10 12
 #
 
 pair_modify     mix arithmetic
-kspace_style    pppm 1e-6
+# kspace_style    pppm 1e-6
+kspace_style    pppm 1e-4
 # Quote from http://lammps.sandia.gov/doc/kspace_style.html:
+# pppm value = accuracy
+#  accuracy = desired relative error in forces
+#
 # The pppm style invokes a particle-particle particle-mesh solver (Hockney)
 # which maps atom charge to a 3d mesh, uses 3d FFTs to solve Poisson’s
 # equation on the mesh, then interpolates electric fields on the mesh points
@@ -96,6 +100,20 @@ kspace_style    pppm 1e-6
 # Ewald summation scales as N^(3/2) where N is the number of atoms in the
 # system. The PPPM solver scales as Nlog(N) due to the FFTs, so it is almost
 # always a faster choice (Pollock).
+#
+# [...]
+# 
+# The specified accuracy determines the relative RMS error in per-atom forces 
+# calculated by the long-range solver. It is set as a dimensionless number, 
+# relative to the force that two unit point charges (e.g. 2 monovalent ions) 
+# exert on each other at a distance of 1 Angstrom. This reference value was 
+# chosen as representative of the magnitude of electrostatic forces in atomic
+#  systems. Thus an accuracy value of 1.0e-4 means that the RMS error will be
+#  a factor of 10000 smaller than the reference force.
+#
+# The accuracy setting is used in conjunction with the pairwise cutoff to 
+# determine the number of K-space vectors for style ewald or the grid size for
+#  style pppm or msm.
 #
 # (Hockney)   Hockney and Eastwood, Computer Simulation Using Particles,
 #             Adam Hilger, NY (1989).
@@ -116,12 +134,24 @@ special_bonds   charmm
 
 timestep       2.0 # 0.002 ps = 2 fs
 
-group          water      type  9 10  #  9 - H, 10 - O
-group          surface    type  8     #  8 - Au
-group          ion        type  11 12 # 11 - Br-, 12 - Na+
+group          water      type  8 9    #  8 - H, 10 - O
+group          surface    type  11     # 11 - Au
+group          ion        type  10     # 10 - Br-
 group          surfactant subtract all water surface ion
 group          nonwater   subtract all water
 
+# From "41_CTAB_on_AU_111_21x12x2_bilayer_psfgen.data"
+#        1      1.008  # HL
+#        2      1.008  # HAL2
+#        3      1.008  # HAL3
+#        4     12.011  # CTL2
+#        5     12.011  # CTL3
+#        6     12.011  # CTL5
+#        7     14.007  # NTL
+#        8      1.008  # HT
+#        9    15.9994  # OT
+#       10     79.904  # BR
+#       11   196.9665  # AU
 
 # fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
 #   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
@@ -130,5 +160,13 @@ group          nonwater   subtract all water
 #   mode scalar file ${baseName}_thermo.out
 thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
   edihed eimp epair evdwl ecoul elong etail vol
-thermo         10
+# log output every 2 ps
+thermo         1000
 thermo_modify  norm no
+# Note that some computes calculate “intensive” global quantities like
+# temperature; others calculate “extensive” global quantities like kinetic
+# energy that are summed over all atoms in the compute group. Intensive
+# quantities are printed directly without normalization by thermo_style custom.
+# Extensive quantities may be normalized by the total number of atoms in the
+# simulation (NOT the number of atoms in the compute group) when output, 
+# depending on the thermo_modify norm option being used.
