@@ -1,4 +1,4 @@
-variable baseName       string  "41_CTAB_on_AU_111_21x12x2_bilayer"
+include                 system_specific.input
 variable dataFile       string  ${baseName}_nvtEquilibrated.lammps
 
 log                     ${baseName}_03_nptEquilibration.log

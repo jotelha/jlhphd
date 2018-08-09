@@ -1,7 +1,6 @@
-variable baseName       string  "41_CTAB_on_AU_111_21x12x2_bilayer"
+include                 system_specific.input
 variable dataFile       string  ${baseName}_psfgen.data
 
-#log                     ${baseName}_00.log
 log                     ${baseName}_01_minimization.log
 
 include                 lmp_header.input
@@ -20,7 +19,6 @@ include                 lmp_header.input
 # initial position.
 
 minimize 0.0 1.0 10000 100000
-# log ${baseName}_00.log append
 # minimize etol ftol maxiter maxeval
 # Quote from http://lammps.sandia.gov/doc/minimize.html
 # Perform an energy minimization of the system, by iteratively adjusting atom

@@ -3,7 +3,7 @@ variable dataFile       string  ${baseName}_nptEquilibrated.lammps
 
 log                     ${baseName}_00.log
 
-variable mixedProductionSteps   equal   25000000    # 50 ns
+variable mixedProductionSteps   equal   5000000    # 10 ns
 
 include                 lmp_header.input
 
