@@ -12,6 +12,10 @@ set -e
 set -o pipefail
 
 SUFFIX_EXE=""
+if [ -z "${OMP_NUM_THREADS}" ]; then
+   export OMP_NUM_THREADS=1
+fi
+
 if [ -n "${MOAB_JOBNAME}" ]; then
   cd "${MOAB_SUBMITDIR}"
 
