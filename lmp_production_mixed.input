@@ -130,7 +130,7 @@ dump            dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc
                   id mol type x y z
 # at 2 fs time step output every 2 ps
 
-run             ${mixedProductionSteps}
+run             ${mixedProductionSteps} upto
 
 write_data      ${baseName}_production_mixed.lammps
 

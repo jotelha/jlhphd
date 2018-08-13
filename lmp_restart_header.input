@@ -145,7 +145,7 @@ kspace_style    pppm 1e-4
 # (Darden)    Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
 # (Pollock)   Pollock and Glosli, Comp Phys Comm, 95, 93 (1996).
 
-read_data       ${dataFile}
+# read_data       ${dataFile}
 
 special_bonds   charmm
 # http://lammps.sandia.gov/doc/special_bonds.html

@@ -1,11 +1,24 @@
-include                 system_specific.input
-variable dataFile       string  ${baseName}_nptEquilibrated.lammps
+# Continues a run from given restart file
+# Source: https://lammps.sandia.gov/doc/read_restart.html
+# Here is a list of information not stored in a restart file, which means you 
+# must re-issue these commands in your input script, after reading the restart
+# file. 
+#    newton pair (see discussion of newton command below)
+#    fix commands (see below)
+#    compute commands (see below)
+#    variable commands
+#    region commands
+#    neighbor list criteria including neigh_modify settings
+#    kspace_style and kspace_modify settings
+#    info for thermodynamic, dump, or restart output
+# expects variables ${baseName} and ${restartFile}
 
-log                     ${baseName}_00.log
+log                     ${baseName}_00.log append
 
 variable mixedProductionSteps   equal   5000000    # 10 ns
 
-include                 lmp_header.input
+include                 lmp_restart_header.input
+read_restart            ${restartFile}
 
 # consecutively numbered restart files ...
 # restart               100000 ${baseName}.restart # every 200 ps
@@ -33,5 +46,6 @@ restart                 100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.rest
 # have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump 
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
+
 
 include                 lmp_production_mixed.input

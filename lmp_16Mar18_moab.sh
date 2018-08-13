@@ -15,6 +15,13 @@ SUFFIX_EXE=""
 if [ -z "${OMP_NUM_THREADS}" ]; then
    export OMP_NUM_THREADS=1
 fi
+# if possible, map tasks by socket, NEMO specific
+MAP_BY=socket
+if [[ $((10 % $OMP_NUM_THREADS)) != 0 ]]; then
+  echo "Allow tasks to distribute threads across different sockets, map by node."
+  MAP_BY=node
+fi
+
 
 if [ -n "${MOAB_JOBNAME}" ]; then
   cd "${MOAB_SUBMITDIR}"
