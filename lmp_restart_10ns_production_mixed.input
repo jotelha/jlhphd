@@ -17,8 +17,8 @@ log                     ${baseName}_00.log append
 
 variable mixedProductionSteps   equal   5000000    # 10 ns
 
-include                 lmp_restart_header.input
 read_restart            ${restartFile}
+include                 lmp_restart_header.input
 
 # consecutively numbered restart files ...
 # restart               100000 ${baseName}.restart # every 200 ps
@@ -46,6 +46,5 @@ restart                 100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.rest
 # have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump 
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
-
 
 include                 lmp_production_mixed.input
