@@ -124,10 +124,12 @@ dump            dumpPng nonwater image 1000000 &
                 ${baseName}_production_mixed.*.png type type
 #                                      ^one image every 2 ns
 
-# dump            dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc &
-#                   id mol type x y z
-dump            dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc &
-                  id mol type x y z
+if "${mpiio} > 0" then &
+  "print 'netcdf/mpiio output'" &
+  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc.nc id mol type x y z"
+else &
+  "print 'netcdf output (no netcdf/mpiiio)'" &
+  "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc.nc id mol type x y z"
 # at 2 fs time step output every 2 ps
 
 run             ${mixedProductionSteps} upto

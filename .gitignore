@@ -11,6 +11,10 @@
 !examples
 !examples/**/*
 
+# except fireworks related
+!*.yaml
+!*.template
+
 # except lammps-related
 !*.input
 !*.data

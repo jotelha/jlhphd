@@ -1,7 +1,7 @@
 include                 system_specific.input
 variable dataFile       string  ${baseName}_nptEquilibrated.lammps
 
-log                     ${baseName}_00.log
+log                     ${baseName}_production_mixed.log
 
 variable mixedProductionSteps   equal   5000000    # 10 ns
 
@@ -10,8 +10,12 @@ include                 lmp_header.input
 # consecutively numbered restart files ...
 # restart               100000 ${baseName}.restart # every 200 ps
 # ... or two alternating files ...
-# restart                 100000 ${baseName}.restart1 ${baseName}.restart2
-restart                 100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2
+if "${mpiio} > 0" then &
+  "print 'mpiio restart files'" &
+  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2"
+else &
+  "print 'standard restart files (no mpiiio)'" &
+  "restart 100000 ${baseName}.restart1 ${baseName}.restart2"
 # Source: https://lammps.sandia.gov/doc/restart.html
 # [...]
 # If a “%” character appears in the restart filename(s), then one file is 

@@ -1,7 +1,7 @@
 include                 system_specific.input
 variable dataFile       string  ${baseName}_psfgen.data
 
-log                     ${baseName}_01_minimization.log
+log                     ${baseName}_minimization.log
 
 include                 lmp_header.input
 

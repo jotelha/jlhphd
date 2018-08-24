@@ -1,7 +1,7 @@
 include                 system_specific.input
 variable dataFile       string  ${baseName}_nvtEquilibrated.lammps
 
-log                     ${baseName}_03_nptEquilibration.log
+log                     ${baseName}_ptEquilibration.log
 
 include                 lmp_header.input
 
@@ -171,10 +171,13 @@ fix rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 dump            dumpPng nonwater image ${nptEqSteps} &
                 ${baseName}_nptEquilibration.*.png type type
 
-dump            dumpNetCDF all netcdf 1000 ${baseName}_nptEquilibration.nc &
-                  id mol type x y z
-# dump            dumpNetCDF all netcdf/mpiio 100 ${baseName}_nptEquilibration.nc &
-#                  id mol type x y z
+
+if "${mpiio} > 0" then &
+  "print 'netcdf/mpiio output'" &
+  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_nptEquilibration.nc id mol type x y z"
+else &
+  "print 'netcdf output (no netcdf/mpiiio)'" &
+  "dump dumpNetCDF all netcdf 1000 ${baseName}_nptEquilibration.nc id mol type x y z"
 
 run             ${nptEqSteps}
 

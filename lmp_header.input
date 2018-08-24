@@ -1,3 +1,9 @@
+# technical settings
+
+variable mpiio          index  1         # parallel io on or off
+
+# system settings
+
 variable nvtEqSteps     equal  100000    # 200 ps
 variable nptEqSteps     equal  100000    # 200 ps
 
@@ -7,7 +13,7 @@ variable pressureP      equal      1    # atm
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
 # Look it up within the data file.
-variable angleIdWater   equal     16
+variable angleIdWater   equal     11
 
 # Intialization
 units          real
@@ -161,10 +167,31 @@ timestep       2.0 # 0.002 ps = 2 fs
 
 group          water      type  8 9    #  8 - H, 10 - O
 group          surface    type  11     # 11 - Au
-group          ion        type  10     # 10 - Br-
+group          ion        type  10     # 10 - Na+
 group          surfactant subtract all water surface ion
 group          nonwater   subtract all water
 
+# SDS - specific
+#       1      1.008  # HAL2
+#       2      1.008  # HAL3
+#       3     12.011  # CTL2
+#       4     12.011  # CTL3
+#       5    15.9994  # OSL
+#       6    15.9994  # O2L
+#       7      32.06  # SL
+#       8      1.008  # HT
+#       9    15.9994  # OT
+#      10   22.98977  # SOD
+#      11   196.9665  # AU
+
+# CTAB - specific
+#
+# group          water      type  8 9    #  8 - H, 10 - O
+# group          surface    type  11     # 11 - Au
+# group          ion        type  10     # 10 - Br-
+# group          surfactant subtract all water surface ion
+# group          nonwater   subtract all water
+#
 # From "41_CTAB_on_AU_111_21x12x2_bilayer_psfgen.data"
 #        1      1.008  # HL
 #        2      1.008  # HAL2
