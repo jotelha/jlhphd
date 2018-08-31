@@ -1,7 +1,7 @@
 include                 system_specific.input
 variable dataFile       string  ${baseName}_nptEquilibrated.lammps
 
-log                     ${baseName}_production_mixed.log
+log                     ${baseName}_10ns_production_mixed.log
 
 variable mixedProductionSteps   equal   5000000    # 10 ns
 
@@ -12,7 +12,7 @@ include                 lmp_header.input
 # ... or two alternating files ...
 if "${mpiio} > 0" then &
   "print 'mpiio restart files'" &
-  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2"
+  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" & 
 else &
   "print 'standard restart files (no mpiiio)'" &
   "restart 100000 ${baseName}.restart1 ${baseName}.restart2"

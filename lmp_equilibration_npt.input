@@ -1,7 +1,7 @@
 include                 system_specific.input
 variable dataFile       string  ${baseName}_nvtEquilibrated.lammps
 
-log                     ${baseName}_ptEquilibration.log
+log                     ${baseName}_nptEquilibration.log
 
 include                 lmp_header.input
 
@@ -174,7 +174,7 @@ dump            dumpPng nonwater image ${nptEqSteps} &
 
 if "${mpiio} > 0" then &
   "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_nptEquilibration.nc id mol type x y z"
+  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_nptEquilibration.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf 1000 ${baseName}_nptEquilibration.nc id mol type x y z"

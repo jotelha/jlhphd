@@ -126,7 +126,7 @@ dump            dumpPng nonwater image 1000000 &
 
 if "${mpiio} > 0" then &
   "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc.nc id mol type x y z"
+  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc.nc id mol type x y z"
