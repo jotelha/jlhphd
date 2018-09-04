@@ -1,6 +1,6 @@
 ############
 # PRODUCTION
-# 
+#
 # only temper substrate
 
 fix thermostat surface langevin ${temperatureT} ${temperatureT} 100 29061988
@@ -56,7 +56,7 @@ fix barostat all nph aniso ${pressureP} ${pressureP} 1000
 ###############
 # DRIFT REMOVAL
 
-# Keep substrate slab's position COM position fixed, remove relative drift 
+# Keep substrate slab's position COM position fixed, remove relative drift
 fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 #               ^ID               ^group-ID
 #                                         ^style   ^x   ^y   ^z   ^keyword
@@ -65,26 +65,26 @@ fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 # fix ID group-ID recenter x y z keyword value ...
 #   shift value = group-ID
 #     group-ID = group of atoms whose coords are shifted
-# 
-# Constrain the center-of-mass position of a group of atoms by adjusting the 
-# coordinates of the atoms every timestep. This is simply a small shift that 
-# does not alter the dynamics of the system or change the relative coordinates 
-# of any pair of atoms in the group. This can be used to insure the entire 
+#
+# Constrain the center-of-mass position of a group of atoms by adjusting the
+# coordinates of the atoms every timestep. This is simply a small shift that
+# does not alter the dynamics of the system or change the relative coordinates
+# of any pair of atoms in the group. This can be used to insure the entire
 # collection of atoms (or a portion of them) do not drift during the simulation
 # due to random perturbations (e.g. fix langevin thermostatting).
-# 
-# The center-of-mass (COM) is computed for the group specified by the fix. 
-# If the current COM is different than the specified x,y,z, then a group of 
+#
+# The center-of-mass (COM) is computed for the group specified by the fix.
+# If the current COM is different than the specified x,y,z, then a group of
 # atoms has their coordinates shifted by the difference. By default the shifted
 # group is also the group specified by the fix. A different group can be shifted
-# by using the shift keyword. For example, the COM could be computed on a 
-# protein to keep it in the center of the simulation box. But the entire system 
+# by using the shift keyword. For example, the COM could be computed on a
+# protein to keep it in the center of the simulation box. But the entire system
 # (protein + water) could be shifted.
 #
 # Distance units for the x,y,z values are determined by the setting of the units
-# keyword, as discussed below. One or more x,y,z values can also be specified 
+# keyword, as discussed below. One or more x,y,z values can also be specified
 # as NULL, which means exclude that dimension from this operation. Or it can be
-# specified as INIT which means to constrain the center-of-mass to its initial 
+# specified as INIT which means to constrain the center-of-mass to its initial
 # value at the beginning of the run.
 
 
@@ -126,10 +126,10 @@ dump            dumpPng nonwater image 1000000 &
 
 if "${mpiio} > 0" then &
   "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc.nc id mol type x y z" &
+  "dump dumpNetCDF all netcdf/mpiio 1000 ${baseName}_production_mixed.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
-  "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc.nc id mol type x y z"
+  "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc id mol type x y z"
 # at 2 fs time step output every 2 ps
 
 run             ${mixedProductionSteps} upto

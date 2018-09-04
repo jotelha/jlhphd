@@ -1,3 +1,5 @@
+variable                robust_minimization index 0
+
 include                 system_specific.input
 variable dataFile       string  ${baseName}_psfgen.data
 
@@ -19,7 +21,13 @@ thermo                  100
 # account any crossings of periodic boundary by the atom since it was in its
 # initial position.
 
-minimize 0.0 1.0 10000 100000
+if "${robust_minimization} > 0" then &
+  "print 'Using alternative robust minimization settings'" &
+  "neigh_modify delay 0 every 1 check yes one 5000 page 250000" &
+  "minimize 0.0 1.0 10000 100000" &
+else &
+  "minimize 0.0 1.0 10000 100000"
+
 # minimize etol ftol maxiter maxeval
 # Quote from http://lammps.sandia.gov/doc/minimize.html
 # Perform an energy minimization of the system, by iteratively adjusting atom

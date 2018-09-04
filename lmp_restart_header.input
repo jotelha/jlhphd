@@ -1,3 +1,9 @@
+# technical settings
+
+variable mpiio          index  1         # parallel io on or off
+
+# system settings
+
 variable nvtEqSteps     equal  100000    # 200 ps
 variable nptEqSteps     equal  100000    # 200 ps
 
@@ -7,7 +13,7 @@ variable pressureP      equal      1    # atm
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
 # Look it up within the data file.
-variable angleIdWater   equal     16
+variable angleIdWater   equal     11
 
 # Intialization
 # units          real
@@ -30,12 +36,12 @@ variable angleIdWater   equal     16
     #density = gram/cm^dim
 
 # neigh 2.0 bin
-# The style value selects what algorithm is used to build the list. The bin 
-# style creates the list by binning which is an operation that scales linearly 
-# with N/P, the number of atoms per processor where N = total number of atoms 
-# and P = number of processors. It is almost always faster than the nsq style 
-# which scales as (N/P)^2. For unsolvated small molecules in a non-periodic 
-# box, the nsq choice can sometimes be faster. Either style should give the 
+# The style value selects what algorithm is used to build the list. The bin
+# style creates the list by binning which is an operation that scales linearly
+# with N/P, the number of atoms per processor where N = total number of atoms
+# and P = number of processors. It is almost always faster than the nsq style
+# which scales as (N/P)^2. For unsolvated small molecules in a non-periodic
+# box, the nsq choice can sometimes be faster. Either style should give the
 # same answers.
 # Defaults: 2.0 bin for units = real or metal, skin = 2.0 Angstroms
 
@@ -46,17 +52,17 @@ neigh_modify    delay 2 every 1 check yes
 
 # Note on possible error:
 # Out of range atoms - cannot compute PPPM
-#    One or more atoms are attempting to map their charge to a PPPM grid point 
-#    that is not owned by a processor. This is likely for one of two reasons, 
-#    both of them bad. First, it may mean that an atom near the boundary of a 
-#    processor’s sub-domain has moved more than 1/2 the neighbor skin distance 
-#    without neighbor lists being rebuilt and atoms being migrated to new 
-#    processors. This also means you may be missing pairwise interactions that 
-#    need to be computed. The solution is to change the re-neighboring criteria 
-#    via the neigh_modify command. The safest settings are “delay 0 every 1 
-#    check yes”. Second, it may mean that an atom has moved far outside a 
-#    processor’s sub-domain or even the entire simulation box. This indicates 
-#    bad physics, e.g. due to highly overlapping atoms, too large a timestep, 
+#    One or more atoms are attempting to map their charge to a PPPM grid point
+#    that is not owned by a processor. This is likely for one of two reasons,
+#    both of them bad. First, it may mean that an atom near the boundary of a
+#    processor’s sub-domain has moved more than 1/2 the neighbor skin distance
+#    without neighbor lists being rebuilt and atoms being migrated to new
+#    processors. This also means you may be missing pairwise interactions that
+#    need to be computed. The solution is to change the re-neighboring criteria
+#    via the neigh_modify command. The safest settings are “delay 0 every 1
+#    check yes”. Second, it may mean that an atom has moved far outside a
+#    processor’s sub-domain or even the entire simulation box. This indicates
+#    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
 # atom_style      full
@@ -86,27 +92,27 @@ neigh_modify    delay 2 every 1 check yes
 # (Brooks)    Brooks, et al, J Comput Chem, 30, 1545 (2009).
 
 # #
-# Storm, S., Jakobtorweihen, S., Smirnova, I., Panagiotopoulos, A.Z., 2013. 
-# Molecular dynamics simulation of SDS and CTAB micellization and prediction 
+# Storm, S., Jakobtorweihen, S., Smirnova, I., Panagiotopoulos, A.Z., 2013.
+# Molecular dynamics simulation of SDS and CTAB micellization and prediction
 # of partition equilibria with COSMOmic. Langmuir 29, 11582-11592.
 #
 # recommend an 8 Ang inner cutoff:
 #
-# "Recently, Piggot el al. compared different force fields for lipids. Although 
-# "their recommendations for CHARMM36 force field (CHARMM TIP3P water model, 
-# "0.8 nm Lennard-Jones switching) are based on bilayer simulations, they were 
-# "followed here 
+# "Recently, Piggot el al. compared different force fields for lipids. Although
+# "their recommendations for CHARMM36 force field (CHARMM TIP3P water model,
+# "0.8 nm Lennard-Jones switching) are based on bilayer simulations, they were
+# "followed here
 #
 # #
 # http://www.gromacs.org/Documentation/Terminology/Force_Fields/CHARMM
 #
 # notes
 #
-# Please also note that the switching distance is a matter of some debate in 
-# lipid bilayer simulations, and it is dependent to some extent on the nature 
-# of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
-# appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
-# 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+# Please also note that the switching distance is a matter of some debate in
+# lipid bilayer simulations, and it is dependent to some extent on the nature
+# of the lipid. Some studies have found that an 0.8-1.0 nm switch is
+# appropriate, others argue 0.8-1.2 nm is best, and yet others stand by
+# 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 # literature for their chosen lipid(s) before beginning a simulation!
 #
 
@@ -127,16 +133,16 @@ kspace_style    pppm 1e-4
 # always a faster choice (Pollock).
 #
 # [...]
-# 
-# The specified accuracy determines the relative RMS error in per-atom forces 
-# calculated by the long-range solver. It is set as a dimensionless number, 
-# relative to the force that two unit point charges (e.g. 2 monovalent ions) 
-# exert on each other at a distance of 1 Angstrom. This reference value was 
+#
+# The specified accuracy determines the relative RMS error in per-atom forces
+# calculated by the long-range solver. It is set as a dimensionless number,
+# relative to the force that two unit point charges (e.g. 2 monovalent ions)
+# exert on each other at a distance of 1 Angstrom. This reference value was
 # chosen as representative of the magnitude of electrostatic forces in atomic
 #  systems. Thus an accuracy value of 1.0e-4 means that the RMS error will be
 #  a factor of 10000 smaller than the reference force.
 #
-# The accuracy setting is used in conjunction with the pairwise cutoff to 
+# The accuracy setting is used in conjunction with the pairwise cutoff to
 # determine the number of K-space vectors for style ewald or the grid size for
 #  style pppm or msm.
 #
@@ -159,12 +165,33 @@ kspace_style    pppm 1e-4
 
 # timestep       2.0 # 0.002 ps = 2 fs
 
+group          water      type  8 9    #  8 - H, 10 - O
+group          surface    type  11     # 11 - Au
+group          ion        type  10     # 10 - Na+
+group          surfactant subtract all water surface ion
+group          nonwater   subtract all water
+
+# SDS - specific
+#       1      1.008  # HAL2
+#       2      1.008  # HAL3
+#       3     12.011  # CTL2
+#       4     12.011  # CTL3
+#       5    15.9994  # OSL
+#       6    15.9994  # O2L
+#       7      32.06  # SL
+#       8      1.008  # HT
+#       9    15.9994  # OT
+#      10   22.98977  # SOD
+#      11   196.9665  # AU
+
+# CTAB - specific
+#
 # group          water      type  8 9    #  8 - H, 10 - O
 # group          surface    type  11     # 11 - Au
 # group          ion        type  10     # 10 - Br-
 # group          surfactant subtract all water surface ion
 # group          nonwater   subtract all water
-
+#
 # From "41_CTAB_on_AU_111_21x12x2_bilayer_psfgen.data"
 #        1      1.008  # HL
 #        2      1.008  # HAL2
@@ -193,5 +220,5 @@ thermo_modify  norm no
 # energy that are summed over all atoms in the compute group. Intensive
 # quantities are printed directly without normalization by thermo_style custom.
 # Extensive quantities may be normalized by the total number of atoms in the
-# simulation (NOT the number of atoms in the compute group) when output, 
+# simulation (NOT the number of atoms in the compute group) when output,
 # depending on the thermo_modify norm option being used.

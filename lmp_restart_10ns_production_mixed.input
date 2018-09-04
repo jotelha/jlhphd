@@ -1,8 +1,8 @@
 # Continues a run from given restart file
 # Source: https://lammps.sandia.gov/doc/read_restart.html
-# Here is a list of information not stored in a restart file, which means you 
+# Here is a list of information not stored in a restart file, which means you
 # must re-issue these commands in your input script, after reading the restart
-# file. 
+# file.
 #    newton pair (see discussion of newton command below)
 #    fix commands (see below)
 #    compute commands (see below)
@@ -13,37 +13,41 @@
 #    info for thermodynamic, dump, or restart output
 # expects variables ${baseName} and ${restartFile}
 
-log                     ${baseName}_00.log append
+log                     ${baseName}_10ns_production_mixed.log append
 
 variable mixedProductionSteps   equal   5000000    # 10 ns
 
 read_restart            ${restartFile}
-include                 lmp_restart_header.input
+include                 lmp_header.input
 
 # consecutively numbered restart files ...
 # restart               100000 ${baseName}.restart # every 200 ps
 # ... or two alternating files ...
-# restart                 100000 ${baseName}.restart1 ${baseName}.restart2
-restart                 100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2
+if "${mpiio} > 0" then &
+  "print 'mpiio restart files'" &
+  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
+else &
+  "print 'standard restart files (no mpiiio)'" &
+  "restart 100000 ${baseName}.restart1 ${baseName}.restart2"
 # Source: https://lammps.sandia.gov/doc/restart.html
 # [...]
-# If a “%” character appears in the restart filename(s), then one file is 
-# written for each processor and the “%” character is replaced with the 
+# If a “%” character appears in the restart filename(s), then one file is
+# written for each processor and the “%” character is replaced with the
 # processor ID from 0 to P-1. An additional file with the “%” replaced by
-# “base” is also written, which contains global information. For example, 
-# the files written on step 1000 for filename restart.% would be 
-# restart.base.1000, restart.0.1000, restart.1.1000, …, restart.P-1.1000. 
-# This creates smaller files and can be a fast mode of output and subsequent 
-# input on parallel machines that support parallel I/O. The optional fileper 
+# “base” is also written, which contains global information. For example,
+# the files written on step 1000 for filename restart.% would be
+# restart.base.1000, restart.0.1000, restart.1.1000, …, restart.P-1.1000.
+# This creates smaller files and can be a fast mode of output and subsequent
+# input on parallel machines that support parallel I/O. The optional fileper
 # and nfile keywords discussed below can alter the number of files written.
 #
 # The restart file can also be written in parallel as one large binary file via
-# the MPI-IO library, which is part of the MPI standard for versions 2.0 and 
-# above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO 
+# the MPI-IO library, which is part of the MPI standard for versions 2.0 and
+# above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO
 # package installed [...]
 #
 # Second, use a restart filename which contains “.mpiio”. Note that it does not
-# have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump 
+# have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
 
