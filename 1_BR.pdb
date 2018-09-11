@@ -1,0 +1,6 @@
+TITLE     BROMIDE ION
+REMARK    DUMMY PDB FOR BROMIDE ION
+MODEL        1
+ATOM      1  BR  BR      1       0.000   0.000   0.000  1.00  0.00           BR
+TER
+ENDMOL
