@@ -23,6 +23,9 @@
 
 log.lammps
 
+# except vmd-related
+!*.tcl
+
 # standard github .gitignore template for Python:
 
 # Byte-compiled / optimized / DLL files
