@@ -83,24 +83,54 @@ namespace eval ::JlhVmd:: {
     variable surfactant_resname CTAB
     variable counterion_name    BR
     variable counterion_resname BR
-    variable solvent_resname    H2O
+    variable solvent_resname    TIP3
     variable substrate_name     AU
     variable substrate_resname  AUM
 
     variable H2O_H_type 8
     variable H2O_O_type 9
+
+    # suggestion from https://lammps.sandia.gov/threads/msg21297.html
+    variable type_name_list { \
+        1 HL  \
+        2 HAL2  \
+        3 HAL3  \
+        4 CTL2  \
+        5 CTL3  \
+        6 CTL5  \
+        7 NTL  \
+        8 HT  \
+        9 OT  \
+       10 BR  \
+       11 AU  \
+    }
   }
 
   proc use_SDS {} {
     variable surfactant_resname SDS
-    variable counterion_name    NA
-    variable counterion_resname NA
-    variable solvent_resname    H2O
+    variable counterion_name    SOD
+    variable counterion_resname SOD
+    variable solvent_resname    TIP3
     variable substrate_name     AU
     variable substrate_resname  AUM
 
     variable H2O_H_type 8
     variable H2O_O_type 9
+
+    # from SDS-related data file
+    variable type_name_list { \
+        1 HAL2  \
+        2 HAL3  \
+        3 CTL2  \
+        4 CTL3  \
+        5 OSL  \
+        6 O2L  \
+        7 SL  \
+        8 HT  \
+        9 OT  \
+       10 SOD  \
+       11 AU  \
+    }
   }
 
   # ##################
@@ -135,15 +165,22 @@ namespace eval ::JlhVmd:: {
   proc init_system { infile } {
     variable system_id
     variable system
+    variable type_name_list
     set system_id [topo readlammpsdata $infile full]
     set system [atomselect $system_id all]
     $system global
 
     # https://sites.google.com/site/akohlmey/software/topotools/topotools-tutorial---various-tips-tricks
     topo guessatom element mass
-    topo guessatom name element
+    # topo guessatom name element
     topo guessatom radius element
 
+    # suggestionf from https://lammps.sandia.gov/threads/msg21297.html
+    foreach {type name} $type_name_list {
+      set sel [atomselect $system_id "type $type"]
+      $sel set name $name
+      $sel delete
+    }
     mol rename $system_id interface
   }
 
