@@ -27,8 +27,8 @@ namespace eval ::JlhVmd:: {
   namespace export system substrate surfactant solvent counterion indenter
   namespace export nonsolvent
 
-  namespace export use_CTAB use_SDS
-  namespace export init_system position_system merge
+  namespace export use_CTAB use_SDS display_system_information
+  namespace export init_system proc make_types_ascii_sortable position_system
   namespace export read_indenter_pdb read_indenter_lmp
   namespace export init_indenter scale_indenter position_indenter clip_indenter
   namespace export merge identify_overlap remove_overlap
@@ -70,7 +70,7 @@ namespace eval ::JlhVmd:: {
     }
     return $res
   }
-  
+
   # returns a scaling transformation matrix
   proc transscale {s} {
     set res  [ scalar_times_matrix $s [transidentity] ]
@@ -162,26 +162,101 @@ namespace eval ::JlhVmd:: {
   set system_rep 0
   set indenter_rep 0
 
-  proc init_system { infile } {
+  proc init_system { infile { psffile "" } } {
     variable system_id
     variable system
     variable type_name_list
-    set system_id [topo readlammpsdata $infile full]
+
+    if { $psffile ne "" } {
+      set system_id [mol new $psffile type psf waitfor all]
+      #mol addfile XYZ.dcd type dcd first 999 last 999 waitfor all molid $mol
+      topo readlammpsdata $infile full -molid $system_id
+    } else {
+      # no psf topology, use topotools to derive types
+      set system_id [topo readlammpsdata $infile full]
+
+      # https://sites.google.com/site/akohlmey/software/topotools/topotools-tutorial---various-tips-tricks
+      topo guessatom element mass
+      # topo guessatom name element
+      topo guessatom radius element
+
+      # suggestion from https://lammps.sandia.gov/threads/msg21297.html
+      foreach {type name} $type_name_list {
+        set sel [atomselect $system_id "type $type"]
+        $sel set name $name
+        $sel delete
+      }
+    }
+
     set system [atomselect $system_id all]
     $system global
 
-    # https://sites.google.com/site/akohlmey/software/topotools/topotools-tutorial---various-tips-tricks
-    topo guessatom element mass
-    # topo guessatom name element
-    topo guessatom radius element
-
-    # suggestionf from https://lammps.sandia.gov/threads/msg21297.html
-    foreach {type name} $type_name_list {
-      set sel [atomselect $system_id "type $type"]
-      $sel set name $name
-      $sel delete
-    }
     mol rename $system_id interface
+  }
+
+  proc make_types_ascii_sortable {} {
+    # preserve ordering of types when writing output, as TopoTools 1.7
+    # sorts types alphabeticall, not numerically,
+    # see topotools/topolammps.tcl::TopoTools::writelammpsmasses, line 900:
+    #   set typemap  [lsort -unique -ascii [$sel get type]]
+
+    # number of digits necessary to address all types with decimal numbers
+    variable system
+    variable H2O_H_type
+    variable H2O_O_type
+
+    set num_digits [
+      expr int( ceil( log( [topo numatomtypes] + 1.0 ) / log (10.0) ) ) ]
+
+    vmdcon -info "Prepending zeros to fill ${num_digits} digits to types."
+
+    proc map {lambda list} {
+      #upvar num_digits
+      set result {}
+      foreach item $list {
+          lappend result [apply $lambda $item]
+      }
+      return $result
+    }
+    # fill types with leading zeroes if necessary
+    $system set type [
+      map { x {
+        upvar 2 num_digits num_digits
+        return [format "%0${num_digits}d" $x]
+        } } [ $system get type] ]
+
+    # also set type-dependent variables
+    set H2O_H_type [format "%0${num_digits}d" $H2O_H_type]
+    set H2O_O_type [format "%0${num_digits}d" $H2O_O_type]
+    # the following types reside within TopoTools, thus the retyping procedures
+    # are placed within the according namespace
+    ::TopoTools::make_bond_types_ascii_sortable $system
+    ::TopoTools::make_angle_types_ascii_sortable $system
+    ::TopoTools::make_dihedral_types_ascii_sortable $system
+    ::TopoTools::make_improper_types_ascii_sortable $system
+  }
+
+  proc display_system_information { {mol_id 0} } {
+    vmdcon -info "Number of objects:"
+    vmdcon -info "Number of atoms:           [format "% 12d" [topo numatoms -molid ${mol_id} ]]"
+    vmdcon -info "Number of bonds:           [format "% 12d" [topo numbonds -molid ${mol_id} ]]"
+    vmdcon -info "Number of angles:          [format "% 12d" [topo numangles -molid ${mol_id} ]]"
+    vmdcon -info "Number of dihedrals:       [format "% 12d" [topo numdihedrals -molid ${mol_id} ]]"
+    vmdcon -info "Number of impropers:       [format "% 12d" [topo numimpropers -molid ${mol_id} ]]"
+
+    vmdcon -info "Number of object types:"
+    vmdcon -info "Number of atom types:      [format "% 12d" [topo numatomtypes -molid ${mol_id} ]]"
+    vmdcon -info "Number of bond types:      [format "% 12d" [topo numbondtypes -molid ${mol_id} ]]"
+    vmdcon -info "Number of angle types:     [format "% 12d" [topo numangletypes -molid ${mol_id} ]]"
+    vmdcon -info "Number of dihedral types:  [format "% 12d" [topo numdihedraltypes -molid ${mol_id} ]]"
+    vmdcon -info "Number of improper types:  [format "% 12d" [topo numimpropertypes -molid ${mol_id} ]]"
+
+    vmdcon -info "Object type names:"
+    vmdcon -info "Atom type names:      [topo atomtypenames -molid ${mol_id} ]"
+    vmdcon -info "Bond type names:      [topo bondtypenames -molid ${mol_id} ]"
+    vmdcon -info "Angle type names:     [topo angletypenames -molid ${mol_id} ]"
+    vmdcon -info "Dihedral type names:  [topo dihedraltypenames -molid ${mol_id} ]"
+    vmdcon -info "Improper type names:  [topo impropertypenames -molid ${mol_id} ]"
   }
 
   proc position_system {} {
@@ -590,8 +665,17 @@ namespace eval ::JlhVmd:: {
     variable indenter_immersed_id
     set sel [atomselect $indenter_immersed_id all]
     topo -molid $indenter_immersed_id writelammpsdata $outname.lammps full
+    vmdcon -info "Wrote $outname.lammps"
+    vmdcon -warn "The data files created by TopoTools don't contain any \
+      potential parameters or pair/bond/angle/dihedral style definitions. \
+      Those have to be generated in addition, however, the generated data \
+      files contain comments that match the symbolic type names with the \
+      corresponding numeric definitions, which helps in writing those input \
+       segment. In many cases, this can be easily scripted, too."
     $sel writepsf $outname.psf
+    vmdcon -info "Wrote $outname.psf"
     $sel writepdb $outname.pdb
+    vmdcon -info "Wrote $outname.pdb"
   }
 
 
@@ -695,72 +779,197 @@ namespace eval ::JlhVmd:: {
   # read both system and indenter from lammps data file, merges them and
   # removes overlap
   proc batch_merge_lmp { system_infile indenter_infile } {
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Read system from LAMMPS data file $system_infile..."
     init_system $system_infile
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in system read from $system_infile:"
+    display_system_information
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Make types ascii-sortable to preserver original order..."
+    make_types_ascii_sortable
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in system after type renaming:"
+    display_system_information
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Position system..."
     position_system
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Read indenter from LAMMPS data file $indenter_infile..."
     read_indenter_lmp $indenter_infile
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Init indenter..."
     init_indenter
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Merge systems..."
     merge
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Identify ovelap..."
     identify_overlap
     vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Remove overlap..."
     return [ remove_overlap ]
   }
 
   # read system from lammps data file, indenter from raw pdb file
   proc batch_merge_pdb { system_infile indenter_infile } {
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Read system from LAMMPS data file $system_infile..."
     init_system $system_infile
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in system read from $system_infile:"
+    display_system_information
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Make types ascii-sortable to preserver original order..."
+    make_types_ascii_sortable
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in system after type renaming:"
+    display_system_information
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Position system..."
     position_system
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Read indenter from PDB file $indenter_infile..."
     read_indenter_pdb $indenter_infile
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Init indenter..."
     init_indenter
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Scale indenter..."
     scale_indenter
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Position indenter..."
     position_indenter
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Clip indenter..."
     clip_indenter
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Merge systems..."
     merge
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Identify ovelap..."
     identify_overlap
-    vmdcon -info "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Remove overlap..."
     return [ remove_overlap ]
   }
 
   proc batch_process_lmp { system_infile indenter_infile outname } {
     set out_id [ batch_merge_lmp $system_infile $indenter_infile ]
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in output system:"
+    display_system_information $out_id
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Write output..."
     write_out_indenter_immersed $outname
     return $out_id
   }
 
   proc batch_process_pdb { system_infile indenter_infile outname } {
     set out_id [ batch_merge_pdb $system_infile $indenter_infile ]
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Objects in output system:"
+    display_system_information $out_id
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Write output..."
     write_out_indenter_immersed $outname
     return $out_id
   }
 
   proc batch_process_lmp_visual { system_infile indenter_infile outname } {
     set out_id [ batch_process_lmp $system_infile $indenter_infile $outname ]
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Set visualization properties..."
     set_visual
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Show everything except solvent for output system..."
     show_nonsolvent $out_id
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Render snapshot of output system..."
     render_scene $outname
   }
 
   proc batch_process_pdb_visual { system_infile indenter_infile outname } {
     set out_id [ batch_process_pdb $system_infile $indenter_infile $outname ]
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Set visualization properties..."
     set_visual
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Show everything except solvent for output system..."
     show_nonsolvent $out_id
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Render snapshot of output system..."
     render_scene $outname
+  }
+}
+
+namespace eval ::TopoTools:: {
+  # adapted from ::TopoTools::retypebonds
+  proc ::TopoTools::make_bond_types_ascii_sortable {sel} {
+    set bondlist  [bondinfo getbondlist $sel type]
+
+    set newbonds {}
+
+    set num_digits [
+      expr int( ceil( log( [bondinfo numbondtypes $sel] + 1.0 ) / log (10.0) ) ) ]
+
+    vmdcon -info "Prepending zeros to bond types filling ${num_digits} digits."
+
+    foreach bond $bondlist {
+        set type [format "%0${num_digits}d" [ lindex $bond 2 ]]
+        lappend newbonds [list [lindex $bond 0] [lindex $bond 1] $type]
+    }
+    setbondlist $sel type $newbonds
+  }
+
+  # adapted from proc ::TopoTools::retypeangles
+  proc ::TopoTools::make_angle_types_ascii_sortable {sel} {
+      set anglelist [angleinfo getanglelist $sel]
+      set newanglelist {}
+
+      set num_digits [
+        expr int( ceil( log( [angleinfo numangletypes $sel] + 1.0 ) / log (10.0) ) ) ]
+      vmdcon -info "Prepending zeros to angle types filling ${num_digits} digits."
+      foreach angle $anglelist {
+          lassign $angle type i1 i2 i3
+          set type [format "%0${num_digits}d" $type]
+          lappend newanglelist [list $type $i1 $i2 $i3]
+      }
+      setanglelist $sel $newanglelist
+  }
+
+  # adapted from ::TopoTools::retypedihedrals
+  proc ::TopoTools::make_dihedral_types_ascii_sortable {sel} {
+    set dihedrallist [dihedralinfo getdihedrallist $sel]
+    set newdihedrallist {}
+
+    set num_digits [
+      expr int( ceil( log( [dihedralinfo numdihedraltypes $sel] + 1.0 ) / log (10.0) ) ) ]
+    vmdcon -info "Prepending zeros to angle types filling ${num_digits} digits."
+    foreach dihedral $dihedrallist {
+        lassign $dihedral type i1 i2 i3 i4
+        set type [format "%0${num_digits}d" $type]
+        lappend newdihedrallist [list $type $i1 $i2 $i3 $i4]
+    }
+    setdihedrallist $sel $newdihedrallist
+  }
+
+  # adapted from ::TopoTools::retypeimpropers
+  proc ::TopoTools::make_improper_types_ascii_sortable {sel} {
+
+    set improperlist [improperinfo getimproperlist $sel]
+    set newimproperlist {}
+    set num_digits [
+      expr int( ceil( log( [improperinfo numimpropertypes $sel] + 1.0 ) / log (10.0) ) ) ]
+    vmdcon -info "Prepending zeros to improper types filling ${num_digits} digits."
+    foreach improper $improperlist {
+        lassign $improper type i1 i2 i3 i4
+        set type [format "%0${num_digits}d" $type]
+        lappend newimproperlist [list $type $i1 $i2 $i3 $i4]
+    }
+    setimproperlist $sel $newimproperlist
   }
 }
 

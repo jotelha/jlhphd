@@ -1,7 +1,11 @@
 # technical settings
 
-variable mpiio          index  1         # parallel io on or off
-variable is_restart     index  0         # marks current run as restart
+variable mpiio           index  1         # parallel io on or off
+variable is_restart      index  0         # marks current run as restart
+variable pbd2d           index  1         # 0: 3d periodic, 1: 2d periodic
+variable has_indenter    index  0         # marks whether indenter placed above surface
+variable surfactant_name index  SDS       # SDS or CTAB
+
 # system settings
 
 variable nvtEqSteps     equal  100000    # 200 ps
@@ -19,6 +23,8 @@ print "Variables in lmp_header.input:"
 info variables
 
 # Intialization
+if "${is_restart} == 0 && ${pbc2d} > 0" then "boundary p p f"
+
 if "${is_restart} == 0" then "units real"
 # http://lammps.sandia.gov/doc/units.html
     #mass = grams/mole
@@ -154,7 +160,45 @@ kspace_style    pppm 1e-4
 # (Darden)    Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
 # (Pollock)   Pollock and Glosli, Comp Phys Comm, 95, 93 (1996).
 
+if "${pbc2d} > 0" then &
+    "kspace_modify slab 3.0"
+# The slab keyword allows an Ewald or PPPM solver to be used for a systems that
+# are periodic in x,y but non-periodic in z - a boundary setting of
+# “boundary p p f”. This is done by treating the system as if it were periodic
+# in z, but inserting empty volume between atom slabs and removing dipole
+# inter-slab interactions so that slab-slab interactions are effectively turned
+# off. The volfactor value sets the ratio of the extended dimension in z divided
+# by the actual dimension in z. The recommended value is 3.0. A larger value is
+# inefficient; a smaller value introduces unwanted slab-slab interactions. The
+# use of fixed boundaries in z means that the user must prevent particle
+# migration beyond the initial z-bounds, typically by providing a wall-style
+# fix. The methodology behind the slab option is explained in the paper by
+# (Yeh). The slab option is also extended to non-neutral systems (Ballenegger).
+#
+# An alternative slab option can be invoked with the nozforce keyword in lieu of
+# the volfactor. This turns off all kspace forces in the z direction. The
+# nozforce option is not supported by MSM. For MSM, any combination of periodic,
+# non-periodic, or shrink-wrapped boundaries can be set using boundary (the slab
+# approximation in not needed). The slab keyword is not currently supported by
+# Ewald or PPPM when using a triclinic simulation cell. The slab correction has
+# also been extended to point dipole interactions (Klapp) in kspace_style
+# ewald/disp.
+
+# If you wish to apply an electric field in the Z-direction, in conjunction with
+# the slab keyword, you should do it by adding explicit charged particles to the
+# +/- Z surfaces. If you do it via the fix efield command, it will not give the
+# correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
+# being compatible with how fix efield works.
+
 if "${is_restart} == 0" then "read_data       ${dataFile}"
+
+# determine center
+variable z_center equal $(( zlo + zhi ) / 2.0)
+# For style plane, a plane is defined which contain the point (px,py,pz) and
+# has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
+# length. The “inside” of the plane is the half-space in the direction of the
+# normal vector; see the discussion of the side option below.
+region upper_half plane 0 0 ${z_center} 0 0 1 side in
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -168,12 +212,34 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 
 if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
 
-if "${is_restart} == 0" then &
-  "group          water      type  8 9    #  8 - H, 10 - O" &
-  "group          surface    type  11     # 11 - Au" &
+if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
+  "group          solvent    type  8 9    #  8 - H, 10 - O" &
+  "group          solid      type  11     # 11 - Au" &
   "group          ion        type  10     # 10 - Na+" &
-  "group          surfactant subtract all water surface ion" &
-  "group          nonwater   subtract all water"
+  "group          surfactant subtract all solvent solid ion" &
+  "group          nonwater   subtract all solvent" &
+elif "${is_restart} == 0 && ${surfactant_name} == CTAB" then &
+  "group          solvent    type  8 9    #  8 - H, 10 - O" &
+  "group          solid      type  11     # 11 - Au" &
+  "group          ion        type  10     # 10 - Br-" &
+  "group          surfactant subtract all solvent solid ion" &
+  "group          nonwater   subtract all solvent"
+
+# correct if indenter is present
+if "${is_restart} == 0 && ${has_indenter} > 0" then &
+  "group          atoms_in_upper_half region upper_half" &
+  "group          substrate  subtract solid atoms_in_upper_half" &
+  "group          indenter   subtract solid substrate" &
+elif "${is_restart} == 0" then &
+  "group          substrate intersect all solid"
+
+
+# for compatibility reasons:
+if "${is_restart} == 0" then &
+    "group    surface     intersect all substrate" &
+    "group    water       intersect all solvent" &
+    "group    nonindenter subtract all indenter" &
+    "group    nonsolvent  subtract all solvent"
 
 # SDS - specific
 #       1      1.008  # HAL2
@@ -208,6 +274,52 @@ if "${is_restart} == 0" then &
 #        9    15.9994  # OT
 #       10     79.904  # BR
 #       11   196.9665  # AU
+
+# exclude intra-indenter interactions for rigid indenter
+if "${has_indenter} > 0 " then &
+  "neigh_modify exclude group indenter indenter check no"
+
+# walls if box non-periodic, use AU paramters (sigma ignored)
+if "${pbc2d} > 0" then &
+  "fix upper_wall all wall/harmonic zhi EDGE 5.29 2.629 3.0" &
+  "fix_modify upper_wall energy yes virial yes"
+#                     ^style        ^face
+#                                       ^coord
+#                                            ^epsilon
+#                                                 ^sigma
+#                                                       ^cutoff
+# https://lammps.sandia.gov/doc/fix_wall.html
+# args = coord epsilon sigma cutoff
+#  coord = position of wall = EDGE or constant or variable
+#    EDGE = current lo or hi edge of simulation box
+#    constant = number like 0.0 or -30.0 (distance units)
+#    variable = equal-style variable like v_x or v_wiggle
+# epsilon = strength factor for wall-particle interaction (energy or energy/distance^2 units)
+#    epsilon can be a variable (see below)
+# sigma = size factor for wall-particle interaction (distance units)
+#    sigma can be a variable (see below)
+# cutoff = distance from wall at which wall-particle interaction is cut off (distance units)
+#
+# The harmonic style is a softer potential and does not blow up as r -> 0, but
+# you must use a large enough epsilon that particles always reamin on the
+# correct side of the wall (r > 0).
+#
+# The forces due to this fix are imposed during an energy minimization, invoked
+# by the minimize command.
+#
+# If you want the atom/wall interaction energy to be included in the total
+# potential energy of the system (the quantity being minimized), you MUST enable
+# the fix_modify energy option for this fix.
+#
+# No information about this fix is written to binary restart files.
+#
+# The fix_modify energy option is supported by this fix to add the energy of
+# interaction between atoms and each wall to the system’s potential energy as
+# part of thermodynamic output.
+#
+# The fix_modify virial option is supported by this fix to add the contribution
+# due to the interaction between atoms and each wall to the system’s virial as
+# part of thermodynamic output. The default is virial no
 
 # fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
 #   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &

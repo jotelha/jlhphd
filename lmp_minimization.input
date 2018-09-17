@@ -1,13 +1,39 @@
+# run with
+# lmp -in lmp_minimization \
+#  -v has_indenter 1 -v robust_minimization 0 -v pbc2d 1 \
+#  -v baseName 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped \
+#  -v dataFile 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped_parametrized.lammps
+
 variable                robust_minimization index 0
 
-include                 system_specific.input
-variable dataFile       string  ${baseName}_psfgen.data
+# include                 system_specific.input
+variable dataFile       index  ${baseName}_psfgen.data
 
 log                     ${baseName}_minimization.log
 
 include                 lmp_header.input
 
 thermo                  100
+
+############
+# restraints
+############
+# Keep indenter restrained during minimzation
+# Note that you can minimize some atoms in the system while holding the
+# coordinates of other atoms fixed by applying fix setforce to the other atoms.
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+# https://lammps.sandia.gov/doc/fix_setforce.html
+# Set each component of force on each atom in the group to the specified values
+# fx,fy,fz. This erases all previously computed forces on the atom, though
+# additional fixes could add new forces. This command can be used to freeze
+# certain atoms in the simulation by zeroing their force, either for running
+# dynamics or performing an energy minimization. For dynamics, this assumes
+# their initial velocity is also zero.
+
+print "LAMMPS state before minimization:"
+info all
+
 ##############
 # minimization
 ##############
