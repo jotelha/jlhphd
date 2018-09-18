@@ -17,6 +17,14 @@
 # interface_with_immersed_indenter.lammps, interface_with_immersed_indenter.psf
 # interface_with_immersed_indenter.pdb data files as well as a tga snapshot
 # interface_with_immersed_indenter.tga of the resulting system
+#
+# No routine for displacing charged ions implemented yed. THEY ARE REMOVED.
+# Double-check for section 
+#   Info) Identify ovelap...
+#   Info) #atoms in overlapping SOD:                0
+#   Info) #atoms in overlapping TIP3:            9354
+#   Info) #atoms in overlapping SDS:                0
+# in output to make sure only water has been removed.
 
 namespace eval ::JlhVmd:: {
   variable version 0.1
@@ -182,7 +190,7 @@ namespace eval ::JlhVmd:: {
 
       # suggestion from https://lammps.sandia.gov/threads/msg21297.html
       foreach {type name} $type_name_list {
-        set sel [atomselect $system_id "type $type"]
+        set sel [atomselect $system_id "type '$type'"]
         $sel set name $name
         $sel delete
       }
@@ -260,22 +268,22 @@ namespace eval ::JlhVmd:: {
   }
 
   proc position_system {} {
-    variable surfactant_resname
     variable counterion_name
     variable counterion_resname
-    variable solvent_resname
     variable substrate_name
     variable substrate_resname
+    variable solvent_resname
+    variable surfactant_resname
     variable H2O_H_type
     variable H2O_O_type
 
     variable system
     variable system_id
-    variable surfactant
-    variable substrate
     variable counterion
-    variable solvent
     variable nonsolvent
+    variable solvent
+    variable substrate
+    variable surfactant
 
     variable sb_cell_inner_lattice_points
     variable sb_cell_multiples
@@ -291,7 +299,9 @@ namespace eval ::JlhVmd:: {
     $counterion set resname $counterion_resname
     vmdcon -info [format "%-30.30s %12d" "#atoms in $counterion_resname:" [$counterion num]]
 
-    set solvent [atomselect $system_id "type $H2O_H_type $H2O_O_type"]
+    # for types with leading zeroes: single quotation marks necessary, otherwise selection fails
+    vmdcon -info "Solvent selection by 'type '$H2O_H_type' '$H2O_O_type''"
+    set solvent [atomselect $system_id "type '$H2O_H_type' '$H2O_O_type'"]
     $solvent global
     $solvent set resname $solvent_resname
     vmdcon -info [format "%-30.30s %12d" "#atoms in $solvent_resname:" [$solvent num]]
@@ -302,8 +312,9 @@ namespace eval ::JlhVmd:: {
     $surfactant set resname $surfactant_resname
     vmdcon -info [format "%-30.30s %12d" "#atoms in $surfactant_resname:" [$surfactant num]]
 
-    set nonsolvent [atomselect $system_id "not resname $substrate_resname"]
+    set nonsolvent [atomselect $system_id "not resname $solvent_resname"]
     $nonsolvent global
+    vmdcon -info [format "%-30.30s %12d" "#atoms in nonsolvent:" [$nonsolvent num]]
 
     # get substrate COM and measures
     set sb_center [measure center $substrate]
@@ -313,6 +324,9 @@ namespace eval ::JlhVmd:: {
     set sb_com    [lindex [measure inertia $substrate] 0]
     vmdcon -info "substrate COM:      [format "%8.4f %8.4f %8.4f" {*}$sb_com]"
 
+    # low z cooridnates in 1st row 3rd entry of measure minmax
+    set z_shift   [ expr -1.0 * [lindex [measure minmax $substrate] 0 2] ]
+    vmdcon -info "substrate low z:    [format "%8.4f" $z_shift]"
 
     # calculate desired reference COM of substrate
     # (in case of substrate corner in origin 0 0 0)
@@ -333,7 +347,6 @@ namespace eval ::JlhVmd:: {
     # should meet about one grid constant in x-y direction due to periodicity
     set sb_spacing [ vecsub $cell $sb_measures ]
 
-
     # estimate lattice constants in 2D-periodic directions
     # based on subsrate extremes and box measures
     set sb_lattice_constant {}
@@ -349,7 +362,9 @@ namespace eval ::JlhVmd:: {
     foreach i {0 1} {
         lappend sb_com_offset [expr [lindex $cell_center $i] - [lindex $sb_com $i] ]
     }
-    lappend sb_com_offset [expr [lindex $sb_com_reference 2] - [lindex $sb_com 2] ]
+    # add small number to z-shift in order to avoid atoms wrapping at z = 0 due to machine precision
+    # lappend sb_com_offset [expr [lindex $sb_com_reference 2] - [lindex $sb_com 2] + 2.0e-15 ]
+    lappend sb_com_offset [expr $z_shift + 2.0e-15 ]
 
     vmdcon -info "################################################################################"
     vmdcon -info "effective lattice constant (substrate extremes as reference): [format "%8.4f %8.4f" {*}$sb_lattice_constant]"
