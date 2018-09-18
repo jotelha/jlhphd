@@ -1,16 +1,27 @@
-include                 system_specific.input
-variable dataFile       string  ${baseName}_nvtEquilibrated.lammps
+#include                 system_specific.input
+variable dataFile       index  ${baseName}_nvtEquilibrated.lammps
 
 log                     ${baseName}_nptEquilibration.log
 
 include                 lmp_header.input
+############
+# restraints
+############
+# Keep indenter restrained during minimization
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
 
 ###################
 # NPT equilibration
 ###################
-fix timeIntegration all nve # necessary for nvt via langevin
-# fix thermostat all temp/berendsen ${temperatureT} ${temperatureT} 100 
-fix thermostat all langevin ${temperatureT} ${temperatureT} 100 29061988
+if "${has_indenter} > 0" then &
+    "variable tempered_group string nonindenter" &
+else &
+    "variable tempered_group string all"
+
+fix timeIntegration ${tempered_group} nve # necessary for nvt via langevin
+# fix thermostat all temp/berendsen ${temperatureT} ${temperatureT} 100
+fix thermostat ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29061988
 #   ^ID        ^group-ID
 #                   ^langevin
 #                           ^Tstart         ^Tstop          ^damp
@@ -55,7 +66,7 @@ fix thermostat all langevin ${temperatureT} ${temperatureT} 100 29061988
 # BAROSTAT
 
 # fix barostat all press/berendsen aniso 0 0 1000
-fix barostat all press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6
+fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6
 # fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
 # fix ID group-ID press/berendsen keyword value ...
 # dilate partial
@@ -73,29 +84,29 @@ fix barostat all press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1
 #   modulus value = bulk modulus of system (pressure units)
 #   dilate value = all or partial
 #
-# Reset the pressure of the system by using a Berendsen barostat (Berendsen), 
+# Reset the pressure of the system by using a Berendsen barostat (Berendsen),
 # which rescales the system volume and (optionally) the atoms coordinates within
 #  the simulation box every timestep.
 #
 # Regardless of what atoms are in the fix group, a global pressure is computed
 # for all atoms. Similarly, when the size of the simulation box is changed, all
-# atoms are re-scaled to new positions, unless the keyword dilate is specified 
-# with a value of partial, in which case only the atoms in the fix group are 
+# atoms are re-scaled to new positions, unless the keyword dilate is specified
+# with a value of partial, in which case only the atoms in the fix group are
 # re-scaled. The latter can be useful for leaving the coordinates of atoms in
-# a solid substrate unchanged and controlling the pressure of a surrounding 
+# a solid substrate unchanged and controlling the pressure of a surrounding
 # fluid.
 #
-# The relaxation time is actually also a function of the bulk modulus of the 
-# system (inverse of isothermal compressibility). The bulk modulus has units 
-# of pressure and is the amount of pressure that would need to be applied 
+# The relaxation time is actually also a function of the bulk modulus of the
+# system (inverse of isothermal compressibility). The bulk modulus has units
+# of pressure and is the amount of pressure that would need to be applied
 # (isotropically) to reduce the volume of the system by a factor of 2
 # (assuming the bulk modulus was a constant, independent of density, which it’s
-#  not). The bulk modulus can be set via the keyword modulus. The Pdamp 
+#  not). The bulk modulus can be set via the keyword modulus. The Pdamp
 # parameter is effectively multiplied by the bulk modulus, so if the pressure is
 # relaxing faster than expected or desired, increasing the bulk modulus has the
-# same effect as increasing Pdamp. The converse is also true. LAMMPS does not 
-# attempt to guess a correct value of the bulk modulus; it just uses 10.0 as a 
-# default value which gives reasonable relaxation for a Lennard-Jones liquid, 
+# same effect as increasing Pdamp. The converse is also true. LAMMPS does not
+# attempt to guess a correct value of the bulk modulus; it just uses 10.0 as a
+# default value which gives reasonable relaxation for a Lennard-Jones liquid,
 # but will be way off for other materials and way too small for solids. Thus
 # you should experiment to find appropriate values of Pdamp and/or the modulus
 # when using this fix.
@@ -103,7 +114,7 @@ fix barostat all press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1
 ###############
 # DRIFT REMOVAL
 
-# Keep substrate slab's position COM position fixed, remove relative drift 
+# Keep substrate slab's position COM position fixed, remove relative drift
 fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 #               ^ID               ^group-ID
 #                                         ^style   ^x   ^y   ^z   ^keyword
@@ -112,26 +123,26 @@ fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 # fix ID group-ID recenter x y z keyword value ...
 #   shift value = group-ID
 #     group-ID = group of atoms whose coords are shifted
-# 
-# Constrain the center-of-mass position of a group of atoms by adjusting the 
-# coordinates of the atoms every timestep. This is simply a small shift that 
-# does not alter the dynamics of the system or change the relative coordinates 
-# of any pair of atoms in the group. This can be used to insure the entire 
+#
+# Constrain the center-of-mass position of a group of atoms by adjusting the
+# coordinates of the atoms every timestep. This is simply a small shift that
+# does not alter the dynamics of the system or change the relative coordinates
+# of any pair of atoms in the group. This can be used to insure the entire
 # collection of atoms (or a portion of them) do not drift during the simulation
 # due to random perturbations (e.g. fix langevin thermostatting).
-# 
-# The center-of-mass (COM) is computed for the group specified by the fix. 
-# If the current COM is different than the specified x,y,z, then a group of 
+#
+# The center-of-mass (COM) is computed for the group specified by the fix.
+# If the current COM is different than the specified x,y,z, then a group of
 # atoms has their coordinates shifted by the difference. By default the shifted
 # group is also the group specified by the fix. A different group can be shifted
-# by using the shift keyword. For example, the COM could be computed on a 
-# protein to keep it in the center of the simulation box. But the entire system 
+# by using the shift keyword. For example, the COM could be computed on a
+# protein to keep it in the center of the simulation box. But the entire system
 # (protein + water) could be shifted.
 #
 # Distance units for the x,y,z values are determined by the setting of the units
-# keyword, as discussed below. One or more x,y,z values can also be specified 
+# keyword, as discussed below. One or more x,y,z values can also be specified
 # as NULL, which means exclude that dimension from this operation. Or it can be
-# specified as INIT which means to constrain the center-of-mass to its initial 
+# specified as INIT which means to constrain the center-of-mass to its initial
 # value at the beginning of the run.
 
 
@@ -142,7 +153,7 @@ fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.
@@ -167,6 +178,9 @@ fix rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # the pressure of the system (virial) is also accounted for.
 
 # dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
+if "${reinitialize_velocities} > 1" then &
+  "velocity ${tempered_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
+
 
 dump            dumpPng nonwater image ${nptEqSteps} &
                 ${baseName}_nptEquilibration.*.png type type
@@ -178,6 +192,9 @@ if "${mpiio} > 0" then &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf 1000 ${baseName}_nptEquilibration.nc id mol type x y z"
+
+print "LAMMPS state before NPT equilibration:"
+info all
 
 run             ${nptEqSteps}
 

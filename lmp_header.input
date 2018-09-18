@@ -1,23 +1,24 @@
 # technical settings
 
-variable mpiio           index  1         # parallel io on or off
-variable is_restart      index  0         # marks current run as restart
-variable pbd2d           index  1         # 0: 3d periodic, 1: 2d periodic
-variable has_indenter    index  0         # marks whether indenter placed above surface
-variable surfactant_name index  SDS       # SDS or CTAB
+variable mpiio                   index  1 # parallel io on or off
+variable is_restart              index  0 # marks current run as restart
+variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
+variable has_indenter            index  0
+variable reinitialize_velocities index  0
+variable surfactant_name         index  SDS # SDS or CTAB
 
 # system settings
 
-variable nvtEqSteps     equal  100000    # 200 ps
-variable nptEqSteps     equal  100000    # 200 ps
+variable nvtEqSteps     index  100000    # 200 ps
+variable nptEqSteps     index  100000    # 200 ps
 
-variable temperatureT   equal    298    # K
-variable pressureP      equal      1    # atm
+variable temperatureT   index    298    # K
+variable pressureP      index      1    # atm
 
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
 # Look it up within the data file.
-variable angleIdWater   equal     11
+variable angleIdWater   index     11
 
 print "Variables in lmp_header.input:"
 info variables
