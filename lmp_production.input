@@ -27,11 +27,9 @@ elif "${mpiio}      == 0"      "variable restartFile index default.restart" &
 else                           "variable restartFile index default.mpiio.restart"
 # in the last case, run is restart and mpiio is used
 
-if "${is_restart} == 0" then "variable dataFile string ${baseName}_nptEquilibrated.lammps"
+if "${is_restart} == 0" then "variable dataFile index ${baseName}_nptEquilibrated.lammps"
 
-log                     ${baseName}_10ns_production_mixed.log
-
-variable mixedProductionSteps   index   5000000    # 10 ns
+log                     ${baseName}_production.log
 
 print "Variables in lmp_production.input:"
 info variables
@@ -65,8 +63,8 @@ else &
 # above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO
 # package installed [...]
 #
-# Second, use a restart filename which contains “.mpiio”. Note that it does not
-# have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump
+# Second, use a restart filename which contains ".mpiio". Note that it does not
+# have to end in ".mpiio", just contain those characters. Unlike MPI-IO dump
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
 
@@ -112,7 +110,7 @@ if "${use_colvars} > 0" then &
 # prerecorded state. Fix colvars records it state in binary restart files, so
 # when using the read_restart command, this is usually not needed. The output
 # keyword allows to specify the output prefix. All output files generated will
-# use this prefix followed by the “.colvars.” and a word like “state” or “traj”.
+# use this prefix followed by the ".colvars." and a word like "state" or "traj".
 
 # The seed keyword contains the seed for the random number generator that will
 # be used in the colvars module.

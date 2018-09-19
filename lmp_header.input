@@ -5,16 +5,16 @@ variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable reinitialize_velocities index  0
-variable use_colvars
+variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
-
+variable thermo_frequency        index  1000
 # system settings
 
 variable surfactant_name         index  SDS # SDS or CTAB
 variable has_indenter            index  0
 
-variable nvtEqSteps     index    100000    # 200 ps
-variable nptEqSteps     index    100000    # 200 ps
+variable nvtEqSteps      index    100000    # 200 ps
+variable nptEqSteps      index    100000    # 200 ps
 variable productionSteps index  5000000    #  10 ns
 
 variable temperatureT   index    298    # K
@@ -205,15 +205,15 @@ variable z_center equal $(( zlo + zhi ) / 2.0)
 
 # For style plane, a plane is defined which contain the point (px,py,pz) and
 # has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
-# length. The “inside” of the plane is the half-space in the direction of the
+# length. The "inside" of the plane is the half-space in the direction of the
 # normal vector; see the discussion of the side option below.
 region upper_half plane 0  0  ${z_center} 0 0 1          side in
 #                       ^x ^y ^z          ^plane normal  ^everython in dirction of normal in region
-region central_column cylinder z ${x_center} ${y_center} 2.0 0 ${z_center} ${zhi} side in
+region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)) side in
 #                              ^cylinder axis
 #                                ^cylinder coordinates in x,y dim
 #                                                        ^cylinder radius
-#                                                               ^lower and ^upper point
+#                                                             ^lower and ^upper point
 
 
 if "${is_restart} == 0" then "special_bonds   charmm"
@@ -302,10 +302,10 @@ if "${pbc2d} > 0" then &
   "fix upper_wall all wall/harmonic zhi EDGE 5.29 2.629 3.0" &
   "fix_modify upper_wall energy yes virial yes"
 #                     ^style        ^face
-#                                       ^coord
-#                                            ^epsilon
-#                                                 ^sigma
-#                                                       ^cutoff
+#                                          ^coord
+#                                               ^epsilon
+#                                                    ^sigma
+#                                                          ^cutoff
 # https://lammps.sandia.gov/doc/fix_wall.html
 # args = coord epsilon sigma cutoff
 #  coord = position of wall = EDGE or constant or variable
@@ -347,7 +347,7 @@ if "${pbc2d} > 0" then &
 thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
   edihed eimp epair evdwl ecoul elong etail vol
 # log output every 2 ps
-thermo         1000
+thermo         ${thermo_frequency}
 thermo_modify  norm no
 # Note that some computes calculate “intensive” global quantities like
 # temperature; others calculate “extensive” global quantities like kinetic

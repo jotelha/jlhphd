@@ -6,6 +6,9 @@ if "${has_indenter} > 0" then &
 else &
     "variable pressured_group string all"
 
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+
 # only temper substrate
 fix thermostat substrate langevin ${temperatureT} ${temperatureT} 100 29061988
 #   ^ID        ^group-ID
@@ -136,10 +139,13 @@ else &
   "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc id mol type x y z"
 
 
+if "${reinitialize_velocities} > 0" then &
+  "velocity ${pressured_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
+
 print "LAMMPS state before production:"
 info all
 # at 2 fs time step output every 2 ps
-run             ${mixedProductionSteps} upto
+run             ${productionSteps} upto
 
 write_data      ${baseName}_production_mixed.lammps
 
