@@ -1,9 +1,13 @@
 ############
 # PRODUCTION
 #
-# only temper substrate
+if "${has_indenter} > 0" then &
+    "variable pressured_group string nonindenter" &
+else &
+    "variable pressured_group string all"
 
-fix thermostat surface langevin ${temperatureT} ${temperatureT} 100 29061988
+# only temper substrate
+fix thermostat substrate langevin ${temperatureT} ${temperatureT} 100 29061988
 #   ^ID        ^group-ID
 #                      ^langevin
 #                               ^Tstart         ^Tstop          ^damp
@@ -47,7 +51,7 @@ fix thermostat surface langevin ${temperatureT} ${temperatureT} 100 29061988
 ##########
 # BAROSTAT
 
-fix barostat all nph aniso ${pressureP} ${pressureP} 1000
+fix barostat ${pressured_group} nph aniso ${pressureP} ${pressureP} 1000
 # source https://lammps.sandia.gov/doc/fix_nh.html#fix-nph-command
 # As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
 # time integration. Fix press/berendsen does NOT, so it should be used with one
@@ -95,7 +99,7 @@ fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix rigidHbonds ${pressured_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.
@@ -120,7 +124,7 @@ fix rigidHbonds all rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # the pressure of the system (virial) is also accounted for.
 
 
-dump            dumpPng nonwater image 1000000 &
+dump            dumpPng nonsolvent image 1000000 &
                 ${baseName}_production_mixed.*.png type type
 #                                      ^one image every 2 ns
 
@@ -130,8 +134,11 @@ if "${mpiio} > 0" then &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf 1000 ${baseName}_production_mixed.nc id mol type x y z"
-# at 2 fs time step output every 2 ps
 
+
+print "LAMMPS state before production:"
+info all
+# at 2 fs time step output every 2 ps
 run             ${mixedProductionSteps} upto
 
 write_data      ${baseName}_production_mixed.lammps

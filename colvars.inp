@@ -1,0 +1,242 @@
+# Sample colvars.inp measuring distance between indendter and substrate
+
+# PBC:
+
+# The user should determine whether maintaining the default value of unwrap,
+# depending on the specifics of each system. In general, internal coordinate
+# wrapping by LAMMPS does not affect the calculation of colvars if each atom
+# group satisfies one or more of the following: i) it is composed by only one
+# atom; ii) it is used by a colvar component which does not make use of its
+# center of geometry, but only of pairwise distances (distanceInv, coordNum,
+# hBond, alpha, dihedralPC); iii) it is used by a colvar component that ignores
+# the ill-defined Cartesian components of its center of mass (such as the x and
+# y components of a membrane’s center of mass modeled with distanceZ)
+
+# Performance:
+
+# The calculation of variables, components and biases can be distributed over
+# the processor cores of the node where the Colvars module is executed.
+# Currently, an equal weight is assigned to each colvar, or to each component of
+# those colvars that include more than one component. The performance of
+# simulations that use many colvars or components is improved automatically. For
+# simulations that use a single large colvar, it may be advisable to partition
+# it in multiple components, which will be then distributed across the available
+# cores. In LAMMPS, this feature is supported automatically when LAMMPS is
+# compiled with OpenMP support. If printed, the message “SMP parallelism is
+# available.” indicates the availability of the option. If available, the option
+# is turned on by default, but may be disabled using the keyword smp if required
+# for debugging.
+
+
+colvarsTrajFrequency 100
+# The values of each colvar (and of other related quantities, if requested) are
+# written to the file output.colvars.traj every these many steps throughout the
+# simulation. If the value is 0, such trajectory file is not written. For
+# optimization the output is buffered, and synchronized with the disk only when
+# the restart file is being written.
+
+indexFile lmp_group_indices.ndx
+# This option reads an index file (usually with a .ndx extension) as produced by
+# the make ndx tool of GROMACS. This keyword may be repeated to load multiple
+# index files: the same group name cannot appear in multiple index files. In
+# LAMMPS, the group2ndx command can be used to generate such file from existing
+# groups. Note that the Colvars module reads the indices of atoms from the index
+# file: therefore, the LAMMPS groups do not need to remain active during the
+# simulation, and could be deleted right after issuing group2ndx. The names of
+# index groups contained in this file can then be used to define atom groups
+# with the indexGroup keyword. Other supported methods to select atoms are
+# described in 5.
+
+analysis on
+# If this flag is enabled, each colvar is instructed to perform whatever
+# run-time statistical analysis it is configured to, such as correlation
+# functions, or running averages and standard deviations. See section 4.4 for
+# details.
+
+colvar {
+  name indenter_com_substrate_com_distance
+  distance {
+    group1 { indexGroup indenter }
+    group2 { indexGroup substrate }
+  }
+  outputVelocity on
+  # Description: If colvarsTrajFrequency is defined, the finite-difference
+  # calculated velocity of this colvar are written to the trajectory file under
+  # the label “v <name>”.
+
+  outputTotalForce on
+  # Description: If colvarsTrajFrequency is defined, the total force on this
+  # colvar (i.e. the projection of all atomic total forces onto this colvar —
+  # see equation (15) in section 7.1) are written to the trajec- tory file under
+  # the label “fs <name>”. For extended Lagrangian colvars, the “total force”
+  # felt by the extended degree of freedom is simply the force from the harmonic
+  # spring. Note: not all components support this option. The physical unit for
+  # this force is the unit of energy specified by units, divided by the colvar
+  # unit U.
+
+  outputAppliedForce on
+  # If colvarsTrajFrequency is defined, the total force applied on this colvar
+  # by Colvars biases are written to the trajectory under the label “fa <name>”.
+  # For extended Lagrangian colvars, this force is actually applied to the
+  # extended degree of freedom rather than the geometric colvar itself. The
+  # physical unit for this force is the unit of energy specified by units
+  # divided by the colvar unit.
+
+  # When the global keyword analysis is defined in the configuration file,
+  # run-time calculations of statisti- cal properties for individual colvars can
+  # be performed. At the moment, several types of time correlation functions,
+  # running averages and running standard deviations are available.
+  runAve on
+  runAveLength 1000
+}
+
+colvar {
+  name indenter_com_substrate_com_distance_z
+  distanceZ {
+  # distanceZ: projection of a distance vector on an axis. The distanceZ {...}
+  # block defines a distance projection component, which can be seen as measuring
+  # the distance between two groups projected onto an axis, or the position of a
+  # group along such an axis. The axis can be defined using either one reference
+  # group and a constant vector, or dynamically based on two reference groups. One
+  # of the groups can be set to a dummy atom to allow the use of an absolute
+  # Cartesian coordinate.
+
+    main { indexGroup indenter }
+    ref  { indexGroup substrate}
+    axis { 0.0, 0.0, 1.0 }
+    # The three components of this vector define a projection axis e for the
+    # distance vector r − r1 joining the centers of groups ref and main. The value
+    # of the component is then e · (r − r1 ). The vector should be written as three
+    # components separated by commas and enclosed in parentheses.
+  }
+  outputVelocity on
+  outputTotalForce on
+  outputAppliedForce on
+
+  runAve on
+  runAveLength 1000
+}
+
+colvar {
+  name indenter_apex_substrate_com_distance
+  distance {
+    group1 { indexGroup indenter_apex }
+    group2 { indexGroup substrate }
+  }
+  outputTotalForce on
+
+  runAve on
+  runAveLength 1000
+}
+
+colvar {
+  name indenter_apex_substrate_com_distance_z
+  distanceZ {
+    main { indexGroup indenter }
+    ref  { indexGroup substrate}
+    axis { 0.0, 0.0, 1.0 }
+  }
+  outputTotalForce on
+
+  runAve on
+  runAveLength 1000
+}
+
+harmonic {
+  # V(xi) = 1/2 * k * [ (xi - xi_0) / w_xi ]^2
+  # The formula above includes the characteristic length scale w_xi of the
+  # colvar xi (keyword width, see 4.1) to allow the definition of a
+  # multi-dimensional restraint with a unified force constant. If
+  # one-dimensional or homogeneous multi-dimensional restraints are defined, and
+  # there are no other uses for the parameter w_xi , the parameter width can be
+  # left at its default value of 1.
+  name indenter_pulled
+
+  colvars indenter_com_substrate_com_distance
+
+  forceConstant 10
+
+  # 120 Ang is closer than initial placement
+  centers       120
+  # The centers (equilibrium values) of the restraint, ξ0 , are entered here.
+  # The number of values must be the number of requested colvars. Each value is
+  # a decimal number if the corresponding colvar returns a scalar [...]
+
+  # 40 Angstrom: rough estimate for COM-COM distance
+  # at surface thickness ~ 12 Ang and indenter height ~ 36 Ang
+  # indenter should be touching substrate
+  targetCenters 40
+  # When defined, the current centers will be moved towards these
+  # values during the simulation. By default, the centers are moved over a total
+  # of targetNumSteps steps by a linear inter-polation, in the spirit of
+  # Steered MD. If targetNumStages is set to a nonzero value, the change is per-
+  # formed in discrete stages, lasting targetNumSteps steps each. This second
+  # mode may be used to sam- ple successive windows in the context of an
+  # Umbrella Sampling simulation. When continuing a simu- lation run, the
+  # centers specified in the configuration file <colvarsConfig> are overridden
+  # by those saved in the restart file <colvarsInput>. To perform Steered MD in
+  # an arbitrary space of colvars, it is sufficient to use this option and
+  # enable outputAccumulatedWork and/or outputAppliedForce within each of the
+  # colvars involved.
+
+  # this determines the rate of indenter approach
+  # at 2 fs timestep, 5 mio correspond to 10 ns
+  # at 2 fs timestep, 50 k  correspond to 100 ps
+  targetNumSteps 50000
+  # In single-stage (continuous) transformations, defines the number of MD steps
+  # required to move the restraint centers (or force constant) towards the
+  # values specified with targetCenters or targetForceConstant. After the target
+  # values have been reached, the centers (resp. force constant) are kept fixed.
+  # In multi-stage transformations, this sets the number of MD steps per stage
+
+  outputCenters on
+  # If this option is chosen and colvarsTrajFrequency is not zero, the positions
+  # of the restraint centers will be written to the trajectory file during the
+  # simulation. This option allows to conveniently extract the PMF from the
+  # colvars trajectory files in a steered MD calculation.
+
+  outputAccumulatedWork on
+  # If targetCenters or targetForceConstant are defined and this option is
+  # enabled, the accumulated work from the beginning of the simulation will be
+  # written to the trajectory file (colvarsTrajFrequency must be non-zero). When
+  # the simulation is continued from a state file, the previously accumulated
+  # work is included in the integral. This option allows to conveniently extract
+  # the estimated PMF of a steered MD calculation (when targetCenters is used),
+  # or of other simulation protocols.
+
+  outputEnergy on
+  #  If this option is chosen and colvarsTrajFrequency is not zero, the current
+  #  value of the biasing energy will be written to the trajectory file during
+  #  the simulation.
+
+  writeTIPMS on
+  # If the bias is applied to a variable that supports the calculation of total
+  # forces (see outputTotalForce and 6.3.3), this option allows calculating the
+  # corresponding PMF by thermody- nanic integration, and writing it to the file
+  # output.<name>.ti.pmf, where <name> is the name of the bias. The total force
+  # includes the forces applied to the variable by all bias, except those from
+  # this bias itself. If any bias applies time-dependent forces besides the one
+  # using this option, an error is raised.
+
+
+}
+
+# Note on restarting moving restraint simulations: Information about the current
+# step and stage of a simulation with moving restraints is stored in the restart
+# file (state file). Thus, such simulations can be run in several chunks, and
+# restarted directly using the same colvars configuration file. In case of a
+# restart, the values of parameters such as targetCenters, targetNumSteps, etc.
+# should not be changed manually.
+
+# Configuration keywords shared by all components
+# scalable
+# Context: any component
+# Acceptable values: boolean
+# Default value: on, if available
+# Description: If set to on (default), the Colvars module will attempt to
+# calculate this component in parallel to reduce overhead. Whether this option
+# is available depends on the type of component: currently supported are
+# distance, distanceZ, distanceXY, distanceVec, distanceDir, angle and dihedral.
+# This flag influences computational cost, but does not affect numerical
+# results: therefore, it should only be turned off for debugging or testing
+# purposes.

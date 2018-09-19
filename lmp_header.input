@@ -1,16 +1,21 @@
 # technical settings
 
+# index varibles can be overridden by command line parameters "-v varName value"
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
-variable has_indenter            index  0
 variable reinitialize_velocities index  0
-variable surfactant_name         index  SDS # SDS or CTAB
+variable use_colvars
+variable colvarsFile             index  colvars.inp
 
 # system settings
 
-variable nvtEqSteps     index  100000    # 200 ps
-variable nptEqSteps     index  100000    # 200 ps
+variable surfactant_name         index  SDS # SDS or CTAB
+variable has_indenter            index  0
+
+variable nvtEqSteps     index    100000    # 200 ps
+variable nptEqSteps     index    100000    # 200 ps
+variable productionSteps index  5000000    #  10 ns
 
 variable temperatureT   index    298    # K
 variable pressureP      index      1    # atm
@@ -194,12 +199,22 @@ if "${pbc2d} > 0" then &
 if "${is_restart} == 0" then "read_data       ${dataFile}"
 
 # determine center
+variable x_center equal $(( xlo + xhi ) / 2.0)
+variable y_center equal $(( ylo + yhi ) / 2.0)
 variable z_center equal $(( zlo + zhi ) / 2.0)
+
 # For style plane, a plane is defined which contain the point (px,py,pz) and
 # has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
 # length. The “inside” of the plane is the half-space in the direction of the
 # normal vector; see the discussion of the side option below.
-region upper_half plane 0 0 ${z_center} 0 0 1 side in
+region upper_half plane 0  0  ${z_center} 0 0 1          side in
+#                       ^x ^y ^z          ^plane normal  ^everython in dirction of normal in region
+region central_column cylinder z ${x_center} ${y_center} 2.0 0 ${z_center} ${zhi} side in
+#                              ^cylinder axis
+#                                ^cylinder coordinates in x,y dim
+#                                                        ^cylinder radius
+#                                                               ^lower and ^upper point
+
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -228,9 +243,11 @@ elif "${is_restart} == 0 && ${surfactant_name} == CTAB" then &
 
 # correct if indenter is present
 if "${is_restart} == 0 && ${has_indenter} > 0" then &
-  "group          atoms_in_upper_half region upper_half" &
-  "group          substrate  subtract solid atoms_in_upper_half" &
-  "group          indenter   subtract solid substrate" &
+  "group          atoms_in_upper_half     region upper_half" &
+  "group          atoms_in_central_column region central_column" &
+  "group          substrate      subtract solid atoms_in_upper_half" &
+  "group          indenter       subtract solid substrate" &
+  "group          indenter_apex  intersect indenter atoms_in_central_column" &
 elif "${is_restart} == 0" then &
   "group          substrate intersect all solid"
 

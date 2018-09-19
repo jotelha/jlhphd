@@ -33,7 +33,7 @@ log                     ${baseName}_10ns_production_mixed.log
 
 variable mixedProductionSteps   index   5000000    # 10 ns
 
-print "Variables in lmp_10ns_production_mixed.input:"
+print "Variables in lmp_production.input:"
 info variables
 
 if "${is_restart} > 0" then "read_restart ${restartFile}"
@@ -69,5 +69,63 @@ else &
 # have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
+
+######################
+# Collective variables
+
+# variable colvarsFile             index  colvars.inp
+# set in lmp_header.lammps
+
+if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
+# https://lammps.sandia.gov/doc/group2ndx.html
+# Write or read a Gromacs style index file in text format that associates atom
+# IDs with the corresponding group definitions. This index file can be used with
+# in combination with Gromacs analysis tools or to import group definitions into
+# the fix colvars input file. It can also be used to save and restore group
+# definitions for static groups.
+#
+# The group2ndx command will write group definitions to an index file. Without
+# specifying any group IDs, all groups will be written to the index file. When
+# specifying group IDs, only those groups will be written to the index file. In
+# order to follow the Gromacs conventions, the group all will be renamed to
+# System in the index file.
+
+if "${use_colvars} > 0" then &
+  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap no"
+#      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
+# source: https://lammps.sandia.gov/doc/fix_colvars.html
+# This fix interfaces LAMMPS to the collective variables “Colvars” library,
+# which allows to calculate potentials of mean force (PMFs) for any set of
+# colvars, using different sampling methods: currently implemented are the
+# Adaptive Biasing Force (ABF) method, metadynamics, Steered Molecular Dynamics
+# (SMD) and Umbrella Sampling (US) via a flexible harmonic restraint bias.
+
+# The group-ID entry is ignored. The collective variable module will always
+# apply to the entire system and there can only be one instance of the colvars
+# fix at a time. The colvars fix will only communicate the minimum information
+# necessary and the colvars library supports multiple, completely independent
+# collective variables, so there is no restriction to functionality by limiting
+# the number of colvars fixes.
+
+# The input keyword allows to specify a state file that would contain the
+# restart information required in order to continue a calculation from a
+# prerecorded state. Fix colvars records it state in binary restart files, so
+# when using the read_restart command, this is usually not needed. The output
+# keyword allows to specify the output prefix. All output files generated will
+# use this prefix followed by the “.colvars.” and a word like “state” or “traj”.
+
+# The seed keyword contains the seed for the random number generator that will
+# be used in the colvars module.
+
+# The unwrap keyword controls whether wrapped or unwrapped coordinates are
+# passed to the colvars library for calculation of the collective variables and
+# the resulting forces. The default is yes, i.e. to use the image flags to
+# reconstruct the absolute atom positions. Setting this to no will use the
+# current local coordinates that are wrapped back into the simulation cell at
+# each re-neighboring instead.
+
+# The tstat keyword can be either NULL or the label of a thermostating fix that
+# thermostats all atoms in the fix colvars group. This will be used to provide
+# the colvars module with the current thermostat target temperature.
 
 include                 lmp_production_mixed.input

@@ -1,4 +1,3 @@
-#include                 system_specific.input
 variable dataFile       index  ${baseName}_nvtEquilibrated.lammps
 
 log                     ${baseName}_nptEquilibration.log
