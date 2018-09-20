@@ -48,12 +48,12 @@ else &
   "restart 100000 ${baseName}.restart1 ${baseName}.restart2"
 # Source: https://lammps.sandia.gov/doc/restart.html
 # [...]
-# If a “%” character appears in the restart filename(s), then one file is
-# written for each processor and the “%” character is replaced with the
-# processor ID from 0 to P-1. An additional file with the “%” replaced by
-# “base” is also written, which contains global information. For example,
+# If a "%" character appears in the restart filename(s), then one file is
+# written for each processor and the "%" character is replaced with the
+# processor ID from 0 to P-1. An additional file with the "%" replaced by
+# "base" is also written, which contains global information. For example,
 # the files written on step 1000 for filename restart.% would be
-# restart.base.1000, restart.0.1000, restart.1.1000, …, restart.P-1.1000.
+# restart.base.1000, restart.0.1000, restart.1.1000, ..., restart.P-1.1000.
 # This creates smaller files and can be a fast mode of output and subsequent
 # input on parallel machines that support parallel I/O. The optional fileper
 # and nfile keywords discussed below can alter the number of files written.
@@ -92,7 +92,7 @@ if "${use_colvars} > 0" then &
   "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap no"
 #      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
 # source: https://lammps.sandia.gov/doc/fix_colvars.html
-# This fix interfaces LAMMPS to the collective variables “Colvars” library,
+# This fix interfaces LAMMPS to the collective variables "Colvars" library,
 # which allows to calculate potentials of mean force (PMFs) for any set of
 # colvars, using different sampling methods: currently implemented are the
 # Adaptive Biasing Force (ABF) method, metadynamics, Steered Molecular Dynamics

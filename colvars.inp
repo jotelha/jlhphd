@@ -28,12 +28,18 @@
 # for debugging.
 
 
-colvarsTrajFrequency 100
+colvarsTrajFrequency 1000
 # The values of each colvar (and of other related quantities, if requested) are
 # written to the file output.colvars.traj every these many steps throughout the
 # simulation. If the value is 0, such trajectory file is not written. For
 # optimization the output is buffered, and synchronized with the disk only when
 # the restart file is being written.
+
+colvarsRestartFrequency 100000
+# Description: Allows to choose a different restart frequency for the Colvars
+# module. Redefining it may be useful to trace the time evolution of those few
+# properties which are not written to the trajectory file for reasons of disk
+# space.
 
 indexFile lmp_group_indices.ndx
 # This option reads an index file (usually with a .ndx extension) as produced by
@@ -59,6 +65,23 @@ colvar {
     group1 { indexGroup indenter }
     group2 { indexGroup substrate }
   }
+  lowerBoundary 20
+  # Defines the lowest end of the interval of “relevant” values for the colvar.
+  # This number can be either a true physical boundary, or a user-defined
+  # number. Together with upperBoundary and width, it is used to define a grid
+  # of values along the colvar (not available for colvars based on distanceDir,
+  # distanceVec, and orientation). This option does not affect dynamics: to
+  # confine a colvar within a certain interval, use a harmonicWalls bias.
+  # colvars complains if not defined:
+  # User-controlled feature "lower boundary" may not be enabled as a dependency
+  #   in colvar indenter_com_substrate_com_distance.
+  # colvars:     ...required by "grid" in colvar indenter_com_substrate_com_distance
+  # colvars:     ...required by "calculate TI samples" in bias indenter_pulled
+  # colvars:     ...required by "write TI PMF" in bias indenter_pulled
+
+  upperBoundary 180
+  # box size
+
   outputVelocity on
   # Description: If colvarsTrajFrequency is defined, the finite-difference
   # calculated velocity of this colvar are written to the trajectory file under
@@ -103,7 +126,7 @@ colvar {
 
     main { indexGroup indenter }
     ref  { indexGroup substrate}
-    axis { 0.0, 0.0, 1.0 }
+    axis ( 0.0, 0.0, 1.0 )
     # The three components of this vector define a projection axis e for the
     # distance vector r − r1 joining the centers of groups ref and main. The value
     # of the component is then e · (r − r1 ). The vector should be written as three
@@ -134,7 +157,7 @@ colvar {
   distanceZ {
     main { indexGroup indenter }
     ref  { indexGroup substrate}
-    axis { 0.0, 0.0, 1.0 }
+    axis ( 0.0, 0.0, 1.0 )
   }
   outputTotalForce on
 
@@ -154,7 +177,7 @@ harmonic {
 
   colvars indenter_com_substrate_com_distance
 
-  forceConstant 10
+  forceConstant 1000
 
   # 120 Ang is closer than initial placement
   centers       120
@@ -182,7 +205,7 @@ harmonic {
   # this determines the rate of indenter approach
   # at 2 fs timestep, 5 mio correspond to 10 ns
   # at 2 fs timestep, 50 k  correspond to 100 ps
-  targetNumSteps 50000
+  targetNumSteps 500000
   # In single-stage (continuous) transformations, defines the number of MD steps
   # required to move the restraint centers (or force constant) towards the
   # values specified with targetCenters or targetForceConstant. After the target
@@ -209,7 +232,7 @@ harmonic {
   #  value of the biasing energy will be written to the trajectory file during
   #  the simulation.
 
-  writeTIPMS on
+  writeTIPMF on
   # If the bias is applied to a variable that supports the calculation of total
   # forces (see outputTotalForce and 6.3.3), this option allows calculating the
   # corresponding PMF by thermody- nanic integration, and writing it to the file
