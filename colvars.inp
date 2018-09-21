@@ -1,4 +1,15 @@
-# Sample colvars.inp measuring distance between indendter and substrate
+# {{ header }}
+# template placeholders:
+#    output_frequency
+#    restart_frequency
+#    lower_boundary
+#    upper_boundary
+#    force_constant
+#    initial_com_com_distance
+#    final_com_com_distance
+#    total_steps
+
+# colvars.inp measuring distance between indendter and substrate
 
 # PBC:
 
@@ -10,7 +21,7 @@
 # center of geometry, but only of pairwise distances (distanceInv, coordNum,
 # hBond, alpha, dihedralPC); iii) it is used by a colvar component that ignores
 # the ill-defined Cartesian components of its center of mass (such as the x and
-# y components of a membrane’s center of mass modeled with distanceZ)
+# y components of a membrane's center of mass modeled with distanceZ)
 
 # Performance:
 
@@ -22,18 +33,23 @@
 # simulations that use a single large colvar, it may be advisable to partition
 # it in multiple components, which will be then distributed across the available
 # cores. In LAMMPS, this feature is supported automatically when LAMMPS is
-# compiled with OpenMP support. If printed, the message “SMP parallelism is
-# available.” indicates the availability of the option. If available, the option
+# compiled with OpenMP support. If printed, the message "SMP parallelism is
+# available." indicates the availability of the option. If available, the option
 # is turned on by default, but may be disabled using the keyword smp if required
 # for debugging.
 
-
-colvarsTrajFrequency 100
+colvarsTrajFrequency {{ output_frequency|default(100,true)|int }}
 # The values of each colvar (and of other related quantities, if requested) are
 # written to the file output.colvars.traj every these many steps throughout the
 # simulation. If the value is 0, such trajectory file is not written. For
 # optimization the output is buffered, and synchronized with the disk only when
 # the restart file is being written.
+
+colvarsRestartFrequency {{ restart_frequency|default(1000,true)|int }}
+# Description: Allows to choose a different restart frequency for the Colvars
+# module. Redefining it may be useful to trace the time evolution of those few
+# properties which are not written to the trajectory file for reasons of disk
+# space.
 
 indexFile lmp_group_indices.ndx
 # This option reads an index file (usually with a .ndx extension) as produced by
@@ -58,17 +74,43 @@ colvar {
   distance {
     group1 { indexGroup indenter }
     group2 { indexGroup substrate }
+    forceNoPBC on
+    # By default, in calculations with periodic boundary conditions, the
+    # distance compo- nent returns the distance according to the minimum-image
+    # convention. If this parameter is set to yes, PBC will be ignored and the
+    # distance between the coordinates as maintained internally will be used.
+    # This is only useful in a limited number of special cases, e.g. to describe
+    # the distance between remote points of a single macromolecule, which cannot
+    # be split across periodic cell boundaries, and for which the minimum-image
+    # distance might give the wrong result because of a relatively small
+    # periodic cell.
   }
+  lowerBoundary {{ lower_boundary|default(20.0,true) }}
+  # Defines the lowest end of the interval of "relevant" values for the colvar.
+  # This number can be either a true physical boundary, or a user-defined
+  # number. Together with upperBoundary and width, it is used to define a grid
+  # of values along the colvar (not available for colvars based on distanceDir,
+  # distanceVec, and orientation). This option does not affect dynamics: to
+  # confine a colvar within a certain interval, use a harmonicWalls bias.
+  # colvars complains if not defined:
+  # User-controlled feature "lower boundary" may not be enabled as a dependency
+  #   in colvar indenter_com_substrate_com_distance.
+  # colvars:     ...required by "grid" in colvar indenter_com_substrate_com_distance
+  # colvars:     ...required by "calculate TI samples" in bias indenter_pulled
+  # colvars:     ...required by "write TI PMF" in bias indenter_pulled
+
+  upperBoundary {{ upper_boundary|default(180.0,true) }}
+
   outputVelocity on
   # Description: If colvarsTrajFrequency is defined, the finite-difference
   # calculated velocity of this colvar are written to the trajectory file under
-  # the label “v <name>”.
+  # the label "v <name>".
 
   outputTotalForce on
   # Description: If colvarsTrajFrequency is defined, the total force on this
-  # colvar (i.e. the projection of all atomic total forces onto this colvar —
+  # colvar (i.e. the projection of all atomic total forces onto this colvar
   # see equation (15) in section 7.1) are written to the trajec- tory file under
-  # the label “fs <name>”. For extended Lagrangian colvars, the “total force”
+  # the label "fs <name>". For extended Lagrangian colvars, the "total force"
   # felt by the extended degree of freedom is simply the force from the harmonic
   # spring. Note: not all components support this option. The physical unit for
   # this force is the unit of energy specified by units, divided by the colvar
@@ -76,18 +118,18 @@ colvar {
 
   outputAppliedForce on
   # If colvarsTrajFrequency is defined, the total force applied on this colvar
-  # by Colvars biases are written to the trajectory under the label “fa <name>”.
+  # by Colvars biases are written to the trajectory under the label "fa <name>".
   # For extended Lagrangian colvars, this force is actually applied to the
   # extended degree of freedom rather than the geometric colvar itself. The
   # physical unit for this force is the unit of energy specified by units
   # divided by the colvar unit.
 
   # When the global keyword analysis is defined in the configuration file,
-  # run-time calculations of statisti- cal properties for individual colvars can
+  # run-time calculations of statistical properties for individual colvars can
   # be performed. At the moment, several types of time correlation functions,
   # running averages and running standard deviations are available.
-  runAve on
-  runAveLength 1000
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -102,19 +144,25 @@ colvar {
   # Cartesian coordinate.
 
     main { indexGroup indenter }
-    ref  { indexGroup substrate}
-    axis { 0.0, 0.0, 1.0 }
+    ref  { indexGroup substrate }
+    axis ( 0.0, 0.0, 1.0 )
     # The three components of this vector define a projection axis e for the
-    # distance vector r − r1 joining the centers of groups ref and main. The value
-    # of the component is then e · (r − r1 ). The vector should be written as three
+    # distance vector r - r1 joining the centers of groups ref and main. The value
+    # of the component is then e · (r - r1 ). The vector should be written as three
     # components separated by commas and enclosed in parentheses.
+
+    forceNoPBC on
   }
+
+  lowerBoundary {{ lower_boundary|default(20.0,true) }}
+  upperBoundary {{ upper_boundary|default(180.0,true) }}
+
   outputVelocity on
   outputTotalForce on
   outputAppliedForce on
 
-  runAve on
-  runAveLength 1000
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -122,11 +170,12 @@ colvar {
   distance {
     group1 { indexGroup indenter_apex }
     group2 { indexGroup substrate }
+    forceNoPBC on
   }
   outputTotalForce on
 
-  runAve on
-  runAveLength 1000
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -134,12 +183,13 @@ colvar {
   distanceZ {
     main { indexGroup indenter }
     ref  { indexGroup substrate}
-    axis { 0.0, 0.0, 1.0 }
+    axis ( 0.0, 0.0, 1.0 )
+    forceNoPBC on
   }
   outputTotalForce on
 
-  runAve on
-  runAveLength 1000
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 harmonic {
@@ -152,20 +202,20 @@ harmonic {
   # left at its default value of 1.
   name indenter_pulled
 
-  colvars indenter_com_substrate_com_distance
+  colvars indenter_com_substrate_com_distance_z
 
-  forceConstant 10
+  forceConstant {{ force_constant|default(2500.0,true) }}
 
   # 120 Ang is closer than initial placement
-  centers       120
-  # The centers (equilibrium values) of the restraint, ξ0 , are entered here.
+  centers       {{ initial_com_com_distance|default(120.0,true) }}
+  # The centers (equilibrium values) of the restraint, xi_0 , are entered here.
   # The number of values must be the number of requested colvars. Each value is
   # a decimal number if the corresponding colvar returns a scalar [...]
 
-  # 40 Angstrom: rough estimate for COM-COM distance
+  # 25 Angstrom: rough estimate for COM-COM distance
   # at surface thickness ~ 12 Ang and indenter height ~ 36 Ang
   # indenter should be touching substrate
-  targetCenters 40
+  targetCenters {{ final_com_com_distance|default(25.0,true) }}
   # When defined, the current centers will be moved towards these
   # values during the simulation. By default, the centers are moved over a total
   # of targetNumSteps steps by a linear inter-polation, in the spirit of
@@ -182,7 +232,7 @@ harmonic {
   # this determines the rate of indenter approach
   # at 2 fs timestep, 5 mio correspond to 10 ns
   # at 2 fs timestep, 50 k  correspond to 100 ps
-  targetNumSteps 50000
+  targetNumSteps {{ total_steps|default(5000000,true)|int }}
   # In single-stage (continuous) transformations, defines the number of MD steps
   # required to move the restraint centers (or force constant) towards the
   # values specified with targetCenters or targetForceConstant. After the target
@@ -209,7 +259,7 @@ harmonic {
   #  value of the biasing energy will be written to the trajectory file during
   #  the simulation.
 
-  writeTIPMS on
+  writeTIPMF on
   # If the bias is applied to a variable that supports the calculation of total
   # forces (see outputTotalForce and 6.3.3), this option allows calculating the
   # corresponding PMF by thermody- nanic integration, and writing it to the file
@@ -217,8 +267,6 @@ harmonic {
   # includes the forces applied to the variable by all bias, except those from
   # this bias itself. If any bias applies time-dependent forces besides the one
   # using this option, an error is raised.
-
-
 }
 
 # Note on restarting moving restraint simulations: Information about the current
@@ -240,3 +288,31 @@ harmonic {
 # This flag influences computational cost, but does not affect numerical
 # results: therefore, it should only be turned off for debugging or testing
 # purposes.
+
+# Errors:
+# colvars:   Writing TI PMF to file "367_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_50Ang_stepped.indenter_pulled.ti.pmf".
+#    1000   -2400905.2    334256.84     -2735162    295.30831    13.419031   -2399803.8    1677.9273    12110.176    5215.9241            0   -2754166.1   -918074.93    5177567.7   -7013658.8            0    5628032.1   -21259.507    23.129123   -247.40987    745.55363    -21006.26   -43.876901   -74.352925   -811.71204   -29.140588  0.096791131 -0.0094132807    27.368932    69641.331 3.3524425e-07 -6.8395215e-07 0.00025863626    195605.17 3.3524425e-07 -6.8395215e-07 0.00025863626   -65285.262   -6.1753654    124.13091    -3927.552   -65285.262   -6.1753654    124.13091    -3927.552   -3926.0268   -163.63824    125.83572    81.891826            0            0            0            0   -14474.397   -159.13832    290.11601   -258.06779 -0.057043724  0.019930225 -0.012847812 -0.059659375
+#[int01:142734] *** Process received signal ***
+#[int01:142734] Signal: Segmentation fault (11)
+#[int01:142734] Signal code: Address not mapped (1)
+#[int01:142734] Failing at address: (nil)
+#[int01:142734] [ 0] /lib64/libpthread.so.0(+0xf5e0)[0x7fa6dda3e5e0]
+#[int01:142734] [ 1] lmp(_ZN6colvar11calc_runaveEv+0x4bf)[0x166fc1f]
+#[int01:142734] [ 2] lmp(_ZN6colvar7analyzeEv+0x35)[0x166fe05]
+#[int01:142734] [ 3] lmp(_ZN12colvarmodule7analyzeEv+0x49)[0x15bf759]
+#[int01:142734] [ 4] lmp(_ZN12colvarmodule4calcEv+0x128)[0x15c2b58]
+#[int01:142734] [ 5] lmp(_ZN18colvarproxy_lammps7computeEv+0x128)[0xb3c4e8]
+#[int01:142734] [ 6] lmp(_ZN9LAMMPS_NS10FixColvars10post_forceEi+0x849)[0xb51a69]
+#[int01:142734] [ 7] lmp(_ZN9LAMMPS_NS6Modify10post_forceEi+0x42)[0xf5fd12]
+#[int01:142734] [ 8] lmp(_ZN9LAMMPS_NS6Verlet3runEi+0x265)[0x11e0e45]
+#[int01:142734] [ 9] lmp(_ZN9LAMMPS_NS3Run7commandEiPPc+0x929)[0xe32a79]
+#[int01:142734] [10] lmp(_ZN9LAMMPS_NS5Input15command_creatorINS_3RunEEEvPNS_6LAMMPSEiPPc+0x26)[0x6b30b6]
+#[int01:142734] [11] lmp(_ZN9LAMMPS_NS5Input15execute_commandEv+0x966)[0x6b1416]
+#[int01:142734] [12] lmp(_ZN9LAMMPS_NS5Input4fileEv+0x247)[0x6b1e87]
+#[int01:142734] [13] lmp(main+0x46)[0x607726]
+#[int01:142734] [14] /lib64/libc.so.6(__libc_start_main+0xf5)[0x7fa6dc7acc05]
+#[int01:142734] [15] lmp[0x60827f]
+#[int01:142734] *** End of error message ***
+#-------------------------------------------------------
+#Primary job  terminated normally, but 1 process returned
+#a non-zero exit code. Per user-direction, the job has been aborted.

@@ -27,11 +27,9 @@ elif "${mpiio}      == 0"      "variable restartFile index default.restart" &
 else                           "variable restartFile index default.mpiio.restart"
 # in the last case, run is restart and mpiio is used
 
-if "${is_restart} == 0" then "variable dataFile string ${baseName}_nptEquilibrated.lammps"
+if "${is_restart} == 0" then "variable dataFile index ${baseName}_nptEquilibrated.lammps"
 
-log                     ${baseName}_10ns_production_mixed.log
-
-variable mixedProductionSteps   index   5000000    # 10 ns
+log                     ${baseName}_production.log
 
 print "Variables in lmp_production.input:"
 info variables
@@ -44,18 +42,18 @@ include                 lmp_header.input
 # ... or two alternating files ...
 if "${mpiio} > 0" then &
   "print 'mpiio restart files'" &
-  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
+  "restart  ${restart_frequency} ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
 else &
   "print 'standard restart files (no mpiiio)'" &
-  "restart 100000 ${baseName}.restart1 ${baseName}.restart2"
+  "restart ${restart_frequency} ${baseName}.restart1 ${baseName}.restart2"
 # Source: https://lammps.sandia.gov/doc/restart.html
 # [...]
-# If a “%” character appears in the restart filename(s), then one file is
-# written for each processor and the “%” character is replaced with the
-# processor ID from 0 to P-1. An additional file with the “%” replaced by
-# “base” is also written, which contains global information. For example,
+# If a "%" character appears in the restart filename(s), then one file is
+# written for each processor and the "%" character is replaced with the
+# processor ID from 0 to P-1. An additional file with the "%" replaced by
+# "base" is also written, which contains global information. For example,
 # the files written on step 1000 for filename restart.% would be
-# restart.base.1000, restart.0.1000, restart.1.1000, …, restart.P-1.1000.
+# restart.base.1000, restart.0.1000, restart.1.1000, ..., restart.P-1.1000.
 # This creates smaller files and can be a fast mode of output and subsequent
 # input on parallel machines that support parallel I/O. The optional fileper
 # and nfile keywords discussed below can alter the number of files written.
@@ -65,8 +63,8 @@ else &
 # above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO
 # package installed [...]
 #
-# Second, use a restart filename which contains “.mpiio”. Note that it does not
-# have to end in “.mpiio”, just contain those characters. Unlike MPI-IO dump
+# Second, use a restart filename which contains ".mpiio". Note that it does not
+# have to end in ".mpiio", just contain those characters. Unlike MPI-IO dump
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
 
@@ -91,10 +89,10 @@ if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
 # System in the index file.
 
 if "${use_colvars} > 0" then &
-  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap no"
+  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap yes"
 #      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
 # source: https://lammps.sandia.gov/doc/fix_colvars.html
-# This fix interfaces LAMMPS to the collective variables “Colvars” library,
+# This fix interfaces LAMMPS to the collective variables "Colvars" library,
 # which allows to calculate potentials of mean force (PMFs) for any set of
 # colvars, using different sampling methods: currently implemented are the
 # Adaptive Biasing Force (ABF) method, metadynamics, Steered Molecular Dynamics
@@ -112,7 +110,7 @@ if "${use_colvars} > 0" then &
 # prerecorded state. Fix colvars records it state in binary restart files, so
 # when using the read_restart command, this is usually not needed. The output
 # keyword allows to specify the output prefix. All output files generated will
-# use this prefix followed by the “.colvars.” and a word like “state” or “traj”.
+# use this prefix followed by the ".colvars." and a word like "state" or "traj".
 
 # The seed keyword contains the seed for the random number generator that will
 # be used in the colvars module.
