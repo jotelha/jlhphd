@@ -1,4 +1,15 @@
-# Sample colvars.inp measuring distance between indendter and substrate
+# {{ header }}
+# template placeholders:
+#    output_frequency
+#    restart_frequency
+#    lower_boundary
+#    upper_boundary
+#    force_constant
+#    initial_com_com_distance
+#    final_com_com_distance
+#    total_steps
+
+# colvars.inp measuring distance between indendter and substrate
 
 # PBC:
 
@@ -26,7 +37,6 @@
 # available." indicates the availability of the option. If available, the option
 # is turned on by default, but may be disabled using the keyword smp if required
 # for debugging.
-
 
 colvarsTrajFrequency {{ output_frequency|default(100,true)|int }}
 # The values of each colvar (and of other related quantities, if requested) are
@@ -118,8 +128,8 @@ colvar {
   # run-time calculations of statistical properties for individual colvars can
   # be performed. At the moment, several types of time correlation functions,
   # running averages and running standard deviations are available.
-  runAve on
-  runAveLength {{ output_frequency|default(100,true)|int }}
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -134,7 +144,7 @@ colvar {
   # Cartesian coordinate.
 
     main { indexGroup indenter }
-    ref  { indexGroup substrate}
+    ref  { indexGroup substrate }
     axis ( 0.0, 0.0, 1.0 )
     # The three components of this vector define a projection axis e for the
     # distance vector r - r1 joining the centers of groups ref and main. The value
@@ -145,14 +155,14 @@ colvar {
   }
 
   lowerBoundary {{ lower_boundary|default(20.0,true) }}
-  upperBoundary upperBoundary {{ upper_boundary|default(180.0,true) }}
+  upperBoundary {{ upper_boundary|default(180.0,true) }}
 
   outputVelocity on
   outputTotalForce on
   outputAppliedForce on
 
-  runAve on
-  runAveLength {{ output_frequency|default(100,true)|int }}
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -164,8 +174,8 @@ colvar {
   }
   outputTotalForce on
 
-  runAve on
-  runAveLength {{ output_frequency|default(100,true)|int }}
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -178,8 +188,8 @@ colvar {
   }
   outputTotalForce on
 
-  runAve on
-  runAveLength {{ output_frequency|default(100,true)|int }}
+  # runAve on
+  # runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 harmonic {
@@ -257,8 +267,6 @@ harmonic {
   # includes the forces applied to the variable by all bias, except those from
   # this bias itself. If any bias applies time-dependent forces besides the one
   # using this option, an error is raised.
-
-
 }
 
 # Note on restarting moving restraint simulations: Information about the current
@@ -280,3 +288,31 @@ harmonic {
 # This flag influences computational cost, but does not affect numerical
 # results: therefore, it should only be turned off for debugging or testing
 # purposes.
+
+# Errors:
+# colvars:   Writing TI PMF to file "367_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_50Ang_stepped.indenter_pulled.ti.pmf".
+#    1000   -2400905.2    334256.84     -2735162    295.30831    13.419031   -2399803.8    1677.9273    12110.176    5215.9241            0   -2754166.1   -918074.93    5177567.7   -7013658.8            0    5628032.1   -21259.507    23.129123   -247.40987    745.55363    -21006.26   -43.876901   -74.352925   -811.71204   -29.140588  0.096791131 -0.0094132807    27.368932    69641.331 3.3524425e-07 -6.8395215e-07 0.00025863626    195605.17 3.3524425e-07 -6.8395215e-07 0.00025863626   -65285.262   -6.1753654    124.13091    -3927.552   -65285.262   -6.1753654    124.13091    -3927.552   -3926.0268   -163.63824    125.83572    81.891826            0            0            0            0   -14474.397   -159.13832    290.11601   -258.06779 -0.057043724  0.019930225 -0.012847812 -0.059659375
+#[int01:142734] *** Process received signal ***
+#[int01:142734] Signal: Segmentation fault (11)
+#[int01:142734] Signal code: Address not mapped (1)
+#[int01:142734] Failing at address: (nil)
+#[int01:142734] [ 0] /lib64/libpthread.so.0(+0xf5e0)[0x7fa6dda3e5e0]
+#[int01:142734] [ 1] lmp(_ZN6colvar11calc_runaveEv+0x4bf)[0x166fc1f]
+#[int01:142734] [ 2] lmp(_ZN6colvar7analyzeEv+0x35)[0x166fe05]
+#[int01:142734] [ 3] lmp(_ZN12colvarmodule7analyzeEv+0x49)[0x15bf759]
+#[int01:142734] [ 4] lmp(_ZN12colvarmodule4calcEv+0x128)[0x15c2b58]
+#[int01:142734] [ 5] lmp(_ZN18colvarproxy_lammps7computeEv+0x128)[0xb3c4e8]
+#[int01:142734] [ 6] lmp(_ZN9LAMMPS_NS10FixColvars10post_forceEi+0x849)[0xb51a69]
+#[int01:142734] [ 7] lmp(_ZN9LAMMPS_NS6Modify10post_forceEi+0x42)[0xf5fd12]
+#[int01:142734] [ 8] lmp(_ZN9LAMMPS_NS6Verlet3runEi+0x265)[0x11e0e45]
+#[int01:142734] [ 9] lmp(_ZN9LAMMPS_NS3Run7commandEiPPc+0x929)[0xe32a79]
+#[int01:142734] [10] lmp(_ZN9LAMMPS_NS5Input15command_creatorINS_3RunEEEvPNS_6LAMMPSEiPPc+0x26)[0x6b30b6]
+#[int01:142734] [11] lmp(_ZN9LAMMPS_NS5Input15execute_commandEv+0x966)[0x6b1416]
+#[int01:142734] [12] lmp(_ZN9LAMMPS_NS5Input4fileEv+0x247)[0x6b1e87]
+#[int01:142734] [13] lmp(main+0x46)[0x607726]
+#[int01:142734] [14] /lib64/libc.so.6(__libc_start_main+0xf5)[0x7fa6dc7acc05]
+#[int01:142734] [15] lmp[0x60827f]
+#[int01:142734] *** End of error message ***
+#-------------------------------------------------------
+#Primary job  terminated normally, but 1 process returned
+#a non-zero exit code. Per user-direction, the job has been aborted.
