@@ -10,7 +10,7 @@
 # center of geometry, but only of pairwise distances (distanceInv, coordNum,
 # hBond, alpha, dihedralPC); iii) it is used by a colvar component that ignores
 # the ill-defined Cartesian components of its center of mass (such as the x and
-# y components of a membrane’s center of mass modeled with distanceZ)
+# y components of a membrane's center of mass modeled with distanceZ)
 
 # Performance:
 
@@ -22,20 +22,20 @@
 # simulations that use a single large colvar, it may be advisable to partition
 # it in multiple components, which will be then distributed across the available
 # cores. In LAMMPS, this feature is supported automatically when LAMMPS is
-# compiled with OpenMP support. If printed, the message “SMP parallelism is
-# available.” indicates the availability of the option. If available, the option
+# compiled with OpenMP support. If printed, the message "SMP parallelism is
+# available." indicates the availability of the option. If available, the option
 # is turned on by default, but may be disabled using the keyword smp if required
 # for debugging.
 
 
-colvarsTrajFrequency 10
+colvarsTrajFrequency {{ output_frequency|default(100,true)|int }}
 # The values of each colvar (and of other related quantities, if requested) are
 # written to the file output.colvars.traj every these many steps throughout the
 # simulation. If the value is 0, such trajectory file is not written. For
 # optimization the output is buffered, and synchronized with the disk only when
 # the restart file is being written.
 
-colvarsRestartFrequency 1000
+colvarsRestartFrequency {{ restart_frequency|default(1000,true)|int }}
 # Description: Allows to choose a different restart frequency for the Colvars
 # module. Redefining it may be useful to trace the time evolution of those few
 # properties which are not written to the trajectory file for reasons of disk
@@ -64,9 +64,19 @@ colvar {
   distance {
     group1 { indexGroup indenter }
     group2 { indexGroup substrate }
+    forceNoPBC on
+    # By default, in calculations with periodic boundary conditions, the
+    # distance compo- nent returns the distance according to the minimum-image
+    # convention. If this parameter is set to yes, PBC will be ignored and the
+    # distance between the coordinates as maintained internally will be used.
+    # This is only useful in a limited number of special cases, e.g. to describe
+    # the distance between remote points of a single macromolecule, which cannot
+    # be split across periodic cell boundaries, and for which the minimum-image
+    # distance might give the wrong result because of a relatively small
+    # periodic cell.
   }
-  lowerBoundary 20
-  # Defines the lowest end of the interval of “relevant” values for the colvar.
+  lowerBoundary {{ lower_boundary|default(20.0,true) }}
+  # Defines the lowest end of the interval of "relevant" values for the colvar.
   # This number can be either a true physical boundary, or a user-defined
   # number. Together with upperBoundary and width, it is used to define a grid
   # of values along the colvar (not available for colvars based on distanceDir,
@@ -79,19 +89,18 @@ colvar {
   # colvars:     ...required by "calculate TI samples" in bias indenter_pulled
   # colvars:     ...required by "write TI PMF" in bias indenter_pulled
 
-  upperBoundary 180
-  # box size
+  upperBoundary {{ upper_boundary|default(180.0,true) }}
 
   outputVelocity on
   # Description: If colvarsTrajFrequency is defined, the finite-difference
   # calculated velocity of this colvar are written to the trajectory file under
-  # the label “v <name>”.
+  # the label "v <name>".
 
   outputTotalForce on
   # Description: If colvarsTrajFrequency is defined, the total force on this
-  # colvar (i.e. the projection of all atomic total forces onto this colvar —
+  # colvar (i.e. the projection of all atomic total forces onto this colvar
   # see equation (15) in section 7.1) are written to the trajec- tory file under
-  # the label “fs <name>”. For extended Lagrangian colvars, the “total force”
+  # the label "fs <name>". For extended Lagrangian colvars, the "total force"
   # felt by the extended degree of freedom is simply the force from the harmonic
   # spring. Note: not all components support this option. The physical unit for
   # this force is the unit of energy specified by units, divided by the colvar
@@ -99,18 +108,18 @@ colvar {
 
   outputAppliedForce on
   # If colvarsTrajFrequency is defined, the total force applied on this colvar
-  # by Colvars biases are written to the trajectory under the label “fa <name>”.
+  # by Colvars biases are written to the trajectory under the label "fa <name>".
   # For extended Lagrangian colvars, this force is actually applied to the
   # extended degree of freedom rather than the geometric colvar itself. The
   # physical unit for this force is the unit of energy specified by units
   # divided by the colvar unit.
 
   # When the global keyword analysis is defined in the configuration file,
-  # run-time calculations of statisti- cal properties for individual colvars can
+  # run-time calculations of statistical properties for individual colvars can
   # be performed. At the moment, several types of time correlation functions,
   # running averages and running standard deviations are available.
   runAve on
-  runAveLength 1000
+  runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -128,21 +137,22 @@ colvar {
     ref  { indexGroup substrate}
     axis ( 0.0, 0.0, 1.0 )
     # The three components of this vector define a projection axis e for the
-    # distance vector r − r1 joining the centers of groups ref and main. The value
-    # of the component is then e · (r − r1 ). The vector should be written as three
+    # distance vector r - r1 joining the centers of groups ref and main. The value
+    # of the component is then e · (r - r1 ). The vector should be written as three
     # components separated by commas and enclosed in parentheses.
+
+    forceNoPBC on
   }
 
-  lowerBoundary 20
-  upperBoundary 180
+  lowerBoundary {{ lower_boundary|default(20.0,true) }}
+  upperBoundary upperBoundary {{ upper_boundary|default(180.0,true) }}
 
-  # box size
   outputVelocity on
   outputTotalForce on
   outputAppliedForce on
 
   runAve on
-  runAveLength 1000
+  runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -150,11 +160,12 @@ colvar {
   distance {
     group1 { indexGroup indenter_apex }
     group2 { indexGroup substrate }
+    forceNoPBC on
   }
   outputTotalForce on
 
   runAve on
-  runAveLength 1000
+  runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 colvar {
@@ -163,11 +174,12 @@ colvar {
     main { indexGroup indenter }
     ref  { indexGroup substrate}
     axis ( 0.0, 0.0, 1.0 )
+    forceNoPBC on
   }
   outputTotalForce on
 
   runAve on
-  runAveLength 1000
+  runAveLength {{ output_frequency|default(100,true)|int }}
 }
 
 harmonic {
@@ -182,18 +194,18 @@ harmonic {
 
   colvars indenter_com_substrate_com_distance_z
 
-  forceConstant 250
+  forceConstant {{ force_constant|default(2500.0,true) }}
 
   # 120 Ang is closer than initial placement
-  centers       120
-  # The centers (equilibrium values) of the restraint, ξ0 , are entered here.
+  centers       {{ initial_com_com_distance|default(120.0,true) }}
+  # The centers (equilibrium values) of the restraint, xi_0 , are entered here.
   # The number of values must be the number of requested colvars. Each value is
   # a decimal number if the corresponding colvar returns a scalar [...]
 
-  # 40 Angstrom: rough estimate for COM-COM distance
+  # 25 Angstrom: rough estimate for COM-COM distance
   # at surface thickness ~ 12 Ang and indenter height ~ 36 Ang
   # indenter should be touching substrate
-  targetCenters 40
+  targetCenters {{ final_com_com_distance|default(25.0,true) }}
   # When defined, the current centers will be moved towards these
   # values during the simulation. By default, the centers are moved over a total
   # of targetNumSteps steps by a linear inter-polation, in the spirit of
@@ -210,7 +222,7 @@ harmonic {
   # this determines the rate of indenter approach
   # at 2 fs timestep, 5 mio correspond to 10 ns
   # at 2 fs timestep, 50 k  correspond to 100 ps
-  targetNumSteps 500000
+  targetNumSteps {{ total_steps|default(5000000,true)|int }}
   # In single-stage (continuous) transformations, defines the number of MD steps
   # required to move the restraint centers (or force constant) towards the
   # values specified with targetCenters or targetForceConstant. After the target

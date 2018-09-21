@@ -42,10 +42,10 @@ include                 lmp_header.input
 # ... or two alternating files ...
 if "${mpiio} > 0" then &
   "print 'mpiio restart files'" &
-  "restart  100000 ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
+  "restart  ${restart_frequency} ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
 else &
   "print 'standard restart files (no mpiiio)'" &
-  "restart 100000 ${baseName}.restart1 ${baseName}.restart2"
+  "restart ${restart_frequency} ${baseName}.restart1 ${baseName}.restart2"
 # Source: https://lammps.sandia.gov/doc/restart.html
 # [...]
 # If a "%" character appears in the restart filename(s), then one file is

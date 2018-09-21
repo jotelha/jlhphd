@@ -5,9 +5,12 @@ variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable reinitialize_velocities index  0
+variable compute_interactions    index  1 # group-goup interactions to thermo_out
 variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
 variable thermo_frequency        index  1000
+variable netcdf_frequency        index  1000
+variable restart_frequency       index  100000
 # system settings
 
 variable surfactant_name         index  SDS # SDS or CTAB
@@ -15,7 +18,7 @@ variable has_indenter            index  0
 
 variable nvtEqSteps      index    100000    # 200 ps
 variable nptEqSteps      index    100000    # 200 ps
-variable productionSteps index  5000000    #  10 ns
+variable productionSteps index   5000000    #  10 ns
 
 variable temperatureT   index    298    # K
 variable pressureP      index      1    # atm
@@ -264,6 +267,29 @@ if "${is_restart} == 0" then &
     "group    nonindenter subtract all indenter" &
     "group    nonsolvent  subtract all solvent"
 
+# define computes
+# kspace no: AU atoms neutral
+if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+    "compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no" &
+    "compute indenter_surfactant_interaction indenter group/group surfactant pair yes kspace no" &
+    "compute indenter_solvent_interaction indenter group/group solvent pair yes kspace no" &
+    "compute indenter_ion_interaction indenter group/group ion pair yes kspace no"
+# indenter_substrate_interaction indenter_surfactant_interaction
+# indenter_solvent_interaction indenter_ion_interaction
+
+if "${compute_interactions} > 0" then &
+    "compute substrate_solvent_interaction substrate group/group solvent pair yes kspace no" &
+    "compute substrate_surfactant_interaction substrate group/group surfactant pair yes kspace no" &
+    "compute substrate_ion_interaction substrate group/group ion pair yes kspace no" &
+    "compute surfactant_surfactant_intermolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule inter" &
+    "compute surfactant_surfactant_intramolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule intra" &
+    "compute surfactant_solvent_interaction surfactant group/group solvent pair yes kspace yes" &
+    "compute surfactant_ion_interaction surfactant group/group solvent pair yes kspace yes"
+# substrate_solvent_interaction substrate_surfactant_interaction
+# substrate_ion_interaction surfactant_surfactant_intermolecular_interaction
+# surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction
+# surfactant_solvent_interaction surfactant_ion_interaction
+
 # SDS - specific
 #       1      1.008  # HAL2
 #       2      1.008  # HAL3
@@ -349,8 +375,45 @@ if "${pbc2d} > 0" then &
 #   c_thermo_edihed c_thermo_eimp c_thermo_epair c_thermo_evdwl c_thermo_ecoul  &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
 #   mode scalar file ${baseName}_thermo.out
-thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
-  edihed eimp epair evdwl ecoul elong etail vol
+
+# (1) If the last printable character on the line is a “&” character, the
+# command is assumed to continue on the next line. The next line is concatenated
+# to the previous line by removing the “&” character and line break. This allows
+# long commands to be continued across two or more lines. See the discussion of
+# triple quotes in (6) for how to continue a command across multiple line
+# without using “&” characters.
+if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+ "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+   edihed eimp epair evdwl ecoul elong etail vol &
+   c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+   c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+   c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+   c_surfactant_surfactant_intermolecular_interaction &
+   c_surfactant_surfactant_intermolecular_interaction[*] &
+   c_surfactant_surfactant_intramolecular_interaction &
+   c_surfactant_surfactant_intramolecular_interaction[*] &
+   c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+   c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+   c_indenter_substrate_interaction c_indenter_substrate_interaction[*] &
+   c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
+   c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
+   c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
+elif "${compute_interactions} > 0" then &
+  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
+else &
+  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol"
+
 # log output every 2 ps
 thermo         ${thermo_frequency}
 thermo_modify  norm no
