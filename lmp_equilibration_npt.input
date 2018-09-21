@@ -177,7 +177,7 @@ fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # the pressure of the system (virial) is also accounted for.
 
 # dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
-if "${reinitialize_velocities} > 1" then &
+if "${reinitialize_velocities} > 0" then &
   "velocity ${tempered_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
 
 

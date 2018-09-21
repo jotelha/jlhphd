@@ -5,7 +5,7 @@ variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable reinitialize_velocities index  0
-variable use_colvars
+variable use_colvars             index  0 # if on, uses colvars module
 variable colvarsFile             index  colvars.inp
 
 # system settings
