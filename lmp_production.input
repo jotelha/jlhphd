@@ -89,7 +89,7 @@ if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
 # System in the index file.
 
 if "${use_colvars} > 0" then &
-  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap no"
+  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap yes"
 #      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
 # source: https://lammps.sandia.gov/doc/fix_colvars.html
 # This fix interfaces LAMMPS to the collective variables "Colvars" library,

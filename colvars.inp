@@ -28,14 +28,14 @@
 # for debugging.
 
 
-colvarsTrajFrequency 1000
+colvarsTrajFrequency 10
 # The values of each colvar (and of other related quantities, if requested) are
 # written to the file output.colvars.traj every these many steps throughout the
 # simulation. If the value is 0, such trajectory file is not written. For
 # optimization the output is buffered, and synchronized with the disk only when
 # the restart file is being written.
 
-colvarsRestartFrequency 100000
+colvarsRestartFrequency 1000
 # Description: Allows to choose a different restart frequency for the Colvars
 # module. Redefining it may be useful to trace the time evolution of those few
 # properties which are not written to the trajectory file for reasons of disk
@@ -132,6 +132,11 @@ colvar {
     # of the component is then e · (r − r1 ). The vector should be written as three
     # components separated by commas and enclosed in parentheses.
   }
+
+  lowerBoundary 20
+  upperBoundary 180
+
+  # box size
   outputVelocity on
   outputTotalForce on
   outputAppliedForce on
@@ -175,9 +180,9 @@ harmonic {
   # left at its default value of 1.
   name indenter_pulled
 
-  colvars indenter_com_substrate_com_distance
+  colvars indenter_com_substrate_com_distance_z
 
-  forceConstant 1000
+  forceConstant 250
 
   # 120 Ang is closer than initial placement
   centers       120

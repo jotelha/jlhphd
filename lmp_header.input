@@ -22,8 +22,13 @@ variable pressureP      index      1    # atm
 
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
-# Look it up within the data file.
-variable angleIdWater   index     11
+# Look it up within the data file. Usually 11 for SDS, 16 for CTAB
+
+if "${surfactant} == SDS" then &
+  "variable angleIdWater   index     11" &
+else &
+  "variable angleIdWater   index     16"
+
 
 print "Variables in lmp_header.input:"
 info variables
