@@ -274,6 +274,7 @@ if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
     "compute indenter_surfactant_interaction indenter group/group surfactant pair yes kspace no" &
     "compute indenter_solvent_interaction indenter group/group solvent pair yes kspace no" &
     "compute indenter_ion_interaction indenter group/group ion pair yes kspace no"
+    "compute indenter_nonindenter_interaction indenter group/group nonindenter pair yes kspace no"
 # indenter_substrate_interaction indenter_surfactant_interaction
 # indenter_solvent_interaction indenter_ion_interaction
 

@@ -13,4 +13,8 @@ if [ -n "${1}" ] ; then
     OUTFILE="${2}"
   fi
 fi
-cat "${LOGFILE}" | sed -n '/^Step/,/^Loop time/p' | head -n-1 > "${OUTFILE}"
+# first sed cuts out thermo section from log
+# second sed removes all lines added by colvars
+# other outputs (i.e. fix shake stats)  can be filtered in a similar manner if necessary
+# head removes last line (might be incomplete)
+cat "${LOGFILE}" | sed -n '/^Step/,/^Loop time/p' | sed '/^colvars:/d' | head -n-1 > "${OUTFILE}"

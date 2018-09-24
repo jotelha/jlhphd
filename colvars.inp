@@ -181,7 +181,7 @@ colvar {
 colvar {
   name indenter_apex_substrate_com_distance_z
   distanceZ {
-    main { indexGroup indenter }
+    main { indexGroup indenter_apex }
     ref  { indexGroup substrate}
     axis ( 0.0, 0.0, 1.0 )
     forceNoPBC on
