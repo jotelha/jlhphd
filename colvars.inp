@@ -267,6 +267,17 @@ harmonic {
   # includes the forces applied to the variable by all bias, except those from
   # this bias itself. If any bias applies time-dependent forces besides the one
   # using this option, an error is raised.
+
+  # writeTISamples
+  # This option allows to compute total forces for use with thermodynamic
+  # integration as done by the keyword writeTIPMF. The names of the files
+  # containing the variables’ histogram and mean thermodynamic forces are
+  # output.<name>.ti.count and output.<name>.ti.grad, respectively: these can
+  # be used by abf integrate or similar utility. This option on by default when
+  # writeTIPMF is on, but can be enabled separately if the bias is applied to
+  # more than one variable, making not possible the direct integration of the
+  # PMF at runtime. If any bias applies time-dependent forces besides the one
+  # using this option, an error is raised.
 }
 
 # Note on restarting moving restraint simulations: Information about the current

@@ -273,7 +273,7 @@ if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
     "compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no" &
     "compute indenter_surfactant_interaction indenter group/group surfactant pair yes kspace no" &
     "compute indenter_solvent_interaction indenter group/group solvent pair yes kspace no" &
-    "compute indenter_ion_interaction indenter group/group ion pair yes kspace no"
+    "compute indenter_ion_interaction indenter group/group ion pair yes kspace no" &
     "compute indenter_nonindenter_interaction indenter group/group nonindenter pair yes kspace no"
 # indenter_substrate_interaction indenter_surfactant_interaction
 # indenter_solvent_interaction indenter_ion_interaction
@@ -285,7 +285,7 @@ if "${compute_interactions} > 0" then &
     "compute surfactant_surfactant_intermolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule inter" &
     "compute surfactant_surfactant_intramolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule intra" &
     "compute surfactant_solvent_interaction surfactant group/group solvent pair yes kspace yes" &
-    "compute surfactant_ion_interaction surfactant group/group solvent pair yes kspace yes"
+    "compute surfactant_ion_interaction surfactant group/group solvent pair yes kspace yes" &
 # substrate_solvent_interaction substrate_surfactant_interaction
 # substrate_ion_interaction surfactant_surfactant_intermolecular_interaction
 # surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction

@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 # # CTAB on AU 111 LAMMPS
@@ -250,6 +249,172 @@ def makeRollingAverageThermoPlotsFromDataFrame(df, fig=None,
                fig, next(pos), "Total, kinetic and potential energies", time_label, energy_label)
 
     fig.tight_layout() # tigh_layout avoids label overlap
+    return fig
+
+###  Constraint-related plotting
+
+def makeColvarsPlots( df, fig=None,
+        time_label          = r'$\frac{\mathrm{Steps}}{2 \mathrm{fs}}$',
+        temperature_label   = r'$\frac{T}{\mathrm{K}}$',
+        pressure_label      = r'$\frac{P}{\mathrm{atm}}$',
+        energy_label        = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1}}$',
+        force_label         = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1} \AA^{-1} }$',
+        distance_label      = r'$\frac{d}{\AA}$',
+        window = 1000 ):
+    """Automizes the plotting of colvars output."""
+    # Expected columns
+
+    # Index(['indenter_com_substrat', 'v_indenter_com_substr',
+    #    'ft_indenter_com_subst', 'fa_indenter_com_subst',
+    #    'indenter_com_substrat.1', 'v_indenter_com_substr.1',
+    #    'ft_indenter_com_subst.1', 'fa_indenter_com_subst.1',
+    #    'indenter_apex_substra', 'ft_indenter_apex_subs',
+    #    'indenter_apex_substra.1', 'ft_indenter_apex_subs.1',
+    #    'E_indenter_pulled', 'x0_indenter_com_subst', 'W_indenter_pulled'],
+    #   dtype='object')
+
+    rows = 3
+    cols = 2
+    #if fig == None:
+    fig = plt.figure(figsize=(cols*8,rows*5))
+
+    pos = subplotPosition(rows,cols)
+
+    df["time"] = df.index * dt
+
+    curpos = next(pos)
+    _, ax = addSubplot( df[["time"]], df[["indenter_com_substrat.1"]],
+                legend = 'Tip COM - substrate COM distance',
+                fig = fig, pos = curpos, title = "z distances",
+                xlabel = time_label, ylabel = distance_label )
+    addSubplot( df.index * dt, df[["indenter_apex_substra.1"]],
+                legend='Tip apex - substrate COM distance',
+                fig = fig, ax = ax, pos = curpos )
+    addSubplot( df.index * dt, df[["x0_indenter_com_subst"]],
+                legend='Constraint position',
+                fig = fig, ax = ax, pos = curpos )
+
+    curpos = next(pos)
+    # constaraint energy & work
+    _, ax = addSubplot( df[["time"]], df[["E_indenter_pulled"]],
+               legend="Constraint energy",
+               fig = fig, pos = curpos,
+               title = "Constraint energy and accumulated work",
+               xlabel = time_label, ylabel = energy_label)
+    addSubplot( df[["time"]], df[["W_indenter_pulled"]],
+               legend="Constraint work",
+               fig = fig, ax = ax, pos = curpos )
+
+    # z total & applied force com com
+    curpos = next(pos)
+    _, ax = addSubplot(
+        df[["time"]].rolling(window=window,center=True).mean(),
+        df[["ft_indenter_com_subst.1"]].rolling(window=window,center=True).mean(),
+        fig = fig, pos = curpos,
+        legend = "Total force on COM-COM distance",
+        title = "Total and applied force on COM COM dist",
+        xlabel = time_label, ylabel = energy_label )
+
+    addSubplot( df[["time"]], df[["fa_indenter_com_subst.1"]],
+                legend = "Applied force on COM-COM distance",
+                fig = fig, ax = ax, pos = curpos )
+
+    # # # z total & applied force com com
+    # addSubplot(
+    #     df[["ft_indenter_com_subst.1", "fa_indenter_com_subst.1"]],
+    #     colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(),
+    #            fig, next(pos), "Total and applied force on COM COM dist",
+    #            time_label, energy_label)
+
+    addSubplot(
+        df[['indenter_com_substrat.1']].rolling(window=window,center=True).mean(),
+        df[['ft_indenter_com_subst.1']].rolling(window=window,center=True).mean(),
+        fig = fig, pos = next(pos),
+        title = 'Total force on COM COM distance',
+        xlabel = distance_label, ylabel = force_label)
+
+    fig.tight_layout()
+    return fig
+
+    # plt.plot(colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
+    # plt.plot(colvars_traj_df[['fa_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Applied force on tip COM')
+    # plt.legend()
+
+    #addSubplot( df.index, df[["W_indenter_pulled"]],
+    #            fig, next(pos), "Constraint work", time_label, energy_label)
+    # addSubplot(['E_indenter_pulled'], label='Constraint eneryg')
+
+    # # z distance COM - COM, apex COM, constraint
+    # plt.plot(colvars_traj_df['indenter_com_substrat.1'], label='Tip COM - substrate COM distance')
+    # plt.plot(colvars_traj_df['indenter_apex_substra.1'], label='Tip apex - substrate COM distance')
+    # plt.plot(colvars_traj_df['x0_indenter_com_subst'], label='Constraint position')
+    # plt.legend()
+
+    # # constaraint energy & work
+    # plt.plot(colvars_traj_df['E_indenter_pulled'], label='Constraint eneryg')
+    # plt.plot(colvars_traj_df['W_indenter_pulled'], label='Constraint work')
+    # plt.legend()
+    #
+    # # z total & applied force com com
+    # plt.plot(colvars_traj_df['ft_indenter_com_subst.1'], label='Total force on tip COM')
+    # plt.plot(colvars_traj_df['fa_indenter_com_subst.1'], label='Applied force on tip COM')
+    #
+    # # z total & applied force com com
+    # plt.plot(colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
+    # plt.plot(colvars_traj_df[['fa_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Applied force on tip COM')
+    # plt.legend()
+    #
+    # # z total force com com
+    # plt.plot(colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
+    #
+    # # z distance com com
+    # plt.plot(colvars_traj_df[['indenter_com_substrat.1']].rolling(window=100,center=True).mean(), colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
+    #
+    # # z velocity com com dist
+    # plt.plot(colvars_traj_df[['v_indenter_com_substr.1']].rolling(window=100,center=True).mean(), label='Indenter approach velocity')
+
+def makePMEPlots( pmf_df, grad_df = None, count_df = None, fig=None,
+        time_label          = r'$\frac{\mathrm{Steps}}{2 \mathrm{fs}}$',
+        temperature_label   = r'$\frac{T}{\mathrm{K}}$',
+        pressure_label      = r'$\frac{P}{\mathrm{atm}}$',
+        energy_label        = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1}}$',
+        force_label         = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1} \AA^{-1} }$',
+        distance_label      = r'$\frac{d}{\AA}$',
+        window = 1000 ):
+    """Automizes the plotting of colvars output."""
+    # Expected columns
+    # xi A(xi)
+
+    rows = 1
+    if grad_df is not None:
+        rows += 1
+    if count_df is not None:
+        rows += 1
+
+    cols = 1
+    #if fig == None:
+    fig = plt.figure(figsize=(cols*8,rows*5))
+
+    pos = subplotPosition(rows,cols)
+
+    # curpos = next(pos)
+    addSubplot( pmf_df.index, pmf_df[["pmf"]],
+        fig = fig, pos = next(pos), title = "substrate COM - tip COM distance PMF",
+        xlabel = distance_label, ylabel = energy_label )
+
+    if grad_df is not None:
+        addSubplot( grad_df.index, grad_df[["grad"]],
+            fig = fig, pos = next(pos),
+            title = "substrate COM - tip COM distance mean thermodynamic force",
+            xlabel = distance_label, ylabel = force_label )
+
+    if count_df is not None:
+        addSubplot( count_df.index, count_df[["count"]],
+            fig = fig, pos = next(pos),
+            title = "substrate COM - tip COM distance sample histogram",
+            xlabel = distance_label, ylabel = 'N' )
+
+    fig.tight_layout()
     return fig
 
 # ASE by default infers elements from LAMMPS atom types, in our case they are unrelated
@@ -504,63 +669,50 @@ def evaluateDisplacement(displacement, dt = 10, window = 500):
 
     return fig
 
-
 # ## Colvars
+def read_data_with_hashed_header(filename):
+    header = pd.read_csv(filename,
+                         delim_whitespace=True, nrows=0)
+    columns = header.columns[1:]
+    df = pd.read_csv( filename, delim_whitespace=True, header=None, comment='#',
+        names=columns)
+    return df
 
-def evaluate__volvars_traj():
+def read_colvars_traj():
     # expect only one file
     colvars_traj_file = glob('*.colvars.traj')[0]
 
-    colvars_traj_header = pd.read_csv(colvars_traj_file,
-                                      delim_whitespace=True, nrows=0)
-
-    colvars_traj_columns = colvars_traj_header.columns[1:]
-
-    colvars_traj_df = pd.read_csv(colvars_traj_file,
-                               delim_whitespace=True, header=None, comment='#', names=colvars_traj_columns)
-
+    colvars_traj_df = read_data_with_hashed_header( colvars_traj_file )
     colvars_traj_df.set_index('step',inplace=True)
+    return colvars_traj_df
 
-    # Expected columns
-
-    # Index(['indenter_com_substrat', 'v_indenter_com_substr',
-    #    'ft_indenter_com_subst', 'fa_indenter_com_subst',
-    #    'indenter_com_substrat.1', 'v_indenter_com_substr.1',
-    #    'ft_indenter_com_subst.1', 'fa_indenter_com_subst.1',
-    #    'indenter_apex_substra', 'ft_indenter_apex_subs',
-    #    'indenter_apex_substra.1', 'ft_indenter_apex_subs.1',
-    #    'E_indenter_pulled', 'x0_indenter_com_subst', 'W_indenter_pulled'],
-    #   dtype='object')
-
-    # z distance COM - COM, apex COM, constraint
-    plt.plot(colvars_traj_df['indenter_com_substrat.1'], label='Tip COM - substrate COM distance')
-    plt.plot(colvars_traj_df['indenter_apex_substra.1'], label='Tip apex - substrate COM distance')
-    plt.plot(colvars_traj_df['x0_indenter_com_subst'], label='Constraint position')
-    plt.legend()
+def read_colvars_ti():
+    # expect only one file
+    colvars_pmf_file = glob('*.ti.pmf')[0]
+    colvars_grad_file = glob('*.ti.grad')[0]
+    colvars_count_file = glob('*.ti.count')[0]
 
 
-    # constaraint energy & work
-    plt.plot(colvars_traj_df['E_indenter_pulled'], label='Constraint eneryg')
-    plt.plot(colvars_traj_df['W_indenter_pulled'], label='Constraint work')
-    plt.legend()
+    colvars_pmf_df = read_data_with_hashed_header( colvars_pmf_file )
+    colvars_pmf_df.set_index('xi', inplace = True)
+    colvars_pmf_df.columns = ['pmf']
 
-    # z total & applied force com com
-    plt.plot(colvars_traj_df['ft_indenter_com_subst.1'], label='Total force on tip COM')
-    plt.plot(colvars_traj_df['fa_indenter_com_subst.1'], label='Applied force on tip COM')
+    colvars_grad_df = pd.read_csv( colvars_grad_file,
+        delim_whitespace=True, header=None, comment='#', skiprows=3,
+        names=['xi', 'grad'] )
+    colvars_grad_df.set_index('xi', inplace = True)
+    #colvars_grad_df.columns = ['grad']
+    #colvars_pmf_df['grad'] = colvars_grad_df['grad']
 
-    # z total & applied force com com
-    plt.plot(colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
-    plt.plot(colvars_traj_df[['fa_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Applied force on tip COM')
-    plt.legend()
+    colvars_count_df = pd.read_csv( colvars_count_file,
+        delim_whitespace=True, header=None, comment='#', skiprows=3,
+        names=['xi', 'count'] )
+    colvars_count_df.set_index('xi', inplace = True)
+    #colvars_count_df.columns = ['count']
+    #colvars_pmf_df['count'] = colvars_count_df['count']
 
-    # z total force com com
-    plt.plot(colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
-
-    # z distance com com
-    plt.plot(colvars_traj_df[['indenter_com_substrat.1']].rolling(window=100,center=True).mean(), colvars_traj_df[['ft_indenter_com_subst.1']].rolling(window=100,center=True).mean(), label='Total force on tip COM')
-
-    # z velocity com com dist
-    plt.plot(colvars_traj_df[['v_indenter_com_substr.1']].rolling(window=100,center=True).mean(), label='Indenter approach velocity')
+    #colvars_traj_df.set_index('step',inplace=True)
+    return colvars_pmf_df, colvars_grad_df, colvars_count_df
 
 
 # ## Energy evaluations with pandas
@@ -577,10 +729,10 @@ def evaulate_minimization():
     # In[63]:
 
 
-    minimization_thermo_pd.set_index("Step",inplace=True
+    minimization_thermo_pd.set_index("Step",inplace=True)
 
 
-    makeThermoPlotsFromDataFrame(minimization_thermo_pd);
+    makeThermoPlotsFromDataFrame(minimization_thermo_pd)
 
 
     # long Coulombic interaction (by PPPME)
@@ -621,14 +773,96 @@ def evaluate_production():
     makeRollingAverageThermoPlotsFromDataFrame(production_thermo_pd.copy(),window=10);
 
     production_thermo_pd[["PotEng","E_pair"]].rolling(window=10,center=True).mean().plot()
+    return production_thermo_pd
 
-    # plot group interactions
-    interactions_of_interest = [ 'c_substrate_solvent_interaction[3]', 'c_substrate_surfactant_interaction[3]',
-                               'c_indenter_substrate_interaction[3]', 'c_indenter_surfactant_interaction[3]',
-                                'c_indenter_solvent_interaction[3]', 'c_indenter_ion_interaction[3]' ]
+def evaluate_group_group_interactions(df, fig=None,
+        time_label          = r'$\frac{\mathrm{Steps}}{2 \mathrm{fs}}$',
+        temperature_label   = r'$\frac{T}{\mathrm{K}}$',
+        pressure_label      = r'$\frac{P}{\mathrm{atm}}$',
+        energy_label        = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1}}$',
+        force_label         = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1} \AA^{-1} }$',
+        distance_label      = r'$\frac{d}{\AA}$',
+        window = 1000 ):
+    """Automizes the plotting of group group interactions."""
 
-    production_thermo_pd[interactions_of_interest].plot()
-    production_thermo_pd[interactions_of_interest].rolling(window=10,center=True).mean().plot()
+    # plot group interactions in z direction
+    # interactions_of_interest = [
+    #     'c_substrate_solvent_interaction[3]',
+    #     'c_substrate_surfactant_interaction[3]',
+    #     'c_indenter_substrate_interaction[3]',
+    #     'c_indenter_surfactant_interaction[3]',
+    #     'c_indenter_solvent_interaction[3]',
+    #     'c_indenter_ion_interaction[3]' ]
+
+    rows = 3
+
+    cols = 2
+    #if fig == None:
+    fig = plt.figure(figsize=(cols*8,rows*5))
+
+    pos = subplotPosition(rows,cols)
+
+    df["time"] = dt *df.index
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_substrate_solvent_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "substrate - solvent interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_substrate_solvent_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_substrate_surfactant_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "substrate - surfactant interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_substrate_surfactant_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_indenter_substrate_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "indenter - substrate interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_indenter_substrate_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_indenter_surfactant_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "indenter - surfactant interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_indenter_surfactant_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_indenter_solvent_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "indenter - solvent interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_indenter_solvent_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    curpos = next(pos)
+    fig, ax = addSubplot( df["time"], df[["c_indenter_ion_interaction"]],
+        legend = "absolute value",
+        fig = fig, pos = curpos, title = "indenter - ion interaction",
+        xlabel = distance_label, ylabel = energy_label )
+    fig, ax = addSubplot( df["time"], df[["c_indenter_ion_interaction[3]"]],
+        legend = "substrate-normal component",
+        fig = fig, pos = curpos, ax = ax )
+
+    fig.tight_layout()
+    return fig
+
+    #production_thermo_pd[interactions_of_interest].plot()
+    #production_thermo_pd[interactions_of_interest].rolling(window=10,center=True).mean().plot()
 
 # ## Trajectory visualization with ASE and ParmEd
 
@@ -761,7 +995,7 @@ def read_trajs( lmp_traj_files = None ):
 
 
 
-def show_frames(lmp_frames)
+def show_frames(lmp_frames):
     lmp_views = []
     for k, f in lmp_frames.items():
         lmp_views.append( nv.show_ase(f) )
