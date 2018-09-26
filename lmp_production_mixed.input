@@ -131,13 +131,26 @@ dump            dumpPng nonsolvent image 1000000 &
                 ${baseName}_production_mixed.*.png type type
 #                                      ^one image every 2 ns
 
-if "${mpiio} > 0" then &
+if "${mpiio} > 0 && ${store_forces} > 0" then &
+  "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${baseName}_production_mixed.nc id mol type x y z &
+    fx fy fz f_storeUnconstrainedForces[*]" &
+elif "${store_forces} > 0" &
+ "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
+ "dump dumpNetCDF all netcdf ${netcdf_frequency} &
+   ${baseName}_production_mixed.nc id mol type x y z &
+   fx fy fz f_storeUnconstrainedForces[*]" &
+elif "${mpiio} > 0" then &
   "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} ${baseName}_production_mixed.nc id mol type x y z" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${baseName}_production_mixed.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
-  "dump dumpNetCDF all netcdf ${netcdf_frequency} ${baseName}_production_mixed.nc id mol type x y z"
+  "dump dumpNetCDF all netcdf ${netcdf_frequency} &
+    ${baseName}_production_mixed.nc id mol type x y z"
 
+if "${store_forces} > 0" then "dump_modify dumpNetCDF append yes"
 
 if "${reinitialize_velocities} > 0" then &
   "velocity ${pressured_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
