@@ -19,7 +19,7 @@
 # interface_with_immersed_indenter.tga of the resulting system
 #
 # No routine for displacing charged ions implemented yed. THEY ARE REMOVED.
-# Double-check for section 
+# Double-check for section
 #   Info) Identify ovelap...
 #   Info) #atoms in overlapping SOD:                0
 #   Info) #atoms in overlapping TIP3:            9354
@@ -39,7 +39,7 @@ namespace eval ::JlhVmd:: {
   namespace export init_system proc make_types_ascii_sortable position_system
   namespace export read_indenter_pdb read_indenter_lmp
   namespace export init_indenter scale_indenter position_indenter clip_indenter
-  namespace export merge identify_overlap remove_overlap
+  namespace export merge identify_overlap move_nonsolvent_overlap remove_overlap
   namespace export set_visual show_nonsolvent show_solvent_only show_overlap
   namespace export batch_merge_lmp batch_merge_pdb
   namespace export batch_process_lmp batch_process_pdb
@@ -598,6 +598,172 @@ namespace eval ::JlhVmd:: {
     return $overlapping
   }
 
+  proc move_nonsolvent_overlap {} {
+    variable system_id
+    variable combined_id
+    variable nonoverlapping
+    variable overlapping
+
+    variable substrate
+    variable indenter
+
+    variable overlapping_surfactant
+    variable overlapping_counterion
+
+    variable surfactant_resname
+    variable counterion_resname
+    variable solvent_resname
+    variable substrate_resname
+
+    variable overlap_distance
+
+    # minmax selection: Returns two vectors, the first containing the minimum
+    # x, y, and z coordinates of all atoms in selection, and the second
+    # containing the corresponding maxima.
+
+    set indenter_extents  [ measure minmax $indenter ]
+    vmdcon -info [ format "      indenter extents: %26s; %26s" \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $indenter_extents 0 ] ] \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $indenter_extents 1 ] ] ]
+    set substrate_extents [ measure minmax $substrate ]
+    vmdcon -info [ format "     substrate extents: %26s; %26s" \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $substrate_extents 0 ] ] \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $substrate_extents 1 ] ] ]
+
+
+
+    # determine allowed extents of a new random position for overlapping
+    # non-solvent residues. Here box between substrate surface and indenter
+    # apex, laterally bounded by indenter extents
+    # limits [ [ min_x, min_y, min_z ], [max_x, max_y, max_z] ]
+    set position_limits [ list  \
+      [ lreplace [ lindex $indenter_extents 0 ] 2 2 [ \
+        expr [lindex $substrate_extents 1 2] + $overlap_distance ] ] \
+      [ lreplace [ lindex $indenter_extents 1 ] 2 2 [ \
+        expr [lindex $indenter_extents 0 2 ] - $overlap_distance ] ] ]
+    vmdcon -info [ format "random position limits: %26s; %26s" \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $position_limits 0 ] ] \
+      [ format "%8.4f %8.4f %8.4f" {*}[ lindex $position_limits 1 ] ] ]
+
+    set position_origin [ lindex $position_limits 0 ]
+    vmdcon -info [ format "random position origin: %26s" \
+      [ format "%8.4f %8.4f %8.4f" {*}$position_origin ] ]
+    set position_offset [ vecscale -1.0 [ vecsub {*}$position_limits ] ]
+    vmdcon -info [ format "random position offset: %26s" \
+      [ format "%8.4f %8.4f %8.4f" {*}$position_offset ] ]
+    # vmd's "residue" and "resid" differ:
+    # former is a zero-based consecutive index,
+    # latter is identifier as in input file (starts at 1 for standard numbering)
+    # but might not be unique
+
+    # get unique residue ids in overlapping surfactant and counterions
+    set overlapping_surfactant_residues [ lsort -unique -integer [ \
+      $overlapping_surfactant get residue ] ]
+    vmdcon -info [ format "% 8d surfactant residues to be moved." \
+      [ llength $overlapping_surfactant_residues ] ]
+
+    set overlapping_counterion_residues [ lsort -unique -integer [ \
+      $overlapping_counterion get residue ] ]
+    vmdcon -info [ format "% 8d counterion residues to be moved." \
+      [ llength $overlapping_counterion_residues ] ]
+
+    set overlapping_residues [ \
+      concat $overlapping_surfactant_residues $overlapping_counterion_residues ]
+
+    foreach res $overlapping_residues {
+      vmdcon -info [ format "Treating overlapping residue %8d..." $res ]
+      set cur [ atomselect $combined_id "residue $res"]
+      if { [ $cur num ] == 0 } {
+        vmdcon -warn "Selection empty, already removed!"
+        continue
+      }
+
+      vmdcon -info [format "%-30.30s" "  #atoms in current residue:"] \
+        [format "%12d" [$cur num]]
+
+      # only try 1000 times to avoid endless loop
+      set nmoved 0
+      for {set i 0} {$i<1000} {incr i} {
+        set cur_overlapping [atomselect $combined_id \
+          "same fragment as (exwithin $overlap_distance of residue $res)"]
+        vmdcon -info [format "%-30.30s" "    #atoms overlapping in total:"] \
+          [format "%12d" [$cur_overlapping num]]
+
+        # report on overlapping molecules
+        set cur_overlapping_counterion [atomselect \
+          $combined_id "resname $counterion_resname and ([$cur_overlapping text])"]
+        vmdcon -info [format "%-30.30s" "    #atoms in overlapping $counterion_resname:"] \
+          [format "%12d" [$cur_overlapping_counterion num]]
+
+        set cur_overlapping_surfactant [atomselect $combined_id \
+          "resname $surfactant_resname and ([$cur_overlapping text])"]
+        vmdcon -info [format "%-30.30s" "    #atoms in overlapping $surfactant_resname:"] \
+          [format "%12d" [$cur_overlapping_surfactant num]]
+
+          set cur_overlapping_substrate [atomselect $combined_id \
+            "resname $substrate_resname and ([$cur_overlapping text])"]
+          vmdcon -info [format "%-30.30s" "    #atoms in overlapping $substrate_resname:"] \
+            [format "%12d" [$cur_overlapping_substrate num]]
+
+        set cur_overlapping_solvent [atomselect $combined_id \
+          "resname $solvent_resname and ([$cur_overlapping text])"]
+        vmdcon -info [format "%-30.30s" "    #atoms in overlapping $solvent_resname:"] \
+          [format "%12d" [$cur_overlapping_solvent num]]
+
+        # check whether position is alright:
+        # we allow overlap with solvent, which is subsequently removed, but not
+        # with anything else, i.e. other surfactant chains, counterions or
+        # substrate. This is the case for overlapping solvent atoms = total ovelap
+        if { [ $cur_overlapping_solvent num ] == [ $cur_overlapping num ]} {
+          vmdcon -info [
+            format "  Found suitable location in iteration %3d." $i ]
+          # remove solvent by modifying overlapping and nonoverlapping selections
+          set previous_noverlap [ $overlapping num ]
+          set previous_nnonoverlap [ $nonoverlapping num ]
+          set overlapping [ atomselect $combined_id \
+            "(not residue $res and [$overlapping text]) or ([$cur_overlapping_solvent text])" ]
+          $overlapping global
+          vmdcon -info [ \
+            format "    Modified overlap selection from %d to %d atoms." \
+                $previous_noverlap [ $overlapping num ] ]
+
+          set nonoverlapping [ atomselect $combined_id \
+            "(residue $res or [$nonoverlapping text]) and not ([$cur_overlapping_solvent text])" ]
+          $nonoverlapping global
+          vmdcon -info [ \
+            format "    Modified non-overlap selection from %d to %d atoms." \
+                $previous_nnonoverlap [ $nonoverlapping num ] ]
+
+          incr nmoved
+          break
+        }
+
+        vmdcon -info [ format "  Iteration %3d: Make a move..." $i ]
+
+        set random_3vec [ list [ expr rand() ] [ expr rand() ] [ expr rand() ] ]
+        vmdcon -info [ format "   random 3-vector: %26s" \
+          [ format "%8.4f %8.4f %8.4f" {*}$random_3vec ] ]
+
+        set random_position [ vecadd $position_origin [ \
+          vecmul $random_3vec $position_offset] ]
+        vmdcon -info [ format "   random position: %26s" \
+          [ format "%8.4f %8.4f %8.4f" {*}$random_position ] ]
+
+        set cur_position [measure center $cur]
+        vmdcon -info [ format "  current position: %26s" \
+          [ format "%8.4f %8.4f %8.4f" {*}$cur_position ] ]
+
+        set cur_offset [vecsub $random_position $cur_position]
+        vmdcon -info [ format "           move by: %26s" \
+          [ format "%8.4f %8.4f %8.4f" {*}$cur_offset ] ]
+        #set cur [atomselect $combined_id "residue $res"]
+
+        $cur moveby $cur_offset
+      }
+    }
+    vmdcon -info [ format "Successfully moved %3d residues." $nmoved ]
+  }
+
   # routine for possibly overlapping surfactant and counterion molecules needed!
 
   proc remove_overlap {} {
@@ -801,7 +967,7 @@ namespace eval ::JlhVmd:: {
     vmdcon -info "Objects in system read from $system_infile:"
     display_system_information
     vmdcon -info "-------------------------------------------------------------"
-    vmdcon -info "Make types ascii-sortable to preserver original order..."
+    vmdcon -info "Make types ascii-sortable to preserve original order..."
     make_types_ascii_sortable
     vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Objects in system after type renaming:"
@@ -821,7 +987,10 @@ namespace eval ::JlhVmd:: {
     vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Identify ovelap..."
     identify_overlap
-    vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    #vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Reposition non-solvent overlap..."
+    move_nonsolvent_overlap
     vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Remove overlap..."
     return [ remove_overlap ]
@@ -865,7 +1034,10 @@ namespace eval ::JlhVmd:: {
     vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Identify ovelap..."
     identify_overlap
-    vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    #vmdcon -warn "ATTENTION: No routine for (counter-)ion replacement implemented yet"
+    vmdcon -info "-------------------------------------------------------------"
+    vmdcon -info "Reposition non-solvent overlap..."
+    move_nonsolvent_overlap
     vmdcon -info "-------------------------------------------------------------"
     vmdcon -info "Remove overlap..."
     return [ remove_overlap ]
