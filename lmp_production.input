@@ -71,7 +71,10 @@ else &
 ##############
 # Store forces
 
-if "${store_forces} > 0" then "fix storeUnconstrainedForces all store/force"
+if "${store_forces} > 0" then &
+    "fix storeUnconstrainedForces all store/force" &
+    "fix storeUnconstrainedForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeUnconstrainedForces[*]"
+
 # https://lammps.sandia.gov/doc/fix_store_force.html
 # Store the forces on atoms in the group at the point during each timestep when
 # the fix is invoked, as described below. This is useful for storing forces

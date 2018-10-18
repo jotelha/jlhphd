@@ -69,6 +69,8 @@ namespace eval ::JlhVmd:: {
 
   # distance within which molecules are regarded as overlapping
   set overlap_distance 2.0
+  # clip indenter that far away from cell boundary:
+  set padding_distance 5.0
 
   # two small supportive functions to enhance vmd's matrix manipulation toolset
   proc scalar_times_matrix {s m} {
@@ -468,6 +470,7 @@ namespace eval ::JlhVmd:: {
     variable system_id
     variable indenter_id
     variable indenter
+    variable padding_distance
 
     set a [ molinfo $system_id get a ]
     set b [ molinfo $system_id get b ]
@@ -476,8 +479,9 @@ namespace eval ::JlhVmd:: {
     vmdcon -info [format "%-30.30s %12d" \
       "# atoms in original indenter:" [$indenter num]]
 
+    # user overlap_distance as padding to box boundary
     set indenter [ atomselect $indenter_id \
-      "(x > 0.0) and (y > 0.0) and (z > 0.0) and (x < $a) and (y < $b) and (z <$c)"]
+      "(x > $padding_distance) and (y > $padding_distance) and (z > $padding_distance) and (x < [expr $a - $padding_distance]) and (y < [expr $b - $padding_distance]) and (z <[expr $c - $padding_distance])"]
     $indenter global
 
     vmdcon -info [format "%-30.30s %12d" \
@@ -670,6 +674,7 @@ namespace eval ::JlhVmd:: {
     set overlapping_residues [ \
       concat $overlapping_surfactant_residues $overlapping_counterion_residues ]
 
+    set nmoved 0
     foreach res $overlapping_residues {
       vmdcon -info [ format "Treating overlapping residue %8d..." $res ]
       set cur [ atomselect $combined_id "residue $res"]
@@ -682,7 +687,6 @@ namespace eval ::JlhVmd:: {
         [format "%12d" [$cur num]]
 
       # only try 1000 times to avoid endless loop
-      set nmoved 0
       for {set i 0} {$i<1000} {incr i} {
         set cur_overlapping [atomselect $combined_id \
           "same fragment as (exwithin $overlap_distance of residue $res)"]
