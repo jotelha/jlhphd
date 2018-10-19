@@ -16,6 +16,9 @@ variable restart_frequency       index  100000
 
 variable surfactant_name         index  SDS # SDS or CTAB
 variable has_indenter            index  0
+variable freeze_substrate        index  0 # keep substrate frozen (during minim)
+# this can be useful if a very dense initial packing would result into substrate
+# deformation otherwise
 
 variable nvtEqSteps      index    100000    # 200 ps
 variable nptEqSteps      index    100000    # 200 ps
