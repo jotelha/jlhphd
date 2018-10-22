@@ -19,7 +19,7 @@ else &
     "variable tempered_group string all"
 
 fix timeIntegration     ${tempered_group} nve # necessary for nvt via langevin
-fix thermostat          ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29061988
+fix thermostat          ${tempered_group} langevin ${initialT} ${temperatureT} 100 29061988
 #   ^ID                 ^group-ID
 #                           ^langevin
 #                                    ^Tstart         ^Tstop          ^damp

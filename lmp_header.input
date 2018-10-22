@@ -25,6 +25,7 @@ variable nptEqSteps      index    100000    # 200 ps
 variable productionSteps index   5000000    #  10 ns
 
 variable temperatureT   index    298    # K
+variable initialT       index    ${temperatureT}  # for ramped temperature
 variable pressureP      index      1    # atm
 
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
