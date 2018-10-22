@@ -221,7 +221,7 @@ variable z_center equal $(( zlo + zhi ) / 2.0)
 # length. The "inside" of the plane is the half-space in the direction of the
 # normal vector; see the discussion of the side option below.
 region upper_half plane 0  0  ${z_center} 0 0 1          side in
-#                       ^x ^y ^z          ^plane normal  ^everython in dirction of normal in region
+#                       ^x ^y ^z          ^plane normal  ^everything in direction of normal in region
 region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)) side in
 #                              ^cylinder axis
 #                                ^cylinder coordinates in x,y dim
