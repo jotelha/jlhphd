@@ -30,6 +30,41 @@ type_mapping_regex = re.compile(r'''
         ^\#\ *(?P<index>\d+)\ *(?P<name>\d+)
         ''', re.MULTILINE | re.VERBOSE )
 
+section_header_dict = {
+    'Masses':'atom types',
+    'Atoms':'atoms',
+    'Angles':'angles',
+    'Angle Coeffs':'angle types',
+    'Bonds':'bonds',
+    'Bond Coeffs':'bond types',
+    'Dihedrals':'dihedrals',
+    'Dihedral Coeffs':'dihedral types'
+    #'Pair Coeffs', no header
+    #'Velocities', no header
+}
+
+header_section_dict = {
+    header: section for section, header in section_header_dict.items() }
+
+header_ordering_list = [
+    'atoms',
+    'atom types',
+    'angles',
+    'angle types',
+    'bonds',
+    'bond types',
+    'dihedrals',
+    'dihedral types' ]
+
+header_ordering_dict = dict(
+    zip( header_ordering_list, range(len(header_ordering_list)) ) )
+
+def header_key(key):
+    if key in header_ordering_dict:
+        return header_ordering_dict[key]
+    else:
+        return len(header_ordering_dict)
+
 # re.VERBOSE
 #
 # This flag allows you to write regular expressions that look nicer and are more
@@ -68,7 +103,10 @@ def map_types(datafile):
                 print("Add mapping index: {} <--> name: {}".format(
                     mapping.group('index'), mapping.group('name') ) )
                 mapping_table.append( ( int(mapping.group('name')), int(mapping.group('index')) ) )
-        mapping_dict[key] = dict(mapping_table)
+
+        # only if mapping table not empty:
+        if len(mapping_table) > 0:
+            mapping_dict[key] = dict(mapping_table)
 
     print("Created mapping dict:")
     pprint(mapping_dict)
@@ -96,8 +134,11 @@ def merge_lammps_datafiles(datafile,reffile,outfile):
     print("Atom types in reference data file:")
     for line in ref.sections["Masses"]: print(line.rstrip())
 
-    print("Atom types in data file:")
-    for line in dat.sections["Masses"]: print(line.rstrip())
+    if "Masses" in dat.sections:
+        print("Atom types in data file:")
+        for line in dat.sections["Masses"]: print(line.rstrip())
+    else:
+        print("No atom types in data file!")
 
     print("Sections in reference data file:")
     pprint(ref.sections.keys())
@@ -105,7 +146,7 @@ def merge_lammps_datafiles(datafile,reffile,outfile):
     print("Sections in data file:")
     pprint(dat.sections.keys())
 
-    # very weird: pizza.py apparenlty creates an object called "list" 
+    # very weird: pizza.py apparenlty creates an object called "list"
     # containing its command line arguments
     # try:
     #    del list
@@ -146,6 +187,36 @@ def merge_lammps_datafiles(datafile,reffile,outfile):
         else:
             print("Missing section {} does not require specific mapping, copy as is.".format(section))
             dat.sections[section] = ref.sections[section]
+
+    # if new sections have been added (or the lenght of sections has been
+    # altered), the header must be updated accordingly
+    print("Check header for completeness...")
+    for section in dat.sections.keys():
+        if section in section_header_dict:
+            header = section_header_dict[section]
+            if header in dat.headers:
+                print( ' '.join((
+                    "Section '{:s}' corresponds".format(section),
+                    "to existent header entry '{:s}'".format(header) )) )
+                if dat.headers[header] == len(dat.sections[section]):
+                    print(
+                        "Header value {} agrees with section length.".format(
+                            dat.headers[header] ))
+                else:
+                    print( ' '.join((
+                        "Header value {} does not".format(dat.headers[header]),
+                        "agree with section length {}! Updated.".format(
+                            len(dat.sections[section] ) ) )) )
+                    dat.headers[header] = len(dat.sections[section])
+            else:
+                print( ' '.join((
+                    "No corresponding header entry '{}'".format(header),
+                    "for section '{}' of length {}! Created.".format(section,
+                        len(dat.sections[section] ) ) )) )
+                dat.headers[header] = len(dat.sections[section])
+        else:
+            print("No header entry required for section '{}'.".format(section) )
+
 
     print("Write merged data to {}...".format(outfile))
     dat.write(outfile)
