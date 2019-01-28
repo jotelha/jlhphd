@@ -8,8 +8,6 @@ MD parameters are based upon
 
 * [CHARMM36 Jul17 package, modified](https://github.com/jotelha/jlh_toppar_c36_jul17)
 
-git@github.com:jotelha/N_surfactant_on_substrate_template.git
-
 ## TODO 
 (from high to low priority):
 
