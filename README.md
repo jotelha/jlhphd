@@ -1,5 +1,22 @@
 # Surfactant Adsorption Workflow
 
+  * [TODO](#todo)
+  * [Software requirements](#software-requirements)
+  * [Overview](#overview)
+    + [Selection of simulation parameters](#selection-of-simulation-parameters)
+    + [Initial configuration preparation](#initial-configuration-preparation)
+    + [Surfactant film MD](#surfactant-film-md)
+    + [Indenter on film MD](#indenter-on-film-md)
+    + [Realization as a FireWorks workflow](#realization-as-a-fireworks-workflow)
+  * [Detailed description of initial configuration preparation](#detailed-description-of-initial-configuration-preparation)
+    + [Surface sample preparation](#surface-sample-preparation)
+    + [Aggregate preassembly](#aggregate-preassembly)
+    + [Formatting: Preparation of PDB files to be read by GROMACS](#formatting-preparation-of-pdb-files-to-be-read-by-gromacs)
+    + [Solvation](#solvation)
+    + [Formatting: Convert GROMACS output back to PDB](#formatting-convert-gromacs-output-back-to-pdb)
+    + [Convert PDB to CHARMM  PSF](#convert-pdb-to-charmm--psf)
+    + [Create LAMMPS input](#create-lammps-input)
+
 Tool scripts and template input files are to be found within the repository
 
 * [N_surfactant_on_substrate_template](https://github.com/jotelha/N_surfactant_on_substrate_template)
