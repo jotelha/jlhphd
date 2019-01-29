@@ -28,7 +28,7 @@ MD parameters are based upon
 ## TODO 
 (from high to low priority):
 
-- [ ] Attach all simulation meta data and parameters available to workflows.
+- [ ] Attach all simulation meta data and parameters available to workflows and files in filepad.
 - [ ] Remove any absolute path dependency from `JobAdmin.py` and `job_admin.ipynb`. 
       Push and pull any relevant files to the data base. 
 - [ ] Make workflow environment-independent (i.e. nothing machine-dependent in `JobAdmin.py` and `job_admin.ipynb`,
