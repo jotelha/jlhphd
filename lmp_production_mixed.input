@@ -6,6 +6,19 @@ if "${has_indenter} > 0" then &
 else &
     "variable pressured_group string all"
 
+if "${has_indenter} >0 && ${constant_indenter_velocity} > 0.0" then &
+  "velocity indenter set 0.0 0.0 ${constant_indenter_velocity} sum no units box"
+#                        ^vx ^vy ^vy
+# The sum keyword is used by all styles, except zero. The new velocities will be
+# added to the existing ones if sum = yes, or will replace them if sum = no.
+# The units keyword is used by set and ramp. If units = box, the velocities and
+# coordinates specified in the velocity command are in the standard units 
+# described by the units command (e.g. Angstroms/fmsec for real units). If
+# units = lattice, velocities are in units of lattice spacings per time (e.g.
+# spacings/fmsec) and coordinates are in lattice spacings. The lattice command
+# must have been previously used to define the lattice spacing.
+
+# treats indenter rigid, i.e. removes all forces on indenter
 if "${has_indenter} > 0" then &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 

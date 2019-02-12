@@ -128,9 +128,10 @@ colvar {
   # run-time calculations of statistical properties for individual colvars can
   # be performed. At the moment, several types of time correlation functions,
   # running averages and running standard deviations are available.
-  # runAve on
-  # runAveLength {{ output_frequency|default(100,true)|int }}
-}
+  {% if store_average %}
+  runAve on
+  runAveLength {{ output_frequency|default(100,true)|int }}
+  {% endif %}}
 
 colvar {
   name indenter_com_substrate_com_distance_z
@@ -161,8 +162,10 @@ colvar {
   outputTotalForce on
   outputAppliedForce on
 
-  # runAve on
-  # runAveLength {{ output_frequency|default(100,true)|int }}
+  {% if store_average %}
+  runAve on
+  runAveLength {{ output_frequency|default(100,true)|int }}
+  {% endif %}
 }
 
 colvar {
@@ -174,8 +177,10 @@ colvar {
   }
   outputTotalForce on
 
-  # runAve on
-  # runAveLength {{ output_frequency|default(100,true)|int }}
+  {% if store_average %}
+  runAve on
+  runAveLength {{ output_frequency|default(100,true)|int }}
+  {% endif %}
 }
 
 colvar {
@@ -188,8 +193,10 @@ colvar {
   }
   outputTotalForce on
 
-  # runAve on
-  # runAveLength {{ output_frequency|default(100,true)|int }}
+  {% if store_average %}
+  runAve on
+  runAveLength {{ output_frequency|default(100,true)|int }}
+  {% endif %}
 }
 
 harmonic {
