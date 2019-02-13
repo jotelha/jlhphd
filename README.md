@@ -42,6 +42,83 @@ MD parameters are based upon
       but never necessary, at any point of the workflow.
 - [ ] Transfer workflow from Python to a library of .yaml text files.
 
+## Guidelines
+
+- Move all independent scripts from this repositotry into bwCloud image module `MDTools` under `$EBROOTMDTOOLS/jlh/bin` 
+  (`$EBROOTMDTOOLS` is available after `module load MDTools`)
+- Move script and input file **templates** to be used by ScriptWriterTask to `$EBROOTFWJLH/fireworks/user_objects/firetasks/templates`.
+  (`$EBROOTFWJLH` is available after `module load FireWorks`)
+- Push independent input files (i.e. substrate unit cells, LAMMPS input, etc.) to be accessible 
+  during FireWork execution to FilePad database with the functionality of `fireworks.utilities.filepad.FilePad`, 
+  using descriptive identifiers and meaningful meta data. Example:
+  ```python
+  from from fireworks.utilities.filepad import FilePad
+  fp = FilePad(
+    host=mongodb_host,
+    port=mongodb_port,
+    database=mongodb_name,
+    username=mongodb_user,
+    password=mongodb_pwd)
+  fp.add_file(
+    template_prefix + os.sep + 'indenter_insertion.tcl',
+    identifier='indenter_insertion.tcl',
+    metadata={
+        'type':     'template',
+        'language': 'tcl',
+        'usecase':  'indenter insertion in vmd'})
+  ```
+  FireWorks should access these files with the `GetFilesTask`, i.e.
+  ```python
+  from fireworks.user_objects.firetasks.filepad_tasks import GetFilesTask
+  get_data_file_ft = GetFilesTask( {
+    'identifiers': [ 'indenter_insertion.tcl' ],
+    'new_file_names': [ 'dummy.tcl' ] } )
+  ```
+  When pushing files to the data base, existing entries are not overwritten by default. This can be
+  achieved consecutive `DeleteFilesTask` and `AddFilesTask`:
+  ```python
+  from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask, DeleteFilesTask
+  sb_delete_ft = DeleteFilesTask( {
+    'identifiers': ['indenter_insertion.tcl']})
+  sb_store_ft =  AddFilesTask( {
+    'paths':       ['indenter_insertion.tcl'],
+    'identifiers': ['indenter_insertion.tcl']})
+  ```
+- Transform system preparation methods of class `JobAdmin` in `$EBROOTFWJLH/fwtools/JobAdmin.py` 
+  (`$EBROOTFWJLH` is available after `module load FireWorks`) into independent functions 
+  of a minimum set of parameters callable by FireWorks' `PyTask` .
+- Transition to `.yaml` files instead of `.ipynb` notebooks for job preparation.
+- Gradually make `JobAdmin`'s attribute pandas DataFrame `_sim_df` obsolete by attaching parameters 
+  and metadata to FireWorks workflow.
+- Never rely on a system's name / identifier for any parametric information.
+- Place modifications to official FireWorks distribution files under `$EBROOTFWJLH/fireworks` 
+  (`$EBROOTFWJLH` is available after `module load FireWorks`) to override 
+  original FireWorks functionality without modifying original distribution 
+  (The original distribution's system-wide installation is found under 
+  `/usr/local/lib/python3.6/dist-packages/FireWorks-1.8.4-py3.6.egg/fireworks`, take files to be modified from here).
+  Attention: Any original FireWorks subfolder duplicated within `$EBROOTFWJLH/fireworks` must
+  - contain a one line `__init__.py` with content `__path__ = __import__('pkgutil').extend_path(__path__, __name__)`
+  - have the relative location of this init file appended to the `for` loop list of `bin/setup.sh`
+  After any new `__init__.py` file, do `module purge` (unload custom FireWorks) 
+  and `sudo bin/setup.sh` to update system-wide FireWorks installation. 
+  Samples of such modifications are custom FireTasks under `fireworks/user_objects/firetasks` 
+  and ScriptWriterTask templates under `fireworks/user_objects/firetasks/templates`.
+- The execution environment for FireWorks services on the bwCloud image is set up in a tiny wrapper script
+  `/usr/local/bin/wrafw`:
+  ```bash
+  #!/bin/bash
+  echo "wrafw called"
+  source /etc/profile
+  echo "source /etc/profile"
+  module load FireWorks/jlh-25Jan19
+  echo "module load FireWorks/jlh-25Jan19"
+
+  exec $@
+  ```
+  Modify only if absolutely necessary. Try to merge all modifications within the framework outlined above.
+- Until furthe notice, we stick with FireWorks 1.8.4. 1.8.5 breaks data base authentication.
+
+
 ## Software requirements
 
 All required software is set up ready-to-use within the openstack image (TODO: make available)
