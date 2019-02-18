@@ -2,6 +2,10 @@
 
 # ignore all files in root
 *
+
+# but not subfolder fw
+!fw
+!fw/**/*
 # except .py files
 !*.py
 !*.ipynb
