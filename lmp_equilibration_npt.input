@@ -1,7 +1,3 @@
-variable dataFile       index  ${baseName}_nvtEquilibrated.lammps
-
-log                     ${baseName}_nptEquilibration.log
-
 include                 lmp_header.input
 ############
 # restraints
@@ -176,28 +172,28 @@ fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # temperature and pressure computations. Similarly, the SHAKE contribution to
 # the pressure of the system (virial) is also accounted for.
 
-# dump            dumpTraj all atom 100 ${baseName}_nptEquilibration.dump
+# dump            dumpTraj all atom 100 ${baseName}.dump
 if "${reinitialize_velocities} > 0" then &
   "velocity ${tempered_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
 
 
 dump            dumpPng nonwater image ${nptEqSteps} &
-                ${baseName}_nptEquilibration.*.png type type
+                ${baseName}.*.png type type
 
 
 if "${mpiio} > 0" then &
   "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} ${baseName}_nptEquilibration.nc id mol type x y z" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} ${baseName}.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
-  "dump dumpNetCDF all netcdf ${netcdf_frequency} ${baseName}_nptEquilibration.nc id mol type x y z"
+  "dump dumpNetCDF all netcdf ${netcdf_frequency} ${baseName}.nc id mol type x y z"
 
 print "LAMMPS state before NPT equilibration:"
 info all
 
 run             ${nptEqSteps}
 
-write_data      ${baseName}_nptEquilibrated.lammps
+write_data      ${baseName}.lammps
 
 unfix           timeIntegration
 unfix           thermostat

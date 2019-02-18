@@ -156,7 +156,7 @@ if "${store_forces} > 0" then &
 
 
 dump            dumpPng nonsolvent image 1000000 &
-                ${baseName}_production_mixed.*.png type type
+                ${baseName}.*.png type type
 #                                      ^one image every 2 ns
 
 # output format for stored forces:
@@ -169,7 +169,7 @@ dump            dumpPng nonsolvent image 1000000 &
 if "${mpiio} > 0 && ${store_forces} > 0" then &
   "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
-    ${baseName}_production_mixed.nc id mol type x y z fx fy fz &
+    ${baseName}.nc id mol type x y z fx fy fz &
     f_storeAnteSHAKEForces[1] f_storeAnteSHAKEForces[2] f_storeAnteSHAKEForces[3] &
     f_storeAnteStatForces[1] f_storeAnteStatForces[2] f_storeAnteStatForces[3] &
     f_storeUnconstrainedForces[1] f_storeUnconstrainedForces[2] f_storeUnconstrainedForces[3] &
@@ -179,7 +179,7 @@ if "${mpiio} > 0 && ${store_forces} > 0" then &
 elif "${store_forces} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
-    ${baseName}_production_mixed.nc id mol type x y z fx fy fz &
+    ${baseName}.nc id mol type x y z fx fy fz &
     f_storeAnteSHAKEForces[1] f_storeAnteSHAKEForces[2] f_storeAnteSHAKEForces[3] &
     f_storeAnteStatForces[1] f_storeAnteStatForces[2] f_storeAnteStatForces[3] &
     f_storeUnconstrainedForces[1] f_storeUnconstrainedForces[2] f_storeUnconstrainedForces[3] &
@@ -189,11 +189,11 @@ elif "${store_forces} > 0" &
 elif "${mpiio} > 0" &
   "print 'netcdf/mpiio output'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
-    ${baseName}_production_mixed.nc id mol type x y z" &
+    ${baseName}.nc id mol type x y z" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
-    ${baseName}_production_mixed.nc id mol type x y z"
+    ${baseName}.nc id mol type x y z"
 
 # interestingly, wildcard * operator does not work for dump netcdf
 
@@ -215,7 +215,7 @@ info all
 # at 2 fs time step output every 2 ps
 run             ${productionSteps} upto
 
-write_data      ${baseName}_production_mixed.lammps
+write_data      ${baseName}.lammps
 
 # unfix           timeIntegration
 unfix           thermostat

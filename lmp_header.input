@@ -1,6 +1,8 @@
 # technical settings
 
 # index varibles can be overridden by command line parameters "-v varName value"
+variable baseName                index "default"
+variable dataFile                index  "datafile.lammps"
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
@@ -399,7 +401,7 @@ if "${pbc2d} > 0" then &
 #   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
 #   c_thermo_edihed c_thermo_eimp c_thermo_epair c_thermo_evdwl c_thermo_ecoul  &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
-#   mode scalar file ${baseName}_thermo.out
+#   mode scalar file ${baseName}.out
 
 # (1) If the last printable character on the line is a “&” character, the
 # command is assumed to continue on the next line. The next line is concatenated

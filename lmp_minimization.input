@@ -6,11 +6,6 @@
 
 variable                robust_minimization index 0
 
-# include                 system_specific.input
-variable dataFile       index  ${baseName}_psfgen.data
-
-log                     ${baseName}_minimization.log
-
 include                 lmp_header.input
 
 thermo                  100
@@ -77,6 +72,6 @@ else &
 # Either or both of the etol and ftol values can be set to 0.0, in which case
 # some other criterion will terminate the minimization.
 
-write_data     ${baseName}_minimized.lammps
+write_data     ${baseName}.lammps
 
 reset_timestep  0

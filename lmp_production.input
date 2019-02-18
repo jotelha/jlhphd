@@ -1,4 +1,4 @@
-# define baseName via command line swicth "-v baseName systemXYZ"
+# define baseName via command line switch "-v baseName systemXYZ"
 # also define restartFile to override default name below
 
 # setting $is_restart continues a run from given restart file
@@ -26,10 +26,6 @@ if   "${is_restart} == 0" then "print 'Initial run on system ${baseName}'" &
 elif "${mpiio}      == 0"      "variable restartFile index default.restart" &
 else                           "variable restartFile index default.mpiio.restart"
 # in the last case, run is restart and mpiio is used
-
-if "${is_restart} == 0" then "variable dataFile index ${baseName}_nptEquilibrated.lammps"
-
-log                     ${baseName}_production.log
 
 print "Variables in lmp_production.input:"
 info variables
