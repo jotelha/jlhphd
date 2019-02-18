@@ -1,12 +1,12 @@
 ############
 # PRODUCTION
 #
-if "${has_indenter} > 0" then 
+if "${has_indenter} > 0" then &
   "variable pressured_group string nonindenter" &
 else &
   "variable pressured_group string all"
 
-if "${has_indenter} >0 && ${constant_indenter_velocity} > 0.0" then &
+if "${has_indenter} >0 && ${constant_indenter_velocity} != 0.0" then &
   "velocity indenter set 0.0 0.0 ${constant_indenter_velocity} sum no units box"
 #                        ^vx ^vy ^vy
 # The sum keyword is used by all styles, except zero. The new velocities will be
@@ -19,9 +19,9 @@ if "${has_indenter} >0 && ${constant_indenter_velocity} > 0.0" then &
 # must have been previously used to define the lattice spacing.
 
 # treats indenter rigid, i.e. removes all forces on indenter
-if "${has_indenter} >0 && ${constant_indenter_velocity} > 0.0" then &
+if "${has_indenter} > 0 && ${constant_indenter_velocity} != 0.0" then &
   "fix freeze indenter nve/noforce" &
-if "${has_indenter} > 0" then &
+elif "${has_indenter} > 0" &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 
 # store forces before thermo- and barostatting, but after colvars contraints
