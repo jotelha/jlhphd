@@ -1,0 +1,11 @@
+name: "NEMO Recover LAMMPS"
+spec:
+    _category: "nemo_noqueue"
+    _files_out:
+      restart_file: default.mpiio.restart    
+    _allow_fizzled_parents: True
+    _tasks:
+    - _fw_name: RecoverLammpsTask
+      recover: True
+      continue: False
+      fizzle_on_no_restart_file: True
