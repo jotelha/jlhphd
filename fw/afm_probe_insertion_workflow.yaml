@@ -11,7 +11,7 @@ fws:
     - _fw_name: GetFilesTask
       identifiers:
       - 50Ang_stepped.pdb
-      - 646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_10ns.lammps
+      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
       new_file_names:
       - indenter.pdb
       - interface.lammps

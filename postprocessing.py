@@ -1339,6 +1339,22 @@ def read_production_thermo():
     # production_thermo_pd[["PotEng","E_pair"]].rolling(window=10,center=True).mean().plot()
     return production_thermo_pd
 
+def read_production_thermo_ave(t):
+
+    # subprocess.run(
+    #    ['./extract_thermo.sh',production_log_file,'production_thermo.out'],
+    #    shell=False, check=True)
+
+    #production_thermo_file = glob('thermo.out')[0]
+    production_thermo_pd = pd.read_csv('thermo_ave.out',delim_whitespace=True)
+    production_thermo_pd.set_index("Step",inplace=True)
+
+    #makeThermoPlotsFromDataFrame(production_1ns_thermo_pd.iloc[::100].copy()); # only every 100th data point
+    # makeThermoPlotsFromDataFrame(production_thermo_pd.copy()); # only every 100th data point
+    # makeRollingAverageThermoPlotsFromDataFrame(production_thermo_pd.copy(),window=10);
+    # production_thermo_pd[["PotEng","E_pair"]].rolling(window=10,center=True).mean().plot()
+    return production_thermo_pd
+
 # ## Energy evaluations with pandas
 
 # ### Minimization

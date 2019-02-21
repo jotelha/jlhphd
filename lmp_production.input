@@ -22,7 +22,7 @@ variable is_restart     index  0         # marks current run as restart
 
 # for the initial run, a small file called system_specific.input is expected
 # to define the variable $baseName
-if   "${is_restart} == 0" then "print 'Initial run on system ${baseName}'" &
+if   "${is_restart} == 0" then "print 'Initial run on system'" &
 elif "${mpiio}      == 0"      "variable restartFile index default.restart" &
 else                           "variable restartFile index default.mpiio.restart"
 # in the last case, run is restart and mpiio is used
