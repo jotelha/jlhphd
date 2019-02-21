@@ -42,6 +42,17 @@ MD parameters are based upon
       but never necessary, at any point of the workflow.
 - [ ] Transfer workflow from Python to a library of .yaml text files.
 
+These TODOs have been achieved (partially) for the latter part of workflows (AFM probe approach):
+- [ ] Attach all simulation meta data and parameters available to workflows and files in filepad.
+- [ ] Remove any absolute path dependency from `JobAdmin.py` and `job_admin.ipynb`. 
+      Push and pull any relevant files to the data base. 
+- [X] Make workflow environment-independent (i.e. nothing machine-dependent in `JobAdmin.py` and `job_admin.ipynb`,
+      especially no `module load` commands). Using worker-specific parameters as descibed within the 
+      [FireWorks ducumentation](https://materialsproject.github.io/fireworks/worker_tutorial.html) should help.
+- [ ] Make choice of *worker* and *queue* (i.e. bwCloud, NEMO or JUWELS) really possible by single Fireworks option
+      `category`, without further adaptions. (For this, ssh has to work again between NEMO and bwCloud!)
+- [X] Transfer workflow from Python to a library of .yaml text files.
+
 ## Guidelines
 
 - Move all independent scripts from this repositotry into bwCloud image module `MDTools` under `$EBROOTMDTOOLS/jlh/bin` 
