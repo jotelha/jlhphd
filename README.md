@@ -549,3 +549,37 @@ converting the system into a set of PDB files with at most 9999 resiudues each. 
 
 ### Create LAMMPS input
 `ch2lmp` utilizes the Perl script `charmm2lammps.pl` in order to take PDB, PSF, RTF and PRM (four files) and converts it into LAMMPS .in and .data files (two files). Lateron in our workflow, .data is used. .in is obsolete.
+
+### ...  LAMMPS Fireworks ...
+TODO: Write documentaiton
+
+## AFM tip approach
+The subfolder `fw` constains samples for Fireworks workflows on different machines. 
+
+The configuration & parameter file to be passed along subsequent 
+LAMMPS Fireworks is referred to as `data_file` within the `_files_in` 
+nd `_files_out` sections of the `.yaml` file workflow description.
+
+* `filepad_add.yaml` and
+* `filepad_get.yaml` 
+
+push and pull such a file to and from Firework's underlying *Filepad* database. They can
+be inserted after or before any Fireworks yielding or expecting `data_file` as `_files_out`
+or `_files_in`. This might be necessary at intermmediate steps if workflow moves onto 
+different filesystem.
+
+* `afm_probe_insertion_workflow.yaml` inserts the AFM probe into a readily prepared interfacial system.
+* `lmp_equilibration.nemo.yaml` runs minimization, nvt and npt equilibration for such as system on NEMO.
+* `lmp_production_constant_AFM_tip_velocity.nemo.yaml` drives the probe towards the substrate on NEMO. 
+  If job fails (likely due to walltime), the latest restart file is retrieved and a subsequent continuation
+  run is submitted automatically. 
+  
+These (partial) workflows can be appended to their respective predecessor by 
+
+    lpad add ${YAML_DESCRIPTION_OF_INITIAL_PARTIAL_WF}
+    
+for the initial part and subsequent use of 
+
+    lpad append_wflow -i ${FW_ID_OF_PREDECESSOR_FIREWORKS} -f ${YAML_DESCRIPTION_OF_SUBSEQUENT_PARTIAL_WF}
+    
+for all following sections.
