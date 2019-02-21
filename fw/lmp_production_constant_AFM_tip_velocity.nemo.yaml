@@ -23,7 +23,6 @@ fws:
       - lmp_production.input
       - lmp_production_mixed.input
     - _fw_name: CmdTask
-      fizzle_bad_rc: true
       cmd: lmp
       opt:
       - -in lmp_production.input
@@ -37,7 +36,8 @@ fws:
       - -v mpiio 1
       - -v thermo_frequency 10000
       - -v thermo_average_frequency 10000
-      - -v netcdf_frequency 100000
+      - -v netcdf_frequency  100000
+      - -v restart_frequency 100000
       - -v compute_interactions 1
       - -v store_forces 1
       stderr_file:   std.err
@@ -48,8 +48,9 @@ fws:
     - filename: log.lammps
       nlines: 25
 
+# Recover most recent restart file:
 - fw_id: -2
-  name: "NEMO LAMMPS Post-Production"
+  name: "NEMO recover failed LAMMPS run"
   spec:
     _category: "nemo_noqueue"
     _allow_fizzled_parents: True
@@ -58,11 +59,11 @@ fws:
     _tasks:
     - _fw_name: RecoverLammpsTask
       recover:      True # filter most recent restart file and forward
-      restart:      True # append restart fw as defined within "restart_fw"
+      repeated_recover_fw_name: NEMO recover failed LAMMPS run, repeatedly
       max_restarts: 5 # repeatedly append recover and restart fireworks
       # a firework to be appended as restart if initial LAMMPS run fails
       restart_fw:
-      - name: "NEMO LAMMPS restart run"
+        name: "NEMO LAMMPS restart run"
         spec:
         _category: "nemo_queue"
         _queueadapter:
@@ -98,6 +99,7 @@ fws:
           - -v thermo_frequency 10000
           - -v thermo_average_frequency 10000
           - -v netcdf_frequency 100000
+          - -v restart_frequency 100000
           - -v compute_interactions 1
           - -v store_forces 1
           - -v is_restart 1
@@ -110,62 +112,63 @@ fws:
         - filename: log.lammps
           nlines: 25
 
-    - _fw_name: GetFilesTask
-      identifiers:
-      - extract_thermo.sh
-
-    - _fw_name: ScriptTask
-      script:
-      - bash extract_thermo.sh log.lammps thermo.out
-      use_shell:     true
-      fizzle_bad_rc: false
-
-    # first delete if file existent
-    - _fw_name: DeleteFilesTask
-      identifiers:
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.lammps
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo.out
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo_ave.out
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.log
-
-    # then add again:
-    - _fw_name: AddFilesTask
-      identifiers:
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.lammps
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo.out
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo_ave.out
-      - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.log
-      paths:
-      - datafile.lammps
-      - thermo.out
-      - thermo_ave.out
-      - log.lammps
-      metadata:
-      - system_name:      646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped
-        surfactant:       SDS
-        sf_nmolecules:    646
-        sf_preassembly:   monolayer
-        counterion:       NA
-        ci_preassembly:   at polar heads
-        substrate:        AU
-        sb_name:          AU_111_51x30x2
-        sb_crystal_plane: 111
-        sb_multiples:
-        - 51
-        - 30
-        - 2
-        solvent:          H2O
-        sv_density:       997 # kg m^-3
-        sv_preassembly:   random
-        indenter:         AU
-        indenter_pdb:     50Ang_stepped
-        indenter_vel:     0.1 # m / s, constant speed, linear translation
-        indenter_dist:    7.5 # nm, initial distance above substrate
-        temperature:      298 # K
-        pressure:         1 # atm
-        total_steps:      37500000 # a 2 fs each
-        total_time:       75 # ns
-        state:            probed
+    # TODO: automatically piece together all fragments
+    # - _fw_name: GetFilesTask
+    #   identifiers:
+    #   - extract_thermo.sh
+    #
+    # - _fw_name: ScriptTask
+    #   script:
+    #   - bash extract_thermo.sh log.lammps thermo.out
+    #   use_shell:     true
+    #   fizzle_bad_rc: false
+    #
+    # # first delete if file existent
+    # - _fw_name: DeleteFilesTask
+    #   identifiers:
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.lammps
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo.out
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo_ave.out
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.log
+    #
+    # # then add again:
+    # - _fw_name: AddFilesTask
+    #   identifiers:
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.lammps
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo.out
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps_thermo_ave.out
+    #   - 646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_37500000_steps.log
+    #   paths:
+    #   - datafile.lammps
+    #   - thermo.out
+    #   - thermo_ave.out
+    #   - log.lammps
+    #   metadata:
+    #   - system_name:      646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped
+    #     surfactant:       SDS
+    #     sf_nmolecules:    646
+    #     sf_preassembly:   monolayer
+    #     counterion:       NA
+    #     ci_preassembly:   at polar heads
+    #     substrate:        AU
+    #     sb_name:          AU_111_51x30x2
+    #     sb_crystal_plane: 111
+    #     sb_multiples:
+    #     - 51
+    #     - 30
+    #     - 2
+    #     solvent:          H2O
+    #     sv_density:       997 # kg m^-3
+    #     sv_preassembly:   random
+    #     indenter:         AU
+    #     indenter_pdb:     50Ang_stepped
+    #     indenter_vel:     0.1 # m / s, constant speed, linear translation
+    #     indenter_dist:    7.5 # nm, initial distance above substrate
+    #     temperature:      298 # K
+    #     pressure:         1 # atm
+    #     total_steps:      37500000 # a 2 fs each
+    #     total_time:       75 # ns
+    #     state:            probed
 
 links:
   -1:
