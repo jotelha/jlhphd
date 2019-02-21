@@ -27,7 +27,6 @@ fws:
       - lmp_production_mixed.input
       - datafile.lammps
     - _fw_name: CmdTask
-      fizzle_bad_rc: true
       cmd: lmp
       opt:
       - -in lmp_production.input
@@ -68,7 +67,7 @@ fws:
       max_restarts: 5 # repeatedly append recover and restart fireworks
       # a firework to be appended as restart if initial LAMMPS run fails
       restart_fw:
-      - name: "NEMO LAMMPS restart run"
+        name: "NEMO LAMMPS restart run"
         spec:
         _category: "nemo_queue"
         _queueadapter:
