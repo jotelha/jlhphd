@@ -227,24 +227,24 @@ links:
   - -6
 
 metadata:
-  - system_name:      646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped
-    surfactant:       SDS
-    sf_nmolecules:    646
-    sf_preassembly:   monolayer
-    counterion:       NA
-    ci_preassembly:   at polar heads
-    substrate:        AU
-    sb_name:          AU_111_51x30x2
-    sb_crystal_plane: 111
-    sb_multiples:
-    - 51
-    - 30
-    - 2
-    solvent:          H2O
-    sv_density:       997 # kg m^-3
-    sv_preassembly:   random
-    indenter:         AU
-    indenter_pdb:     50Ang_stepped
-    indenter_dist:    7.5 # nm, initial distance above substrate
-    temperature:      298 # K
-    pressure:         1 # atm
+  system_name:      646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped
+  surfactant:       SDS
+  sf_nmolecules:    646
+  sf_preassembly:   monolayer
+  counterion:       NA
+  ci_preassembly:   at polar heads
+  substrate:        AU
+  sb_name:          AU_111_51x30x2
+  sb_crystal_plane: 111
+  sb_multiples:
+  - 51
+  - 30
+  - 2
+  solvent:          H2O
+  sv_density:       997 # kg m^-3
+  sv_preassembly:   random
+  indenter:         AU
+  indenter_pdb:     50Ang_stepped
+  indenter_dist:    7.5 # nm, initial distance above substrate
+  temperature:      298 # K
+  pressure:         1 # atm
