@@ -20,6 +20,7 @@ variable restart_frequency       index  100000
 variable surfactant_name         index  SDS # SDS or CTAB
 variable has_indenter            index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
+variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
 variable freeze_substrate        index  0 # keep substrate frozen (during minim)
 # this can be useful if a very dense initial packing would result into substrate
 # deformation otherwise
@@ -454,7 +455,7 @@ thermo_modify  norm no
 
 # averaging output
 #     v Nrepeat                   v Nfreq
-#   v Nevery 
+#   v Nevery
 if "${thermo_average_frequency} > 0 && ${compute_interactions} > 0 && &
   ${has_indenter} > 0" then &
   "fix thermo_average all ave/time &
@@ -492,7 +493,7 @@ elif "${thermo_average_frequency} > 0" &
   "fix thermo_average all ave/time &
     1 ${thermo_average_frequency} ${thermo_average_frequency} &
     c_thermo_pe c_thermo_temp c_thermo_press &
-    file thermo_ave.out" 
+    file thermo_ave.out"
 # https://lammps.sandia.gov/doc/fix_ave_time.html
 # Use one or more global values as inputs every few timesteps, and average them
 # over longer timescales. The resulting averages can be used by other output
@@ -527,8 +528,8 @@ elif "${thermo_average_frequency} > 0" &
 # Nrepeat=1 and Nfreq = 100, then no time averaging is done; values are simply
 # generated on timesteps 100,200,etc.
 #
-# Defaults: The option defaults are mode = scalar, ave = one, start = 0, 
-# no file output, format = %g, title 1,2,3 = strings as described above, 
+# Defaults: The option defaults are mode = scalar, ave = one, start = 0,
+# no file output, format = %g, title 1,2,3 = strings as described above,
 # and no off settings for any input values.
 
 print "Fixes in lmp_header.input:"
