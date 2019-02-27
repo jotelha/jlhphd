@@ -12,17 +12,34 @@ if "${has_indenter} >0 && ${constant_indenter_velocity} != 0.0" then &
 # The sum keyword is used by all styles, except zero. The new velocities will be
 # added to the existing ones if sum = yes, or will replace them if sum = no.
 # The units keyword is used by set and ramp. If units = box, the velocities and
-# coordinates specified in the velocity command are in the standard units 
+# coordinates specified in the velocity command are in the standard units
 # described by the units command (e.g. Angstroms/fmsec for real units). If
 # units = lattice, velocities are in units of lattice spacings per time (e.g.
 # spacings/fmsec) and coordinates are in lattice spacings. The lattice command
 # must have been previously used to define the lattice spacing.
 
 # treats indenter rigid, i.e. removes all forces on indenter
-if "${has_indenter} > 0 && ${constant_indenter_velocity} != 0.0" then &
+# 20190227: doubts about performance of nve/noforce
+if "${has_indenter} > 0 && ${indenter_nve_noforce} > 0 && ${constant_indenter_velocity} != 0.0" then &
   "fix freeze indenter nve/noforce" &
+elif "${has_indenter} > 0 && ${constant_indenter_velocity} != 0.0" &
+  "fix freeze indenter setforce 0.0 0.0 0.0" &
+  "fix freeze indenter nve" &
 elif "${has_indenter} > 0" &
   "fix freeze indenter setforce 0.0 0.0 0.0"
+
+# source: https://lammps.sandia.gov/doc/fix_nve_noforce.html
+# Perform updates of position, but not velocity for atoms in the group each
+# timestep. In other words, the force on the atoms is ignored and their velocity
+# is not updated. The atom velocities are used to update their positions.
+#
+# This can be useful for wall atoms, when you set their velocities, and want the
+# wall to move (or stay stationary) in a prescribed fashion.
+#
+# This can also be accomplished via the fix setforce command, but with fix
+# nve/noforce, the forces on the wall atoms are unchanged, and can thus be
+# printed by the dump command or queried with an equal-style variable that uses
+# the fcm() group function to compute the total force on the group of atoms.
 
 # store forces before thermo- and barostatting, but after colvars contraints
 if "${store_forces} > 0" then &
