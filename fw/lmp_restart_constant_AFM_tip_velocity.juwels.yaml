@@ -1,24 +1,26 @@
-  name: "NEMO recover failed LAMMPS run"
+  name: "JUWELS recover failed LAMMPS run"
   spec:
-    _category: "nemo_noqueue"
+    _category: "juwels_noqueue"
     _allow_fizzled_parents: True
     _files_out:
       restart_file: default.mpiio.restart
     _tasks:
     - _fw_name: RecoverLammpsTask
       recover:      True # filter most recent restart file and forward
-      repeated_recover_fw_name: NEMO recover failed LAMMPS run, repeatedly
-      max_restarts: 5 # repeatedly append recover and restart fireworks
+      repeated_recover_fw_name: JUWELS recover failed LAMMPS run, repeatedly
+      max_restarts: 20 # repeatedly append recover and restart fireworks
       # a firework to be appended as restart if initial LAMMPS run fails
       restart_fw:
         name: "NEMO LAMMPS restart run"
         spec:
-          _category: "nemo_queue"
+          _category: "juwels_queue"
           _queueadapter:
-            nodes: 8
-            ppn: 20
-            queue: ''
-            walltime: 96:00:00
+            account:         hfr13
+            nodes:           2,
+            ntasks:          192
+            ntasks_per_node: 96
+            queue":          batch
+            walltime":       06:00:00
           _files_in:
             restart_file:    default.mpiio.restart
           _files_out:
