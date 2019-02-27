@@ -1,3 +1,26 @@
+# This workflow queues a LAMMPS run on NEMO as Firework "NEMO Trial"
+# The LAMMPS run is followed by a Firework "NEMO recover failed LAMMPS run".
+# This subsequent Firework utilizes "RecoverLammpsTask" to
+# a) queue a restart run with the latest restart file if the
+#    previous LAMMPS run failed (due to walltime) and the maximum number of
+#    restarts has not been reached yet.
+# b) execute a tiny post-processing task, which concatenates outputs of
+#    current (possibly failed) LAMMPS run and previously failed runs. This
+#    step is always appended.
+# In 'RecoverLammpsTask', 'detour_fw' is always appended, but 'restart_fw'
+# only in the case of a failed parent with available restart file.
+
+# ATTENTION: When testing, I have observed the case that a restart file has been
+# written by LAMMPS, while some of the immediately preceding steps had not yet
+# been written to the log file thermo dump. When concatenating such outputs of
+# subsequent restarts the thermo.out might contain a small gap just before
+# a restart happened.
+
+# TODO:
+# * append extraction of results after successfull final run
+# * no redundant metadata / spec entries
+# * reduce number of file duplicates to a minimum
+
 name: "LAMMPS Production Run on NEMO Trial"
 fws:
 - fw_id: -1
