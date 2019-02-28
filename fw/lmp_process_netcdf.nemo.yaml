@@ -19,8 +19,8 @@ spec:
     - --dim 2
     - --plane 20.0
     - --netcdf-output-interval 1000
-    - --verbose
     - --output-formats txt
+    - --verbose
     - default.nc # input file
     - indenter_z_forces # output file name without extension
     - nonindenter_z_forces
