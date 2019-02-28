@@ -423,9 +423,16 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
         energy_label        = r'$\frac{E}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1}}$',
         force_label         = r'$\frac{F}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1} \AA^{-1} }$',
         distance_label      = r'$\frac{d}{\AA}$',
+        time_factor         = 1,
+        temperature_factor  = 1,
+        pressure_factor     = 1,
+        energy_factor       = 1,
+        force_factor        = 1,
+        distance_factor     = 1,
         window        = 1,
         interval      = slice(40,100),
         legend_prefix = None,
+        x_offset      = 0,
         colvars_traj_df_dist_column = "com_com_dist_z" ):
     """Automizes the plotting of group group interactions."""
 
@@ -472,7 +479,7 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
 
     # standard plotting routine
 
-    rows = 8
+    rows = 4
     cols = 2
 
     if fig is None:
@@ -485,7 +492,7 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
         axes = [ax for ax_list in ax_array for ax in ax_list]
 
     df = thermo_df_by_dist.loc[interval,:].rolling(window=window,center=True).mean()
-    x = df.index.get_values()
+    x = df.index.get_values() + x_offset
 
     df.loc[:,"c_indenter_nonindenter_interaction"] = \
         df["c_indenter_surfactant_interaction"] + \
@@ -501,95 +508,6 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
 
     pos = subplotPosition(rows,cols)
 
-    i = 0
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_substrate_solvent_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "substrate - solvent interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_substrate_solvent_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_substrate_surfactant_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "substrate - surfactant interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_substrate_surfactant_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "indenter - substrate interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "indenter - surfactant interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "indenter - solvent interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "indenter - ion interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction"]],
-        legend = "{} absolute value".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "indenter - non-indenter interaction",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction[3]"]],
-        legend = "{} substrate-normal component".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
-    i += 1
-    curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction"]],
-        legend = "{} indenter - substrate interaction".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos, title = "normal interactions",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]],
-        legend = "{} indenter - surfactant interaction".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-    _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction[3]"]],
-        legend = "{} indenter - solvent interaction".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-    _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction[3]"]],
-        legend = "{} indenter - counterion interaction".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-    _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction[3]"]],
-        legend = "{} indenter - non-indenter interaction".format(legend_prefix),
-        fig = fig, ax=axes[i], pos = curpos )
-
     # fig.tight_layout()
     #
     # ret = [fig]
@@ -600,69 +518,70 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
     # fig = plt.figure(figsize=(cols*8,rows*5))
     # pos = subplotPosition(rows,cols)
 
-    i += 1
+    # i += 1
+    i = 0
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_substrate_solvent_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_substrate_solvent_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "substrate - solvent interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_substrate_surfactant_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_substrate_surfactant_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "substrate - surfactant interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "indenter - substrate interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "indenter - surfactant interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "indenter - solvent interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
     _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction[3]"]],
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "indenter - ion interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction[3]"]]*force_factor,
         legend = legend_prefix,
         fig = fig, ax=axes[i], pos = curpos, title = "indenter - non-indenter interaction",
-        xlabel = distance_label, ylabel = energy_label )
+        xlabel = distance_label, ylabel = force_label )
 
     i += 1
     curpos = next(pos)
-    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_substrate_interaction[3]"]]*force_factor,
         legend = "{} indenter - substrate interaction".format(legend_prefix),
         fig = fig, ax=axes[i], pos = curpos, title = "normal interactions",
-        xlabel = distance_label, ylabel = energy_label )
-    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]],
+        xlabel = distance_label, ylabel = force_label )
+    _, axes[i] = addSubplot( x, df[["c_indenter_surfactant_interaction[3]"]]*force_factor,
         legend = "{} indenter - surfactant interaction".format(legend_prefix),
         fig = fig, ax=axes[i], pos = curpos )
     # _, axes[i] = addSubplot( x, df[["c_indenter_solvent_interaction[3]"]],
     #    legend = "{} indenter - solvent interaction".format(legend_prefix),
     #    fig = fig, ax=axes[i], pos = curpos )
-    _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction[3]"]],
+    _, axes[i] = addSubplot( x, df[["c_indenter_ion_interaction[3]"]]*force_factor,
         legend = "{} indenter - counterion interaction".format(legend_prefix),
         fig = fig, ax=axes[i], pos = curpos )
     # _, axes[i] = addSubplot( x, df[["c_indenter_nonindenter_interaction[3]"]],
@@ -676,6 +595,76 @@ def makeGroupGroupInteractionsByDistPlot( thermo_df, colvars_traj_df, pmf_df,
 
     #production_thermo_pd[interactions_of_interest].plot()
     #production_thermo_pd[interactions_of_interest].rolling(window=10,center=True).mean().plot()
+
+def makeVariableByDistPlot( df, colvars_traj_df, pmf_df,
+        fig=None, axes=None,
+        title         = None,
+        x_label       = r'$\frac{d}{\AA}$',
+        y_label       = r'$\frac{F}{\mathrm{Kcal} \cdot \mathrm{mole}^{-1} \AA^{-1} }$',
+        window        = 1,
+        interval      = slice(20,80),
+        legend        = None,
+        x_offset      = 0,
+        colvars_traj_df_dist_column = "com_com_dist_z" ):
+    """Automizes the distance-resolved plotting of any time-resolved variable."""
+
+    # use PMF xi grid as distance bins:
+    z_bins = np.array(pmf_df.index)
+    # bin colvars time steps by distance:
+    binned_steps = pd.cut( colvars_traj_df[colvars_traj_df_dist_column], z_bins )
+    # >>> type(binned_steps[0])
+    #     pandas._libs.interval.Interval
+
+    # assign each thermo output step its substrate - indenter distance
+    # use the bin interval's midpoint
+    df.loc[:,"com_com_dist"] = \
+        binned_steps[df.index].apply( lambda r: r.mid )
+
+    # group thermo output by distance
+    grouped_df = df.groupby( df["com_com_dist"] )
+    # ATTENTION:
+    # >>> type( type(grouped_thermo_df.mean().index) )
+    #     pandas.core.indexes.category.CategoricalIndex
+    # still contains all bins, even empty ones
+
+    # select only groups with entries
+    df_by_dist = grouped_df.mean()[ grouped_df.size() > 0 ]
+
+    # removes empty indices, but not inplace:
+    # >>> thermo_df_by_dist.index.remove_unused_categories()
+
+    # add number of values in bin as df column
+    # df_by_dist.loc[:,"count"] = \
+    #    grouped_df.size()[ grouped_df.size() > 0 ]
+
+    # replaces categorical indices by values
+    df_by_dist.index = df_by_dist.index.get_values()
+
+    # standard plotting routine
+    rows = 1
+    cols = 1
+
+    if fig is None:
+        fig, ax_array = plt.subplots(rows, cols,squeeze=False)
+            #figsize=(cols*8,rows*5))
+
+    if axes is None:
+        axes = [ax for ax_list in ax_array for ax in ax_list]
+
+    df = df_by_dist.loc[interval,:].rolling(window=window,center=True).mean()
+    x = df.index.get_values() - x_offset
+
+    pos = subplotPosition(rows,cols)
+
+    i = 0
+    curpos = next(pos)
+    _, axes[i] = addSubplot( x, df,
+        legend = legend,
+        fig = fig, ax=axes[i], pos = curpos, title = title,
+        xlabel = x_label, ylabel = y_label )
+
+    fig.tight_layout()
+    return fig, axes
 
 
 ###  Constraint-related plotting
@@ -1268,6 +1257,8 @@ def read_data_with_hashed_header(filename ):
     return df
 
 def read_colvars_traj(
+    colvars_traj_file = None,
+    prefix = None,
     column_dict = {
         'indenter_com_substrat'     : 'com_com_dist',
         'v_indenter_com_substr'     : 'com_com_vel',
@@ -1286,7 +1277,13 @@ def read_colvars_traj(
         'W_indenter_pulled'         : 'W_constraint' # work done by moving constraint
     } ):
     # expect only one file
-    colvars_traj_file = glob('*.colvars.traj')[0]
+    if colvars_traj_file is None:
+        colvars_traj_file_glob_pattern = '*.colvars.traj'
+        if prefix is not None:
+            colvars_traj_file_glob_pattern = os.sep.join((
+                prefix, colvars_traj_file_glob_pattern))
+
+        colvars_traj_file = glob(colvars_traj_file_glob_pattern)[0]
 
     colvars_traj_df = read_data_with_hashed_header( colvars_traj_file )
     colvars_traj_df.set_index('step',inplace=True)
@@ -1295,11 +1292,24 @@ def read_colvars_traj(
 
     return colvars_traj_df
 
-def read_colvars_ti():
+def read_colvars_ti(prefix = None):
     # expect only one file
-    colvars_pmf_file = glob('*.ti.pmf')[0]
-    colvars_grad_file = glob('*.ti.grad')[0]
-    colvars_count_file = glob('*.ti.count')[0]
+
+    colvars_pmf_file_glob_pattern = '*.ti.pmf'
+    colvars_grad_file_glob_pattern = '*.ti.grad'
+    colvars_count_file_glob_pattern = '*.ti.count'
+
+    if prefix is not None:
+        colvars_pmf_file_glob_pattern = os.sep.join((
+            prefix, colvars_pmf_file_glob_pattern))
+        colvars_grad_file_glob_pattern = os.sep.join((
+            prefix, colvars_grad_file_glob_pattern))
+        colvars_count_file_glob_pattern = os.sep.join((
+            prefix, colvars_count_file_glob_pattern))
+
+    colvars_pmf_file   = glob(colvars_pmf_file_glob_pattern)[0]
+    colvars_grad_file  = glob(colvars_grad_file_glob_pattern)[0]
+    colvars_count_file = glob(colvars_count_file_glob_pattern)[0]
 
 
     colvars_pmf_df = read_data_with_hashed_header( colvars_pmf_file )
@@ -1323,14 +1333,23 @@ def read_colvars_ti():
     #colvars_traj_df.set_index('step',inplace=True)
     return colvars_pmf_df, colvars_grad_df, colvars_count_df
 
-def read_production_thermo():
+def read_production_thermo( production_thermo_file = None, prefix = None ):
+
+    if production_thermo_file is None:
+        production_thermo_file_glob_pattern = '*thermo.out'
+        if prefix is not None:
+            production_thermo_file_glob_pattern = os.sep.join((
+                prefix, production_thermo_file_glob_pattern))
+
+        production_thermo_file = glob(production_thermo_file_glob_pattern)[0]
+
 
     # subprocess.run(
     #    ['./extract_thermo.sh',production_log_file,'production_thermo.out'],
     #    shell=False, check=True)
 
-    production_thermo_file = glob('*_thermo.out')[0]
-    production_thermo_pd = pd.read_csv(production_thermo_file,delim_whitespace=True)
+    production_thermo_pd = pd.read_csv(
+        production_thermo_file, delim_whitespace=True )
     production_thermo_pd.set_index("Step",inplace=True)
 
     #makeThermoPlotsFromDataFrame(production_1ns_thermo_pd.iloc[::100].copy()); # only every 100th data point
@@ -1393,10 +1412,17 @@ def evaulate_minimization():
 
 # ## Trajectory visualization with ASE and ParmEd
 
+# type dict, manually for SDS
+sds_t2n = {1: 1, 2: 1, 3: 6, 4: 6, 5: 8, 6: 8, 7: 16, 8: 1, 9: 8, 10: 11, 12: 79}
+sds_t2n_array = np.array([0,*list(sds_t2n.values())],dtype='uint64')
+sds_t2e_array = np.array(ase.data.chemical_symbols)[sds_t2n_array] # double-check against LAMMPS data file
+
 # type dict, manually for CTAB
-t2n = {1: 1, 2: 1, 3: 1, 4: 6, 5: 6, 6: 6, 7: 7, 8: 1, 9: 8, 10: 35, 11: 79}
-t2n_array = np.array([0,*list(t2n.values())],dtype='uint64')
-t2e_array = np.array(ase.data.chemical_symbols)[t2n_array] # double-check against LAMMPS data file
+ctab_t2n = {1: 1, 2: 1, 3: 1, 4: 6, 5: 6, 6: 6, 7: 7, 8: 1, 9: 8, 10: 35, 11: 79}
+ctab_t2n_array = np.array([0,*list(ctab_t2n.values())],dtype='uint64')
+ctab_t2e_array = np.array(ase.data.chemical_symbols)[ctab_t2n_array] # double-check against LAMMPS data file
+
+t2n_array = ctab_t2n_array
 
 def read_frames(lmp_files = None):
     global t2n_array

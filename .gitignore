@@ -6,6 +6,8 @@
 # but not subfolder fw
 !fw
 !fw/**/*
+!pp
+!pp/**/*
 # except .py files
 !*.py
 !*.ipynb
