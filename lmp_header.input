@@ -214,10 +214,15 @@ if "${pbc2d} > 0" then &
 if "${is_restart} == 0" then "read_data       ${dataFile}"
 
 print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
-info atom bond angle dihedral improper
+info styles atom out log
+info stylse bond out log
+info styles angle out log
+info styles dihedral out log
+info sytles improper out log
 
 print "Pair, kspace in lmp_header.input:"
-info pair kspace
+info styles pair out log
+info styles kspace out log
 
 
 # determine center
@@ -226,7 +231,7 @@ variable y_center equal $(( ylo + yhi ) / 2.0)
 variable z_center equal $(( zlo + zhi ) / 2.0)
 
 print "Variables in lmp_header.input:"
-info variables
+info variables out log
 
 # For style plane, a plane is defined which contain the point (px,py,pz) and
 # has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
@@ -243,7 +248,7 @@ region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)
 #                                                        ^cylinder radius
 #                                                             ^lower and ^upper point
 print "Regions in lmp_header.input:"
-info regions
+info regions out log
 
 
 if "${is_restart} == 0" then "special_bonds   charmm"
@@ -289,7 +294,7 @@ if "${is_restart} == 0" then &
     "group    nonsolvent  subtract all solvent"
 
 print "Groups in lmp_header.input:"
-info groups
+info groups out log
 
 # define computes
 # kspace no: AU atoms neutral
@@ -349,7 +354,7 @@ if "${compute_interactions} > 0" then &
 #       10     79.904  # BR
 #       11   196.9665  # AU
 print "Computes in lmp_header.input:"
-info computes
+info computes out log
 
 
 # exclude intra-indenter interactions for rigid indenter
@@ -533,4 +538,4 @@ elif "${thermo_average_frequency} > 0" &
 # and no off settings for any input values.
 
 print "Fixes in lmp_header.input:"
-info fix
+info fixes out log

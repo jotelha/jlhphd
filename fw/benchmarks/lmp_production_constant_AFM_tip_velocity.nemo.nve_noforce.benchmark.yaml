@@ -1,0 +1,61 @@
+name: "LAMMPS Production Run on NEMO Benchmark"
+fws:
+- fw_id: -1
+  name: "NEMO LAMMPS benchmark, 1000 steps, 8 nodes, 20 ppn"
+  spec:
+    _category: "nemo_queue"
+    _queueadapter:
+      nodes: 8
+      ppn: 20
+      queue: 'express'
+      walltime: 00:15:00
+    _files_out:
+      data_file:       default.lammps
+      traj_file:       default.nc
+      log_file:        log.lammps
+      ave_file:        thermo_ave.out
+    _tasks:
+    - _fw_name: GetFilesTask
+      identifiers:
+      - lmp_header.input
+      - lmp_production.input
+      - lmp_production_mixed.input
+      - 646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_50Ang_stepped_nptEquilibrated.lammps
+      new_file_names:
+      - lmp_header.input
+      - lmp_production.input
+      - lmp_production_mixed.input
+      - datafile.lammps
+    - _fw_name: CmdTask
+      cmd: lmp
+      opt:
+      - -in lmp_production.input
+      - -v surfactant_name SDS
+      - -v has_indenter 1
+      - -v constant_indenter_velocity -0.0001
+      - -v productionSteps 1000
+      - -v pbc2d 0
+      - -v reinitialize_velocities 0
+      - -v use_colvars 0
+      - -v mpiio 1
+      - -v thermo_frequency 1
+      - -v thermo_average_frequency 10
+      - -v netcdf_frequency 100
+      - -v restart_frequency 100
+      - -v compute_interactions 1
+      - -v store_forces 1
+      - -v nve_noforce 1
+      stderr_file:   std.err
+      stdout_file:   std.out
+      fizzle_bad_rc: true
+      use_shell:     true
+    _trackers:
+    - filename: log.lammps
+      nlines: 25
+
+links: 
+  -1: []
+
+metadata:
+  type: benchmark
+  setting: rigid indenter by fix nve/noforce

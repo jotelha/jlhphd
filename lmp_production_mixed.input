@@ -20,11 +20,12 @@ if "${has_indenter} >0 && ${constant_indenter_velocity} != 0.0" then &
 
 # treats indenter rigid, i.e. removes all forces on indenter
 # 20190227: doubts about performance of nve/noforce
+# 20190228: unjustified, same performance for both options
 if "${has_indenter} > 0 && ${indenter_nve_noforce} > 0 && ${constant_indenter_velocity} != 0.0" then &
-  "fix freeze indenter nve/noforce" &
+  "fix integrateIndenter indenter nve/noforce" &
 elif "${has_indenter} > 0 && ${constant_indenter_velocity} != 0.0" &
   "fix freeze indenter setforce 0.0 0.0 0.0" &
-  "fix freeze indenter nve" &
+  "fix integrateIndenter indenter nve" &
 elif "${has_indenter} > 0" &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 
