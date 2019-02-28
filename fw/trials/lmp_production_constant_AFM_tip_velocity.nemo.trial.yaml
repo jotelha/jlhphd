@@ -134,9 +134,9 @@ fws:
           _files_in:
             # from previous recover fw
             restart_file:    default.mpiio.restart
-            input_file_1:      lmp_header.input
-            input_file_2:      lmp_production.input
-            input_file_3:      lmp_production_mixed.input
+            input_file_1:    lmp_header.input
+            input_file_2:    lmp_production.input
+            input_file_3:    lmp_production_mixed.input
           _files_out:
             data_file:       default.lammps
             traj_file:       default.nc
@@ -164,7 +164,7 @@ fws:
             - -v thermo_average_frequency 10
             - -v netcdf_frequency 5
             - -v restart_frequency 10
-            - -v compute_interactions 1
+            - -v compute_interactions 0
             - -v store_forces 1
             - -v is_restart 1
             - -v restartFile default.mpiio.restart
@@ -176,7 +176,7 @@ fws:
           - filename: log.lammps
             nlines: 25
       detour_fw:
-        name: "NEMO LAMMPS post-processing"
+        name: "NEMO LAMMPS immediate post-processing"
         spec:
           _category: "nemo_noqueue"
           # _allow_fizzled_parents: True
