@@ -1,4 +1,4 @@
-name: "LAMMPS trial tun on JUWELS"
+name: "LAMMPS production run on JUWELS"
 fws:
 - fw_id: -1
   name: "JUWELS File Retrieval"
@@ -121,54 +121,54 @@ fws:
       restart_fw:
         name: "JUWELS LAMMPS restart run, offline"
         spec:
-        _category: "juwels_queue"
-        _queueadapter:
-          nodes:           2
-          ntasks:          192
-          ntasks_per_node: 96
-          queue:           batch
-          walltime:        06:00:00
-          account:         hfr13
-        _files_in:
-          # from previous recover fw
-          restart_file:    default.mpiio.restart
-          input_file_1:    lmp_header.input
-          input_file_2:    lmp_production.input
-          input_file_3:    lmp_production_mixed.input
-        _files_out:
-          data_file:       default.lammps
-          traj_file:       default.nc
-          log_file:        lammps.log
-          ave_file:        thermo_ave.out
-        _tasks:
-        - _fw_name: CmdTask
-          cmd: lmp
-          opt:
-          - -in lmp_production.input
-          - -v surfactant_name SDS
-          - -v has_indenter 1
-          - -v constant_indenter_velocity -0.000001
-          - -v productionSteps 37500000
-          - -v pbc2d 0
-          - -v reinitialize_velocities 0
-          - -v use_colvars 0
-          - -v mpiio 1
-          - -v thermo_frequency 1000
-          - -v thermo_average_frequency 1000
-          - -v netcdf_frequency 10000
-          - -v restart_frequency 10000
-          - -v compute_interactions 0
-          - -v store_forces 1
-          - -v indenter_nve_noforce 1
-          - -v is_restart 1
-          - -v restartFile default.mpiio.restart
-          stderr_file:   std.err
-          stdout_file:   std.out
-          fizzle_bad_rc: true
-          use_shell:     true
-        _trackers:
-        - filename: log.lammps
-          nlines: 25
+          _category: "juwels_queue"
+          _queueadapter:
+            nodes:           2
+            ntasks:          192
+            ntasks_per_node: 96
+            queue:           batch
+            walltime:        06:00:00
+            account:         hfr13
+          _files_in:
+            # from previous recover fw
+            restart_file:    default.mpiio.restart
+            input_file_1:    lmp_header.input
+            input_file_2:    lmp_production.input
+            input_file_3:    lmp_production_mixed.input
+          _files_out:
+            data_file:       default.lammps
+            traj_file:       default.nc
+            log_file:        lammps.log
+            ave_file:        thermo_ave.out
+          _tasks:
+          - _fw_name: CmdTask
+            cmd: lmp
+            opt:
+            - -in lmp_production.input
+            - -v surfactant_name SDS
+            - -v has_indenter 1
+            - -v constant_indenter_velocity -0.000001
+            - -v productionSteps 37500000
+            - -v pbc2d 0
+            - -v reinitialize_velocities 0
+            - -v use_colvars 0
+            - -v mpiio 1
+            - -v thermo_frequency 1000
+            - -v thermo_average_frequency 1000
+            - -v netcdf_frequency 10000
+            - -v restart_frequency 10000
+            - -v compute_interactions 0
+            - -v store_forces 1
+            - -v indenter_nve_noforce 1
+            - -v is_restart 1
+            - -v restartFile default.mpiio.restart
+            stderr_file:   std.err
+            stdout_file:   std.out
+            fizzle_bad_rc: true
+            use_shell:     true
+          _trackers:
+          - filename: log.lammps
+            nlines: 25
       detour_fw:
         name: "JUWELS LAMMPS immediate post-processing"
         spec:
