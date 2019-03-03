@@ -270,7 +270,7 @@ fws:
       - --element Au
       - --dim 2
       - --plane 20.0
-      - --netcdf-output-interval 1000
+      - --netcdf-output-interval 10000
       - --output-formats txt
       - --verbose
       - default.nc # input file
