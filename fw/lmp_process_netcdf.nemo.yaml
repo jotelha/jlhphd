@@ -1,6 +1,11 @@
 name: "NEMO extract forces from NetCDF"
 spec:
-  _category: "nemo_noqueue"
+  _category: "nemo_queue"
+  _queueadapter:
+    nodes: 1
+    ppn: 1
+    queue: ''
+    walltime: 12:00:00
   _allow_fizzled_parents: True
   _files_in:
     joint_traj_file:       default.nc # from previous post-processing task
@@ -18,7 +23,7 @@ spec:
     - --element Au
     - --dim 2
     - --plane 20.0
-    - --netcdf-output-interval 1000
+    - --netcdf-output-interval 10000
     - --output-formats txt
     - --verbose
     - default.nc # input file

@@ -56,7 +56,7 @@ fws:
             ntasks:          192
             ntasks_per_node: 96
             queue:           batch
-            walltime:        06:00:00
+            walltime:        24:00:00
             account:         hfr13
           _files_in:
             # from previous recover fw
