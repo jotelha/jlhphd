@@ -1,0 +1,32 @@
+name: "NEMO sync directory to RZ storage"
+spec:
+  _category: "nemo_noqueue"
+  _allow_fizzled_parents: True
+  _files_in:
+    log_file:              log.lammps
+    joint_traj_file:       default.nc # from previous post-processing task
+    joint_thermo_file:     thermo.out
+    joint_ave_file:        thermo_ave.out
+    indenter_forces:       indenter_forces.txt
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: smbsync.py
+    opt:
+    - --server_name ufr2.isi1.public.ads.uni-freiburg.de
+    - --share pastewka 
+    - --domain PUBLIC 
+    - --username pastewka
+    - --server_port 445 
+    - --verbose 
+    - --password RZ.Storage_20
+    - . 
+    - hoermannj/2019/md/AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/375000
+#                           ^surfactant            ^initial config
+#                               ^surfactant molcules             ^indenter name (not real measures)
+#                                   ^substrate material                ^indenter structure
+#                                      ^substrate crytal plane                 ^initial indenter substrate distance
+#                                          ^substrate unit cell multiples            ^steps to contact
+    stderr_file:   std.err
+    stdout_file:   std.out
+    fizzle_bad_rc: true
+    use_shell:     true
