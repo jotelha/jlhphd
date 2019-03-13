@@ -62,7 +62,7 @@ fws:
     step: minimization
 
 - fw_id: -25
-  name: "Pre-NPT file retrieval"
+  name: "Pre-NVT file retrieval"
   spec:
     _category: "nemo_noqueue"
     _files_out:
@@ -80,6 +80,8 @@ fws:
     _category: nemo_queue_offline
     _files_in:
       data_file: datafile.lammps
+      input_file_1:    lmp_header.input
+      input_file_2:    lmp_equilibration_nvt.input
     _files_out:
       data_file: default.lammps
       traj_file: default.nc
@@ -124,7 +126,7 @@ fws:
     _files_out:
       thermo_file: thermo.out
     _tasks:
-    _fw_name: CmdTask
+    - _fw_name: CmdTask
       cmd: extract_thermo.sh # extracts thermo output from lammps log
       opt:
       - log.lammps # input file
@@ -144,8 +146,8 @@ fws:
     _tasks:
     - _fw_name: GetFilesTask
       identifiers:
-      - lmp_header.input
-      - lmp_equilibration_npt.input
+        - lmp_header.input
+        - lmp_equilibration_npt.input
 
 - fw_id: -50
   name: LAMMPS NPT equilibration
@@ -202,7 +204,7 @@ fws:
     _files_out:
       thermo_file: thermo.out
     _tasks:
-    _fw_name: CmdTask
+    - _fw_name: CmdTask
       cmd: extract_thermo.sh # extracts thermo output from lammps log
       opt:
       - log.lammps # input file
