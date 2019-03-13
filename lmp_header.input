@@ -22,6 +22,12 @@ variable has_indenter            index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
 variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
 variable freeze_substrate        index  0 # keep substrate frozen (during minim)
+variable manual_indenter_region  index  0 # if set to 1, use measures below
+variable indenter_substrate_dist index  30.0 # Ang, default distance substrate surface - indenter apex
+variable substrate_thickness     index  14.0 # Ang
+variable indenter_height         index  45.0 # Ang
+variable region_tolerance        index   5.0 # Ang
+
 # this can be useful if a very dense initial packing would result into substrate
 # deformation otherwise
 
@@ -238,10 +244,18 @@ info variables out log
 # length. The "inside" of the plane is the half-space in the direction of the
 # normal vector; see the discussion of the side option below.
 #
-# ATTENTION: upper_half is used to identify indenter initially
+# ATTENTION: if no manual indenter position and measures are specified, then
+# upper half of simulation box is used to select indenter.
 # if indenter protudes into lower half, this results in wrong atom selection!
-region upper_half plane 0  0  ${z_center} 0 0 1          side in
-#                       ^x ^y ^z          ^plane normal  ^everything in direction of normal in region
+if "${manual_indenter_region} == 1" then &
+    "variable indenter_region_bottom equal $((zlo + substrate_thickness + indenter_substrate_dist - region_tolerance))" &
+    "variable indenter_region_top equal $((zlo + substrate_thickness + indenter_substrate_dist + indenter_height + region_tolerance))" &
+    "region indenter_region block INF INF ${indenter_region_bottom} INF INF ${indenter_region_top} units box" &
+else &
+    "region indenter_region plane 0  0  ${z_center} 0 0 1 side in units box"
+#                                 ^x ^y ^z          ^plane normal
+#                                                         ^everything in direction of normal in region
+#                                                                 ^Ang as unit
 region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)) side in
 #                              ^cylinder axis
 #                                ^cylinder coordinates in x,y dim
@@ -278,10 +292,10 @@ elif "${is_restart} == 0 && ${surfactant_name} == CTAB" &
 
 # correct if indenter is present
 if "${is_restart} == 0 && ${has_indenter} > 0" then &
-  "group          atoms_in_upper_half     region upper_half" &
-  "group          atoms_in_central_column region central_column" &
-  "group          substrate      subtract solid atoms_in_upper_half" &
-  "group          indenter       subtract solid substrate" &
+  "group          atoms_in_indenter_region region indenter_region" &
+  "group          atoms_in_central_column  region central_column" &
+  "group          substrate      subtract  solid atoms_in_indenter_region" &
+  "group          indenter       subtract  solid substrate" &
   "group          indenter_apex  intersect indenter atoms_in_central_column" &
   "group          nonindenter    subtract all indenter" &
 elif "${is_restart} == 0" &
