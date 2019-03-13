@@ -248,9 +248,9 @@ info variables out log
 # upper half of simulation box is used to select indenter.
 # if indenter protudes into lower half, this results in wrong atom selection!
 if "${manual_indenter_region} == 1" then &
-    "variable indenter_region_bottom equal $((zlo + substrate_thickness + indenter_substrate_dist - region_tolerance))" &
-    "variable indenter_region_top equal $((zlo + substrate_thickness + indenter_substrate_dist + indenter_height + region_tolerance))" &
-    "region indenter_region block INF INF ${indenter_region_bottom} INF INF ${indenter_region_top} units box" &
+    "variable indenter_region_bottom equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist - v_region_tolerance))" &
+    "variable indenter_region_top equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist + v_indenter_height + v_region_tolerance))" &
+    "region indenter_region block INF INF INF INF ${indenter_region_bottom} ${indenter_region_top} units box" &
 else &
     "region indenter_region plane 0  0  ${z_center} 0 0 1 side in units box"
 #                                 ^x ^y ^z          ^plane normal
