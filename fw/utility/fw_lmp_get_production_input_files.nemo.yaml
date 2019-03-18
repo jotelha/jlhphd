@@ -1,0 +1,15 @@
+name: "File Retrieval"
+spec:
+  _category: "nemo_noqueue"
+  _files_out:
+    data_file:       datafile.lammps
+    input_file_1:    lmp_header.input
+    input_file_2:    lmp_production.input
+    input_file_3:    lmp_production_mixed.input
+  _tasks:
+  - _fw_name: GetFilesTask
+    identifiers:
+    - lmp_header.input
+    - lmp_production.input
+    - lmp_production_mixed.input
+

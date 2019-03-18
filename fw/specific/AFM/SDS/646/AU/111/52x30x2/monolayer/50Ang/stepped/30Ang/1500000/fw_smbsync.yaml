@@ -20,7 +20,7 @@ spec:
     - --verbose 
     - --password RZ.Storage_20
     - . 
-    - hoermannj/2019/md/AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/375000
+    - hoermannj/2019/md/AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/30Ang/1500000
 #                           ^surfactant            ^initial config
 #                               ^surfactant molcules             ^indenter name (not real measures)
 #                                   ^substrate material                ^indenter structure
