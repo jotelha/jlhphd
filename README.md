@@ -1,5 +1,8 @@
 # Surfactant Adsorption Workflow
 
+# Content
+
+  
   * [TODO](#todo)
   * [Software requirements](#software-requirements)
   * [Overview](#overview)
@@ -31,10 +34,10 @@ MD parameters are based upon
 - [ ] Attach all simulation meta data and parameters available to workflows and files in filepad.
 - [ ] Remove any absolute path dependency from `JobAdmin.py` and `job_admin.ipynb`. 
       Push and pull any relevant files to the data base. 
-- [ ] Make workflow environment-independent (i.e. nothing machine-dependent in `JobAdmin.py` and `job_admin.ipynb`,
+- [X] Make workflow environment-independent (i.e. nothing machine-dependent in `JobAdmin.py` and `job_admin.ipynb`,
       especially no `module load` commands). Using worker-specific parameters as descibed within the 
       [FireWorks ducumentation](https://materialsproject.github.io/fireworks/worker_tutorial.html) should help.
-- [ ] Make choice of *worker* and *queue* (i.e. bwCloud, NEMO or JUWELS) really possible by single Fireworks option
+- [X] Make choice of *worker* and *queue* (i.e. bwCloud, NEMO or JUWELS) really possible by single Fireworks option
       `category`, without further adaptions. (For this, ssh has to work again between NEMO and bwCloud!)
 - [ ] Right now, the workflow technically decays into four subsequent, but independent workflows: 
       Substrate slab preparation, intital film configuration preparation, quasi-equilibration MD, indenter MD.
