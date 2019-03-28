@@ -1,7 +1,7 @@
 # technical settings
 
 # index varibles can be overridden by command line parameters "-v varName value"
-variable baseName                index "default"
+variable baseName                index  "default"
 variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
 variable mpiio                   index  1 # parallel io on or off
@@ -19,6 +19,7 @@ variable restart_frequency       index  100000
 # system settings
 
 variable surfactant_name         index  SDS # SDS or CTAB
+variable use_eam                 index  0 # use pairstyle eam for solid
 variable has_indenter            index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
 variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
@@ -48,6 +49,9 @@ if "${surfactant_name} == SDS" then &
   "variable angleIdWater   index     11" &
 else &
   "variable angleIdWater   index     16"
+
+# per default substrate is gold and assumed to be type 11
+variable substrateType index 11
 
 
 # Intialization
@@ -92,13 +96,13 @@ neigh_modify    delay 2 every 1 check yes
 #    One or more atoms are attempting to map their charge to a PPPM grid point
 #    that is not owned by a processor. This is likely for one of two reasons,
 #    both of them bad. First, it may mean that an atom near the boundary of a
-#    processor’s sub-domain has moved more than 1/2 the neighbor skin distance
+#    processor's sub-domain has moved more than 1/2 the neighbor skin distance
 #    without neighbor lists being rebuilt and atoms being migrated to new
 #    processors. This also means you may be missing pairwise interactions that
 #    need to be computed. The solution is to change the re-neighboring criteria
-#    via the neigh_modify command. The safest settings are “delay 0 every 1
-#    check yes”. Second, it may mean that an atom has moved far outside a
-#    processor’s sub-domain or even the entire simulation box. This indicates
+#    via the neigh_modify command. The safest settings are "delay 0 every 1
+#    check yes". Second, it may mean that an atom has moved far outside a
+#    processor's sub-domain or even the entire simulation box. This indicates
 #    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
@@ -117,7 +121,8 @@ if "${is_restart} == 0" then "dihedral_style  charmmfsw"
 #             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
 
 if "${is_restart} == 0" then "improper_style  harmonic"
-if "${is_restart} == 0" then "pair_style      lj/charmmfsw/coul/long 8 12"
+if "${is_restart} == 0 && ${use_eam} == 0" then &
+    "pair_style lj/charmmfsw/coul/long 8 12"
 # Quote from http://lammps.sandia.gov/doc/pair_charmm.html
 # The newer styles with charmmfsw or charmmfsh in their name replace the
 # energy switching with force switching (fsw) and force shifting (fsh)
@@ -152,6 +157,13 @@ if "${is_restart} == 0" then "pair_style      lj/charmmfsw/coul/long 8 12"
 # 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 # literature for their chosen lipid(s) before beginning a simulation!
 #
+if "${is_restart} == 0 && ${use_eam} > 0" then &
+  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/fs"
+# The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
+# one simulation. With the hybrid style, exactly one pair style is assigned to
+# each pair of atom types. With the hybrid/overlay style, one or more pair
+# styles can be assigned to each pair of atom types. The assignment of pair
+# styles to type pairs is made via the pair_coeff command.
 
 if "${is_restart} == 0" then "pair_modify     mix arithmetic"
 # kspace_style    pppm 1e-6
@@ -161,7 +173,7 @@ kspace_style    pppm 1e-4
 #  accuracy = desired relative error in forces
 #
 # The pppm style invokes a particle-particle particle-mesh solver (Hockney)
-# which maps atom charge to a 3d mesh, uses 3d FFTs to solve Poisson’s
+# which maps atom charge to a 3d mesh, uses 3d FFTs to solve Poisson's
 # equation on the mesh, then interpolates electric fields on the mesh points
 # back to the atoms. It is closely related to the particle-mesh Ewald
 # technique (PME) (Darden) used in AMBER and CHARMM. The cost of traditional
@@ -192,7 +204,7 @@ if "${pbc2d} > 0" then &
     "kspace_modify slab 3.0"
 # The slab keyword allows an Ewald or PPPM solver to be used for a systems that
 # are periodic in x,y but non-periodic in z - a boundary setting of
-# “boundary p p f”. This is done by treating the system as if it were periodic
+# "boundary p p f". This is done by treating the system as if it were periodic
 # in z, but inserting empty volume between atom slabs and removing dipole
 # inter-slab interactions so that slab-slab interactions are effectively turned
 # off. The volfactor value sets the ratio of the extended dimension in z divided
@@ -219,6 +231,63 @@ if "${pbc2d} > 0" then &
 # being compatible with how fix efield works.
 
 if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
+
+# override Au-Au LJ interaction by EAM potential:
+# TODO: make an adaptive NULL string depending on used Au atom type
+if "${use_eam} > 0" then &
+  "pair_coeff ${substrateType} ${substrateType} &
+    CuAu_MishinGrochola_fit_Arithmetic.eam.fs &
+    NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL Au"
+# source: https://lammps.sandia.gov/doc/pair_eam.html#pair-style-eam-fs-command
+# [...] All of these files are parameterized in terms of LAMMPS metal units.
+#
+# [...] where there are N additional arguments after the filename, where N is
+# the number of LAMMPS atom types. See the pair_coeff doc page for alternate
+# ways to specify the path for the potential file. The N values determine the
+# mapping of LAMMPS atom types to EAM elements in the file, as described above
+# for style eam/alloy. As with eam/alloy, if a mapping value is NULL, the
+# mapping is not performed. This can be used when an eam/fs potential is used as
+# part of the hybrid pair style. The NULL values are used as placeholders for
+# atom types that will be used with other potentials.
+
+# Setfl files in the potentials directory of the LAMMPS distribution have an
+# ".eam.alloy" suffix. A DYNAMO multi-element setfl file is formatted as
+# follows:
+#    lines 1,2,3 = comments (ignored)
+#    line 4: Nelements Element1 Element2 ... ElementN
+#    line 5: Nrho, drho, Nr, dr, cutoff
+#
+# FS EAM files include more information than the DYNAMO setfl format files read
+# by eam/alloy, in that i,j density functionals for all pairs of elements are
+# included as needed by the Finnis/Sinclair formulation of the EAM.
+#
+# FS EAM files in the potentials directory of the LAMMPS distribution have an
+# ".eam.fs" suffix. They are formatted as follows:
+#
+#     lines 1,2,3 = comments (ignored)
+#     line 4: Nelements Element1 Element2 ... ElementN
+#     line 5: Nrho, drho, Nr, dr, cutoff
+#
+# The 5-line header section is identical to an EAM setfl file.
+#
+# Following the header are Nelements sections, one for each element I, each with
+# the following format:
+#
+#     line 1 = atomic number, mass, lattice constant, lattice type (e.g. FCC)
+#     embedding function F(rho) (Nrho values)
+#     density function rho(r) for element I at element 1 (Nr values)
+#     density function rho(r) for element I at element 2
+#     ...
+#     density function rho(r) for element I at element Nelement
+#
+# The units of these quantities in line 1 are the same as for setfl files. Note
+# that the rho(r) arrays in Finnis/Sinclair can be asymmetric (i,j != j,i) so
+# there are Nelements^2 of them listed in the file.
+#
+# The eam pair styles do not write their information to binary restart files,
+# since it is stored in tabulated potential files. Thus, you need to re-specify
+# the pair_style and pair_coeff commands in an input script that reads a restart
+# file.
 
 print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
 info styles atom out log
@@ -265,7 +334,6 @@ region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)
 print "Regions in lmp_header.input:"
 info regions out log
 
-
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
 # The charmm keyword sets the 3 coefficients to 0.0, 0.0, 0.0 for both LJ and
@@ -280,13 +348,13 @@ if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
 
 if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
-  "group          solid      type  11     # 11 - Au" &
+  "group          solid      type  ${substrateType}     # 11 - Au" &
   "group          ion        type  10     # 10 - Na+" &
   "group          surfactant subtract all solvent solid ion" &
   "group          nonwater   subtract all solvent" &
 elif "${is_restart} == 0 && ${surfactant_name} == CTAB" &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
-  "group          solid      type  11     # 11 - Au" &
+  "group          solid      type  ${substrateType}     # 11 - Au" &
   "group          ion        type  10     # 10 - Br-" &
   "group          surfactant subtract all solvent solid ion" &
   "group          nonwater   subtract all solvent"
@@ -411,11 +479,11 @@ if "${pbc2d} > 0" then &
 # No information about this fix is written to binary restart files.
 #
 # The fix_modify energy option is supported by this fix to add the energy of
-# interaction between atoms and each wall to the system’s potential energy as
+# interaction between atoms and each wall to the system's potential energy as
 # part of thermodynamic output.
 #
 # The fix_modify virial option is supported by this fix to add the contribution
-# due to the interaction between atoms and each wall to the system’s virial as
+# due to the interaction between atoms and each wall to the system's virial as
 # part of thermodynamic output. The default is virial no
 
 # fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
@@ -424,12 +492,12 @@ if "${pbc2d} > 0" then &
 #   c_thermo_elong c_thermo_etail c_thermo_vol &
 #   mode scalar file ${baseName}.out
 
-# (1) If the last printable character on the line is a “&” character, the
+# (1) If the last printable character on the line is a "&" character, the
 # command is assumed to continue on the next line. The next line is concatenated
-# to the previous line by removing the “&” character and line break. This allows
+# to the previous line by removing the "&" character and line break. This allows
 # long commands to be continued across two or more lines. See the discussion of
 # triple quotes in (6) for how to continue a command across multiple line
-# without using “&” characters.
+# without using "&" characters.
 if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
@@ -465,8 +533,8 @@ else &
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
 thermo_modify  norm no
-# Note that some computes calculate “intensive” global quantities like
-# temperature; others calculate “extensive” global quantities like kinetic
+# Note that some computes calculate "intensive" global quantities like
+# temperature; others calculate "extensive" global quantities like kinetic
 # energy that are summed over all atoms in the compute group. Intensive
 # quantities are printed directly without normalization by thermo_style custom.
 # Extensive quantities may be normalized by the total number of atoms in the
@@ -523,7 +591,7 @@ elif "${thermo_average_frequency} > 0" &
 #
 # The group specified with this command is ignored. However, note that specified
 # values may represent calculations performed by computes and fixes which store
-# their own “group” definitions.
+# their own "group" definitions.
 #
 # Each listed value can be the result of a compute or fix or the evaluation of
 # an equal-style or vector-style variable. In each case, the compute, fix, or
