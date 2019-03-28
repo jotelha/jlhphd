@@ -16,6 +16,8 @@
 !README.md
 !examples
 !examples/**/*
+!bramos
+!bramos/**/*
 
 # except fireworks related
 !*.yaml
