@@ -1,0 +1,9 @@
+# Removes substrate from system.
+variable dataFile index aligned.lammps
+variable outfile index nonSubstrate.lammps
+
+# header reads data file and defines groups
+include lmp_header.input
+
+delete_atoms group substrate
+write_data ${outfile}

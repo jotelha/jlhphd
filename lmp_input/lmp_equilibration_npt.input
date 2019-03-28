@@ -1,0 +1,204 @@
+include                 lmp_header.input
+############
+# restraints
+############
+# Keep indenter restrained during minimization
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+
+###################
+# NPT equilibration
+###################
+if "${has_indenter} > 0" then &
+    "variable tempered_group string nonindenter" &
+else &
+    "variable tempered_group string all"
+
+fix timeIntegration ${tempered_group} nve # necessary for nvt via langevin
+# fix thermostat all temp/berendsen ${temperatureT} ${temperatureT} 100
+fix thermostat ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29061988
+#   ^ID        ^group-ID
+#                   ^langevin
+#                           ^Tstart         ^Tstop          ^damp
+#                                                               ^seed
+# source: https://lammps.sandia.gov/doc/fix_langevin.html
+# fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
+# Apply a Langevin thermostat as described in (Schneider) to a group of atoms
+# which models an interaction with a background implicit solvent. Used with
+# fix nve, this command performs Brownian dynamics (BD), since the total force
+# on each atom will have the form:
+#
+# F = Fc + Ff + Fr
+# Ff = - (m / damp) v
+# Fr is proportional to sqrt(Kb T m / (dt damp))
+#
+# Note that unless you use the omega or angmom keywords, the thermostat effect
+# of this fix is applied to only the translational degrees of freedom for the
+# particles, which is an important consideration for finite-size particles,
+# which have rotational degrees of freedom, are being thermostatted. The
+# translational degrees of freedom can also have a bias velocity removed
+# from them before thermostatting takes place; see the description below.
+#
+# Unlike the fix nvt command which performs Nose/Hoover thermostatting
+# AND time integration, this fix does NOT perform time integration. It
+# only modifies forces to effect thermostatting. Thus you must use a
+# separate time integration fix, like fix nve to actually update the
+# velocities and positions of atoms using the modified forces. Likewise,
+# this fix should not normally be used on atoms that also have their
+# temperature controlled by another fix - e.g. by fix nvt or fix
+# temp/rescale commands.
+#
+# The damp parameter is specified in time units and determines how rapidly the
+# temperature is relaxed. For example, a value of 100.0 means to relax the
+# temperature in a timespan of (roughly) 100 time units (tau or fmsec or psec
+# - see the units command). The damp factor can be thought of as inversely
+# related to the viscosity of the solvent. I.e. a small relaxation time
+# implies a hi-viscosity solvent and vice versa. See the discussion about
+# gamma and viscosity in the documentation for the fix viscous command for
+# more details.
+
+##########
+# BAROSTAT
+
+# fix barostat all press/berendsen aniso 0 0 1000
+fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6
+# fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
+# fix ID group-ID press/berendsen keyword value ...
+# dilate partial
+# modulus value = bulk modulus of system (pressure units)
+# water bulk modulus: 2.15e9 Pa ~ 2.1e6 atm
+# one or more keyword value pairs may be appended
+# keyword = iso or aniso or x or y or z or couple or dilate or modulus
+#   iso or aniso values = Pstart Pstop Pdamp
+#     Pstart,Pstop = scalar external pressure at start/end of run (pressure units)
+#     Pdamp = pressure damping parameter (time units)
+#   x or y or z values = Pstart Pstop Pdamp
+#     Pstart,Pstop = external stress tensor component at start/end of run (pressure units)
+#     Pdamp = stress damping parameter (time units)
+#   couple = none or xyz or xy or yz or xz
+#   modulus value = bulk modulus of system (pressure units)
+#   dilate value = all or partial
+#
+# Reset the pressure of the system by using a Berendsen barostat (Berendsen),
+# which rescales the system volume and (optionally) the atoms coordinates within
+#  the simulation box every timestep.
+#
+# Regardless of what atoms are in the fix group, a global pressure is computed
+# for all atoms. Similarly, when the size of the simulation box is changed, all
+# atoms are re-scaled to new positions, unless the keyword dilate is specified
+# with a value of partial, in which case only the atoms in the fix group are
+# re-scaled. The latter can be useful for leaving the coordinates of atoms in
+# a solid substrate unchanged and controlling the pressure of a surrounding
+# fluid.
+#
+# The relaxation time is actually also a function of the bulk modulus of the
+# system (inverse of isothermal compressibility). The bulk modulus has units
+# of pressure and is the amount of pressure that would need to be applied
+# (isotropically) to reduce the volume of the system by a factor of 2
+# (assuming the bulk modulus was a constant, independent of density, which it’s
+#  not). The bulk modulus can be set via the keyword modulus. The Pdamp
+# parameter is effectively multiplied by the bulk modulus, so if the pressure is
+# relaxing faster than expected or desired, increasing the bulk modulus has the
+# same effect as increasing Pdamp. The converse is also true. LAMMPS does not
+# attempt to guess a correct value of the bulk modulus; it just uses 10.0 as a
+# default value which gives reasonable relaxation for a Lennard-Jones liquid,
+# but will be way off for other materials and way too small for solids. Thus
+# you should experiment to find appropriate values of Pdamp and/or the modulus
+# when using this fix.
+
+###############
+# DRIFT REMOVAL
+
+# Keep substrate slab's position COM position fixed, remove relative drift
+fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
+#               ^ID               ^group-ID
+#                                         ^style   ^x   ^y   ^z   ^keyword
+#                                                                       ^group
+# source: https://lammps.sandia.gov/doc/fix_recenter.html
+# fix ID group-ID recenter x y z keyword value ...
+#   shift value = group-ID
+#     group-ID = group of atoms whose coords are shifted
+#
+# Constrain the center-of-mass position of a group of atoms by adjusting the
+# coordinates of the atoms every timestep. This is simply a small shift that
+# does not alter the dynamics of the system or change the relative coordinates
+# of any pair of atoms in the group. This can be used to insure the entire
+# collection of atoms (or a portion of them) do not drift during the simulation
+# due to random perturbations (e.g. fix langevin thermostatting).
+#
+# The center-of-mass (COM) is computed for the group specified by the fix.
+# If the current COM is different than the specified x,y,z, then a group of
+# atoms has their coordinates shifted by the difference. By default the shifted
+# group is also the group specified by the fix. A different group can be shifted
+# by using the shift keyword. For example, the COM could be computed on a
+# protein to keep it in the center of the simulation box. But the entire system
+# (protein + water) could be shifted.
+#
+# Distance units for the x,y,z values are determined by the setting of the units
+# keyword, as discussed below. One or more x,y,z values can also be specified
+# as NULL, which means exclude that dimension from this operation. Or it can be
+# specified as INIT which means to constrain the center-of-mass to its initial
+# value at the beginning of the run.
+
+
+############################################
+# RIGID TIP3P WATER and RIGID HYDROGEN BONDS
+#
+# fix equilibrateNVT all nvt temp ${temperatureT} ${temperatureT} 100 tchain 1
+#  WARNING: Fix rattle should come after all other integration fixes
+#    (../fix_rattle.cpp:147)
+
+fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+# fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
+
+# The b constraint lists bond types that will be constrained.
+# The t constraint lists atom types. All bonds connected to an
+#  atom of the specified type will be constrained. The m constraint
+# lists atom masses. All bonds connected to atoms of the specified
+# masses will be constrained (within a fudge factor of MASSDELTA specified
+# in fix_shake.cpp). The a constraint lists angle types. If both bonds in
+# the angle are constrained then the angle will also be constrained if its
+# type is in the list.
+# The mentioned MASSDELTA is defined as 0.1 (16Mar18).
+# Therefore, all hydrogen
+# The fix rattle command modifies forces and velocities and thus should be
+# defined after all other integration fixes in your input script. If you
+# define other fixes that modify velocities or forces after fix rattle operates,
+# then fix rattle will not take them into account and the overall time
+# integration will typically not satisfy the RATTLE constraints. You can
+# check whether the constraints work correctly by setting the value of
+# RATTLE_DEBUG in src/fix_rattle.cpp to 1 and recompiling LAMMPS.
+# The degrees-of-freedom removed by SHAKE bonds and angles are accounted for in
+# temperature and pressure computations. Similarly, the SHAKE contribution to
+# the pressure of the system (virial) is also accounted for.
+
+# dump            dumpTraj all atom 100 ${baseName}.dump
+if "${reinitialize_velocities} > 0" then &
+  "velocity ${tempered_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
+
+
+dump            dumpPng nonwater image ${nptEqSteps} &
+                ${baseName}.*.png type type
+
+
+if "${mpiio} > 0" then &
+  "print 'netcdf/mpiio output'" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} ${baseName}.nc id mol type x y z" &
+else &
+  "print 'netcdf output (no netcdf/mpiiio)'" &
+  "dump dumpNetCDF all netcdf ${netcdf_frequency} ${baseName}.nc id mol type x y z"
+
+print "LAMMPS state before NPT equilibration:"
+info all
+
+run             ${nptEqSteps}
+
+write_data      ${baseName}.lammps
+
+unfix           timeIntegration
+unfix           thermostat
+unfix           barostat
+unfix           rigidHbonds
+unfix           fixedSubstrateCOM
+undump          dumpPng
+undump          dumpNetCDF

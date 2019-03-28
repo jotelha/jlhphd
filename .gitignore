@@ -19,6 +19,27 @@
 !bramos
 !bramos/**/*
 
+
+!bash
+!ff
+!gmx_input
+!ipynb
+!lmp_input
+!packmol
+!pdb
+!py
+!vmd
+
+!bash/**/*
+!ff/**/*
+!gmx_input/**/*
+!ipynb/**/*
+!lmp_input/**/*
+!packmol/**/*
+!pdb/**/*
+!py/**/*
+!vmd/**/*
+
 # except fireworks related
 !*.yaml
 !*.template

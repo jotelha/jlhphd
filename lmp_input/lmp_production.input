@@ -1,0 +1,154 @@
+# define baseName via command line switch "-v baseName systemXYZ"
+# also define restartFile to override default name below
+
+# setting $is_restart continues a run from given restart file
+# Source: https://lammps.sandia.gov/doc/read_restart.html
+# Here is a list of information not stored in a restart file, which means you
+# must re-issue these commands in your input script, after reading the restart
+# file.
+#    newton pair (see discussion of newton command below)
+#    fix commands (see below)
+#    compute commands (see below)
+#    variable commands
+#    region commands
+#    neighbor list criteria including neigh_modify settings
+#    kspace_style and kspace_modify settings
+#    info for thermodynamic, dump, or restart output
+# expects variables ${baseName} and ${restartFile}
+
+# technical settings
+variable mpiio          index  1         # parallel io on or off
+variable is_restart     index  0         # marks current run as restart
+
+# for the initial run, a small file called system_specific.input is expected
+# to define the variable $baseName
+if   "${is_restart} == 0" then "print 'Initial run on system'" &
+elif "${mpiio}      == 0"      "variable restartFile index default.restart" &
+else                           "variable restartFile index default.mpiio.restart"
+# in the last case, run is restart and mpiio is used
+
+print "Variables in lmp_production.input:"
+info variables
+
+if "${is_restart} > 0" then "read_restart ${restartFile}"
+include                 lmp_header.input
+
+# consecutively numbered restart files ...
+# restart               100000 ${baseName}.restart # every 200 ps
+# ... or two alternating files ...
+if "${mpiio} > 0" then &
+  "print 'mpiio restart files'" &
+  "restart  ${restart_frequency} ${baseName}.mpiio.restart1 ${baseName}.mpiio.restart2" &
+else &
+  "print 'standard restart files (no mpiiio)'" &
+  "restart ${restart_frequency} ${baseName}.restart1 ${baseName}.restart2"
+# Source: https://lammps.sandia.gov/doc/restart.html
+# [...]
+# If a "%" character appears in the restart filename(s), then one file is
+# written for each processor and the "%" character is replaced with the
+# processor ID from 0 to P-1. An additional file with the "%" replaced by
+# "base" is also written, which contains global information. For example,
+# the files written on step 1000 for filename restart.% would be
+# restart.base.1000, restart.0.1000, restart.1.1000, ..., restart.P-1.1000.
+# This creates smaller files and can be a fast mode of output and subsequent
+# input on parallel machines that support parallel I/O. The optional fileper
+# and nfile keywords discussed below can alter the number of files written.
+#
+# The restart file can also be written in parallel as one large binary file via
+# the MPI-IO library, which is part of the MPI standard for versions 2.0 and
+# above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO
+# package installed [...]
+#
+# Second, use a restart filename which contains ".mpiio". Note that it does not
+# have to end in ".mpiio", just contain those characters. Unlike MPI-IO dump
+# files, a particular restart file must be both written and read using MPI-IO.
+#                       ^ every 200 ps
+
+##############
+# Store forces
+
+if "${store_forces} > 0" then &
+    "fix storeUnconstrainedForces all store/force" &
+    "fix storeUnconstrainedForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeUnconstrainedForces[*]"
+
+# https://lammps.sandia.gov/doc/fix_store_force.html
+# Store the forces on atoms in the group at the point during each timestep when
+# the fix is invoked, as described below. This is useful for storing forces
+# before constraints or other boundary conditions are computed which modify the
+# forces, so that unmodified forces can be written to a dump file or accessed by
+# other output commands that use per-atom quantities.
+
+# This fix is invoked at the point in the velocity-Verlet timestepping
+# immediately after pair, bond, angle, dihedral, improper, and long-range forces
+# have been calculated. It is the point in the timestep when various fixes that
+# compute constraint forces are calculated and potentially modify the force on
+# each atom. Examples of such fixes are fix shake, fix wall, and fix indent.
+
+# The order in which various fixes are applied which operate at the same point
+# during the timestep, is the same as the order they are specified in the input
+# script. Thus normally, if you want to store per-atom forces due to force field
+# interactions, before constraints are applied, you should list this fix first
+# within that set of fixes, i.e. before other fixes that apply constraints.
+# However, if you wish to include certain constraints (e.g. fix shake) in the
+# stored force, then it could be specified after some fixes and before others.
+
+
+######################
+# Collective variables
+
+# variable colvarsFile             index  colvars.inp
+# set in lmp_header.lammps
+
+if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
+# https://lammps.sandia.gov/doc/group2ndx.html
+# Write or read a Gromacs style index file in text format that associates atom
+# IDs with the corresponding group definitions. This index file can be used with
+# in combination with Gromacs analysis tools or to import group definitions into
+# the fix colvars input file. It can also be used to save and restore group
+# definitions for static groups.
+#
+# The group2ndx command will write group definitions to an index file. Without
+# specifying any group IDs, all groups will be written to the index file. When
+# specifying group IDs, only those groups will be written to the index file. In
+# order to follow the Gromacs conventions, the group all will be renamed to
+# System in the index file.
+
+if "${use_colvars} > 0" then &
+  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap yes"
+#      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
+# source: https://lammps.sandia.gov/doc/fix_colvars.html
+# This fix interfaces LAMMPS to the collective variables "Colvars" library,
+# which allows to calculate potentials of mean force (PMFs) for any set of
+# colvars, using different sampling methods: currently implemented are the
+# Adaptive Biasing Force (ABF) method, metadynamics, Steered Molecular Dynamics
+# (SMD) and Umbrella Sampling (US) via a flexible harmonic restraint bias.
+
+# The group-ID entry is ignored. The collective variable module will always
+# apply to the entire system and there can only be one instance of the colvars
+# fix at a time. The colvars fix will only communicate the minimum information
+# necessary and the colvars library supports multiple, completely independent
+# collective variables, so there is no restriction to functionality by limiting
+# the number of colvars fixes.
+
+# The input keyword allows to specify a state file that would contain the
+# restart information required in order to continue a calculation from a
+# prerecorded state. Fix colvars records it state in binary restart files, so
+# when using the read_restart command, this is usually not needed. The output
+# keyword allows to specify the output prefix. All output files generated will
+# use this prefix followed by the ".colvars." and a word like "state" or "traj".
+
+# The seed keyword contains the seed for the random number generator that will
+# be used in the colvars module.
+
+# The unwrap keyword controls whether wrapped or unwrapped coordinates are
+# passed to the colvars library for calculation of the collective variables and
+# the resulting forces. The default is yes, i.e. to use the image flags to
+# reconstruct the absolute atom positions. Setting this to no will use the
+# current local coordinates that are wrapped back into the simulation cell at
+# each re-neighboring instead.
+
+# The tstat keyword can be either NULL or the label of a thermostating fix that
+# thermostats all atoms in the fix colvars group. This will be used to provide
+# the colvars module with the current thermostat target temperature.
+
+include                 lmp_production_mixed.input

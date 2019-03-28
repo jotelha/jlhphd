@@ -1,0 +1,77 @@
+# run with
+# lmp -in lmp_minimization \
+#  -v has_indenter 1 -v robust_minimization 0 -v pbc2d 1 \
+#  -v baseName 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped \
+#  -v dataFile 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped_parametrized.lammps
+
+variable                robust_minimization index 0
+
+include                 lmp_header.input
+
+thermo                  100
+
+############
+# restraints
+############
+# Keep indenter restrained during minimzation
+# Note that you can minimize some atoms in the system while holding the
+# coordinates of other atoms fixed by applying fix setforce to the other atoms.
+if "${has_indenter} > 0" then &
+  "print 'Indenter frozen during minimization'" &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+# https://lammps.sandia.gov/doc/fix_setforce.html
+# Set each component of force on each atom in the group to the specified values
+# fx,fy,fz. This erases all previously computed forces on the atom, though
+# additional fixes could add new forces. This command can be used to freeze
+# certain atoms in the simulation by zeroing their force, either for running
+# dynamics or performing an energy minimization. For dynamics, this assumes
+# their initial velocity is also zero.
+
+# keep substrate restrained during minimization
+if "${freeze_substrate} > 0" then &
+  "print 'Substrate frozen during minimization'" &
+  "fix freezeSubstrate substrate setforce 0.0 0.0 0.0"
+
+print "LAMMPS state before minimization:"
+info all
+
+##############
+# minimization
+##############
+# fix restraint surfactant spring/self 10.0
+# http://lammps.sandia.gov/doc/fix_spring_self.html
+# Apply a spring force independently to each atom in the group to tether it to
+# its initial position. The initial position for each atom is its location at
+# the time the fix command was issued. At each timestep, the magnitude of the
+# force on each atom is -Kr, where r is the displacement of the atom from its
+# current position to its initial position. The distance r correctly takes into
+# account any crossings of periodic boundary by the atom since it was in its
+# initial position.
+
+if "${robust_minimization} > 0" then &
+  "print 'Using alternative robust minimization settings'" &
+  "neigh_modify delay 0 every 1 check yes one 5000 page 250000" &
+  "minimize 0.0 1.0 10000 100000" &
+else &
+  "minimize 0.0 1.0 10000 100000"
+
+# minimize etol ftol maxiter maxeval
+# Quote from http://lammps.sandia.gov/doc/minimize.html
+# Perform an energy minimization of the system, by iteratively adjusting atom
+# coordinates. Iterations are terminated when one of the stopping criteria is
+# satisfied. At that point the configuration will hopefully be in local
+# potential energy minimum. More precisely, the configuration should
+# approximate a critical point for the objective function (see below), which
+# may or may not be a local minimum.
+#
+#    etol = stopping tolerance for energy (unitless)
+#    ftol = stopping tolerance for force (force units)
+#    maxiter = max iterations of minimizer
+#    maxeval = max number of force/energy evaluations
+#
+# Either or both of the etol and ftol values can be set to 0.0, in which case
+# some other criterion will terminate the minimization.
+
+write_data     ${baseName}.lammps
+
+reset_timestep  0
