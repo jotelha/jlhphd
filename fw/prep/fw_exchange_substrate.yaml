@@ -84,7 +84,7 @@ spec:
   # insert new files into database and delete previous version if exists
   - _fw_name: DeleteFilesTask
     identifiers:
-    - AFM/SDS/646/AU/111/52x30x8/bilayer/interface.lammps
+    - AFM/SDS/646/AU/111/52x30x8/monolayer/interface.lammps
     - substrate/AU/111/52x30x8.lammps
 
   - _fw_name: AddFilesTask
@@ -119,7 +119,7 @@ spec:
 
   - _fw_name: AddFilesTask
     identifiers:
-    - AFM/SDS/646/AU/111/52x30x8/bilayer/interface.lammps
+    - AFM/SDS/646/AU/111/52x30x8/monolayer/interface.lammps
     paths:
     - merged_aligned.lammps
     metadata:
