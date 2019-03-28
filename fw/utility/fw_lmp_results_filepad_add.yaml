@@ -5,7 +5,7 @@ name: "LAMMPS results to filepad (w/o trajectory)"
 spec:
     _category: "nemo_noqueue"
     _files_in:
-      data_file:             datafile.lammps    
+      data_file:             datafile.lammps
       log_file:              log.lammps
       joint_thermo_file:     thermo.out
       joint_ave_file:        thermo_ave.out
@@ -13,7 +13,7 @@ spec:
     _tasks:
     # first delete if file existent
     - _fw_name: DeleteFilesTask
-      identifiers: 
+      identifiers:
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/final_config.lammps
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/log.lammps
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/thermo.out
@@ -21,7 +21,7 @@ spec:
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/indenter_forces.txt
     # then add again:
     - _fw_name: AddFilesTask
-      identifiers: 
+      identifiers:
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/final_config.lammps
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/log.lammps
       - AFM/SDS/646/AU/111/52x30x2/bilayer/50Ang/stepped/30Ang/1500000/thermo.out
