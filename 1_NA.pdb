@@ -1,6 +1,0 @@
-TITLE     SODIUM ION
-REMARK    DUMMY PDB FOR SODIUM ION
-MODEL        1
-ATOM      1  NA  NA      1       0.000   0.000   0.000  1.00  0.00           NA
-TER
-ENDMOL
