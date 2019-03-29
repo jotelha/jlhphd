@@ -233,13 +233,13 @@ if "${pbc2d} > 0" then &
 # correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
 # being compatible with how fix efield works.
 
+if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
+
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:
 shell touch coeff_dummy.input
 # read force field parameter from file if specified:
 include ${coeffInfile}
-
-if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
 
 # override Au-Au LJ interaction by EAM potential:
 # TODO: make an adaptive NULL string depending on used Au atom type
@@ -371,8 +371,9 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 # pairwise contributions are computed as part of the charmm dihedral style
 # - see the pair_coeff and dihedral_style commands for more information.
 # See (MacKerell) for a description of the CHARMM force field.
-if "${use_eam} > 0" then &
-    "special_bonds  pair eam/fs 1.0 1.0 1.0"
+
+# if "${use_eam} > 0" then &
+#     "special_bonds  pair eam/fs 1.0 1.0 1.0"
 # The special and compute/tally keywords can only be used in conjunction with
 # the pair keyword and must directly follow it. special allows to override the
 # special_bonds settings for the specified sub-style. compute/tally allows to
