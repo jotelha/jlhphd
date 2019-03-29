@@ -20,25 +20,25 @@ fws:
 
     - _fw_name: GetFilesTask
       identifiers:
-      - AFM/SDS/646/AU/111/52x30x8/monolayer/interface.lammps
+      - substrate/AU/111/52x30x8.lammps
       new_file_names:
       - datafile.lammps
 
-    - _fw_name: CmdTask
-      cmd: lmp
-      opt:
-      - -in lmp_delete_nonSubst.input
-      - -v surfactant_name SDS
-      - -v has_indenter 0
-      - -v pbc2d 0
-      - -v freeze_substrate 0
-      - -v use_eam 0
-      - -v dataFile datafile.lammps
-      - -v outfile  substrate.lammps
-      stderr_file: delete.err
-      stdout_file: delete.out
-      use_shell: true
-      fizzle_bad_rc: true
+#    - _fw_name: CmdTask
+#      cmd: lmp
+#      opt:
+#      - -in lmp_delete_nonSubst.input
+#      - -v surfactant_name SDS
+#      - -v has_indenter 0
+#      - -v pbc2d 0
+#      - -v freeze_substrate 0
+#      - -v use_eam 0
+#      - -v dataFile datafile.lammps
+#      - -v outfile  substrate.lammps
+#      stderr_file: delete.err
+#      stdout_file: delete.out
+#      use_shell: true
+#      fizzle_bad_rc: true
 
     - _fw_name: CmdTask
       fizzle_bad_rc: true
@@ -49,8 +49,10 @@ fws:
       - -v has_indenter 0
       - -v pbc2d 0
       - -v freeze_substrate 0
+      - -v use_ewald 0
       - -v use_eam 0
-      - -v dataFile substrate.lammps
+      - -v shrink_wrap_once 1
+      - -v dataFile datafile.lammps
       - -v write_coeff 1
       - -v coeffOutfile coeff.input
       - -v topoOutfile stripped.lammps
@@ -62,6 +64,7 @@ fws:
       fizzle_bad_rc: true
       cmd: to_hybrid.py
       opt:
+      - --pair-style lj/charmmfsw/coul/charmmfsh
       - coeff.input
       - coeff_hybrid.input
       stderr_file: convert.err
@@ -98,9 +101,12 @@ fws:
       - -v compute_interactions 0
       - -v store_forces 0
       - -v freeze_substrate 0
+      - -v use_ewald 0
       - -v use_eam 1
-      - -v relax_box 0
+      - -v shrink_wrap_once 1
+      - -v relax_box 1
       - -v write_coeff_to_datafile 0
+      - -v dataFile datafile.lammps
       - -v coeffInfile coeff.input
       stderr_file: std.err
       stdout_file: std.out
