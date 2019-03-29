@@ -7,7 +7,8 @@ variable read_datafile           index  1 # do not read data file if 0
 
 # minimization-related:
 variable relax_box               index  0 # relax box tor specified pressureP in minimization
-
+variable minimization_maxiter    index  100000
+variable minimization_maxeval    index  1000000   
 
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
