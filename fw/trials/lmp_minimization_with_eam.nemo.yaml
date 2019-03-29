@@ -5,21 +5,51 @@ fws:
   spec:
     _category: "nemo_noqueue"
     _files_out:
-      data_file:       datafile.lammps
+      data_file:       stripped.lammps
       input_file_1:    lmp_header.input
       input_file_2:    lmp_minimization.input
+      coeff_file:      coeff_hybrid.input
     _tasks:
 
     - _fw_name: GetFilesTask
       identifiers:
       - lmp_header.input
       - lmp_minimization.input
+      - lmp_split_datafile.input
 
     - _fw_name: GetFilesTask
       identifiers:
       - AFM/SDS/646/AU/111/52x30x8/monolayer/interface.lammps
       new_file_names:
       - datafile.lammps
+
+    - _fw_name: CmdTask
+      fizzle_bad_rc: true
+      cmd: lmp
+      opt:
+      - -in lmp_split_datafile.input
+      - -v surfactant_name SDS
+      - -v has_indenter 0
+      - -v pbc2d 0
+      - -v freeze_substrate 0
+      - -v use_eam 0
+      - -v dataFile datafile.lammps
+      - -v write_coeff 1
+      - -v coeffOutfile coeff.input
+      - -v topoOutfile  stripped.lammps
+      stderr_file: strip.err
+      stdout_file: strip.out
+      use_shell: true
+
+    - _fw_name: CmdTask
+      fizzle_bad_rc: true
+      cmd: to_hybrid.py
+      opt:
+      - coeff.input
+      - coeff_hybrid.input
+      stderr_file: convert.err
+      stdout_file: convert.out
+      use_shell: true
 
 - fw_id: -2
   name: NEMO LAMMPS Minimization
@@ -34,6 +64,7 @@ fws:
       data_file:    datafile.lammps
       input_file_1: lmp_header.input
       input_file_2: lmp_minimization.input
+      coeff_file:   coeff.input
     _files_out:
       data_file: default.lammps
       log_file:  log.lammps
@@ -52,6 +83,7 @@ fws:
       - -v store_forces 0
       - -v freeze_substrate 0
       - -v use_eam 1
+      - -v coeffInfile coeff.input
       stderr_file: std.err
       stdout_file: std.out
       use_shell: true

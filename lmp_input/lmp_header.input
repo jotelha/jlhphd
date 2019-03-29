@@ -12,6 +12,9 @@ variable compute_interactions    index  1 # group-goup interactions to thermo_ou
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
+variable write_coeff             index  0 # write force field parameters to file
+variable coeffOutfile            index  coeff.input # file to store ff parameters
+variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
 variable thermo_frequency        index  1000 # outputs stats at single time step
 variable thermo_average_frequency index 0 # outputs stats averaged over N timesteps. 0: disabled
 variable netcdf_frequency        index  1000
@@ -230,15 +233,37 @@ if "${pbc2d} > 0" then &
 # correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
 # being compatible with how fix efield works.
 
+# LAMMPS does not allow conditional includes. We simulate this by including
+# an empty file per default:
+shell touch coeff_dummy.input
+# read force field parameter from file if specified:
+include ${coeffInfile}
+
 if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
 
 # override Au-Au LJ interaction by EAM potential:
 # TODO: make an adaptive NULL string depending on used Au atom type
 if "${use_eam} > 0" then &
-  "pair_coeff ${substrateType} ${substrateType} &
+  "pair_coeff * * eam/fs &
     CuAu_MishinGrochola_fit_Arithmetic.eam.fs &
     NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL Au"
-# source: https://lammps.sandia.gov/doc/pair_eam.html#pair-style-eam-fs-command
+# https://lammps.sandia.gov/doc/pair_hybrid.html
+# For the hybrid style, each atom type pair I,J is assigned to exactly one
+# sub-style. Just as with a simulation using a single pair style, if you specify
+# the same atom type pair in a second pair_coeff command, the previous
+# assignment will be overwritten.
+#
+# A subset of atom types is assigned to the many-body potential with a single
+# pair_coeff command, using “* *” to include all types and the NULL keywords
+# described above to exclude specific types not assigned to that potential. If
+# types 1,3,4 were assigned in that way (but not type 2), this means that all
+# many-body interactions between all atoms of types 1,3,4 will be computed by
+# that potential. Pair_style hybrid allows interactions between type pairs 2-2,
+# 1-2, 2-3, 2-4 to be specified for computation by other pair styles. You could
+# even add a second interaction for 1-1 to be computed by another pair style,
+# assuming pair_style hybrid/overlay is used.
+#
+# https://lammps.sandia.gov/doc/pair_eam.html#pair-style-eam-fs-command
 # [...] All of these files are parameterized in terms of LAMMPS metal units.
 #
 # [...] where there are N additional arguments after the filename, where N is
@@ -288,6 +313,9 @@ if "${use_eam} > 0" then &
 # since it is stored in tabulated potential files. Thus, you need to re-specify
 # the pair_style and pair_coeff commands in an input script that reads a restart
 # file.
+
+# force field is defined completely at this point
+if "${write_coeff} > 0" then "write_coeff ${coeffOutfile}"
 
 print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
 info styles atom out log
@@ -343,6 +371,13 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 # pairwise contributions are computed as part of the charmm dihedral style
 # - see the pair_coeff and dihedral_style commands for more information.
 # See (MacKerell) for a description of the CHARMM force field.
+if "${use_eam} > 0" then &
+    "special_bonds  pair eam/fs 1.0 1.0 1.0"
+# The special and compute/tally keywords can only be used in conjunction with
+# the pair keyword and must directly follow it. special allows to override the
+# special_bonds settings for the specified sub-style. compute/tally allows to
+# disable or enable registering compute */tally computes for a given sub-style.
+# More details are given below.
 
 if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
 
