@@ -1,13 +1,15 @@
-name: "NEMO TRIAL: LAMMPS Minimzation"
+name: "NEMO: AFM SDS 646 AU 111 52x30x8 monolayer, minimization & equilibration "
 fws:
-- fw_id: -1
+- fw_id: -10
   name: "NEMO File Retrieval"
   spec:
     _category: "nemo_noqueue"
     _files_out:
       data_file:       stripped.lammps
-      input_file_1:    lmp_header.input
-      input_file_2:    lmp_minimization.input
+      header_input:    lmp_header.input
+      minim_input:     lmp_minimization.input
+      nvt_input:       lmp_equilibration_nvt.input
+      npt_input:       lmp_equilibration_npt.input
       coeff_file:      coeff_hybrid.input
     _tasks:
 
@@ -16,6 +18,8 @@ fws:
       - lmp_header.input
       - lmp_minimization.input
       - lmp_split_datafile.input
+      - lmp_equilibration_nvt.input
+      - lmp_equilibration_npt.input
 
     - _fw_name: GetFilesTask
       identifiers:
@@ -51,19 +55,19 @@ fws:
       stdout_file: convert.out
       use_shell: true
 
-- fw_id: -2
+- fw_id: -20
   name: NEMO LAMMPS Minimization
   spec:
     _category: nemo_queue_offline
     _queueadapter:
-      nodes: 1
+      nodes: 4
       ppn: 20
-      queue: 'express'
-      walltime: 00:10:00
+      queue: ''
+      walltime: 12:00:00
     _files_in:
       data_file:    datafile.lammps
-      input_file_1: lmp_header.input
-      input_file_2: lmp_minimization.input
+      header_input: lmp_header.input 
+      minim_input:  lmp_minimization.input
       coeff_file:   coeff.input
     _files_out:
       data_file: default.lammps
@@ -85,16 +89,107 @@ fws:
       - -v coeffInfile coeff.input
       stderr_file: std.err
       stdout_file: std.out
-      use_shell: true
       fizzle_bad_rc: true
+      use_shell: true
     _trackers:
     - filename: log.lammps
       nlines: 25
     step: minimization
 
+- fw_id: -30
+  name: NEMO LAMMPS Equilibration NVT
+  spec:
+    _category: nemo_queue_offline
+    _queueadapter:
+      nodes: 4
+      ppn: 20
+      queue: ''
+      walltime: 24:00:00
+    _files_in:
+      data_file:    datafile.lammps
+      header_input: lmp_header.input
+      nvt_input:    lmp_equilibration_nvt.input
+      coeff_file:   coeff.input
+    _files_out:
+      data_file: default.lammps
+      traj_file: default.nc
+      log_file:  log.lammps
+    _tasks:
+    - _fw_name: CmdTask
+      cmd: lmp
+      opt:
+      - -in lmp_equilibration_nvt.input
+      - -v surfactant_name SDS
+      - -v has_indenter 0
+      - -v pbd2d 0
+      - -v reinitialize_velocities 1
+      - -v nvtEqSteps 10000
+      - -v compute_interactions 0
+      - -v store_forces 0
+      - -v mpiio 1
+      - -v use_eam 1
+      - -v coeffInfile coeff.input
+      stderr_file: std.err
+      stdout_file: std.out
+      use_shell: true
+      fizzle_bad_rc: true
+    _trackers:
+    - filename: log.lammps
+      nlines: 25
+    step: equilibration_nvt
+
+- fw_id: -40
+  name: LAMMPS NPT equilibration
+  spec:
+    _category: nemo_queue_offline
+    _queueadapter:
+      nodes: 4
+      ppn: 20
+      queue: ''
+      walltime: 24:00:00
+    _files_in:
+      data_file:    datafile.lammps
+      header_input: lmp_header.input
+      npt_input: lmp_equilibration_npt.input
+      coeff_file:   coeff.input
+    _files_out:
+      data_file: default.lammps
+      traj_file: default.nc
+      log_file:  log.lammps
+    _tasks:
+    - _fw_name: CmdTask
+      cmd: lmp
+      opt:
+      - -in lmp_equilibration_npt.input
+      - -v surfactant_name SDS
+      - -v has_indenter 0
+      - -v pbd2d 0
+      - -v reinitialize_velocities 0
+      - -v nptEqSteps 10000
+      - -v pbc2d 0
+      - -v compute_interactions 0
+      - -v store_forces 0
+      - -v mpiio 1
+      - -v use_eam 1
+      - -v coeffInfile coeff.input
+      stderr_file: std.err
+      stdout_file: std.out
+      use_shell: true
+      fizzle_bad_rc: true
+    _trackers:
+    - filename: log.lammps
+      nlines: 25
+    step: equilibration_npt
+
 links:
-  -1:
-  - -2
+  -10:
+  - -20
+  - -30
+  - -40
+  -20:
+  - -30
+  -30:
+  - -40
 
 metadata:
   system_name: 646_SDS_on_AU_111_51x30x8_monolayer_with_counterion

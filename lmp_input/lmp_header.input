@@ -133,7 +133,7 @@ if "${is_restart} == 0" then "dihedral_style  charmmfsw"
 if "${is_restart} == 0" then "improper_style  harmonic"
 
 if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" then &
-    "pair_style lj/charmmfsw/coul/long 8 12"
+    "pair_style lj/charmmfsw/coul/long 8 12" &
 elif "${is_restart} == 0 && ${use_eam} == 0" &
     "pair_style lj/charmmfsw/coul/charmmfsh 8 12"
 
