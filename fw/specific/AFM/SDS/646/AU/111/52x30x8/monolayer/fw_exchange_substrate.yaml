@@ -88,6 +88,7 @@ spec:
     - -in lmp_delete_nonSubst.input
     - -v dataFile         merged_aligned.lammps
     - -v outfile          newSubstrate.lammps
+    - -v use_ewald        0
     stderr_file: merge.err
     stdout_file: merge.out
     use_shell: true

@@ -14,6 +14,7 @@ variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable reinitialize_velocities index  0
 variable compute_interactions    index  1 # group-goup interactions to thermo_out
+variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
@@ -130,8 +131,12 @@ if "${is_restart} == 0" then "dihedral_style  charmmfsw"
 #             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
 
 if "${is_restart} == 0" then "improper_style  harmonic"
-if "${is_restart} == 0 && ${use_eam} == 0" then &
+
+if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" then &
     "pair_style lj/charmmfsw/coul/long 8 12"
+elif "${is_restart} == 0 && ${use_eam} == 0" &
+    "pair_style lj/charmmfsw/coul/charmmfsh 8 12"
+
 # Quote from http://lammps.sandia.gov/doc/pair_charmm.html
 # The newer styles with charmmfsw or charmmfsh in their name replace the
 # energy switching with force switching (fsw) and force shifting (fsh)
@@ -166,8 +171,10 @@ if "${is_restart} == 0 && ${use_eam} == 0" then &
 # 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 # literature for their chosen lipid(s) before beginning a simulation!
 #
-if "${is_restart} == 0 && ${use_eam} > 0" then &
-  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/fs"
+if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
+  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/fs" &
+elif "${is_restart} == 0 && ${use_eam} > 0" &
+  "pair_style hybrid lj/charmmfsw/coul/charmmfsh 8 12 eam/fs"
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
 # one simulation. With the hybrid style, exactly one pair style is assigned to
 # each pair of atom types. With the hybrid/overlay style, one or more pair
@@ -176,7 +183,7 @@ if "${is_restart} == 0 && ${use_eam} > 0" then &
 
 if "${is_restart} == 0" then "pair_modify     mix arithmetic"
 # kspace_style    pppm 1e-6
-kspace_style    pppm 1e-4
+if "${use_ewald} > 0" then "kspace_style    pppm 1e-4"
 # Quote from http://lammps.sandia.gov/doc/kspace_style.html:
 # pppm value = accuracy
 #  accuracy = desired relative error in forces
@@ -209,7 +216,7 @@ kspace_style    pppm 1e-4
 # (Darden)    Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
 # (Pollock)   Pollock and Glosli, Comp Phys Comm, 95, 93 (1996).
 
-if "${pbc2d} > 0" then &
+if "${pbc2d} > 0 && ${use_ewald} > 0" then &
     "kspace_modify slab 3.0"
 # The slab keyword allows an Ewald or PPPM solver to be used for a systems that
 # are periodic in x,y but non-periodic in z - a boundary setting of
