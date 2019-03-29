@@ -5,10 +5,10 @@ fws:
   spec:
     _category: "nemo_noqueue"
     _files_out:
-      initial_configuration_file:       stripped.lammps
-      input_header:    lmp_header.input
-      input_minimization:    lmp_minimization.input
-      coeff_file:      coeff_hybrid.input
+      initial_configuration_file: stripped.lammps
+      input_header:               lmp_header.input
+      input_minimization:         lmp_minimization.input
+      coeff_file:                 coeff_hybrid.input
     _tasks:
 
     - _fw_name: GetFilesTask

@@ -193,7 +193,10 @@ info all
 
 run             ${nptEqSteps}
 
-write_data      ${baseName}.lammps
+if "${write_coeff_to_datafile} > 0" then &
+  "write_data     ${baseName}.lammps" &
+else &
+  "write_data     ${baseName}.lammps nocoeff"
 
 unfix           timeIntegration
 unfix           thermostat

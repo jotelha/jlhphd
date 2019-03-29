@@ -233,7 +233,10 @@ info all
 # at 2 fs time step output every 2 ps
 run             ${productionSteps} upto
 
-write_data      ${baseName}.lammps
+if "${write_coeff_to_datafile} > 0" then &
+  "write_data     ${baseName}.lammps" &
+else &
+  "write_data     ${baseName}.lammps nocoeff"
 
 # unfix           timeIntegration
 unfix           thermostat
