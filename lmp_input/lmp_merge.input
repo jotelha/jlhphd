@@ -1,11 +1,11 @@
-# Appends one data file as substrate to another. Subsequently switches to 
-# shrink-wrapped box and zero-aligns the system in order to have an enveloping 
+# Appends one data file as substrate to another. Subsequently switches to
+# shrink-wrapped box and zero-aligns the system in order to have an enveloping
 # box of minimum size.
 variable dataFile         index "nonSubstrate.lammps"
 variable dataFileToAppend index "110_subst_new_original_offset.lammps"
 variable outfile          index "merged.lammps"
 # per default, assume element type 11 as susbtrate
-variable substrateType    index 11 
+variable substrateType    index 11
 # minimum header does not load datafile, does not define groups,
 # does not enable Ewald summation and therefore does not require
 # periodic box.
