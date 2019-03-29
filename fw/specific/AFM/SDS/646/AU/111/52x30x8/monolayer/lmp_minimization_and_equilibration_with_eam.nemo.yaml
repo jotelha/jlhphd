@@ -1,4 +1,4 @@
-name: "NEMO: AFM SDS 646 AU 111 52x30x8 hemicylinders, minimization & equilibration "
+name: "NEMO: AFM SDS 646 AU 111 52x30x8 monolayer, minimization & equilibration "
 fws:
 - fw_id: -10
   name: "NEMO File Retrieval"
@@ -23,7 +23,7 @@ fws:
 
     - _fw_name: GetFilesTask
       identifiers:
-      - AFM/SDS/646/AU/111/52x30x8/hemicylinders/interface.lammps
+      - AFM/SDS/646/AU/111/52x30x8/monolayer/interface.lammps
       new_file_names:
       - datafile.lammps
 
@@ -192,7 +192,7 @@ links:
   - -40
 
 metadata:
-  system_name: 646_SDS_on_AU_111_51x30x8_hemicylinders_with_counterion
+  system_name: 646_SDS_on_AU_111_51x30x8_monolayer_with_counterion
   state: trial minimization with eam potential
   ci_preassembly:                               at polar heads
   counterion:                                   NA
@@ -231,7 +231,7 @@ metadata:
   sf_concentration:                             0.00680627
   sf_concentration_unit:                        M # M = mol L^-3
   sf_nmolecules:                                646
-  sf_preassembly:                               hemicylinders
+  sf_preassembly:                               monolayer
   solvent:                                      H2O
   substrate:                                    AU
   surfactant:                                   SDS
