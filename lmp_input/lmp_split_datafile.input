@@ -1,0 +1,7 @@
+# split a data file into force field parameters and topology information
+# does not work properly for style 'hybrid'
+variable coeffOutfile index coeff.input
+variable topoOutfile index  stripped.lammps
+include                 lmp_header.input
+write_coeff ${coeffOutfile}
+write_data ${topoOutfile} nocoeff
