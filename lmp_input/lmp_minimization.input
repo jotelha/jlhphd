@@ -46,46 +46,6 @@ if "${freeze_substrate} > 0" then &
   "print 'Substrate frozen during minimization'" &
   "fix freezeSubstrate substrate setforce 0.0 0.0 0.0"
 
-print "LAMMPS state before minimization:"
-info all
-
-##############
-# minimization
-##############
-# fix restraint surfactant spring/self 10.0
-# http://lammps.sandia.gov/doc/fix_spring_self.html
-# Apply a spring force independently to each atom in the group to tether it to
-# its initial position. The initial position for each atom is its location at
-# the time the fix command was issued. At each timestep, the magnitude of the
-# force on each atom is -Kr, where r is the displacement of the atom from its
-# current position to its initial position. The distance r correctly takes into
-# account any crossings of periodic boundary by the atom since it was in its
-# initial position.
-
-if "${robust_minimization} > 0" then &
-  "print 'Using alternative robust minimization settings'" &
-  "neigh_modify delay 0 every 1 check yes one 5000 page 250000" &
-  "minimize 0.0 1.0 10000 100000" &
-else &
-  "minimize 0.0 1.0 10000 100000"
-
-# minimize etol ftol maxiter maxeval
-# Quote from http://lammps.sandia.gov/doc/minimize.html
-# Perform an energy minimization of the system, by iteratively adjusting atom
-# coordinates. Iterations are terminated when one of the stopping criteria is
-# satisfied. At that point the configuration will hopefully be in local
-# potential energy minimum. More precisely, the configuration should
-# approximate a critical point for the objective function (see below), which
-# may or may not be a local minimum.
-#
-#    etol = stopping tolerance for energy (unitless)
-#    ftol = stopping tolerance for force (force units)
-#    maxiter = max iterations of minimizer
-#    maxeval = max number of force/energy evaluations
-#
-# Either or both of the etol and ftol values can be set to 0.0, in which case
-# some other criterion will terminate the minimization.
-
 ################
 # box relaxation
 ################
@@ -159,6 +119,45 @@ if "${relax_box} > 0" then &
 # simply continuing the minimization from a restart file.
 
 
+##############
+# minimization
+##############
+# fix restraint surfactant spring/self 10.0
+# http://lammps.sandia.gov/doc/fix_spring_self.html
+# Apply a spring force independently to each atom in the group to tether it to
+# its initial position. The initial position for each atom is its location at
+# the time the fix command was issued. At each timestep, the magnitude of the
+# force on each atom is -Kr, where r is the displacement of the atom from its
+# current position to its initial position. The distance r correctly takes into
+# account any crossings of periodic boundary by the atom since it was in its
+# initial position.
+
+print "LAMMPS state before minimization:"
+info all out log
+
+if "${robust_minimization} > 0" then &
+  "print 'Using alternative robust minimization settings'" &
+  "neigh_modify delay 0 every 1 check yes one 5000 page 250000" &
+  "minimize 0.0 1.0 10000 100000" &
+else &
+  "minimize 0.0 1.0 10000 100000"
+
+# minimize etol ftol maxiter maxeval
+# Quote from http://lammps.sandia.gov/doc/minimize.html
+# Perform an energy minimization of the system, by iteratively adjusting atom
+# coordinates. Iterations are terminated when one of the stopping criteria is
+# satisfied. At that point the configuration will hopefully be in local
+# potential energy minimum. More precisely, the configuration should
+# approximate a critical point for the objective function (see below), which
+# may or may not be a local minimum.
+#
+#    etol = stopping tolerance for energy (unitless)
+#    ftol = stopping tolerance for force (force units)
+#    maxiter = max iterations of minimizer
+#    maxeval = max number of force/energy evaluations
+#
+# Either or both of the etol and ftol values can be set to 0.0, in which case
+# some other criterion will terminate the minimization.
 
 if "${write_coeff_to_datafile} > 0" then &
   "write_data     ${baseName}.lammps" &
