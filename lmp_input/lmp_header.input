@@ -317,25 +317,23 @@ if "${use_eam} > 0" then &
 # force field is defined completely at this point
 if "${write_coeff} > 0" then "write_coeff ${coeffOutfile}"
 
-print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
-info styles atom out log
-info stylse bond out log
-info styles angle out log
-info styles dihedral out log
-info sytles improper out log
 
-print "Pair, kspace in lmp_header.input:"
-info styles pair out log
-info styles kspace out log
+# print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
+# info styles atom out log
+# info stylse bond out log
+# info styles angle out log
+# info styles dihedral out log
+# info sytles improper out log
+
+# print "Pair, kspace in lmp_header.input:"
+# info styles pair out log
+# info styles kspace out log
 
 
 # determine center
 variable x_center equal $(( xlo + xhi ) / 2.0)
 variable y_center equal $(( ylo + yhi ) / 2.0)
 variable z_center equal $(( zlo + zhi ) / 2.0)
-
-print "Variables in lmp_header.input:"
-info variables out log
 
 # For style plane, a plane is defined which contain the point (px,py,pz) and
 # has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
@@ -359,8 +357,6 @@ region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)
 #                                ^cylinder coordinates in x,y dim
 #                                                        ^cylinder radius
 #                                                             ^lower and ^upper point
-print "Regions in lmp_header.input:"
-info regions out log
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -411,9 +407,6 @@ if "${is_restart} == 0" then &
     "group    surface     intersect all substrate" &
     "group    water       intersect all solvent" &
     "group    nonsolvent  subtract all solvent"
-
-print "Groups in lmp_header.input:"
-info groups out log
 
 # define computes
 # kspace no: AU atoms neutral
@@ -472,8 +465,6 @@ if "${compute_interactions} > 0" then &
 #        9    15.9994  # OT
 #       10     79.904  # BR
 #       11   196.9665  # AU
-print "Computes in lmp_header.input:"
-info computes out log
 
 
 # exclude intra-indenter interactions for rigid indenter
@@ -656,5 +647,23 @@ elif "${thermo_average_frequency} > 0" &
 # no file output, format = %g, title 1,2,3 = strings as described above,
 # and no off settings for any input values.
 
+print "Force field parameters in lmp_header.input:"
+info coeffs out log
+
+print "Computes in lmp_header.input:"
+info computes out log
+
 print "Fixes in lmp_header.input:"
 info fixes out log
+
+print "Groups in lmp_header.input:"
+info groups out log
+
+print "Regions in lmp_header.input:"
+info regions out log
+
+print "System info in lmp_header.input:"
+info system out log
+
+print "Variables in lmp_header.input:"
+info variables out log

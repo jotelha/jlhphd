@@ -8,6 +8,20 @@ variable                robust_minimization index 0
 
 include                 lmp_header.input
 
+neigh_modify            delay 0 every 1 check yes
+# https://lammps.sandia.gov/doc/neigh_modify.html
+# The every, delay, check, and once options affect how often lists are built as
+# a simulation runs. The delay setting means never build new lists until at
+# least N steps after the previous build. The every setting means build lists
+# every M steps (after the delay has passed). If the check setting is no, the
+# lists are built on the first step that satisfies the delay and every settings.
+# If the check setting is yes, then the every and delay settings determine when
+# a build may possibly be performed, but an actual build only occurs if some
+# atom has moved more than half the skin distance (specified in the neighbor
+# command) since the last build.
+# If the "delay" setting is non-zero, then it must be a multiple of the "every"
+# setting.
+
 thermo                  100
 
 ############
@@ -20,7 +34,7 @@ if "${has_indenter} > 0" then &
   "print 'Indenter frozen during minimization'" &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 # https://lammps.sandia.gov/doc/fix_setforce.html
-# Set each component of force on each atom in the group to the specified values
+# Set each component of force on each atom in the group to the specified value
 # fx,fy,fz. This erases all previously computed forces on the atom, though
 # additional fixes could add new forces. This command can be used to freeze
 # certain atoms in the simulation by zeroing their force, either for running
