@@ -18,6 +18,7 @@ spec:
     - lmp_minimal_header.input
     - lmp_align.input
     - lmp_delete_subst.input
+    - lmp_delete_nonSubst.input
     - lmp_merge.input
 
   - _fw_name: CmdTask
@@ -49,7 +50,7 @@ spec:
     - --mult 51 30 2  # measures of old substrate in multiples of unit cell
     - --thickness 8   # thickness of new substrate in multiples of unit cell
     - --style full    # LAMMPS atom style
-    - --substrate newSubstrate.lammps
+    - --substrate newSubstrate_raw.lammps
     - --verbose
     - aligned.lammps      # positional argument: original system
     - nonSubstrate.lammps # positional argument: original system w/o substrate
@@ -63,7 +64,7 @@ spec:
     opt:
     - -in lmp_merge.input
     - -v dataFile         nonSubstrate.lammps
-    - -v dataFileToAppend newSubstrate.lammps
+    - -v dataFileToAppend newSubstrate_raw.lammps
     - -v outfile          merged.lammps
     stderr_file: merge.err
     stdout_file: merge.out
@@ -78,6 +79,17 @@ spec:
     - -v outfile          merged_aligned.lammps
     stderr_file: align_new.err
     stdout_file: align_new.out
+    use_shell: true
+    fizzle_bad_rc: true
+
+  - _fw_name: CmdTask
+    cmd: lmp
+    opt:
+    - -in lmp_delete_nonSubst.input
+    - -v dataFile         merged_aligned.lammps
+    - -v outfile          newSubstrate.lammps
+    stderr_file: merge.err
+    stdout_file: merge.out
     use_shell: true
     fizzle_bad_rc: true
 
