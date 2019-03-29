@@ -4,6 +4,11 @@
 variable baseName                index  "default"
 variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
+
+# minimization-related:
+variable relax_box               index  0 # relax box tor specified pressureP in minimization
+
+
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
@@ -12,7 +17,8 @@ variable compute_interactions    index  1 # group-goup interactions to thermo_ou
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
-variable write_coeff             index  0 # write force field parameters to file
+variable write_coeff             index  0 # write force field parameters to independent file
+variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
 variable coeffOutfile            index  coeff.input # file to store ff parameters
 variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
 variable thermo_frequency        index  1000 # outputs stats at single time step
@@ -384,12 +390,14 @@ if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
   "group          ion        type  10     # 10 - Na+" &
   "group          surfactant subtract all solvent solid ion" &
   "group          nonwater   subtract all solvent" &
+  "group          nonsolid   subtract all solid" &
 elif "${is_restart} == 0 && ${surfactant_name} == CTAB" &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
   "group          solid      type  ${substrateType}     # 11 - Au" &
   "group          ion        type  10     # 10 - Br-" &
   "group          surfactant subtract all solvent solid ion" &
-  "group          nonwater   subtract all solvent"
+  "group          nonwater   subtract all solvent" &
+  "group          nonsolid   subtract all solid"
 
 # correct if indenter is present
 if "${is_restart} == 0 && ${has_indenter} > 0" then &
@@ -399,8 +407,10 @@ if "${is_restart} == 0 && ${has_indenter} > 0" then &
   "group          indenter       subtract  solid substrate" &
   "group          indenter_apex  intersect indenter atoms_in_central_column" &
   "group          nonindenter    subtract all indenter" &
+  "group          nonsubstrate subtract all substrate" &
 elif "${is_restart} == 0" &
-  "group          substrate intersect all solid"
+  "group          substrate intersect all solid" &
+  "group          nonsubstrate subtract all substrate"
 
 # for compatibility reasons:
 if "${is_restart} == 0" then &
