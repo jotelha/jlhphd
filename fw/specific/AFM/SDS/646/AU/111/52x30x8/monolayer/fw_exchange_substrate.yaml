@@ -89,8 +89,8 @@ spec:
     - -v dataFile         merged_aligned.lammps
     - -v outfile          newSubstrate.lammps
     - -v use_ewald        0
-    stderr_file: merge.err
-    stdout_file: merge.out
+    stderr_file: extract.err
+    stdout_file: extract.out
     use_shell: true
     fizzle_bad_rc: true
 

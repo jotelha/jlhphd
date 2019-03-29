@@ -13,7 +13,7 @@ variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable reinitialize_velocities index  0
-variable compute_interactions    index  1 # group-goup interactions to thermo_out
+variable compute_interactions    index  0 # group-goup interactions to thermo_out
 variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable use_colvars             index  0
