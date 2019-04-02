@@ -4,8 +4,6 @@
 #  -v baseName 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped \
 #  -v dataFile 377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_100Ang_stepped_parametrized.lammps
 
-variable                robust_minimization index 0
-
 include                 lmp_header.input
 
 neigh_modify            delay 0 every 1 check yes
@@ -49,7 +47,9 @@ if "${freeze_substrate} > 0" then &
 ################
 # box relaxation
 ################
-if "${relax_box} > 0" then &
+if "${relax_box} > 0 && ((${pbc2d} > 0) || (${has_vacuum} > 0))" then &
+  "fix boxRelaxation all box/relax x ${pressureP} y ${pressureP} couple none fixedpoint 0 0 0 nreset 100" &
+elif "${relax_box} > 0" &
   "fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100"
 # https://lammps.sandia.gov/doc/fix_box_relax.html
 # Apply an external pressure or stress tensor to the simulation box during an
@@ -149,9 +149,9 @@ info all out log
 if "${robust_minimization} > 0" then &
   "print 'Using alternative robust minimization settings'" &
   "neigh_modify delay 0 every 1 check yes one 5000 page 250000" &
-  "minimize 0.0 1.0 ${minimization_maxiter} ${minimization_maxeval}" &
+  "minimize 0.0 ${minimization_ftol} ${minimization_maxiter} ${minimization_maxeval}" &
 else &
-  "minimize 0.0 1.0 ${minimization_maxiter} ${minimization_maxeval}"
+  "minimize 0.0 ${minimization_ftol} ${minimization_maxiter} ${minimization_maxeval}"
 
 # minimize etol ftol maxiter maxeval
 # Quote from http://lammps.sandia.gov/doc/minimize.html

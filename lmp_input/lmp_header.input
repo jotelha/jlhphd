@@ -6,15 +6,18 @@ variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
 
 # minimization-related:
+variable robust_minimization     index  0
 variable relax_box               index  0 # relax box tor specified pressureP in minimization
 variable minimization_maxiter    index  100000
 variable minimization_maxeval    index  1000000   
+variable minimization_ftol       index  1.0
 
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
 variable reinitialize_velocities index  0
+variable substrate_recenter      index  1 # remove substrate COM movement
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
 variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
@@ -45,13 +48,16 @@ variable region_tolerance        index   5.0 # Ang
 # this can be useful if a very dense initial packing would result into substrate
 # deformation otherwise
 
-variable nvtEqSteps      index    100000    # 200 ps
-variable nptEqSteps      index    100000    # 200 ps
+variable nvtEqSteps      index   100000    # 200 ps
+variable nptEqSteps      index   100000    # 200 ps
 variable productionSteps index   5000000    #  10 ns
 
 variable temperatureT   index    298    # K
 variable initialT       index    ${temperatureT}  # for ramped temperature
 variable pressureP      index      1    # atm
+
+variable has_vacuum     index    0 # if > 0, z-direction not pressurized
+variable add_vacuum     index    0 # if > 0, adds vacuum of specified thickness in z-direction
 
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
@@ -256,6 +262,10 @@ if "${shrink_wrap_once} > 0 && ${pbc2d} > 0" then &
   "change_box all boundary p p f" &
 elif "${shrink_wrap_once} > 0" &
   "change_box all boundary p p p"
+
+# add vacuum to box if specified
+if "${add_vacuum} > 0.0" then &
+  "change_box all z final $(zlo) $(zhi+v_add_vacuum) units box"
 
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:

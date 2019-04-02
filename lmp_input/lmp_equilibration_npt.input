@@ -1,4 +1,4 @@
-include                 lmp_header.input
+include lmp_header.input
 ############
 # restraints
 ############
@@ -61,7 +61,10 @@ fix thermostat ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29
 # BAROSTAT
 
 # fix barostat all press/berendsen aniso 0 0 1000
-fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6
+if "(${pbc2d} > 0) || (${has_vacuum} > 0)" then &
+  "fix barostat ${tempered_group} press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6" &
+else &
+  "fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6"
 # fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
 # fix ID group-ID press/berendsen keyword value ...
 # dilate partial
@@ -110,10 +113,11 @@ fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 1
 # DRIFT REMOVAL
 
 # Keep substrate slab's position COM position fixed, remove relative drift
-fix             fixedSubstrateCOM surface recenter INIT INIT INIT shift all
-#               ^ID               ^group-ID
-#                                         ^style   ^x   ^y   ^z   ^keyword
-#                                                                       ^group
+if "${substrate_recenter} > 0" then &
+  "fix fixedSubstrateCOM substrate recenter INIT INIT INIT shift all"
+#      ^ID               ^group-ID
+#                                  ^style   ^x   ^y   ^z   ^keyword
+#                                                                ^group
 # source: https://lammps.sandia.gov/doc/fix_recenter.html
 # fix ID group-ID recenter x y z keyword value ...
 #   shift value = group-ID
