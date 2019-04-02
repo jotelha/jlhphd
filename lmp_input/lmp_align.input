@@ -17,7 +17,7 @@ displace_atoms all move 0.0 0.0 ${z_center} units box
 variable x_subst equal (bound(substrate,xmin))
 variable y_subst equal (bound(substrate,ymin))
 variable z_subst equal (bound(substrate,zmin))
-variable precision equal (1.0e-15)
+variable precision equal (1.0e-5)
 info variables
 
 # zero-align

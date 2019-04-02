@@ -2,7 +2,7 @@
 # shrink-wrapped box and zero-aligns the system in order to have an enveloping
 # box of minimum size.
 variable dataFile         index "nonSubstrate.lammps"
-variable dataFileToAppend index "110_subst_new_original_offset.lammps"
+variable dataFileToAppend index "newSubstrate_raw.lammps"
 variable outfile          index "merged.lammps"
 # per default, assume element type 11 as susbtrate
 variable substrateType    index 11
@@ -28,10 +28,43 @@ read_data ${dataFileToAppend} add append group substrate
 
 set group substrate type ${substrateType}
 
-# "tighten" box around merged system:
+# "tighten" box around merged system and add one lattice constant in all directions:
 change_box all boundary s s s
 
 # zero-align system
 displace_atoms all move $((-xlo)) $((-ylo)) $((-zlo)) units box
+
+# switch on periodic bc again
+change_box all boundary p p p
+
+# add one lattice constant in each direction
+
+# default lattice constant for Au
+variable substrate_lattice_constant index 4.07
+# fcc lattice with (111) normal in z-direction
+lattice fcc ${substrate_lattice_constant} orient x 1 -1 0 orient y 1 1 -2 orient z 1 1 1
+# If the spacing option is not specified, the lattice spacings are computed by
+# LAMMPS in the following way. A unit cell of the lattice is mapped into the
+# simulation box (scaled and rotated), so that it now has (perhaps) a modified
+# size and orientation. The lattice spacing in X is defined as the difference
+# between the min/max extent of the x coordinates of the 8 corner points of the
+# modified unit cell (4 in 2d). Similarly, the Y and Z lattice spacings are
+# defined as the difference in the min/max of the y and z coordinates.
+
+# Computed with the help of the following web tool
+# http://neutron.ornl.gov/user_data/hb3a/exp16/tools/Crystal%20Plane%20Spacings%20and%20Interplanar%20Angles.htm
+# the inter-planar spacings of [1,-1,0], [1,1,-2] and [1,1,1] are respectively
+#   d = [2.878, 1.662, 2.35]
+# Interestingly, the automatic computation of lattice spacings xlat,ylat,zlat
+# in LAMMPS results in 
+#   l = [5.75585, 6.64628, 7.04945], 
+# which is the equivalent of
+#   a*{Sqrt[2], Sqrt[8/3], Sqrt[3]} 
+# with lattice constant a = 4.07 for Au.
+# This correspongs to 
+#   n = [2, 4, 3] = l / d (element-wise)
+# crystal planes withinin each dimension within the LAMMPS-computed 
+# lattice spacings.
+change_box all x final $(xlo) $(xhi+(xlat/2.0)) y final $(ylo) $(yhi+(ylat/4.0)) z final $(zlo) $(zhi+(zlat/3.0)) units box
 
 write_data ${outfile}
