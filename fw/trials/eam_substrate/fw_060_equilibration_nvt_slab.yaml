@@ -4,8 +4,8 @@ spec:
   _queueadapter:
     nodes: 1
     ppn: 20
-    queue: 'express'
-    walltime: 00:15:00
+    queue: ''
+    walltime: 01:00:00
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
@@ -35,7 +35,7 @@ spec:
     - -v shrink_wrap_once 0
     - -v store_forces 0
     - -v surfactant_name SDS
-    - -v thermo_frequency 10
+    - -v thermo_frequency 100
     - -v use_ewald 0
     - -v use_eam 1
     - -v write_coeff_to_datafile 0

@@ -26,7 +26,7 @@ spec:
     - -v has_indenter 0
     - -v has_vacuum 1
     - -v mpiio 1
-    - -v netcdf_frequency 100
+    - -v netcdf_frequency 1000
     - -v nvtEqSteps 10000
     - -v pbc2d 0
     - -v temperatureT 298.0
@@ -35,7 +35,7 @@ spec:
     - -v shrink_wrap_once 0
     - -v store_forces 0
     - -v surfactant_name SDS
-    - -v thermo_frequency 10
+    - -v thermo_frequency 100
     - -v use_ewald 0
     - -v use_eam 1
     - -v write_coeff_to_datafile 0

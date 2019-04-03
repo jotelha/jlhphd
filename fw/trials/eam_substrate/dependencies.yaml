@@ -3,8 +3,8 @@ fw_010_file_retrieval.yaml:
 - fw_030_minimization_relaxed_box.yaml
 - fw_040_minimization_slab_fixed_box.yaml
 - fw_050_minimization_slab_relaxed_box.yaml
-- fw_060_equilibration_nvt_slab.yaml
-- fw_070_equilibration_npt_slab.yaml
+# - fw_060_equilibration_nvt_slab.yaml
+# - fw_070_equilibration_npt_slab.yaml
 
 fw_020_minimization_fixed_box.yaml:
 - fw_030_minimization_relaxed_box.yaml
@@ -15,8 +15,8 @@ fw_030_minimization_relaxed_box.yaml:
 fw_040_minimization_slab_fixed_box.yaml:
 - fw_050_minimization_slab_relaxed_box.yaml
 
-fw_050_minimization_slab_relaxed_box.yaml:
-- fw_060_equilibration_nvt_slab.yaml
+# fw_050_minimization_slab_relaxed_box.yaml:
+# - fw_060_equilibration_nvt_slab.yaml
 
-fw_060_equilibration_nvt_slab.yaml:
-- fw_070_equilibration_npt_slab.yaml
+# fw_060_equilibration_nvt_slab.yaml:
+# - fw_070_equilibration_npt_slab.yaml
