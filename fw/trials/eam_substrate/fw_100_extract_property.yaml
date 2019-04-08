@@ -21,7 +21,7 @@ spec:
     stderr_file:   extract_thermo.err
     stdout_file:   extract_thermo.out
     use_shell:     true
-    fizzle_bad_rc: false
+    fizzle_bad_rc: true
 
   - _fw_name: CmdTask
     cmd: extract_property.py
@@ -35,7 +35,7 @@ spec:
     stderr_file: extract_std_property.err
     stdout_file: extract_std_property.out
     use_shell: true
-    fizzle_bad_rc: false
+    fizzle_bad_rc: true
 
   - _fw_name: CmdTask
     cmd: extract_property.py
@@ -49,4 +49,4 @@ spec:
     stderr_file: extract_fcc_property.err
     stdout_file: extract_fcc_property.out
     use_shell: true
-    fizzle_bad_rc: false
+    fizzle_bad_rc: true
