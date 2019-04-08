@@ -1,4 +1,4 @@
-name:  NEMO, EAM substrate slab in vacuum, LAMMPS NPT equilibration
+name:  NEMO, EAM substrate bulk, LAMMPS NVT equilibration
 spec:
   _category: nemo_queue_offline
   _queueadapter:
@@ -9,30 +9,29 @@ spec:
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
-    input_equilibration_npt:    lmp_equilibration_npt.input
+    input_equilibration_nvt:    lmp_equilibration_nvt.input
     coeff_file:                 coeff.input
   _files_out:
     data_file: default.lammps
-    traj_file: default.nc
     log_file:  log.lammps
   _tasks:
   - _fw_name: CmdTask
     cmd: lmp
     opt:
-    - -in lmp_equilibration_npt.input
+    - -in lmp_equilibration_nvt.input
     - -v coeffInfile coeff.input
     - -v compute_interactions 0
     - -v dataFile datafile.lammps
     - -v freeze_substrate 0
     - -v has_indenter 0
-    - -v has_vacuum 1
+    - -v has_vacuum 0
+    - -v initialT 0.0
     - -v mpiio 1
     - -v netcdf_frequency 100
     - -v nvtEqSteps 10000
     - -v pbc2d 0
     - -v temperatureT 298.0
-    - -v pressureP 0.0
-    - -v reinitialize_velocities 0
+    - -v reinitialize_velocities 1
     - -v shrink_wrap_once 0
     - -v store_forces 0
     - -v surfactant_name SDS
@@ -49,4 +48,4 @@ spec:
   _trackers:
   - filename: log.lammps
     nlines: 25
-  step: equilibration_npt
+  step: equilibration_nvt

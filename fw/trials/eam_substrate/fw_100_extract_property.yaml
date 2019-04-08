@@ -1,0 +1,52 @@
+name: "NEMO, EAM substrate only, postprocessing"
+spec:
+  _category: "nemo_noqueue"
+  _files_in:
+    data_file: default.lammps
+    traj_file: default.nc
+    log_file:  log.lammps
+  _files_out:
+    thermo_out:    thermo.out
+    box_measures:  box.txt
+    rdf:           rdf.txt
+    fcc_rdf:       fcc_rdf.txt
+    
+  _tasks:
+
+  - _fw_name: CmdTask
+    cmd: extract_thermo.sh # extracts thermo output from lammps log
+    opt:
+    - log.lammps # input file
+    - thermo.out # output file
+    stderr_file:   extract_thermo.err
+    stdout_file:   extract_thermo.out
+    use_shell:     true
+    fizzle_bad_rc: false
+
+  - _fw_name: CmdTask
+    cmd: extract_property.py
+    opt:
+    - --verbose
+    - --property rdf box 
+    - --trajectory default.nc -- 
+    - default.lammps
+    - rdf.txt
+    - box.txt
+    stderr_file: extract_std_property.err
+    stdout_file: extract_std_property.out
+    use_shell: true
+    fizzle_bad_rc: false
+
+  - _fw_name: CmdTask
+    cmd: extract_property.py
+    opt:
+    - --verbose
+    - --modifier fcc
+    - --property rdf 
+    - --trajectory default.nc -- 
+    - default.lammps
+    - fcc_rdf.txt
+    stderr_file: extract_fcc_property.err
+    stdout_file: extract_fcc_property.out
+    use_shell: true
+    fizzle_bad_rc: false

@@ -1,4 +1,4 @@
-name:  NEMO, EAM substrate slab in vacuum, LAMMPS NPT equilibration
+name:  NEMO, EAM substrate bulk, LAMMPS NPT equilibration, 1 atm
 spec:
   _category: nemo_queue_offline
   _queueadapter:
@@ -25,13 +25,13 @@ spec:
     - -v dataFile datafile.lammps
     - -v freeze_substrate 0
     - -v has_indenter 0
-    - -v has_vacuum 1
+    - -v has_vacuum 0
     - -v mpiio 1
     - -v netcdf_frequency 100
     - -v nvtEqSteps 10000
     - -v pbc2d 0
     - -v temperatureT 298.0
-    - -v pressureP 0.0
+    - -v pressureP 1.0
     - -v reinitialize_velocities 0
     - -v shrink_wrap_once 0
     - -v store_forces 0

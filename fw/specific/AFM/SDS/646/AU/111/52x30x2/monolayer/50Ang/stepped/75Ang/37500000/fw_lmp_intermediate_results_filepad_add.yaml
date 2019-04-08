@@ -3,7 +3,7 @@ name: "LAMMPS results to filepad (w/o trajectory)"
 # append to last post-processing (for complete thermo and thermo_ave)
 # append to extract forces (for indeneter forces)
 spec:
-    _category: "juwels_noqueue"
+    _category: "nemo_noqueue"
     _files_in:
       log_file:              log.lammps
       joint_thermo_file:     thermo.out
@@ -13,17 +13,17 @@ spec:
     # first delete if file existent
     - _fw_name: DeleteFilesTask
       identifiers: 
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/log.lammps
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/thermo.out
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/thermo_ave.out
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/indenter_forces.txt
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/log.lammps
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/thermo.out
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/thermo_ave.out
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/indenter_forces.txt
     # then add again:
     - _fw_name: AddFilesTask
       identifiers: 
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/log.lammps
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/thermo.out
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/thermo_ave.out
-      - AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/75Ang/37500000/indenter_forces.txt
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/log.lammps
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/thermo.out
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/thermo_ave.out
+      - AFM/SDS/646/AU/111/52x30x2/monolayer/50Ang/stepped/75Ang/37500000/indenter_forces.txt
       paths:
       - log.lammps
       - thermo.out
@@ -47,14 +47,14 @@ spec:
         - 2
         sb_name:          AU_111_51x30x2
         sf_nmolecules:    646
-        sf_preassembly:   hemicylinders
+        sf_preassembly:   monolayer
         solvent:          H2O
         substrate:        AU
         surfactant:       SDS
         sv_density:       997
         sv_density_unit:  kg m^-3
         sv_preassembly:   random
-        system_name:  646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_50Ang_stepped_75Ang_dist_37500000
+        system_name:  646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped_75Ang_dist_37500000
         temperature:      298
         temperature_unit: K
         total_steps:      37500000
