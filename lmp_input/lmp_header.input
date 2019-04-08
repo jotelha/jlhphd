@@ -35,6 +35,7 @@ variable restart_frequency       index  100000
 
 variable surfactant_name         index  SDS # SDS or CTAB
 variable use_eam                 index  0 # use pairstyle eam for solid
+variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
 variable has_indenter            index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
 variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
@@ -180,9 +181,9 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 # literature for their chosen lipid(s) before beginning a simulation!
 #
 if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
-  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/fs" &
+  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/alloy" &
 elif "${is_restart} == 0 && ${use_eam} > 0" &
-  "pair_style hybrid lj/charmmfsw/coul/charmmfsh 8 12 eam/fs"
+  "pair_style hybrid lj/charmmfsw/coul/charmmfsh 8 12 eam/alloy"
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
 # one simulation. With the hybrid style, exactly one pair style is assigned to
 # each pair of atom types. With the hybrid/overlay style, one or more pair
@@ -276,8 +277,7 @@ include ${coeffInfile}
 # override Au-Au LJ interaction by EAM potential:
 # TODO: make an adaptive NULL string depending on used Au atom type
 if "${use_eam} > 0" then &
-  "pair_coeff * * eam/fs &
-    CuAu_MishinGrochola_fit_Arithmetic.eam.fs &
+  "pair_coeff * * eam/alloy ${eam_alloy_file} &
     NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL Au"
 # https://lammps.sandia.gov/doc/pair_hybrid.html
 # For the hybrid style, each atom type pair I,J is assigned to exactly one
