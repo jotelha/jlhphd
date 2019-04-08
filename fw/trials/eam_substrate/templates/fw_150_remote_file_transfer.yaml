@@ -1,0 +1,21 @@
+name: "Transfer results to remote"
+spec:
+  _category: "{{ worker|default("nemo_noqueue",true) }}"
+  _files_in:
+    box_measures:   {{ identifier }}_box.txt
+    fcc_rdf:        {{ identifier }}_fcc_rdf.txt
+    rdf:            {{ identifier }}_rdf.txt
+    thermo_out:     {{ identifier }}_thermo.out
+  _tasks:
+  - _fw_name: FileTransferTask
+    files: 
+    - {{ identifier }}_box.txt
+    - {{ identifier }}_fcc_rdf.txt
+    - {{ identifier }}_rdf.txt
+    - {{ identifier }}_thermo.out
+    dest:   {{ remote_dir|default("/mnt/dat/work/testuser/substrate/eam/series7",true) }}
+    mode:   rtransfer
+    server: {{ remote_ip|default("192.52.32.115",true) }}
+    user:   {{ remote_user|default("testuser",true) }}
+    keyfile_name: {{ ssh_key|default("/home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud",true) }}
+    ignore_errors: False
