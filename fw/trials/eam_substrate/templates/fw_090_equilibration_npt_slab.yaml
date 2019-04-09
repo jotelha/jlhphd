@@ -1,0 +1,52 @@
+name:  {{ machine|default("NEMO",true) }}, EAM substrate slab in vacuum, LAMMPS NPT equilibration
+spec:
+  _category: {{ worker|default("nemo_queue_offline",true) }}
+  _queueadapter:
+    nodes:    {{ nodes|default(1,true)|int }}
+    ppn:      {{ ppn|default(20,true)|int }}
+    queue:    {{ queue|default('',true) }}
+    walltime: {{ walltime|default("1:00:00") }}
+  _files_in:
+    data_file:                  datafile.lammps
+    input_header:               lmp_header.input
+    input_equilibration_npt:    lmp_equilibration_npt.input
+    coeff_file:                 coeff.input
+  _files_out:
+    data_file: default.lammps
+    traj_file: default.nc
+    log_file:  log.lammps
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: lmp
+    opt:
+    - -in lmp_equilibration_npt.input
+    - -v coeffInfile              coeff.input
+    - -v compute_interactions     0
+    - -v dataFile                 datafile.lammps
+    - -v freeze_substrate         0
+    - -v has_indenter             0
+    - -v has_vacuum               1
+    - -v mpiio                    1
+    - -v netcdf_frequency         100
+    - -v nptEqSteps               10000
+    - -v pbc2d                    0
+    - -v temperatureT             {{ temperature|default(298.0)|float }}
+    - -v pressureP                {{ pressure|default(0.0,true)|float }}
+    - -v reinitialize_velocities  0
+    - -v shrink_wrap_once         0
+    - -v store_forces             0
+    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v thermo_frequency         100
+    - -v use_eam                  1
+    - -v use_ewald                0
+    - -v write_coeff_to_datafile  0
+    stderr_file:    std.err
+    stdout_file:    std.out
+    store_stdout:   true
+    store_stderr:   true
+    use_shell:      true
+    fizzle_bad_rc:  true
+  _trackers:
+  - filename: log.lammps
+    nlines:   25
+  step: equilibration_npt
