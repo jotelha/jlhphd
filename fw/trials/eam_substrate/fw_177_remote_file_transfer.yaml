@@ -17,5 +17,6 @@ spec:
     mode: rtransfer
     server: 192.52.32.115
     user: testuser
-    keyfile_name: /work/ws/nemo/fr_jh1130-fw_ws_20190202-0/etc/ssh/testuser-bwCloud
+    key_filename: /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
     ignore_errors: False
+    shell_interpret: True
