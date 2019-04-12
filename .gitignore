@@ -28,6 +28,7 @@
 !packmol
 !pdb
 !py
+!regex
 !vmd
 
 !bash/**/*
@@ -38,6 +39,7 @@
 !packmol/**/*
 !pdb/**/*
 !py/**/*
+!regex/**/*
 !vmd/**/*
 
 # except fireworks related
