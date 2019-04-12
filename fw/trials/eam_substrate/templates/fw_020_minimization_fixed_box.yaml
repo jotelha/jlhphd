@@ -1,4 +1,4 @@
-name: "{{ machine|default("NEMO",true) }}, EAM substrate only, LAMMPS minimization, fixed box
+name: {{ machine|default("NEMO",true) }}, EAM substrate only, LAMMPS minimization, fixed box
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
