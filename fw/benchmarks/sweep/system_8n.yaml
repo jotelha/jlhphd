@@ -1,0 +1,146 @@
+name: "NEMO LAMMPS Benchmark, 2019/04/12"
+
+# #
+# some suggested sweep parameters:
+# ewald_accuracy
+# coulomb_cutoff
+# skin_distance
+# neigh_delay
+# neigh_every
+
+metadata:
+  parameters:
+  - ewald_accuracy
+  - coulomb_cutoff
+  - skin_distance
+  - neigh_delay
+  - neigh_every
+  - neich_check
+
+std: # standard settings to be applied to all fireworks, if not ...
+  machine:                NEMO
+  remote_user:            testuser
+  remote_dir:             /mnt/dat/work/testuser/benchmark/lmp/20190412
+  ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
+  system_identifier:      646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_50Ang_stepped_nptEquilibrated.lammps
+  surfactant:             SDS
+  worker:                 nemo_noqueue
+  nodes:                  8
+  ppn:                    20
+  walltime:               00:15:00
+  queue:                  express
+
+  ci_preassembly:     at polar heads
+  counterion:         NA
+  indenter:           AU
+  indenter_dist:      7.5 # nm
+  indenter_dist_unit: nm
+  indenter_pdb: 50Ang_stepped
+  indenter_vel:       0.1
+  indenter_vel_unit:  m s^-1
+  pressure:           1
+  pressure_unit:      atm
+  sb_crystal_plane: 111
+  sb_multiples:
+  - 51
+  - 30
+  - 2
+  sb_name:          AU_111_51x30x2
+  sf_nmolecules:    646
+  sf_preassembly:   hemicylinders
+  solvent:          H2O
+  substrate:        AU
+  surfactant:       SDS
+  sv_density:       997
+  sv_density_unit:  kg m^-3
+  sv_preassembly:   random
+  temperature:      298
+  temperature_unit: K
+
+
+# if more than one set of contexts given, dependency tree will fork
+transient: # ...overridden by these transient settings, which do not affect children
+  fw_050_lmp_bench_production.yaml:
+  -  worker: nemo_queue_offline
+  
+persistent: # ... while settings here override the following settings for all children
+  fw_050_lmp_bench_production.yaml:
+
+  # reference, defaults:
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     2
+    neigh_every:     1
+    neigh_check:     1
+
+  # check off
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     2
+    neigh_every:     1
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     4
+    neigh_every:     2
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     6
+    neigh_every:     3
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     8
+    neigh_every:     4
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     10
+    neigh_every:     5
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     12
+    neigh_every:     6
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     14
+    neigh_every:     7
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     16
+    neigh_every:     8
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     18
+    neigh_every:     9
+    neigh_check:     0
+  - ewald_accuracy:  1.0e-4
+    coulomb_cutoff:  8.0
+    skin_distance:   3.0
+    neigh_delay:     20
+    neigh_every:     10
+    neigh_check:     0
+
+
+dependencies:
+  fw_010_file_retrieval.yaml:
+  - fw_050_lmp_bench_production.yaml
+
+  fw_050_lmp_bench_production.yaml:
+  - fw_100_filepad_add.yaml
+  - fw_150_remote_file_transfer.yaml

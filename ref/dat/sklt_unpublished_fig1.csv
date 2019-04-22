@@ -1,0 +1,9 @@
+# QCM SDS on Au (surface unspecified)
+# c, gamma
+# (bulk concentration in mM), (adsorption mass in ng/cm^2)
+0.1, 4.0994623655914
+0.5, 23.252688172043023
+1.0, 44.75806451612905
+2.0, 56.18279569892472
+5.0, 120.36290322580643
+10.0, 148.58870967741936

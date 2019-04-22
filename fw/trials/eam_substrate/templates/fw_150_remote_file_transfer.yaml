@@ -17,5 +17,5 @@ spec:
     mode:   rtransfer
     server: {{ remote_ip|default("192.52.32.115",true) }}
     user:   {{ remote_user|default("testuser",true) }}
-    keyfile_name: {{ ssh_key|default("/home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud",true) }}
+    key_filename: {{ ssh_key|default("/home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud",true) }}
     ignore_errors: False

@@ -3,42 +3,43 @@
 # ignore all files in root
 *
 
-# but not subfolder fw
-!fw
-!fw/**/*
-!pp
-!pp/**/*
 # except .py files
 !*.py
 !*.ipynb
 !*.sh
 !sample_commands.sh
 !README.md
-!examples
-!examples/**/*
-!bramos
-!bramos/**/*
 
-
+# but not subfolder fw
 !bash
+!bramos
+!dat
+!doc
 !ff
+!fw
 !gmx_input
 !ipynb
 !lmp_input
 !packmol
 !pdb
 !py
+!ref
 !regex
 !vmd
 
 !bash/**/*
+!bramos/**/*
+!dat/**/*
+!doc/**/*
 !ff/**/*
+!fw/**/*
 !gmx_input/**/*
 !ipynb/**/*
 !lmp_input/**/*
 !packmol/**/*
 !pdb/**/*
 !py/**/*
+!ref/**/*
 !regex/**/*
 !vmd/**/*
 

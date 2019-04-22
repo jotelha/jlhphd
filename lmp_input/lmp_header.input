@@ -12,6 +12,23 @@ variable minimization_maxiter    index  100000
 variable minimization_maxeval    index  1000000   
 variable minimization_ftol       index  1.0
 
+# neighbour list settings
+variable skin_distance           index  2.0  # skin distance for neighbour list
+variable neigh_delay             index  2.0 
+variable neigh_every             index  1.0
+variable neigh_check             index  1
+variable neigh_page              index  100000
+variable neigh_one               index  2000
+
+# ewald summation settings
+variable use_ewald               index  1 # switch ewald summation (kspace solver)
+variable ewald_accuracy          index  1e-4 # relative RMS
+
+# force field settings (CHARMM)
+variable inner_cutoff            index  8.0 # CHARMM standard
+variable outer_cutoff            index  12.0 # CHARMM standard
+variable coulomb_cutoff          index  12.0 # Coulomb cutoff
+
 variable mpiio                   index  1 # parallel io on or off
 variable is_restart              index  0 # marks current run as restart
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
@@ -19,7 +36,6 @@ variable shrink_wrap_once        index  0 # shrinks simulation box around system
 variable reinitialize_velocities index  0
 variable substrate_recenter      index  1 # remove substrate COM movement
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
-variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable use_colvars             index  0
 variable colvarsFile             index  colvars.inp
@@ -95,7 +111,7 @@ if "${is_restart} == 0" then "units real"
     #electric field = volts/Angstrom
     #density = gram/cm^dim
 
-# neigh 2.0 bin
+neighbor ${skin_distance} bin
 # The style value selects what algorithm is used to build the list. The bin
 # style creates the list by binning which is an operation that scales linearly
 # with N/P, the number of atoms per processor where N = total number of atoms
@@ -105,7 +121,13 @@ if "${is_restart} == 0" then "units real"
 # same answers.
 # Defaults: 2.0 bin for units = real or metal, skin = 2.0 Angstroms
 
-neigh_modify    delay 2 every 1 check yes
+
+if "${neigh_check} == 1" then &
+  "neigh_modify delay ${neigh_delay} every ${neigh_every} check yes &
+    page ${neigh_page} one ${neigh_one}" &
+else &
+  "neigh_modify delay ${neigh_delay} every ${neigh_every} check no &
+    page ${neigh_page} one ${neigh_one}"
 # This command sets parameters that affect the building and use of pairwise
 # neighbor lists. Depending on what pair interactions and other commands
 # are defined, a simulation may require one or more neighbor lists.
@@ -142,9 +164,9 @@ if "${is_restart} == 0" then "dihedral_style  charmmfsw"
 if "${is_restart} == 0" then "improper_style  harmonic"
 
 if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" then &
-    "pair_style lj/charmmfsw/coul/long 8 12" &
+    "pair_style lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}" &
 elif "${is_restart} == 0 && ${use_eam} == 0" &
-    "pair_style lj/charmmfsw/coul/charmmfsh 8 12"
+    "pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}"
 
 # Quote from http://lammps.sandia.gov/doc/pair_charmm.html
 # The newer styles with charmmfsw or charmmfsh in their name replace the
@@ -155,6 +177,14 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 #
 # (Steinbach) Steinbach, Brooks, J Comput Chem, 15, 667 (1994).
 # (Brooks)    Brooks, et al, J Comput Chem, 30, 1545 (2009).
+
+# The newest CHARMM pair styles reset the Coulombic energy conversion factor
+# used internally in the code, from the LAMMPS value to the CHARMM value, as
+# if it were effectively a parameter of the force field. This is because the
+# CHARMM code uses a slightly different value for the this conversion factor
+# in real units (Kcal/mole), namely CHARMM = 332.0716, LAMMPS = 332.06371.
+# This is to enable more precise agreement by LAMMPS with the CHARMM force
+# field energies and forces, when using one of these two CHARMM pair styles.
 
 # #
 # Storm, S., Jakobtorweihen, S., Smirnova, I., Panagiotopoulos, A.Z., 2013.
@@ -180,10 +210,50 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 # 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 # literature for their chosen lipid(s) before beginning a simulation!
 #
+# #
+# https://www.charmmtutorial.org/index.php/The_Energy_Function#Suggested_Nonbond_cutoff_scheme
+#
+# Suggested Nonbond cutoff scheme
+#
+# In general, it is a good idea to go with the nonbond cutoff scheme given in
+# the parameter file of the force field that you will be using. For example,
+# the CHARMM27 Protein/Nucleic acid force field gives default nonbond
+#  parameters of:
+#
+# NONBONDED nbxmod  5 atom cdiel shift -
+#  vatom vdistance vswitch -
+#  cutnb 14.0 ctofnb 12.0 ctonnb 10.0 -
+#  eps 1.0 e14fac 1.0 wmin 1.5
+#
+# These are good default values for most simulations. In some cases when running
+# in vacuum, it might be necessary to use VSHIft instead of VSWItch. There are a
+# couple other points to remember:
+#
+# 1    Always set INBFrq to -1 so nonbond updates are done heuristically.
+# 2    You can safely increase CUTNb to decrease the frequency of nonbond list
+#      updates (at the expense of a higher memory requirement for the nonbond
+#      list).
+# 3    In general, a nonbond cut off of less than 12 angstroms should not be
+#      used (the errors are too great).
+# 4    In Ewald calculations, the electrostatic cut-off method (SHIFt vs. SWITch
+#      is ignored as the Ewald summation is used to calculate long-range
+#      electrostatics. Replace this with the Ewald parameters described above. 
+#
+# As an example, nonbond setup for a simulation using PBC might look like:
+#
+# nonbond nbxmod 5 atom cdiel -
+#  elec ewald pme kappa 0.34 spline order 6 -
+#  vdw vatom vswitch -
+#  cutnb 14.0 ctofnb 12.0 ctonnb 10.0
+#
+# Be very careful to check compatibility of your nonbond specification with the
+# force fields and implicit solvent models you're using (if any)! This is
+# critically important to the correctness of your simulation! 
+
 if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
-  "pair_style hybrid lj/charmmfsw/coul/long 8 12 eam/alloy" &
+  "pair_style hybrid lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy" &
 elif "${is_restart} == 0 && ${use_eam} > 0" &
-  "pair_style hybrid lj/charmmfsw/coul/charmmfsh 8 12 eam/alloy"
+  "pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy"
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
 # one simulation. With the hybrid style, exactly one pair style is assigned to
 # each pair of atom types. With the hybrid/overlay style, one or more pair
@@ -192,7 +262,7 @@ elif "${is_restart} == 0 && ${use_eam} > 0" &
 
 if "${is_restart} == 0" then "pair_modify     mix arithmetic"
 # kspace_style    pppm 1e-6
-if "${use_ewald} > 0" then "kspace_style    pppm 1e-4"
+if "${use_ewald} > 0" then "kspace_style    pppm ${ewald_accuracy}"
 # Quote from http://lammps.sandia.gov/doc/kspace_style.html:
 # pppm value = accuracy
 #  accuracy = desired relative error in forces

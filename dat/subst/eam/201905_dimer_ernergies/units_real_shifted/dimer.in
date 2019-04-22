@@ -1,0 +1,22 @@
+# dimer energy
+echo both
+units           real
+atom_style      full
+boundary p p p
+read_data       dimer.lammps
+pair_style eam/alloy
+pair_coeff * * Au-Grochola-JCP05-artificially-shifted-units-real.eam.alloy Au Au
+
+timestep        1.0
+thermo          1
+thermo_modify lost warn
+thermo_style custom step etotal
+dump            1 all atom 1 dimer.lammpstrj
+
+group go type 2
+group stay type 1
+
+fix A go move linear 0.0 0.0 0.0001 units box
+fix B stay nve
+fix C stay setforce 0.0 0.0 0.0
+run 40000
