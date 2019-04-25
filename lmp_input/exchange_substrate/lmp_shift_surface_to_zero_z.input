@@ -1,0 +1,20 @@
+# Zero-aligns the upper box boundary of a system at zero z.
+# Adds tiny positive tolerance to avoid 
+# wrapping at periodic boundaries due to machine precision
+variable dataFile         index "datafile.lammps"
+variable coeffFile         index "coeff_nonbonded.input"
+variable outfile          index "aligned.lammps"
+
+variable precision equal (1.0e-5)
+
+# header reads data file and defines groups
+include lmp_minimal_header.input
+
+read_data ${dataFile} 
+
+include ${coeffFile}
+
+# zero-align
+# displace_atoms all move 0 0 $((v_precision-zhi)) units box
+change_box all set z final $((-lz)) 0.0 remap
+write_data ${outfile} nocoeff

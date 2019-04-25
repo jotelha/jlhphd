@@ -1,0 +1,5 @@
+variable dataFile     index "nonSubst.lammps"
+variable snapshotName index "nonSubst"
+include lmp_minimal_header.input
+read_data ${dataFile}
+write_dump     all image ${snapshotName}.*.png type type modify backcolor white

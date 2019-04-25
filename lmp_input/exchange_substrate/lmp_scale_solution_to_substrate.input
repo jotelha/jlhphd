@@ -1,0 +1,97 @@
+# Tries to zero-align a system without substrate at zero z and tightens the box.
+# Adds a tolerance in z direction.
+# variable dataFile         index "datafile.lammps"
+variable coeffFile        index "coeff.input"
+variable solutionFile     index "shiftedSolution.lammps"
+variable substrateFile    index "shiftedSubstrate.lammps"
+variable outfile          index "scaledSolution.lammps"
+
+# header reads data file and defines groups
+
+include lmp_minimal_header.input
+
+print "#########################"
+print "### Reading substrate ###"
+print "#########################"
+
+read_data ${substrateFile} nocoeff
+
+variable xlo1 equal xlo
+variable xhi1 equal xhi
+variable ylo1 equal ylo
+variable yhi1 equal yhi
+
+variable xlo0 equal ${xlo1}
+variable xhi0 equal ${xhi1}
+variable ylo0 equal ${ylo1}
+variable yhi0 equal ${yhi1}
+
+print "Current xlo xhi ylo yhi zlo zhi:"
+print "  $((xlo)) $((xhi))"
+print "  $((ylo)) $((yhi))"
+print "  $((zlo)) $((zhi))" 
+info system
+info variables
+
+print "##########################"
+print "### Clearing substrate ###"
+print "##########################"
+
+clear
+
+info system
+info variables
+
+# This command deletes all atoms, restores all settings to their default 
+# values, and frees all memory allocated by LAMMPS. Once a clear command has
+# been executed, it is almost as if LAMMPS were starting over, with only the
+# exceptions noted below. This command enables multiple jobs to be run
+# sequentially from one input script.
+
+# These settings are not affected by a clear command: the working directory
+# (shell command), log file status (log command), echo status (echo command),
+# and input script variables (variable command).
+
+# zero-align
+#displace_atoms all move $((v_precision-v_x_subst)) $((v_precision-v_y_subst)) &
+#    $((v_precision-v_z_subst)) units box
+# change_box all z final $((v_z_min-v_tolerance)) $((v_z_max+v_tolerance)) & 
+#  set z final 0.0 $((v_z_max-v_z_min+2*v_tolerance)) remap
+
+include lmp_minimal_header.input
+
+print "########################"
+print "### Reading solution ###"
+print "########################"
+
+read_data ${solutionFile} nocoeff
+
+variable xlo1 equal xlo
+variable xhi1 equal xhi
+variable ylo1 equal ylo
+variable yhi1 equal yhi
+
+print "Current xlo xhi ylo yhi zlo zhi:"
+print "  $((xlo)) $((xhi))"
+print "  $((ylo)) $((yhi))"
+print "  $((zlo)) $((zhi))" 
+info system
+info variables
+
+print "########################"
+print "### Scaling solution ###"
+print "########################"
+
+change_box all set x final $((v_xlo0)) $((v_xhi0)) &
+  y final $((v_ylo0)) $((v_yhi0)) remap  
+
+include ${coeffFile}
+
+print "Current xlo xhi ylo yhi zlo zhi:"
+print "  $((xlo)) $((xhi))"
+print "  $((ylo)) $((yhi))"
+print "  $((zlo)) $((zhi))" 
+info system
+info variables
+
+write_data ${outfile} nocoeff

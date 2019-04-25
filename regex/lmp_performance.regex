@@ -27,7 +27,7 @@ Total # of neighbors = (?P<total_no_of_neighbors>[-+]?\d+)
 Ave neighs\/atom = (?P<ave_neighs_per_atom>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)
 Ave special neighs\/atom = (?P<ave_special_neighs_per_atom>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
 Neighbor list builds = (?P<neigh_list_builds>[-+]?\d+)
-Dangerous builds = (?P<neigh_list_dangerous_builds>[-+]?\d+)
+Dangerous builds (?:(?:= (?P<neigh_list_dangerous_builds>[-+]?\d+))|(?:not checked))
 [\s\S]*
 PPPM initialization \.\.\.
 [\s\S]*

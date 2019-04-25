@@ -1,0 +1,110 @@
+# prepares AU crystal with the 111 direction aligned to z axis
+variable substrateType    index 11
+
+# default lattice constant for Au
+variable substrate_lattice_constant index 4.075
+
+### General LAMMPS parameters ###
+# include     lmp_header.input
+
+# Two-dimensional system (each atom has two degrees-of-freedom)
+dimension      3
+# doc: http://lammps.sandia.gov/doc/dimension.html
+
+# Boundary is periodic in all three dimensions
+boundary       p p p
+# doc: http://lammps.sandia.gov/doc/boundary.html
+
+# The atom style tells LAMMPS what type of atoms (particles) we have.
+# "atomic" is the basic style. Example of another style is "charge" which is
+# required for atoms that carry an electric charge.
+atom_style     full
+# doc: http://lammps.sandia.gov/doc/atom_style.html
+
+units real
+
+# bulk lattice is fcc, lattice constant of Grochola AU EAM at 298 K, 1 atm
+lattice fcc ${substrate_lattice_constant} orient x 1 -1 0 orient y 1 1 -2 orient z 1 1 1
+# doc: http://lammps.sandia.gov/doc/lattice.html
+
+# Region where to create atoms
+# 51x90x63 crystal planes:
+# 51x30x21 6 atom unit cells
+# 25.5x22.5x21 LAMMPS lattice constants
+region         box block 0 25.5 0 22.5 0 21
+#               |    |   | |  | |  | |
+#               ^name of region
+#                    ^type of region (rectangular block)
+#                        ^ ^start and end of that block in x-direction
+#                             ^ ^start and end of that block in y-direction
+#                                   ^ ^z-direction (system is 2 dim.)
+# doc: http://lammps.sandia.gov/doc/region.html
+
+# Create simulation box
+create_box ${substrateType} box
+# doc: http://lammps.sandia.gov/doc/create_box.html
+print "Initial box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+
+# Fill this box with atoms
+create_atoms   ${substrateType} box
+# doc: http://lammps.sandia.gov/doc/create_atoms.html
+
+set group all type ${substrateType}
+
+# shrink box around created atoms
+change_box all boundary s s s
+print "Post shrink-wrap box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+
+# zero-align system
+# get minimum substrate coordinates
+variable x_subst equal (bound(all,xmin))
+variable y_subst equal (bound(all,ymin))
+variable z_subst equal (bound(all,zmin))
+variable precision equal (1.0e-5)
+info variables
+print "Minimum coordinates: ${x_subst} ${y_subst} ${z_subst}"
+
+displace_atoms all move $((-xlo)) $((-ylo)) $((-zlo)) units box
+#displace_atoms all move $((v_precision-v_x_subst)) $((v_precision-v_y_subst)) &
+#    $((v_precision-v_z_subst)) units box
+print "Post-displacement box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+
+# switch on periodic bc again
+change_box all boundary p p p
+
+# add one lattice constant in each direction
+
+# If the spacing option is not specified, the lattice spacings are computed by
+# LAMMPS in the following way. A unit cell of the lattice is mapped into the
+# simulation box (scaled and rotated), so that it now has (perhaps) a modified
+# size and orientation. The lattice spacing in X is defined as the difference
+# between the min/max extent of the x coordinates of the 8 corner points of the
+# modified unit cell (4 in 2d). Similarly, the Y and Z lattice spacings are
+# defined as the difference in the min/max of the y and z coordinates.
+
+# Computed with the help of the following web tool
+# http://neutron.ornl.gov/user_data/hb3a/exp16/tools/Crystal%20Plane%20Spacings%20and%20Interplanar%20Angles.htm
+# the inter-planar spacings of [1,-1,0], [1,1,-2] and [1,1,1] are respectively
+#   d = [2.878, 1.662, 2.35]
+# Interestingly, the automatic computation of lattice spacings xlat,ylat,zlat
+# in LAMMPS results in 
+#   l = [5.75585, 6.64628, 7.04945], 
+# which is the equivalent of
+#   a*{Sqrt[2], Sqrt[8/3], Sqrt[3]} 
+# with lattice constant a = 4.07 for Au.
+# This correspongs to 
+#   n = [2, 4, 3] = l / d (element-wise)
+# crystal planes withinin each dimension within the LAMMPS-computed 
+# lattice spacings.
+print "LAMMPS-calculated lattice constants: $(xlat) $(ylat) $(zlat)"
+change_box all x final $(xlo) $(xhi+(xlat/2.0)) y final $(ylo) $(yhi+(ylat/4.0)) z final $(zlo) $(zhi+(zlat/3.0)) units box
+print "Extended box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+
+# Set mass for each atoms, necessary, otherwise trows error
+#mass * ${substrateMass}
+include masses.input
+# doc: http://lammps.sandia.gov/doc/mass.html
+
+# write data file
+write_dump     all image substrate.*.png type type modify backcolor white
+write_data     AU_111_51x30x21.lammps
