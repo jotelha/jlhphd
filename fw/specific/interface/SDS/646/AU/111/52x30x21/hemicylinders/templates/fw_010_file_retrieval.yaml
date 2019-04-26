@@ -1,7 +1,5 @@
-{% set identifier = "interface/%s/%d/%s/%s/%dx%dx%d/%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-{% set title = "%d %s on %s %s %dx%dx%d substrate, %s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-
-name: "{{ machine|default("NEMO",true) }}, {{title}}, file retrieval and preprocessing"
+{% include 'global.yaml' %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, file retrieval and preprocessing"
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
@@ -11,6 +9,7 @@ spec:
     input_equilibration_nvt:    lmp_equilibration_nvt.input
     input_equilibration_npt:    lmp_equilibration_npt.input
     coeff_file:                 coeff_hybrid.input
+
   _tasks:
 
   - _fw_name: GetFilesTask
@@ -22,7 +21,7 @@ spec:
 
   - _fw_name: GetFilesTask
     identifiers:
-    - {{ substrate_identifier|default("substrate/AU/111/52x30x8.lammps") }}
+    - {{ substrate_identifier }}
     new_file_names:
     - datafile.lammps
 

@@ -1,7 +1,33 @@
-name: "NEMO: LAMMPS minimization and equilibration of EAM substrate"
+name: "NEMO: LAMMPS minimization and equilibration of 646 SDS on AU (111) 51x30x21 (EAM)"
 metadata:
-  system_name: AU_111_51x30x21
-  state: initial configuration
+
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+  machine:                NEMO
+  nodes:                  8
+  ppn:                    20
+  walltime:               48:00:00
+  queue:                  ''
+  worker:                 nemo_noqueue
+
+  # storage options
+  remote_user:            testuser
+  remote_dir:             /mnt/dat/work/testuser/interface/SDS/646/AU/111/52x30x21/hemicylinders
+  ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
+  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
+  datafile_identifier:    interface/SDS/646/AU/111/52x30x21/hemicylinders/initial_config.lammps
+
+  # technical LAMMPS options
+  ewald_accuracy:  1.0e-4
+  coulomb_cutoff:  8.0
+  skin_distance:   3.0
+  neigh_delay:     2
+  neigh_every:     1
+  neigh_check:     1
+
+  # system metadata
+  system_name:  646_SDS_on_AU_111_51x30x21_hemicylinders
+  state:        equilibrated
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
@@ -18,7 +44,7 @@ metadata:
   - 51
   - 30
   - 21
-  sb_normal:        2 # z
+  sb_normal:                                    2 # z
   sb_thickness:                                 1.51e-8
   sb_thickness_unit:                            m
   sb_unit_cell:
@@ -28,71 +54,55 @@ metadata:
   sb_unit_cell_unit:                            m
   sb_volume:                                    3.37e-24
   sb_volume_unit:                               m^3
+  sf_concentration:                             0.00680627
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                646
+  sf_preassembly:                               hemicylinders
+  solvent:                                      H2O
   substrate:                                    AU
-  temperature:                                  0 # K
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
   temperature_unit:                             K
-
-std: # standard settings to be applied to all fireworks, if not ...
-  machine:                NEMO
-  pressure:               1
-  pressure_unit:          atm
-  temperature:            298
-  temperature_unit:       K
-  sb_crystal_plane:       111
-  sb_multiples:
-  - 51
-  - 30
-  - 21
-  sb_name:                AU_111_51x30x21
-  substrate:              AU
-  remote_user:            testuser
-  remote_dir:             /mnt/dat/work/testuser/substrate/eam/series9
-  ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
-  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  datafile_identifier:    interface/SDS/646/AU/111/52x30x21/hemicylinders/initial_config.lammps
-  worker:                 nemo_noqueue
-  nodes:                  1
-  ppn:                    20
-  walltime:               00:15:00
-  queue:                  express
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
-  fw_020_minimization_fixed_box.yaml:
-  -  worker:               nemo_queue_offline
-  fw_030_minimization_relaxed_box.yaml:
-  -  worker:               nemo_queue_offline
-  fw_060_equilibration_nvt_bulk.yaml:
-  -  worker:               nemo_queue_offline
-  fw_070_equilibration_npt_bulk.yaml:
-  -  worker:               nemo_queue_offline
-     queue:                ''
-     walltime:             1:00:00
-  
+  fw_020_minimization.yaml:
+  - worker:                 nemo_queue_offline
+    # for testing:
+    nodes:                  2
+    ppn:                    20
+    walltime:               00:05:00
+    queue:                  express
+  fw_060_equilibration_nvt.yaml:
+  - worker:                 nemo_queue_offline
+  fw_070_equilibration_npt.yaml:
+  - worker:                 nemo_queue_offline
+
 persistent: {}
 
 dependencies:
   # single dependency entries result in one instance only
   fw_010_file_retrieval.yaml:
-  - fw_020_minimization_fixed_box.yaml
-  - fw_030_minimization_relaxed_box.yaml
-  - fw_060_equilibration_nvt_bulk.yaml
-  - fw_070_equilibration_npt_bulk.yaml
+  - fw_020_minimization.yaml
+  - fw_060_equilibration_nvt.yaml
+  - fw_070_equilibration_npt.yaml
 
-  fw_020_minimization_fixed_box.yaml:
-  - fw_030_minimization_relaxed_box.yaml
-  
-  # unique ids have the subsequent pathways treated independently
-  fw_030_minimization_relaxed_box.yaml:
-  - fw_060_equilibration_nvt_bulk.yaml
+  fw_020_minimization.yaml:
+  - fw_060_equilibration_nvt.yaml
 
-  fw_060_equilibration_nvt_bulk.yaml:
-  - fw_070_equilibration_npt_bulk.yaml
+  fw_060_equilibration_nvt.yaml:
+  - fw_070_equilibration_npt.yaml
 
-  fw_070_equilibration_npt_bulk.yaml:
+  fw_070_equilibration_npt.yaml:
   - fw_100_extract_property.yaml
-  - fw_200_filepad_add.yaml
-  
-  fw_100_extract_property.yaml:
-  - fw_150_remote_file_transfer.yaml
+  - fw_150_results_to_bwcloud.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml
 
+  fw_100_extract_property.yaml:
+  - fw_150_results_to_bwcloud.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml

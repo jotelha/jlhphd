@@ -1,4 +1,4 @@
-{% set identifier = "substrate/%s/%s/%dx%dx%d"|format(substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2]) %}
+{% include 'global.yaml' }
 name: {{machine}}, transfer '{{identifier}}/equilibrated.lammps' to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
@@ -7,11 +7,11 @@ spec:
   _tasks:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
-    identifiers: 
+    identifiers:
     - {{ identifier }}/equilibrated.lammps
   # then add again:
   - _fw_name: AddFilesTask
-    identifiers: 
+    identifiers:
     - {{ identifier }}/equilibrated.lammps
     paths:
     - equilibrated.lammps
@@ -19,12 +19,4 @@ spec:
     metadata:
       state:              minimized, nvt- and npt-equilibrated with eam potential
       type:               NPT-equilibrated substrate bulk
-
-      pressure:           {{ pressure }}
-      pressure_unit:      {{ pressure_unit }}
-      sb_crystal_plane:   {{ sb_crystal_plane }}
-      sb_multiples:       {{ sb_multiples }}
-      sb_name:            {{ sb_name }}
-      substrate:          {{ substrate }}
-      temperature:        {{ temperature }}
-      temperature_unit:   {{ temperature_unit }}
+      {% include 'metadata.yaml'|indent(6) %}
