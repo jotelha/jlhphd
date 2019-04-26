@@ -2,21 +2,23 @@ include lmp_header.input
 ############
 # restraints
 ############
-# Keep indenter restrained during minimization
+# Keep indenter rigid
 if "${has_indenter} > 0" then &
   "fix freeze indenter setforce 0.0 0.0 0.0"
+
+# Keep substrate layer frozen
+if "${freeze_substrate_layer} > 0.0" then &
+  "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box" &
+  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
 ###################
 # NPT equilibration
 ###################
-if "${has_indenter} > 0" then &
-    "variable tempered_group string nonindenter" &
-else &
-    "variable tempered_group string all"
+if "${is_restart} == 0" then "group tempered_group subtract all frozen"
 
-fix timeIntegration ${tempered_group} nve # necessary for nvt via langevin
+fix timeIntegration tempered_group nve # necessary for nvt via langevin
 # fix thermostat all temp/berendsen ${temperatureT} ${temperatureT} 100
-fix thermostat ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29061988
+fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061988
 #   ^ID        ^group-ID
 #                   ^langevin
 #                           ^Tstart         ^Tstop          ^damp
@@ -62,9 +64,11 @@ fix thermostat ${tempered_group} langevin ${temperatureT} ${temperatureT} 100 29
 
 # fix barostat all press/berendsen aniso 0 0 1000
 if "(${pbc2d} > 0) || (${has_vacuum} > 0)" then &
-  "fix barostat ${tempered_group} press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6" &
+  "fix barostat tempered_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6" &
+elif "(${pressurize_z_only} > 0)" &
+  "fix barostat tempered_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6" &
 else &
-  "fix barostat ${tempered_group} press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6"
+  "fix barostat tempered_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6"
 # fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
 # fix ID group-ID press/berendsen keyword value ...
 # dilate partial
@@ -113,7 +117,7 @@ else &
 # DRIFT REMOVAL
 
 # Keep substrate slab's position COM position fixed, remove relative drift
-if "${substrate_recenter} > 0" then &
+if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
   "fix fixedSubstrateCOM substrate recenter INIT INIT INIT shift all"
 #      ^ID               ^group-ID
 #                                  ^style   ^x   ^y   ^z   ^keyword
@@ -152,7 +156,7 @@ if "${substrate_recenter} > 0" then &
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.
@@ -178,7 +182,7 @@ fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # dump            dumpTraj all atom 100 ${baseName}.dump
 if "${reinitialize_velocities} > 0" then &
-  "velocity ${tempered_group} create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
+  "velocity tempered_group create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
 
 
 dump            dumpPng nonwater image ${nptEqSteps} &

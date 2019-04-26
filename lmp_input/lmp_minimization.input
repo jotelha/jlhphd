@@ -49,6 +49,8 @@ if "${freeze_substrate} > 0" then &
 ################
 if "${relax_box} > 0 && ((${pbc2d} > 0) || (${has_vacuum} > 0))" then &
   "fix boxRelaxation all box/relax x ${pressureP} y ${pressureP} couple none fixedpoint 0 0 0 nreset 100" &
+elif "(${relax_box} > 0) && (${pressurize_z_only} > 0)" &
+  "fix boxRelaxation all box/relax z ${pressureP} couple none fixedpoint 0 0 0 nreset 100" &
 elif "${relax_box} > 0" &
   "fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100"
 # https://lammps.sandia.gov/doc/fix_box_relax.html

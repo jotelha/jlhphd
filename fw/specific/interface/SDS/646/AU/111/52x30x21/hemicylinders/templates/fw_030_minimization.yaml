@@ -26,11 +26,10 @@ spec:
     - -v freeze_substrate 1
     - -v has_indenter 0
     - -v has_vacuum 0
-    - -v minimization_ftol 1e-5
+    - -v minimization_ftol 1.0e-5
     - -v mpiio 1
     - -v pbc2d 0
-    - -v pressureP {{ pressure|default(0.0,true)|float }}
-    - -v relax_box 1
+    - -v relax_box 0
     - -v robust_minimization 0
     - -v store_forces 0
     - -v surfactant_name {{ surfactant|default("SDS") }}
@@ -53,4 +52,3 @@ spec:
   - filename: log.lammps
     nlines: 25
   step: minimization
-  

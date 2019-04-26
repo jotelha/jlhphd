@@ -1,16 +1,33 @@
-# technical settings
-
 # index varibles can be overridden by command line parameters "-v varName value"
+
+# input settings
 variable baseName                index  "default"
+variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
+variable colvarsFile             index  colvars.inp
 variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
 
-# minimization-related:
-variable robust_minimization     index  0
-variable relax_box               index  0 # relax box tor specified pressureP in minimization
+# output settings
+variable coeffOutfile            index  coeff.input # file to store ff parameters
+variable compute_interactions    index  0 # group-goup interactions to thermo_out
+variable mpiio                   index  1 # parallel io on or off
+variable netcdf_frequency        index  1000
+variable restart_frequency       index  100000
+variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
+variable thermo_frequency        index  1000 # outputs stats at single time step
+variable thermo_average_frequency index 0 # outputs stats averaged over N timesteps. 0: disabled
+variable write_coeff             index  0 # write force field parameters to independent file
+variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
+
+# minimization-related settings:
+variable freeze_substrate        index  0 # keep substrate frozen (during minim)
 variable minimization_maxiter    index  100000
-variable minimization_maxeval    index  1000000   
-variable minimization_ftol       index  1.0
+variable minimization_maxeval    index  1000000
+variable minimization_ftol       index  1.0e-5
+variable robust_minimization     index  0
+# this can be useful if a very dense initial packing would result into substrate
+# deformation otherwise
+variable relax_box               index  0 # relax box tor specified pressureP in minimization
 
 # neighbour list settings
 variable skin_distance           index  2.0  # skin distance for neighbour list
@@ -20,61 +37,50 @@ variable neigh_check             index  1
 variable neigh_page              index  100000
 variable neigh_one               index  2000
 
-# ewald summation settings
-variable use_ewald               index  1 # switch ewald summation (kspace solver)
-variable ewald_accuracy          index  1e-4 # relative RMS
-
-# force field settings (CHARMM)
+# force field settings
+## CHARMM-related:
 variable inner_cutoff            index  8.0 # CHARMM standard
 variable outer_cutoff            index  12.0 # CHARMM standard
 variable coulomb_cutoff          index  12.0 # Coulomb cutoff
-
-variable mpiio                   index  1 # parallel io on or off
-variable is_restart              index  0 # marks current run as restart
-variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
-variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
-variable reinitialize_velocities index  0
-variable substrate_recenter      index  1 # remove substrate COM movement
-variable compute_interactions    index  0 # group-goup interactions to thermo_out
-variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
-variable use_colvars             index  0
-variable colvarsFile             index  colvars.inp
-variable write_coeff             index  0 # write force field parameters to independent file
-variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
-variable coeffOutfile            index  coeff.input # file to store ff parameters
-variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
-variable thermo_frequency        index  1000 # outputs stats at single time step
-variable thermo_average_frequency index 0 # outputs stats averaged over N timesteps. 0: disabled
-variable netcdf_frequency        index  1000
-variable restart_frequency       index  100000
-# system settings
-
-variable surfactant_name         index  SDS # SDS or CTAB
+## EAM-related:
 variable use_eam                 index  0 # use pairstyle eam for solid
 variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
+## ewald summation settings:
+variable use_ewald               index  1 # switch ewald summation (kspace solver)
+variable ewald_accuracy          index  1e-4 # relative RMS
+
+# other technical settings:
+variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
+variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
+variable is_restart              index  0 # marks current run as restart
+variable has_vacuum              index  0 # if > 0, z-direction not pressurized
+variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
+variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
+variable reinitialize_velocities index  0
+variable remove_drift            index  1 # remove substrate COM movement
+variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
+variable substrate_recenter      index  1 # same as remove drift
+variable use_colvars             index  0
+
+# system settings
+variable surfactant_name         index  SDS # SDS or CTAB
+variable temperatureT            index  298    # K
+variable initialT                index  ${temperatureT}  # for ramped temperature
+variable pressureP               index  1    # atm
+
+variable nvtEqSteps              index  100000    # 200 ps
+variable nptEqSteps              index  100000    # 200 ps
+variable productionSteps         index  5000000    #  10 ns
+
+# AFM-tip-related settings:
 variable has_indenter            index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
 variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
-variable freeze_substrate        index  0 # keep substrate frozen (during minim)
 variable manual_indenter_region  index  0 # if set to 1, use measures below
 variable indenter_substrate_dist index  30.0 # Ang, default distance substrate surface - indenter apex
 variable substrate_thickness     index  14.0 # Ang
 variable indenter_height         index  45.0 # Ang
 variable region_tolerance        index   5.0 # Ang
-
-# this can be useful if a very dense initial packing would result into substrate
-# deformation otherwise
-
-variable nvtEqSteps      index   100000    # 200 ps
-variable nptEqSteps      index   100000    # 200 ps
-variable productionSteps index   5000000    #  10 ns
-
-variable temperatureT   index    298    # K
-variable initialT       index    ${temperatureT}  # for ramped temperature
-variable pressureP      index      1    # atm
-
-variable has_vacuum     index    0 # if > 0, z-direction not pressurized
-variable add_vacuum     index    0 # if > 0, adds vacuum of specified thickness in z-direction
 
 # the standard TIP3P water model requires not only hydrogen bonds to be rigid,
 # but also the HOH angle. Here we set the ID of this angle.
@@ -87,7 +93,6 @@ else &
 
 # per default substrate is gold and assumed to be type 11
 variable substrateType index 11
-
 
 # Intialization
 if "${is_restart} == 0 && ${pbc2d} > 0" then "boundary p p f"
@@ -237,7 +242,7 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 #      used (the errors are too great).
 # 4    In Ewald calculations, the electrostatic cut-off method (SHIFt vs. SWITch
 #      is ignored as the Ewald summation is used to calculate long-range
-#      electrostatics. Replace this with the Ewald parameters described above. 
+#      electrostatics. Replace this with the Ewald parameters described above.
 #
 # As an example, nonbond setup for a simulation using PBC might look like:
 #
@@ -248,7 +253,7 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 #
 # Be very careful to check compatibility of your nonbond specification with the
 # force fields and implicit solvent models you're using (if any)! This is
-# critically important to the correctness of your simulation! 
+# critically important to the correctness of your simulation!
 
 if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
   "pair_style hybrid lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy" &
@@ -450,15 +455,20 @@ if "${manual_indenter_region} == 1" then &
     "variable indenter_region_top equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist + v_indenter_height + v_region_tolerance))" &
     "region indenter_region block INF INF INF INF ${indenter_region_bottom} ${indenter_region_top} units box" &
 else &
-    "region indenter_region plane 0  0  ${z_center} 0 0 1 side in units box"
-#                                 ^x ^y ^z          ^plane normal
-#                                                         ^everything in direction of normal in region
-#                                                                 ^Ang as unit
-region central_column cylinder z ${x_center} ${y_center} 2.0 ${z_center} $((zhi)) side in
+    "region indenter_region plane 0  0  ${region_tolerance} 0 0 1 side in units box"
+#                                 ^x ^y ^z                  ^plane normal
+#                                                                 ^everything in direction of normal in region
+#                                                                         ^Ang as unit
+# 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
+region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in
 #                              ^cylinder axis
 #                                ^cylinder coordinates in x,y dim
 #                                                        ^cylinder radius
 #                                                             ^lower and ^upper point
+
+# define region of frozen substrate layer if desired:
+if "${freeze_substrate_layer} > 0.0" then &
+  "region frozen_substrate_layer_region plane 0  0  $((xlo+v_freeze_substrate_layer)) 0 0 1 side out units box"
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -479,6 +489,8 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 # More details are given below.
 
 if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
+
+ "${is_restart} == 0" then "group frozen empty"
 
 if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
@@ -503,11 +515,19 @@ if "${is_restart} == 0 && ${has_indenter} > 0" then &
   "group          indenter       subtract  solid substrate" &
   "group          indenter_apex  intersect indenter atoms_in_central_column" &
   "group          nonindenter    subtract all indenter" &
-  "group          nonsubstrate subtract all substrate" &
+  "group          nonsubstrate   subtract all substrate" &
+  "group          frozen         union frozen indenter"
 elif "${is_restart} == 0" &
   "group          substrate intersect all solid" &
   "group          nonsubstrate subtract all substrate"
 
+# create substrate layer group to hold frozen at bottom if desired:
+if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
+  "group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region" &
+  "group frozen_substrate_layer intersect substrate frozen_substrate_layer_region" &
+  "group frozen union frozen frozen_substrate_layer"
+
+# If the group ID already exists, the group command adds the specified atoms to the group.
 # for compatibility reasons:
 if "${is_restart} == 0" then &
     "group    surface     intersect all substrate" &

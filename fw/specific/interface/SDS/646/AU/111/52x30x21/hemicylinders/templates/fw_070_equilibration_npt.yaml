@@ -25,6 +25,7 @@ spec:
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         0
+    - -v freeze_substrate_layer   14.0 # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             0
     - -v has_vacuum               0
     - -v mpiio                    1
@@ -33,6 +34,7 @@ spec:
     - -v pbc2d                    0
     - -v temperatureT             {{ temperature|default(298.0)|float }}
     - -v pressureP                {{ pressure|default(0.0,true)|float }}
+    - -v pressurize_z_only        1
     - -v reinitialize_velocities  0
     - -v shrink_wrap_once         0
     - -v store_forces             0

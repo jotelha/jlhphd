@@ -25,6 +25,7 @@ spec:
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         0
+    - -v freeze_substrate_layer   14.0 # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             0
     - -v has_vacuum               0
     - -v initialT                 0.0

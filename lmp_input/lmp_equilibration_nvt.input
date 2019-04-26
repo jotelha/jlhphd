@@ -1,21 +1,27 @@
-include                 lmp_header.input
+include lmp_header.input
 ############
 # restraints
 ############
-# Keep indenter restrained during minimization
+# Keep indenter rigid
 if "${has_indenter} > 0" then &
   "fix freeze indenter setforce 0.0 0.0 0.0"
+
+# Keep substrate layer frozen
+if "${freeze_substrate_layer} > 0.0" then &
+  "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box" &
+  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
 ###################
 # NVT equilibration
 ###################
-if "${has_indenter} > 0" then &
-    "variable tempered_group string nonindenter" &
-else &
-    "variable tempered_group string all"
+# if "${has_indenter} > 0" then &
+#     "variable tempered_group string nonindenter" &
+# else &
+#     "variable tempered_group string all"
+if   "${is_restart} == 0" then "group tempered_group subtract all frozen"
 
-fix timeIntegration     ${tempered_group} nve # necessary for nvt via langevin
-fix thermostat          ${tempered_group} langevin ${initialT} ${temperatureT} 100 29061988
+fix timeIntegration     tempered_group nve # necessary for nvt via langevin
+fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 29061988
 #   ^ID                 ^group-ID
 #                           ^langevin
 #                                    ^Tstart         ^Tstop          ^damp
@@ -68,8 +74,8 @@ fix thermostat          ${tempered_group} langevin ${initialT} ${temperatureT} 1
 ###############
 # DRIFT REMOVAL
 
-# Keep substrate slab's position COM position fixed, remove relative drift
-if "${substrate_recenter} > 0" then &
+# Keep substrate slab's position COM position fixed, remove relative drift                                                      ^group
+if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
   "fix fixedSubstrateCOM substrate recenter INIT INIT INIT shift all"
 #      ^ID               ^group-ID
 #                                  ^style   ^x   ^y   ^z   ^keyword
@@ -107,7 +113,7 @@ if "${substrate_recenter} > 0" then &
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.
 # The t constraint lists atom types. All bonds connected to an
@@ -131,7 +137,7 @@ fix rigidHbonds ${tempered_group} rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # the pressure of the system (virial) is also accounted for.
 
 
-velocity        ${tempered_group} create ${initialT} 29061988 rot yes mom yes dist gaussian
+velocity        tempered_group create ${initialT} 29061988 rot yes mom yes dist gaussian
 
 # Quote from http://lammps.sandia.gov/doc/velocity.html
 # The mom and rot keywords are used by create. If mom = yes, the linear momentum
@@ -164,10 +170,3 @@ if "${write_coeff_to_datafile} > 0" then &
   "write_data     ${baseName}.lammps" &
 else &
   "write_data     ${baseName}.lammps nocoeff"
-
-unfix           timeIntegration
-unfix           thermostat
-unfix           rigidHbonds
-unfix           fixedSubstrateCOM
-undump          dumpPng
-undump          dumpNetCDF
