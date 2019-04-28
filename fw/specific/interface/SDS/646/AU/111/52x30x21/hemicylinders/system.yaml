@@ -6,7 +6,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                NEMO
   nodes:                  8
   ppn:                    20
-  walltime:               48:00:00
+  walltime:               '48:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
 
@@ -69,28 +69,33 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
-  fw_020_minimization.yaml:
+  fw_030_minimization.yaml:
   - worker:                 nemo_queue_offline
-    # for testing:
     nodes:                  2
     ppn:                    20
-    walltime:               00:05:00
-    queue:                  express
+    walltime:               '4:00:00'
+    # for testing:
+    #nodes:                  2
+    #ppn:                    20
+    #walltime:               '00:05:00'
+    #queue:                  express
   fw_060_equilibration_nvt.yaml:
   - worker:                 nemo_queue_offline
+    walltime:               '24:00:00'
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
+    walltime:               '24:00:00'
 
 persistent: {}
 
 dependencies:
   # single dependency entries result in one instance only
   fw_010_file_retrieval.yaml:
-  - fw_020_minimization.yaml
+  - fw_030_minimization.yaml
   - fw_060_equilibration_nvt.yaml
   - fw_070_equilibration_npt.yaml
 
-  fw_020_minimization.yaml:
+  fw_030_minimization.yaml:
   - fw_060_equilibration_nvt.yaml
 
   fw_060_equilibration_nvt.yaml:

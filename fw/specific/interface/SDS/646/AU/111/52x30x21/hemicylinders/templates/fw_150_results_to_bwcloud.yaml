@@ -1,4 +1,5 @@
-{% include 'global.yaml' %}
+{% extends "fw_base.yaml" %}
+{% block body %}
 name: {{ machine|default("NEMO",true) }}, {{ title }}, transfer results to remote
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
@@ -16,3 +17,4 @@ spec:
     user:   {{ remote_user|default("testuser",true) }}
     key_filename: {{ ssh_key|default("/home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud",true) }}
     ignore_errors: False
+{% endblock %}

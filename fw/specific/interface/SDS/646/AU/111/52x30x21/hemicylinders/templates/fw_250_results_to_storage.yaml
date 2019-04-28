@@ -1,4 +1,5 @@
-{% include 'global.yaml' %}
+{% extends "fw_base.yaml" %}
+{% block body %}
 name: "Sync results to RZ storage"
 spec:
   _category: "nemo_noqueue"
@@ -24,3 +25,4 @@ spec:
     stdout_file:   std.out
     fizzle_bad_rc: true
     use_shell:     true
+{% endblock %}

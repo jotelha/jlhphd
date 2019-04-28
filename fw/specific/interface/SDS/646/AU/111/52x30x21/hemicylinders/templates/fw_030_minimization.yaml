@@ -1,11 +1,12 @@
-{% include 'global.yaml' %}
+{% extends "fw_base.yaml" %}
+{% block body %}
 name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS minimization
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
     nodes:    {{ nodes|default(1,true)|int }}
     ppn:      {{ ppn|default(20,true)|int }}
-    queue:    {{ queue|default('express',true) }}
+    queue:    '{{ queue|default('',true) }}'
     walltime: {{ walltime|default("00:15:00") }}
   _files_in:
     initial_configuration_file: datafile.lammps
@@ -37,7 +38,7 @@ spec:
     - -v use_ewald 1
     - -v write_coeff_to_datafile 0
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
-    - -v ewald_accuracy           {{ ewald_accuracy|default(1.0e-4,true) }}
+    - -v ewald_accuracy           {{ ewald_accuracy|default('1.0e-4',true) }}
     - -v neigh_delay              {{ neigh_delay|default(2,true)|int }}
     - -v neigh_every              {{ neigh_every|default(1,true)|int }}
     - -v neigh_check              {{ neigh_check|default(1,true) }}
@@ -52,3 +53,4 @@ spec:
   - filename: log.lammps
     nlines: 25
   step: minimization
+{% endblock %}

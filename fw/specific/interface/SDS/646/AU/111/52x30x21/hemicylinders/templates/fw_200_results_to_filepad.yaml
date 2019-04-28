@@ -1,4 +1,5 @@
-{% include 'global.yaml' }
+{% extends "fw_base.yaml" %}
+{% block body %}
 name: {{machine}}, transfer '{{identifier}}/equilibrated.lammps' to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
@@ -20,3 +21,4 @@ spec:
       state:              minimized, nvt- and npt-equilibrated with eam potential
       type:               NPT-equilibrated substrate bulk
       {% include 'metadata.yaml'|indent(6) %}
+{% endblock %}

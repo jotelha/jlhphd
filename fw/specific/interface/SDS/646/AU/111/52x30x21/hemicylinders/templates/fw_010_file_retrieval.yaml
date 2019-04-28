@@ -1,4 +1,5 @@
-{% include 'global.yaml' %}
+{% extends "fw_base.yaml" %}
+{% block body %}
 name: "{{ machine|default("NEMO",true) }}, {{ title }}, file retrieval and preprocessing"
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
@@ -21,7 +22,7 @@ spec:
 
   - _fw_name: GetFilesTask
     identifiers:
-    - {{ substrate_identifier }}
+    - {{ datafile_identifier }}
     new_file_names:
     - datafile.lammps
 
@@ -30,3 +31,4 @@ spec:
     - {{ coeff_identifier }}
     new_file_names:
     - coeff_hybrid.input
+{% endblock %}

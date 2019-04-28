@@ -1,7 +1,7 @@
 {% set identifier = "interface/%s/%d/%s/%s/%dx%dx%d/%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 {% set title = "%d %s on %s %s %dx%dx%d substrate, %s"|format(sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-
+{% block body %}{% endblock %}
 # sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
 # identifier composition:
 #                        ^surfactant            ^initial config

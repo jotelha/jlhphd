@@ -57,9 +57,9 @@ variable has_vacuum              index  0 # if > 0, z-direction not pressurized
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
 variable reinitialize_velocities index  0
-variable remove_drift            index  1 # remove substrate COM movement
+variable remove_drift            index  0 # remove substrate COM movement
 variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
-variable substrate_recenter      index  1 # same as remove drift
+variable substrate_recenter      index  0 # same as remove drift
 variable use_colvars             index  0
 
 # system settings
@@ -468,7 +468,7 @@ region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance}
 
 # define region of frozen substrate layer if desired:
 if "${freeze_substrate_layer} > 0.0" then &
-  "region frozen_substrate_layer_region plane 0  0  $((xlo+v_freeze_substrate_layer)) 0 0 1 side out units box"
+  "region frozen_substrate_layer_region plane 0  0  $((zlo+v_freeze_substrate_layer)) 0 0 1 side out units box"
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -490,7 +490,7 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 
 if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
 
- "${is_restart} == 0" then "group frozen empty"
+if "${is_restart} == 0" then "group frozen empty"
 
 if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
@@ -516,7 +516,7 @@ if "${is_restart} == 0 && ${has_indenter} > 0" then &
   "group          indenter_apex  intersect indenter atoms_in_central_column" &
   "group          nonindenter    subtract all indenter" &
   "group          nonsubstrate   subtract all substrate" &
-  "group          frozen         union frozen indenter"
+  "group          frozen         union frozen indenter" &
 elif "${is_restart} == 0" &
   "group          substrate intersect all solid" &
   "group          nonsubstrate subtract all substrate"
@@ -524,7 +524,7 @@ elif "${is_restart} == 0" &
 # create substrate layer group to hold frozen at bottom if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region" &
-  "group frozen_substrate_layer intersect substrate frozen_substrate_layer_region" &
+  "group frozen_substrate_layer intersect substrate atoms_in_frozen_substrate_layer_region" &
   "group frozen union frozen frozen_substrate_layer"
 
 # If the group ID already exists, the group command adds the specified atoms to the group.

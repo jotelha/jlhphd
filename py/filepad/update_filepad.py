@@ -13,7 +13,8 @@ fp = FilePad(
 
 prefix = os.getcwd()
 
-template_prefix = os.path.split(prefix)[0]
+#template_prefix = os.path.split(prefix)[0]
+template_prefix = "/mnt/dat/work/testuser/adsorption/N_surfactant_on_substrate_template"
 
 print("Template prefix: {:s}".format(template_prefix))
 
