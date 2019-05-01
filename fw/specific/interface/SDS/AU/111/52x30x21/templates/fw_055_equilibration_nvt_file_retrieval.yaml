@@ -1,0 +1,23 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, file retrieval and preprocessing"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    input_header:               lmp_header.input
+    input_equilibration_nvt:    lmp_equilibration_nvt.input
+    coeff_file:                 coeff_hybrid.input
+
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - lmp_header.input
+    - lmp_equilibration_nvt.input
+    
+  - _fw_name: GetFilesTask
+    identifiers:
+    - {{ coeff_identifier }}
+    new_file_names:
+    - coeff_hybrid.input
+{% endblock %}
