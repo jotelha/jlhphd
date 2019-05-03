@@ -1,0 +1,29 @@
+# sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
+# identifier composition:
+#                        ^surfactant            ^initial config
+#                            ^surfactant molcules             ^indenter name (not real measures)
+#                                ^substrate material                ^indenter structure
+#                                   ^substrate crytal plane                 ^initial indenter substrate distance
+#                                       ^substrate unit cell multiples            ^steps to contact
+
+
+
+
+
+
+
+name: "NEMO, 75 SDS on AU 111 51x30x2 substrate, bilayer, file retrieval and preprocessing"
+spec:
+  _category: bwcloud_std
+  _files_out:
+    interface_file: interface.lammps
+    substrate_file: substrate.lammps
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - 75_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
+    - substrate/AU/111/51x30x21/equilibrated.lammps
+    new_file_names:
+    - interface.lammps
+    - substrate.lammps

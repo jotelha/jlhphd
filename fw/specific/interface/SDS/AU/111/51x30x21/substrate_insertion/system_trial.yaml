@@ -1,0 +1,87 @@
+name: "NEMO: Substrate insertion into previously equilibrated systems [AU (111) 51x30x21]"
+metadata: {}
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+  machine:                NEMO
+  worker:                 bwcloud_std
+
+  coeff_nonbonded_identifier: SDS/in/H2O/on/AU/coeff/nonbonded.input
+  coeff_identifier:           SDS/in/H2O/on/AU/coeff.input
+  substrate_identifier:       substrate/AU/111/51x30x21/equilibrated.lammps
+  #interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
+  
+  # system metadata
+  state:        equilibrated
+  ci_preassembly:                               at_polar_head
+  counterion:                                   NA
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_51x30x21
+  sb_area:                                      2.2351e-16
+  sb_area_unit:                                 m^2
+  sb_crystal_plane:                             111
+  sb_measures:
+  - 1.48e-8
+  - 1.51e-8
+  - 1.51e-8
+  sb_measures_unit:                             m
+  sb_multiples:
+  - 51
+  - 30
+  - 21
+  sb_normal:                                    2 # z
+  sb_thickness:                                 1.51e-8
+  sb_thickness_unit:                            m
+  sb_unit_cell:
+  - 3e-10
+  - 5e-10
+  - 7e-10
+  sb_unit_cell_unit:                            m
+  sb_volume:                                    3.37e-24
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+
+# if more than one set of contexts given, dependency tree will fork
+transient:  # ...overridden by these transient settings, which do not affect children
+  fw_010_datafile_retrieval.yaml:  
+  - sb_multiples:
+    - 51
+    - 30
+    - 2
+
+  #fw_020_exchange_substrate.yaml:
+  #- worker:   nemo_queue_offline
+  #  nodes:    1
+  #  ppn:      1
+  #  walltime: '00:05:00'
+  #  queue:    express
+
+persistent:
+  fw_010_datafile_retrieval.yaml:
+  - sf_nmolecules:        75
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000453
+
+dependencies:
+  fw_005_input_file_retrieval.yaml:
+  - fw_010_datafile_retrieval.yaml
+  - fw_020_exchange_substrate.yaml
+
+  fw_010_datafile_retrieval.yaml:
+  - fw_020_exchange_substrate.yaml
+  
+  fw_020_exchange_substrate.yaml:
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml

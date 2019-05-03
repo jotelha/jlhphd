@@ -1,0 +1,287 @@
+created_on: 2019-05-03 16:19:53.095453
+fws:
+- created_on: '2019-05-03T16:19:53.005625'
+  fw_id: -10
+  name: NEMO, 0 SDS on AU 111 51x30x21 substrate, none, substrate exchange
+  spec:
+    _category: bwcloud_std
+    _files_out:
+      coeff_file: coeff.input
+      coeff_nonbonded_file: coeff_nonbonded.input
+      input_delete_subst: lmp_delete_subst.input
+      input_header: lmp_header.input
+      input_merge: lmp_merge.input
+      input_minimal_header: lmp_minimal_header.input
+      input_scale_solution_to_substrate: lmp_scale_solution_to_substrate.input
+      input_shift_solution_to_zero_z: lmp_shift_solution_to_zero_z.input
+      input_shift_surface_to_zero_z: lmp_shift_surface_to_zero_z.input
+      input_snapshot: lmp_snapshot.input
+    _tasks:
+    - _fw_name: GetFilesTask
+      identifiers:
+      - lmp_header.input
+      - lmp_minimal_header.input
+      - lmp_delete_subst.input
+      - lmp_snapshot.input
+      - lmp_shift_surface_to_zero_z.input
+      - lmp_shift_solution_to_zero_z.input
+      - lmp_scale_solution_to_substrate.input
+      - lmp_merge.input
+    - _fw_name: GetFilesTask
+      identifiers:
+      - SDS/in/H2O/on/AU/coeff.input
+      - SDS/in/H2O/on/AU/coeff/nonbonded.input
+      new_file_names:
+      - coeff.input
+      - coeff_nonbonded.input
+  updated_on: '2019-05-03T16:19:53.005627'
+- created_on: '2019-05-03T16:19:53.016567'
+  fw_id: -20
+  name: NEMO, 75 SDS on AU 111 51x30x2 substrate, bilayer, file retrieval and preprocessing
+  spec:
+    _category: bwcloud_std
+    _files_out:
+      interface_file: interface.lammps
+      substrate_file: substrate.lammps
+    _tasks:
+    - _fw_name: GetFilesTask
+      identifiers:
+      - 75_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
+      - substrate/AU/111/51x30x21/equilibrated.lammps
+      new_file_names:
+      - interface.lammps
+      - substrate.lammps
+  updated_on: '2019-05-03T16:19:53.016568'
+- created_on: '2019-05-03T16:19:53.065693'
+  fw_id: -30
+  name: NEMO, 75 SDS on AU 111 51x30x21 substrate, bilayer, exchange substrate
+  spec:
+    _category: bwcloud_std
+    _files_in:
+      coeff_file: coeff.input
+      coeff_nonbonded_file: coeff_nonbonded.input
+      input_delete_subst: lmp_delete_subst.input
+      input_header: lmp_header.input
+      input_merge: lmp_merge.input
+      input_minimal_header: lmp_minimal_header.input
+      input_scale_solution_to_substrate: lmp_scale_solution_to_substrate.input
+      input_shift_solution_to_zero_z: lmp_shift_solution_to_zero_z.input
+      input_shift_surface_to_zero_z: lmp_shift_surface_to_zero_z.input
+      input_snapshot: lmp_snapshot.input
+      interface_file: interface.lammps
+      substrate_file: substrate.lammps
+    _files_out:
+      data_file: merged.lammps
+    _queueadapter:
+      nodes: 8
+      ppn: 20
+      queue: ''
+      walltime: 24:00:00
+    _tasks:
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_delete_subst.input
+      - -v dataFile interface.lammps
+      - -v outfile  solution.lammps
+      stderr_file: 010_delete_subst.err
+      stdout_file: 010_delete_subst.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_snapshot.input
+      - -v dataFile     substrate.lammps
+      - -v snapshotName substrate
+      stderr_file: 020_snapshot_substrate.err
+      stdout_file: 020_snapshot_substrate.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_snapshot.input
+      - -v dataFile     solution.lammps
+      - -v snapshotName solution
+      stderr_file: 030_snapshot_solution.err
+      stdout_file: 030_snapshot_solution.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_shift_surface_to_zero_z.input
+      - -v coeffFile  coeff_nonbonded.input
+      - -v dataFile   substrate.lammps
+      - -v outfile    shiftedSubstrate.lammps
+      stderr_file: 040_shift_surface_to_zero_z.err
+      stdout_file: 040_shift_surface_to_zero_z.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_shift_solution_to_zero_z.input
+      - -v coeffFile  coeff.input
+      - -v dataFile   solution.lammps
+      - -v outfile    shiftedSolution.lammps
+      stderr_file: 050_shift_solution_to_zero_z.err
+      stdout_file: 050_shift_solution_to_zero_z.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_snapshot.input
+      - -v dataFile     shiftedSubstrate.lammps
+      - -v snapshotName shiftedSubstrate
+      stderr_file: 060_snapshot_shifted_substrate.err
+      stdout_file: 060_snapshot_shifted_substrate.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_snapshot.input
+      - -v dataFile     shiftedSolution.lammps
+      - -v snapshotName shiftedSolution
+      stderr_file: 070_snapshot_shifted_solution.err
+      stdout_file: 070_snapshot_shifted_solution.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_scale_solution_to_substrate.input
+      - -v coeffFile      coeff.input
+      - -v substrateFile  shiftedSubstrate.lammps
+      - -v solutionFile   shiftedSolution.lammps
+      - -v outfile        scaledSolution.lammps
+      stderr_file: 080_scale_solution_to_substrate.err
+      stdout_file: 080_scale_solution_to_substrate.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_merge.input
+      - -v coeffFile        coeff.input
+      - -v dataFile         scaledSolution.lammps
+      - -v dataFileToAppend shiftedSubstrate.lammps
+      - -v outfile          merged.lammps
+      stderr_file: 090_merge.err
+      stdout_file: 090_merge.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+    - _fw_name: CmdTask
+      cmd: lmp
+      fizzle_bad_rc: true
+      opt:
+      - -in lmp_snapshot.input
+      - -v dataFile     merged.lammps
+      - -v snapshotName merged
+      stderr_file: 100_merged.err
+      stdout_file: 100_snapshot_merged.out
+      store_stderr: true
+      store_stdout: true
+      use_shell: true
+  updated_on: '2019-05-03T16:19:53.065695'
+- created_on: '2019-05-03T16:19:53.080958'
+  fw_id: -40
+  name: NEMO, 75 SDS on AU 111 51x30x21 substrate, bilayer, transfer 'interface/SDS/75/AU/111/51x30x21/bilayer/initial_config.lammps'
+    to file pad
+  spec:
+    _category: bwcloud_std
+    _files_in:
+      data_file: initial_config.lammps
+    _tasks:
+    - _fw_name: DeleteFilesTask
+      identifiers:
+      - interface/SDS/75/AU/111/51x30x21/bilayer/initial_config.lammps
+    - _fw_name: AddFilesTask
+      identifiers:
+      - interface/SDS/75/AU/111/51x30x21/bilayer/initial_config.lammps
+      metadata:
+        ci_preassembly: at_polar_head
+        counterion: NA
+        machine: NEMO
+        pressure: 1
+        pressure_unit: atm
+        sb_crystal_plane: 111
+        sb_multiples:
+        - 51
+        - 30
+        - 21
+        sb_name: AU_111_51x30x21
+        sf_nmolecules: 75
+        sf_preassembly: bilayer
+        solvent: H2O
+        state: initial configuration, substrate exchanged after 10 ns miced NPT/NPH
+        substrate: AU
+        surfactant: SDS
+        sv_density: 997
+        sv_density_unit: kg m^-3
+        sv_preassembly: random
+        system_name: 75_SDS_on_AU_111_51x30x21_bilayer
+        temperature: 298
+        temperature_unit: K
+      paths:
+      - initial_config.lammps
+  updated_on: '2019-05-03T16:19:53.080959'
+- created_on: '2019-05-03T16:19:53.089711'
+  fw_id: -50
+  name: NEMO, 75 SDS on AU 111 51x30x21 substrate, bilayer, sync results to RZ storage
+  spec:
+    _category: bwcloud_std
+    _files_in:
+      data_file: datafile.lammps
+    _tasks:
+    - _fw_name: CmdTask
+      cmd: smbsync.py
+      fizzle_bad_rc: true
+      opt:
+      - --server_name ufr2.isi1.public.ads.uni-freiburg.de
+      - --share pastewka
+      - --domain PUBLIC
+      - --username pastewka
+      - --server_port 445
+      - --verbose
+      - .
+      - hoermannj/2019/md/interface/SDS/75/AU/111/51x30x21/bilayer/initial_config
+      stderr_file: std.err
+      stdout_file: std.out
+      use_shell: true
+  updated_on: '2019-05-03T16:19:53.089712'
+links:
+  '-10':
+  - -20
+  - -30
+  '-20':
+  - -30
+  '-30':
+  - -50
+  - -40
+  '-40': []
+  '-50': []
+metadata: {}
+name: 'NEMO: Substrate insertion into previously equilibrated systems [AU (111) 51x30x21]'
+updated_on: 2019-05-03 16:19:53.095455

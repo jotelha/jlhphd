@@ -538,9 +538,9 @@ if "${is_restart} == 0" then &
     "group water       intersect all solvent" &
     "group nonsolvent  subtract all solvent"
 
-if "read_groups_from_file > 0" then &
+if "${read_groups_from_file} > 0" then &
     "ndx2group ${ndx_file}" &
-elif "write_groups_to_file > 0" &
+elif "${write_groups_to_file} > 0" &
     "group2ndx ${ndx_file}"
 # https://lammps.sandia.gov/doc/group2ndx.html#ndx2group-command
 # Without specifying any group IDs, all groups except System will be read from

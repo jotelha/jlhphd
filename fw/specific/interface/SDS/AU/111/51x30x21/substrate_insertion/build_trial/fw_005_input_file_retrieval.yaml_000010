@@ -1,0 +1,49 @@
+# sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
+# identifier composition:
+#                        ^surfactant            ^initial config
+#                            ^surfactant molcules             ^indenter name (not real measures)
+#                                ^substrate material                ^indenter structure
+#                                   ^substrate crytal plane                 ^initial indenter substrate distance
+#                                       ^substrate unit cell multiples            ^steps to contact
+
+
+
+
+
+
+
+name: "NEMO, 0 SDS on AU 111 51x30x21 substrate, none, substrate exchange"
+spec:
+  _category: bwcloud_std
+  _files_out:
+    input_header:               lmp_header.input
+    input_minimal_header:       lmp_minimal_header.input
+    input_delete_subst:         lmp_delete_subst.input
+    input_snapshot:             lmp_snapshot.input
+    input_shift_surface_to_zero_z:      lmp_shift_surface_to_zero_z.input    
+    input_shift_solution_to_zero_z:     lmp_shift_solution_to_zero_z.input    
+    input_scale_solution_to_substrate:  lmp_scale_solution_to_substrate.input
+    input_merge:                lmp_merge.input    
+    coeff_nonbonded_file:       coeff_nonbonded.input
+    coeff_file:                 coeff.input
+
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - lmp_header.input
+    - lmp_minimal_header.input
+    - lmp_delete_subst.input
+    - lmp_snapshot.input
+    - lmp_shift_surface_to_zero_z.input
+    - lmp_shift_solution_to_zero_z.input
+    - lmp_scale_solution_to_substrate.input
+    - lmp_merge.input
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - SDS/in/H2O/on/AU/coeff.input
+    - SDS/in/H2O/on/AU/coeff/nonbonded.input
+    new_file_names:
+    - coeff.input
+    - coeff_nonbonded.input
