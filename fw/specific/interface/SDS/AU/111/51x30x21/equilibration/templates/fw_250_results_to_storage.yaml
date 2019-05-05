@@ -8,6 +8,7 @@ spec:
     log_file:              log.lammps
     data_file:             datafile.lammps # from previous post-processing task
     thermo_out:            thermo.out
+    ndx_file:              groups.ndx
   _tasks:
   - _fw_name: CmdTask
     cmd: smbsync.py
@@ -18,7 +19,6 @@ spec:
     - --username pastewka
     - --server_port 445
     - --verbose
-    - --password RZ.Storage_20
     - .
     - hoermannj/2019/md/{{ identifier }}/equlibration_npt
     stderr_file:   std.err

@@ -2,14 +2,10 @@ include lmp_header.input
 ############
 # restraints
 ############
-# Keep indenter rigid
-if "${has_indenter} > 0" then &
-  "fix freeze indenter setforce 0.0 0.0 0.0"
 
 # Keep substrate layer frozen
 if "${freeze_substrate_layer} > 0.0" then &
-  "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box" &
-  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
+  "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box"
 
 ###################
 # NVT equilibration
@@ -70,6 +66,17 @@ fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 
 # zero by subtracting off an equal part of it from each atom in the group. As
 # a result, the center-of-mass of a system with zero initial momentum will not
 # drift over time.
+
+############
+# restraints
+############
+# Keep indenter rigid
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+
+# Keep substrate layer frozen
+if "${freeze_substrate_layer} > 0.0" then &
+  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
 ###############
 # DRIFT REMOVAL

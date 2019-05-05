@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: "{{ machine|default("NEMO",true) }}, {{ title }}, file retrieval and preprocessing"
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, NVT equilibration file retrieval and preprocessing"
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:

@@ -25,7 +25,8 @@ spec:
     - -v coeffInfile              coeff.input
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
-    - -v freeze_substrate         1
+    - -v freeze_substrate         1    # hold entire substrate fixed
+    - -v freeze_substrate_layer   14.0 # only for group definition for subsequent steps
     - -v has_indenter             0
     - -v has_vacuum               0
     - -v minimization_ftol        1.0e-5

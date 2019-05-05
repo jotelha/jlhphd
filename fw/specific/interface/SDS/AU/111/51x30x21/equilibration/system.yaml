@@ -11,7 +11,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # storage options
   remote_user:            testuser
-  remote_dir:             /mnt/dat/work/testuser/interface/SDS/646/AU/111/51x30x21/monolayer
+  remote_dir:             /mnt/dat/work/testuser/interface/SDS/AU/111/51x30x21
   ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
   # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
@@ -25,8 +25,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_check:     1
 
   # system metadata
-  system_name:  646_SDS_on_AU_111_51x30x21_monolayer
-  state:        equilibrated
+  # system_name:  646_SDS_on_AU_111_51x30x21_monolayer
+  state:                                        equilibrated
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
@@ -53,10 +53,10 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_unit_cell_unit:                            m
   sb_volume:                                    3.37e-24
   sb_volume_unit:                               m^3
-  sf_concentration:                             0.00680627
+  sf_concentration:                             0
   sf_concentration_unit:                        M # M = mol L^-3
-  sf_nmolecules:                                646
-  sf_preassembly:                               monolayer
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
   solvent:                                      H2O
   substrate:                                    AU
   surfactant:                                   SDS
@@ -87,42 +87,42 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
 persistent:
   fw_010_datafile_retrieval.yaml:
-  - datafile_identifier:  75_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
-    sf_nmolecules:        75
+  - sf_nmolecules:        75
     sf_preassembly:       bilayer
-  - datafile_identifier:  75_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
-    sf_nmolecules:        75
+    sf_concentration:     0.000453
+  - sf_nmolecules:        75
     sf_preassembly:       monolayer
-  - datafile_identifier:  129_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
-    sf_nmolecules:        129
+    sf_concentration:     0.000453
+  - sf_nmolecules:        129
     sf_preassembly:       monolayer
-  - datafile_identifier:  220_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
-    sf_nmolecules:        220
+    sf_concentration:     0.0006
+  - sf_nmolecules:        220
     sf_preassembly:       bilayer
-  - datafile_identifier:  220_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
-    sf_nmolecules:        220
+    sf_concentration:     0.00099
+  - sf_nmolecules:        220
     sf_preassembly:       monolayer
-  - datafile_identifier:  377_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
-    sf_nmolecules:        377
+    sf_concentration:     0.00099
+  - sf_nmolecules:        377
     sf_preassembly:       bilayer
-  - datafile_identifier:  377_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
-    sf_nmolecules:        377
+    sf_concentration:     0.0034
+  - sf_nmolecules:        377
     sf_preassembly:       monolayer
-  - datafile_identifier:  646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
-    sf_nmolecules:        646
+    sf_concentration:     0.0034
+  - sf_nmolecules:        646
     sf_preassembly:       bilayer
-  - datafile_identifier:  646_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
-    sf_nmolecules:        646
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
     sf_preassembly:       cylinders
-  - datafile_identifier:  646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_10ns.lammps
-    sf_nmolecules:        646
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
-  - datafile_identifier:  646_SDS_on_AU_111_51x30x2_monolayer_with_counterion_10ns.lammps
-    sf_nmolecules:        646
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
     sf_preassembly:       monolayer
-  - datafile_identifier:  1107_SDS_on_AU_111_51x30x2_bilayer_with_counterion_10ns.lammps
-    sf_nmolecules:        1107
+    sf_concentration:     0.0068
+  - sf_nmolecules:        1107
     sf_preassembly:       bilayer
+    sf_concentration:     0.017
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
