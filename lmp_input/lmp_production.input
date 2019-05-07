@@ -274,7 +274,7 @@ else &
 
 # Keep substrate slab's position COM position fixed, remove relative drift
 if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
-  "fix fixedSubstrateCOM surface recenter INIT INIT INIT shift all"
+  "fix fixedSubstrateCOM frozen_substrate_layer recenter INIT INIT INIT shift all"
 #      ^ID               ^group-ID
 #                                ^style   ^x   ^y   ^z   ^keyword
 #                                                              ^group

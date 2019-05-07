@@ -55,6 +55,7 @@ variable ewald_accuracy          index  1e-4 # relative RMS
 
 # other technical settings:
 variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
+variable box_shift_z             index  0.0 # shift box once in negative direction by this distance
 variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
 variable is_restart              index  0 # marks current run as restart
 variable has_vacuum              index  0 # if > 0, z-direction not pressurized
@@ -346,6 +347,13 @@ elif "${shrink_wrap_once} > 0" &
 # add vacuum to box if specified
 if "${add_vacuum} > 0.0" then &
   "change_box all z final $(zlo) $(zhi+v_add_vacuum) units box"
+
+# shift (periodic) box, but not atom coordinates
+# this can be used to avoid having frozen substrate atoms close to the periodic
+# boundary, resulting in them transitioning across the boundary due to box
+# scaling in the NPT ensemble
+if "${box_shift_z} > 0.0" then &
+  "change_box all z final $(zlo-v_box_shift_z) $(zhi-v_box_shift_z) units box"
 
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:
