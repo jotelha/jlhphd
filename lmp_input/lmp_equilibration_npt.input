@@ -8,6 +8,14 @@ include lmp_header.input
 if "${freeze_substrate_layer} > 0.0" then &
   "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box"
 
+# Keep substrate layer frozen
+if "${freeze_substrate_layer} > 0.0" then &
+  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
+
+# Keep indenter rigid
+if "${has_indenter} > 0" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0"
+
 ###################
 # NPT equilibration
 ###################
@@ -109,18 +117,6 @@ else &
 # but will be way off for other materials and way too small for solids. Thus
 # you should experiment to find appropriate values of Pdamp and/or the modulus
 # when using this fix.
-
-############
-# restraints
-############
-
-# Keep indenter rigid
-if "${has_indenter} > 0" then &
-  "fix freeze indenter setforce 0.0 0.0 0.0"
-
-# Keep substrate layer frozen
-if "${freeze_substrate_layer} > 0.0" then &
-  "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
 ###############
 # DRIFT REMOVAL
