@@ -348,12 +348,22 @@ elif "${shrink_wrap_once} > 0" &
 if "${add_vacuum} > 0.0" then &
   "change_box all z final $(zlo) $(zhi+v_add_vacuum) units box"
 
-# shift (periodic) box, but not atom coordinates
-# this can be used to avoid having frozen substrate atoms close to the periodic
+# shift (periodic) box, but not atom coordinates:
+# This can be used to avoid having frozen substrate atoms close to the periodic
 # boundary, resulting in them transitioning across the boundary due to box
 # scaling in the NPT ensemble
+# By shifting, solvent molecules are likely to be split across the boundary.
+# For proper constraining, SHAKE (and RATTLE) need the image flags to be set
+# correctly in this case. change_box does not alter the image flags.
+# A combination of displace_atoms and change_box with remapping achieves
+# the preservation of atom coordinates and setting of image flags if crossing
+# a periodic boundary during the box shift. 
 if "${box_shift_z} > 0.0" then &
-  "change_box all z final $(zlo-v_box_shift_z) $(zhi-v_box_shift_z) units box"
+  "variable desired_zlo equal $(zlo-v_box_shift_z)" &
+  "variable desired_zhi equal $(zhi-v_box_shift_z)" &
+  """print "Box current z range [$(zlo),$(zhi)], desired z range [${desired_zlo},${desired_zhi}]" """ &
+  "displace_atoms all move 0.0 0.0 ${box_shift_z} units box" &
+  "change_box all set z final ${desired_zlo} ${desired_zhi} remap units box"  
 
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:
@@ -502,7 +512,45 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 
 if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
 
-if "${is_restart} == 0" then "group frozen empty"
+# pre-define groups:
+# Group[ 0]: all (static)
+# Group[ 0]: all (static)
+# Group[ 1]: frozen (static)
+# Group[ 2]: solvent (static)
+# Group[ 3]: solid (static)
+# Group[ 4]: ion (static)
+# Group[ 5]: surfactant (static)
+# Group[ 6]: nonwater (static)
+# Group[ 7]: nonsolid (static)
+# Group[ 8]: substrate (static)
+# Group[ 9]: nonsubstrate (static)
+# Group[10]: atoms_in_frozen_substrate_layer_region (static)
+# Group[11]: frozen_substrate_layer (static)
+# Group[12]: surface (static)
+# Group[13]: water (static)
+# Group[14]: nonsolvent (static)
+
+if "${is_restart} == 0" then &
+  "group atoms_in_central_column empty" &
+  "group atoms_in_frozen_substrate_layer_region empty" &
+  "group atoms_in_indenter_region empty" &
+  "group frozen empty" &
+  "group frozen_substrate_layer empty" &
+  "group indenter empty" &
+  "group indenter_apex empty" &
+  "group ion empty" &
+  "group nonwater empty" &
+  "group nonindenter empty" &
+  "group nonsolid empty" &
+  "group nonsolvent empty" &
+  "group nonsubstrate empty" &
+  "group solvent empty" &
+  "group solid empty" &
+  "group substrate empty" &
+  "group surfactant empty" &
+  "group surface empty" &
+  "group water empty"
+
 
 if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
   "group          solvent    type  8 9    #  8 - H, 10 - O" &
@@ -548,6 +596,25 @@ if "${is_restart} == 0" then &
 
 if "${read_groups_from_file} > 0" then &
     "ndx2group ${ndx_file}" &
+    """print "#atoms atoms_in_central_column:                $(count(atoms_in_central_column))" """ &
+    """print "#atoms atoms_in_frozen_substrate_layer_region: $(count(atoms_in_frozen_substrate_layer_region))" """ &
+    """print "#atoms atoms_in_indenter_region:               $(count(atoms_in_indenter_region))" """ &
+    """print "#atoms frozen:                                 $(count(frozen))" """ &
+    """print "#atoms frozen_substrate_layer:                 $(count(frozen_substrate_layer))" """ &
+    """print "#atoms indenter:                               $(count(indenter))" """ &
+    """print "#atoms indenter_apex:                          $(count(indenter_apex))" """ &
+    """print "#atoms ion:                                    $(count(ion))" """ &
+    """print "#atoms nonwater:                               $(count(nonwater))" """ &
+    """print "#atoms nonindenter:                            $(count(nonindenter))" """ &
+    """print "#atoms nonsolid:                               $(count(nonsolid))" """ &
+    """print "#atoms nonsolvent:                             $(count(nonsolvent))" """ &
+    """print "#atoms nonsubstrate:                           $(count(nonsubstrate))" """ &
+    """print "#atoms solvent:                                $(count(solvent))" """ &
+    """print "#atoms solid:                                  $(count(solid))" """ &
+    """print "#atoms substrate:                              $(count(substrate))" """ &
+    """print "#atoms surfactant:                             $(count(surfactant))" """ &
+    """print "#atoms surface:                                $(count(surface))" """ &
+    """print "#atoms water:                                  $(count(water))" """ &
 elif "${write_groups_to_file} > 0" &
     "group2ndx ${ndx_file}"
 # https://lammps.sandia.gov/doc/group2ndx.html#ndx2group-command

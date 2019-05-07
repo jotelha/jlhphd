@@ -14,6 +14,8 @@ if "${freeze_substrate_layer} > 0.0" then &
 if "${has_indenter} > 0" then &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 
+if "${is_restart} == 0" then "group tempered_group subtract all frozen"
+
 ###################
 # NVT equilibration
 ###################
@@ -21,9 +23,7 @@ if "${has_indenter} > 0" then &
 #     "variable tempered_group string nonindenter" &
 # else &
 #     "variable tempered_group string all"
-if   "${is_restart} == 0" then "group tempered_group subtract all frozen"
 
-fix timeIntegration     tempered_group nve # necessary for nvt via langevin
 fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 29061988
 #   ^ID                 ^group-ID
 #                           ^langevin
@@ -74,40 +74,7 @@ fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 
 # a result, the center-of-mass of a system with zero initial momentum will not
 # drift over time.
 
-###############
-# DRIFT REMOVAL
-
-# Keep substrate slab's position COM position fixed, remove relative drift                                                      ^group
-if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
-  "fix fixedSubstrateCOM frozen_substrate_layer recenter INIT INIT INIT shift all"
-#      ^ID               ^group-ID
-#                                  ^style   ^x   ^y   ^z   ^keyword
-#                                                                ^group
-# source: https://lammps.sandia.gov/doc/fix_recenter.html
-# fix ID group-ID recenter x y z keyword value ...
-#   shift value = group-ID
-#     group-ID = group of atoms whose coords are shifted
-#
-# Constrain the center-of-mass position of a group of atoms by adjusting the
-# coordinates of the atoms every timestep. This is simply a small shift that
-# does not alter the dynamics of the system or change the relative coordinates
-# of any pair of atoms in the group. This can be used to insure the entire
-# collection of atoms (or a portion of them) do not drift during the simulation
-# due to random perturbations (e.g. fix langevin thermostatting).
-#
-# The center-of-mass (COM) is computed for the group specified by the fix.
-# If the current COM is different than the specified x,y,z, then a group of
-# atoms has their coordinates shifted by the difference. By default the shifted
-# group is also the group specified by the fix. A different group can be shifted
-# by using the shift keyword. For example, the COM could be computed on a
-# protein to keep it in the center of the simulation box. But the entire system
-# (protein + water) could be shifted.
-#
-# Distance units for the x,y,z values are determined by the setting of the units
-# keyword, as discussed below. One or more x,y,z values can also be specified
-# as NULL, which means exclude that dimension from this operation. Or it can be
-# specified as INIT which means to constrain the center-of-mass to its initial
-# value at the beginning of the run.
+fix timeIntegration     tempered_group nve # necessary for nvt via langevin
 
 ############################################
 # RIGID TIP3P WATER and RIGID HYDROGEN BONDS
@@ -139,6 +106,40 @@ fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 # temperature and pressure computations. Similarly, the SHAKE contribution to
 # the pressure of the system (virial) is also accounted for.
 
+###############
+# DRIFT REMOVAL
+
+# Keep substrate slab's position COM position fixed, remove relative drift
+if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
+  "fix fixedSubstrateCOM frozen_substrate_layer recenter INIT INIT INIT shift all"
+#      ^ID               ^group-ID
+#                                  ^style   ^x   ^y   ^z   ^keyword
+#                                                                ^group
+# source: https://lammps.sandia.gov/doc/fix_recenter.html
+# fix ID group-ID recenter x y z keyword value ...
+#   shift value = group-ID
+#     group-ID = group of atoms whose coords are shifted
+#
+# Constrain the center-of-mass position of a group of atoms by adjusting the
+# coordinates of the atoms every timestep. This is simply a small shift that
+# does not alter the dynamics of the system or change the relative coordinates
+# of any pair of atoms in the group. This can be used to insure the entire
+# collection of atoms (or a portion of them) do not drift during the simulation
+# due to random perturbations (e.g. fix langevin thermostatting).
+#
+# The center-of-mass (COM) is computed for the group specified by the fix.
+# If the current COM is different than the specified x,y,z, then a group of
+# atoms has their coordinates shifted by the difference. By default the shifted
+# group is also the group specified by the fix. A different group can be shifted
+# by using the shift keyword. For example, the COM could be computed on a
+# protein to keep it in the center of the simulation box. But the entire system
+# (protein + water) could be shifted.
+#
+# Distance units for the x,y,z values are determined by the setting of the units
+# keyword, as discussed below. One or more x,y,z values can also be specified
+# as NULL, which means exclude that dimension from this operation. Or it can be
+# specified as INIT which means to constrain the center-of-mass to its initial
+# value at the beginning of the run.
 
 velocity        tempered_group create ${initialT} 29061988 rot yes mom yes dist gaussian
 

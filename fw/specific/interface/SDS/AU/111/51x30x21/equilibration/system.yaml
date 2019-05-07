@@ -5,7 +5,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                NEMO
   nodes:                  8
   ppn:                    20
-  walltime:               '48:00:00'
+  walltime:               '1:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
 

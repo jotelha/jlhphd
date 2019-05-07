@@ -24,7 +24,7 @@ spec:
     cmd: lmp
     opt:
     - -in lmp_equilibration_npt.input
-    - -v box_shift_z              5.0
+    - -v box_shift_z              {{ box_shift_z|default(10.0)|float }}
     - -v coeffInfile              coeff.input
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
