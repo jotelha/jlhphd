@@ -776,7 +776,8 @@ else &
 
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
-thermo_modify  norm no
+thermo_modify norm no flush yes
+# thermo_modify  norm no
 # Note that some computes calculate "intensive" global quantities like
 # temperature; others calculate "extensive" global quantities like kinetic
 # energy that are summed over all atoms in the compute group. Intensive
@@ -865,22 +866,29 @@ elif "${thermo_average_frequency} > 0" &
 # and no off settings for any input values.
 
 print "Force field parameters in lmp_header.input:"
+info coeffs out screen
 info coeffs out log
 
 print "Computes in lmp_header.input:"
+info computes out screen
 info computes out log
 
 print "Fixes in lmp_header.input:"
+info fixes out screen
 info fixes out log
 
 print "Groups in lmp_header.input:"
+info groups out screen
 info groups out log
 
 print "Regions in lmp_header.input:"
+info regions out screen
 info regions out log
 
 print "System info in lmp_header.input:"
+info system out screen
 info system out log
 
-print "Variables in lmp_header.input:"
+# print "Variables in lmp_header.input:"
+info variables out screen
 info variables out log
