@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}}}, postprocessing
+name: {{ machine|default("NEMO",true) }}, {{ title }}, postprocessing
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_in:

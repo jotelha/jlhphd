@@ -3,9 +3,9 @@ metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
   machine:                NEMO
-  nodes:                  8
+  nodes:                  2
   ppn:                    20
-  walltime:               '1:00:00'
+  walltime:               '12:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
 
@@ -72,7 +72,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:                 nemo_queue_offline
     nodes:                  2
     ppn:                    20
-    walltime:               '4:00:00'
+    walltime:               '12:00:00'
     # for testing:
     #nodes:                  2
     #ppn:                    20
@@ -80,10 +80,10 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #queue:                  express
   fw_060_equilibration_nvt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '24:00:00'
+    walltime:               '12:00:00'
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '24:00:00'
+    walltime:               '12:00:00'
 
 persistent:
   fw_010_datafile_retrieval.yaml:

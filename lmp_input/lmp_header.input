@@ -488,10 +488,6 @@ region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance}
 #                                                        ^cylinder radius
 #                                                             ^lower and ^upper point
 
-# define region of frozen substrate layer if desired:
-if "${freeze_substrate_layer} > 0.0" then &
-  "region frozen_substrate_layer_region plane 0  0  $((zlo+v_freeze_substrate_layer)) 0 0 1 side out units box"
-
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
 # The charmm keyword sets the 3 coefficients to 0.0, 0.0, 0.0 for both LJ and
@@ -580,6 +576,10 @@ if "${is_restart} == 0 && ${has_indenter} > 0" then &
 elif "${is_restart} == 0" &
   "group substrate      intersect all solid" &
   "group nonsubstrate   subtract all substrate"
+
+# define region of frozen substrate layer if desired:
+if "${freeze_substrate_layer} > 0.0" then &
+  "region frozen_substrate_layer_region plane 0  0  $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
 
 # create substrate layer group to hold frozen at bottom if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
