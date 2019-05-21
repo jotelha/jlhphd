@@ -1,4 +1,4 @@
-name: "NEMO: LAMMPS minimization and equilibration of 646 SDS on AU (111) 51x30x21 (EAM)"
+name: "NEMO: LAMMPS minimization and equilibration of r = 50 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -29,6 +29,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_frequency:                             1000
   minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
+  minimization_maxiter:                         10000
+  minimization_maxeval:                         100000
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   # production_steps:                             100000
