@@ -15,7 +15,7 @@ if "${freeze_substrate_layer} > 0.0" then &
 # Keep indenter rigid or restrained at its initial position
 if "(${has_indenter} > 0) && (${rigid_indenter} > 0)" then &
   "fix freeze indenter setforce 0.0 0.0 0.0" &
-if "(${has_indenter} > 0) && (${restrained_indenter} > 0)" then &
+elif "(${has_indenter} > 0) && (${restrained_indenter} > 0)" &
   "fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale"
 #                                          ^N       ^xyz          ^preserve kinetic energy
 # source: https://lammps.sandia.gov/doc/fix_momentum.html
