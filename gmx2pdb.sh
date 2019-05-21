@@ -2,9 +2,6 @@
 # {{header}}
 components=( "substrate" "surfactant" "solvent" "ions" )
 
-module load gromacs/2018.1-gnu-5.2
-module load vmd/1.9.3-text
-
 system="{{system_name}}"
 
 gmx select -s "${system}_ionized.gro" -on "${system}_substrate.ndx" \

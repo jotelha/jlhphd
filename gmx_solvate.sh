@@ -2,7 +2,7 @@
 #{{header}}
 set -e
 
-module load gromacs/2018.1-gnu-5.2
+#module load gromacs/2018.1-gnu-5.2
 
 system={{system_name}}
 surfactant={{surfactant}}
