@@ -1,4 +1,4 @@
-name: "bwCloud: Insertion of AU radius 50 Ang indenter into SDS on AU (111) 51x30x21 (EAM) interfacial systems"
+name: "NEMO: Insertion of AU radius 50 Ang indenter into SDS on AU (111) 51x30x21 (EAM) interfacial systems"
 
 metadata: {}
 
@@ -104,9 +104,9 @@ transient: {} # ...overridden by these transient settings, which do not affect c
 
 persistent:
   fw_010_interface_file_retrieval.yaml:
-  - sf_nmolecules:        1107
-    sf_preassembly:       bilayer
-    sf_concentration:     0.017
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
@@ -122,7 +122,13 @@ dependencies:
 
   fw_010_interface_file_retrieval.yaml:
   - fw_020_insert_indenter.yaml
+  - fw_030_restore_types.yaml
 
   fw_020_insert_indenter.yaml:
+  - fw_030_restore_types.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml
+
+  fw_030_restore_types.yaml:
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml

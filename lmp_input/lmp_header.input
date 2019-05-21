@@ -79,6 +79,8 @@ variable productionSteps         index  5000000    #  10 ns
 
 # AFM-tip-related settings:
 variable has_indenter            index  0
+variable rigid_indenter          index  0
+variable restrained_indenter     index  0
 variable constant_indenter_velocity     index 0.0 # for approach towards substrate
 variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
 variable manual_indenter_region  index  0 # if set to 1, use measures below
@@ -572,14 +574,17 @@ if "${is_restart} == 0 && ${has_indenter} > 0" then &
   "group indenter_apex  intersect indenter atoms_in_central_column" &
   "group nonindenter    subtract all indenter" &
   "group nonsubstrate   subtract all substrate" &
-  "group frozen         union frozen indenter" &
 elif "${is_restart} == 0" &
   "group substrate      intersect all solid" &
   "group nonsubstrate   subtract all substrate"
 
+# freeze indenter if explicitly specified
+if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter} > 0" then &
+  "group frozen         union frozen indenter"
+
 # define region of frozen substrate layer if desired:
 if "${freeze_substrate_layer} > 0.0" then &
-  "region frozen_substrate_layer_region plane 0  0  $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
+  "region frozen_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
 
 # create substrate layer group to hold frozen at bottom if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
@@ -684,9 +689,11 @@ if "${compute_interactions} > 0" then &
 #       11   196.9665  # AU
 
 
-# exclude intra-indenter interactions for rigid indenter
-if "${has_indenter} > 0 " then &
-  "neigh_modify exclude group indenter indenter check no"
+# exclude intra-frozen interactions for rigid indenter and substrate
+variable number_of_frozen_atoms equal count(frozen)
+if "${number_of_frozen_atoms} > 0 " then &
+  "neigh_modify exclude group frozen frozen"
+
 
 # walls if box non-periodic, use AU paramters (sigma ignored)
 if "${pbc2d} > 0" then &

@@ -10,20 +10,39 @@ if "${freeze_substrate_layer} > 0.0" then &
 if "${freeze_substrate_layer} > 0.0" then &
   "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
-# Keep indenter rigid
-if "${has_indenter} > 0" then &
-  "fix freeze indenter setforce 0.0 0.0 0.0"
+# Keep indenter rigid or restrained at its initial position
+if "(${has_indenter} > 0) && (${rigid_indenter} > 0)" then &
+  "fix freeze indenter setforce 0.0 0.0 0.0" &
+if "(${has_indenter} > 0) && (${restrained_indenter} > 0)" then &
+  "fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale"
+#                                          ^N       ^xyz          ^preserve kinetic energy
+# source: https://lammps.sandia.gov/doc/fix_momentum.html
+# If the linear keyword is used, the linear momentum is zeroed by subtracting
+# the center-of-mass velocity of the group from each atom. This does not change
+# the relative velocity of any pair of atoms. One or more dimensions can be
+# excluded from this operation by setting the corresponding flag to 0.
+#
+# If the angular keyword is used, the angular momentum is zeroed by subtracting
+# a rotational component from each atom.
+#
+# This command can be used to insure the entire collection of atoms (or a
+# subset of them) does not drift or rotate during the simulation due to random
+# perturbations (e.g. fix langevin thermostatting).
+#
+# The rescale keyword enables conserving the kinetic energy of the group of
+# atoms by rescaling the velocities after the momentum was removed.
+#
+# No information about this fix is written to binary restart files. None of the
+# fix_modify options are relevant to this fix. No global or per-atom quantities
+# are stored by this fix for access by various output commands. No parameter of
+# this fix can be used with the start/stop keywords of the run command. This
+# fix is not invoked during energy minimization.
 
 if "${is_restart} == 0" then "group tempered_group subtract all frozen"
 
 ###################
 # NVT equilibration
 ###################
-# if "${has_indenter} > 0" then &
-#     "variable tempered_group string nonindenter" &
-# else &
-#     "variable tempered_group string all"
-
 fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 29061988
 #   ^ID                 ^group-ID
 #                           ^langevin

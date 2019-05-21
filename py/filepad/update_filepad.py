@@ -18,26 +18,6 @@ template_prefix = "/mnt/dat/work/testuser/adsorption/N_surfactant_on_substrate_t
 
 print("Template prefix: {:s}".format(template_prefix))
 
-# TCL:
-
-fp.delete_file(identifier='jlh_vmd.tcl')
-fp.add_file(
-    os.path.join(template_prefix,'vmd','jlh_vmd.tcl'),
-    identifier='jlh_vmd.tcl',
-    metadata={
-        'type':     'script',
-        'language': 'tcl',
-        'usecase':  'indenter insertion in vmd'})
-
-fp.delete_file(identifier='indenter_insertion.tcl')
-fp.add_file(
-    os.path.join(template_prefix,'vmd','indenter_insertion.tcl'),
-    identifier='indenter_insertion.tcl',
-    metadata={
-        'type':     'template',
-        'language': 'tcl',
-        'usecase':  'indenter insertion in vmd'})
-
 # LAMMPS:
 fp.delete_file(identifier='lmp_equilibration_npt.input')
 fp.add_file(

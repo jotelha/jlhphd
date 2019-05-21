@@ -20,7 +20,7 @@ neigh_modify            delay 0 every 1 check yes
 # If the "delay" setting is non-zero, then it must be a multiple of the "every"
 # setting.
 
-thermo                  100
+# thermo                  100
 
 ############
 # restraints

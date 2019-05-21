@@ -13,7 +13,7 @@ spec:
     indenter_file: indenter.lammps
     interface_file: interface.lammps
   _files_out:
-    data_file: system.lammps
+    lmp_file: system.lammps
     pdb_file:  system.pdb
     psf_file:  system.psf
     png_file:  system.png

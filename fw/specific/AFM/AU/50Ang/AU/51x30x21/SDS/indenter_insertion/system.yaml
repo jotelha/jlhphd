@@ -7,11 +7,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                NEMO
   worker:                 nemo_noqueue
 
-  # coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
-  # indenter_identifier:      indenter/AU/111/50Ang/100ns.lammps
-  # interface_identifier:     interface/SDS/646/AU/111/51x30x21/hemicylinders/equilibrated.lammps
-
   # technical LAMMPS options
   ewald_accuracy:  1.0e-4
   coulomb_cutoff:  8.0
@@ -21,7 +16,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_check:     1
 
   # system metadata
-  # system_name:  646_SDS_on_AU_111_51x30x21_monolayer
   ci_preassembly:                               at polar heads
   counterion:                                   NA
   pbc:                                          111 # periodic in all directions
@@ -100,7 +94,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
     nodes:                  1
     ppn:                    1
     walltime:               '00:15:00'
-    queue:                  express
+    queue:                  ''
 
 persistent:
   fw_010_interface_file_retrieval.yaml:
@@ -155,7 +149,13 @@ dependencies:
 
   fw_010_interface_file_retrieval.yaml:
   - fw_020_insert_indenter.yaml
+  - fw_030_restore_types.yaml
 
   fw_020_insert_indenter.yaml:
+  - fw_030_restore_types.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml
+
+  fw_030_restore_types.yaml:
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml
