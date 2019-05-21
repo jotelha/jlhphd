@@ -1,14 +1,14 @@
 fws:
 - fw_id: 1
-  name: "Initialization"
+  name: "NEMO File Retrieval"
   spec:
-    _category: "bwcloud_noqueue"
+    _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_replicate
+      func: fwtools.testuser.get_inputs
       inputs: [dimensions, surfactants,sf_nmolecules,counterion,preassembly,sb_unit]
-      outputs: []
-    dimensions: ['51','30','21']
+      outputs: [inputs]
+    dimensions: ['51','30','16']
     surfactants: ["SDS"]
     sf_nmolecules: '646'
     counterion: 'NA'
@@ -16,18 +16,15 @@ fws:
     sb_unit: ['3e-10', '5e-10', '7e-10']
 
 - fw_id: 2
-  name: "Packmol"
+  name: "convertToLammps"
   spec:
-    _category: "bwcloud_noqueue"
+    _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_packmol
-      inputs: [inputs,nloop,maxit]
-    inputs: 
-    nloop: 200
-    maxit: 500
+      func: fwtools.testuser.run_prepare_pdb2lmp
+      inputs: [inputs]
+    inputs: inputs
 
 links:
-  '1': [2]
+  '1': 2
 metadata: {}
-name: Workflow

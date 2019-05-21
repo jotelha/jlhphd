@@ -26,7 +26,21 @@ fws:
     inputs: 
     nloop: 200
     maxit: 500
+  
+- fw_id: 3
+  name: "convertToLammps"
+  spec:
+    _category: "bwcloud_noqueue"
+    _tasks:
+    - _fw_name: PyTask
+      func: fwtools.testuser.run_prepare_pdb2lmp
+      inputs: [inputs]
+    inputs: 
+  metadata: {inputs}
 
+ 
+      
+    
 links:
   '1': [2]
 metadata: {}
