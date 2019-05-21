@@ -1,0 +1,31 @@
+# Removes substrate from system.
+variable dataFile index aligned.lammps
+variable outfile index nonSubstrate.lammps
+
+# header reads data file and defines groups
+include lmp_header.input
+
+delete_atoms group substrate
+# https://lammps.sandia.gov/doc/atom_modify.html
+# If atom IDs are used, they must all be positive integers. They should also be
+# unique, though LAMMPS does not check for this. Typically they should also be
+# consecutively numbered (from 1 to Natoms), though this is not required.
+# Molecular atom styles are those that store bond topology information (styles
+# bond, angle, molecular, full). These styles require atom IDs since the IDs are
+# used to encode the topology. Some other LAMMPS commands also require the use
+# of atom IDs. E.g. some many-body pair styles use them to avoid double
+# computation of the I-J interaction between two atoms.
+
+reset_ids
+# Reset atom IDs for the system, including all the global IDs stored for bond,
+# angle, dihedral, improper topology data. This will create a set of IDs that
+# are numbered contiguously from 1 to N for a N atoms system.
+
+# This can be useful to do after performing a “delete_atoms” command for a
+# molecular system. The delete_atoms compress yes option will not perform this
+# operation due to the existence of bond topology. It can also be useful to do
+# after any simulation which has lost atoms, e.g. due to atoms moving outside a
+# simulation box with fixed boundaries (see the “boundary command”), or due to
+# evaporation (see the “fix evaporate” command).
+
+write_data ${outfile}

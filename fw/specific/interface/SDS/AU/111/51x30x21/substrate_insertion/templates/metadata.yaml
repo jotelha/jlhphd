@@ -1,0 +1,21 @@
+machine:            {{ machine }}
+
+ci_preassembly:     {{ ci_preassembly }}
+counterion:         {{ counterion }}
+pressure:           {{ pressure }}
+pressure_unit:      {{ pressure_unit }}
+sb_crystal_plane:   {{ sb_crystal_plane }}
+sb_multiples:       {{ sb_multiples }}
+sb_name:            {{ sb_name }}
+sf_nmolecules:      {{ sf_nmolecules }}
+sf_preassembly:     {{ sf_preassembly }}
+solvent:            {{ solvent }}
+substrate:          {{ substrate }}
+surfactant:         {{ surfactant }}
+sv_density:         {{ sv_density }}
+sv_density_unit:    {{ sv_density_unit }}
+sv_preassembly:     {{ sv_preassembly }}
+temperature:        {{ temperature }}
+temperature_unit:   {{ temperature_unit }}
+
+system_name:        {{ system_name }}

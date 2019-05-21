@@ -1,0 +1,27 @@
+# Tries to zero-align a system by its substrate (normal in z dir). 
+# Assumes a system where the substrate is possibly divided by a
+# periodic boundary. Shifts system by half a box measure to make
+# possibly devided substrate whole. Then aligns substrate's minimum
+# coordinates to origin 0,0,0. Adds tiny positive tolerance to avoid 
+# wrapping at periodic boundaries due to machine precision
+variable dataFile         index "datafile.lammps"
+variable outfile          index "aligned.lammps"
+
+# header reads data file and defines groups
+include lmp_header.input
+
+# shift by half a box height
+displace_atoms all move 0.0 0.0 ${z_center} units box
+
+# get minimum substrate coordinates
+variable x_subst equal (bound(substrate,xmin))
+variable y_subst equal (bound(substrate,ymin))
+variable z_subst equal (bound(substrate,zmin))
+variable precision equal (1.0e-5)
+info variables
+
+# zero-align
+displace_atoms all move $((v_precision-v_x_subst)) $((v_precision-v_y_subst)) &
+    $((v_precision-v_z_subst)) units box
+
+write_data ${outfile}

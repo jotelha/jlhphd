@@ -1,0 +1,134 @@
+name: "NEMO: Insertion of AU radius 50 Ang indenter into SDS on AU (111) 51x30x21 (EAM) interfacial systems"
+
+metadata: {}
+
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+  machine:                NEMO
+  worker:                 nemo_noqueue
+
+  # coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
+  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
+  # indenter_identifier:      indenter/AU/111/50Ang/100ns.lammps
+  # interface_identifier:     interface/SDS/646/AU/111/51x30x21/hemicylinders/equilibrated.lammps
+
+  # technical LAMMPS options
+  ewald_accuracy:  1.0e-4
+  coulomb_cutoff:  8.0
+  skin_distance:   3.0
+  neigh_delay:     2
+  neigh_every:     1
+  neigh_check:     1
+
+  # system metadata
+  # system_name:  646_SDS_on_AU_111_51x30x21_monolayer
+  ci_preassembly:                               at polar heads
+  counterion:                                   NA
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_51x30x21
+  sb_area:                                      2.2351e-16
+  sb_area_unit:                                 m^2
+  sb_crystal_plane:                             111
+  sb_in_dist:                                   30.0
+  sb_in_dist_unit:                              Ang
+  sb_measures:
+  - 1.48e-8
+  - 1.51e-8
+  - 1.51e-8
+  sb_measures_unit:                             m
+  sb_multiples:
+  - 51
+  - 30
+  - 21
+  sb_normal:                                    2 # z
+  sb_thickness:                                 1.51e-8
+  sb_thickness_unit:                            m
+  sb_unit_cell:
+  - 3.0e-10
+  - 5.0e-10
+  - 7.0e-10
+  sb_unit_cell_unit:                            m
+  sb_volume:                                    3.37e-24
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  state:                                        minimized, nvt- and npt-equilibrated with eam potential
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+
+  indenter:
+    equilibration_time_span:      50
+    equilibration_time_span_unit: ps
+    initial_radius:               50
+    initial_radius_unit:          Ang
+    initial_shape:                sphere
+    lammps_units:                 real
+    melting_final_temperature:    1800
+    melting_time_span:            1
+    melting_time_span_unit:       ns
+    minimization_ftol:            1e-5
+    minimization_ftol_unit:       kcal
+    natoms:                       30984
+    crystal_plane:                111
+    orientation:                  111 facet facing negative z
+    potential:                    Au-Grochola-JCP05-units-real.eam.alloy
+    quenching_time_span:          100
+    quenching_time_span_unit:     ns
+    quenching_time_step:          5
+    quenching_time_step_unit:     fs
+    substrate:                    AU
+    temperature:                  298
+    temperature_unit:             K
+    time_step:                    2
+    time_step_unit:               fs
+    type:                         AFM tip
+
+# if more than one set of contexts given, dependency tree will fork
+transient: {} # ...overridden by these transient settings, which do not affect children
+  #fw_020_insert_indenter.yaml:
+  #- worker:                 nemo_queue_offline
+  # nodes:                  1
+  #  ppn:                    1
+  #  walltime:               '00:15:00'
+  #  queue:                  express
+
+persistent:
+  fw_010_interface_file_retrieval.yaml:
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+#1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#646_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#75_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+
+dependencies:
+  fw_000_indenter_file_retrieval.yaml:
+  - fw_010_interface_file_retrieval.yaml
+  - fw_020_insert_indenter.yaml
+
+  fw_010_interface_file_retrieval.yaml:
+  - fw_020_insert_indenter.yaml
+  - fw_030_restore_types.yaml
+
+  fw_020_insert_indenter.yaml:
+  - fw_030_restore_types.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml
+
+  fw_030_restore_types.yaml:
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml

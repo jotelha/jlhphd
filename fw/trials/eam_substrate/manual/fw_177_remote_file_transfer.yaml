@@ -1,0 +1,22 @@
+name: "Transfer results to remote"
+spec:
+  _category: "nemo_noqueue"
+  _files_in:
+    box_measures:   077_equilibration_npt_bulk_1_atm_box.txt
+    fcc_rdf:        077_equilibration_npt_bulk_1_atm_fcc_rdf.txt
+    rdf:            077_equilibration_npt_bulk_1_atm_rdf.txt
+    thermo_out:     077_equilibration_npt_bulk_1_atm_thermo.out
+  _tasks:
+  - _fw_name: FileTransferTask
+    files: 
+    - 077_equilibration_npt_bulk_1_atm_box.txt
+    - 077_equilibration_npt_bulk_1_atm_fcc_rdf.txt
+    - 077_equilibration_npt_bulk_1_atm_rdf.txt
+    - 077_equilibration_npt_bulk_1_atm_thermo.out
+    dest: /mnt/dat/work/testuser/substrate/eam/series7
+    mode: rtransfer
+    server: 192.52.32.115
+    user: testuser
+    key_filename: /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
+    ignore_errors: False
+    shell_interpret: True

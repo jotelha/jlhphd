@@ -1,0 +1,18 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, file retrieval and preprocessing"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    interface_file: interface.lammps
+    substrate_file: substrate.lammps
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - {{ interface_identifier }}
+    - {{ substrate_identifier }}
+    new_file_names:
+    - interface.lammps
+    - substrate.lammps
+{% endblock %}

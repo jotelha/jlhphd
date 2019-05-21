@@ -1,6 +1,6 @@
 name: "NEMO extract forces from NetCDF"
 spec:
-  _category: "nemo_queue"
+  _category: "nemo_queue_offline"
   _queueadapter:
     nodes: 1
     ppn: 1

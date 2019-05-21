@@ -1,0 +1,60 @@
+name: "NEMO, EAM substrate only, file retrieval and preprocessing"
+spec:
+  _category: "nemo_noqueue"
+  _files_out:
+    initial_configuration_file: stripped.lammps
+    input_header:               lmp_header.input
+    input_minimization:         lmp_minimization.input
+    input_equilibration_nvt:    lmp_equilibration_nvt.input
+    input_equilibration_npt:    lmp_equilibration_npt.input
+    coeff_file:                 coeff_hybrid.input
+
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - lmp_header.input
+    - lmp_minimization.input
+    - lmp_delete_nonSubst.input
+    - lmp_split_datafile.input
+    - lmp_equilibration_nvt.input
+    - lmp_equilibration_npt.input
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - substrate/AU/111/52x30x8.lammps
+    new_file_names:
+    - datafile.lammps
+
+  - _fw_name: CmdTask
+    fizzle_bad_rc: true
+    cmd: lmp
+    opt:
+    - -in lmp_split_datafile.input
+    - -v surfactant_name SDS
+    - -v has_indenter 0
+    - -v pbc2d 0
+    - -v freeze_substrate 0
+    - -v use_ewald 0
+    - -v use_eam 0
+    - -v shrink_wrap_once 1
+    - -v dataFile datafile.lammps
+    - -v write_coeff 1
+    - -v coeffOutfile coeff.input
+    - -v topoOutfile stripped.lammps
+    stderr_file: strip.err
+    stdout_file: strip.out
+    use_shell: true
+
+  - _fw_name: CmdTask
+    fizzle_bad_rc: true
+    cmd: to_hybrid.py
+    opt:
+    - --pair-style lj/charmmfsw/coul/charmmfsh
+    - coeff.input
+    - coeff_hybrid.input
+    stderr_file: convert.err
+    stdout_file: convert.out
+    store_stdout: true
+    store_stderr: true
+    use_shell: true

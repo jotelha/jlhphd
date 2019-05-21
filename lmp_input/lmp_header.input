@@ -1,0 +1,901 @@
+# index varibles can be overridden by command line parameters "-v varName value"
+
+# input settings
+variable baseName                index  "default"
+variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
+variable colvarsFile             index  colvars.inp
+variable dataFile                index  "datafile.lammps"
+variable read_datafile           index  1 # do not read data file if 0
+variable read_groups_from_file   index  0 #
+
+
+# output settings
+variable coeffOutfile            index  coeff.input # file to store ff parameters
+variable compute_interactions    index  0 # group-goup interactions to thermo_out
+variable mpiio                   index  1 # parallel io on or off
+variable netcdf_frequency        index  1000
+variable restart_frequency       index  100000
+variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
+variable thermo_frequency        index  1000 # outputs stats at single time step
+variable thermo_average_frequency index 0 # outputs stats averaged over N timesteps. 0: disabled
+variable write_coeff             index  0 # write force field parameters to independent file
+variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
+variable write_groups_to_file    index  0 #
+variable ndx_file                index  groups.ndx
+
+# minimization-related settings:
+variable freeze_substrate        index  0 # keep substrate frozen (during minim)
+variable minimization_maxiter    index  100000
+variable minimization_maxeval    index  1000000
+variable minimization_ftol       index  1.0e-5
+variable robust_minimization     index  0
+# this can be useful if a very dense initial packing would result into substrate
+# deformation otherwise
+variable relax_box               index  0 # relax box tor specified pressureP in minimization
+
+# neighbour list settings
+variable skin_distance           index  2.0  # skin distance for neighbour list
+variable neigh_delay             index  2
+variable neigh_every             index  1
+variable neigh_check             index  1
+variable neigh_page              index  100000
+variable neigh_one               index  2000
+
+# force field settings
+## CHARMM-related:
+variable inner_cutoff            index  8.0 # CHARMM standard
+variable outer_cutoff            index  12.0 # CHARMM standard
+variable coulomb_cutoff          index  12.0 # Coulomb cutoff
+## EAM-related:
+variable use_eam                 index  0 # use pairstyle eam for solid
+variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
+## ewald summation settings:
+variable use_ewald               index  1 # switch ewald summation (kspace solver)
+variable ewald_accuracy          index  1e-4 # relative RMS
+
+# other technical settings:
+variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
+variable box_shift_z             index  0.0 # shift box once in negative direction by this distance
+variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
+variable is_restart              index  0 # marks current run as restart
+variable has_vacuum              index  0 # if > 0, z-direction not pressurized
+variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
+variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
+variable reinitialize_velocities index  0
+variable remove_drift            index  0 # remove substrate COM movement
+variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
+variable substrate_recenter      index  0 # same as remove drift
+variable use_colvars             index  0
+
+# system settings
+variable surfactant_name         index  SDS # SDS or CTAB
+variable temperatureT            index  298    # K
+variable initialT                index  ${temperatureT}  # for ramped temperature
+variable pressureP               index  1    # atm
+
+variable nvtEqSteps              index  100000    # 200 ps
+variable nptEqSteps              index  100000    # 200 ps
+variable productionSteps         index  5000000    #  10 ns
+
+# AFM-tip-related settings:
+variable has_indenter            index  0
+variable rigid_indenter          index  0
+variable restrained_indenter     index  0
+variable constant_indenter_velocity     index 0.0 # for approach towards substrate
+variable indenter_nve_noforce    index  0.0 # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
+variable manual_indenter_region  index  0 # if set to 1, use measures below
+variable indenter_substrate_dist index  30.0 # Ang, default distance substrate surface - indenter apex
+variable substrate_thickness     index  14.0 # Ang
+variable indenter_height         index  45.0 # Ang
+variable region_tolerance        index   5.0 # Ang
+
+# the standard TIP3P water model requires not only hydrogen bonds to be rigid,
+# but also the HOH angle. Here we set the ID of this angle.
+# Look it up within the data file. Usually 11 for SDS, 16 for CTAB
+
+if "${surfactant_name} == SDS" then &
+  "variable angleIdWater   index     11" &
+else &
+  "variable angleIdWater   index     16"
+
+# per default substrate is gold and assumed to be type 11
+variable substrateType index 11
+
+# Intialization
+if "${is_restart} == 0 && ${pbc2d} > 0" then "boundary p p f"
+
+if "${is_restart} == 0" then "units real"
+# http://lammps.sandia.gov/doc/units.html
+    #mass = grams/mole
+    #distance = Angstroms
+    #time = femtoseconds
+    #energy = Kcal/mole
+    #velocity = Angstroms/femtosecond
+    #force = Kcal/mole-Angstrom, compared to gmx: kJ mol^-1 nm^-1,
+        # conversion F_lmp = F_gmx * 0.1 [nm/Ang] / 4.184 [kJ/kcal] ~ gmx / 41.81
+        # 1000 kJ / (mol*nm) ~ 25 kCal/(mol*Ang)
+    #torque = Kcal/mole
+    #temperature = Kelvin
+    #pressure = atmospheres, 1 atm = 1013 hPa ~ 100 kPa
+    #dynamic viscosity = Poise
+    #charge = multiple of electron charge (1.0 is a proton)
+    #dipole = charge*Angstroms
+    #electric field = volts/Angstrom
+    #density = gram/cm^dim
+
+neighbor ${skin_distance} bin
+# The style value selects what algorithm is used to build the list. The bin
+# style creates the list by binning which is an operation that scales linearly
+# with N/P, the number of atoms per processor where N = total number of atoms
+# and P = number of processors. It is almost always faster than the nsq style
+# which scales as (N/P)^2. For unsolvated small molecules in a non-periodic
+# box, the nsq choice can sometimes be faster. Either style should give the
+# same answers.
+# Defaults: 2.0 bin for units = real or metal, skin = 2.0 Angstroms
+
+
+if "${neigh_check} == 1" then &
+  "neigh_modify delay ${neigh_delay} every ${neigh_every} check yes &
+    page ${neigh_page} one ${neigh_one}" &
+else &
+  "neigh_modify delay ${neigh_delay} every ${neigh_every} check no &
+    page ${neigh_page} one ${neigh_one}"
+# This command sets parameters that affect the building and use of pairwise
+# neighbor lists. Depending on what pair interactions and other commands
+# are defined, a simulation may require one or more neighbor lists.
+
+# Note on possible error:
+# Out of range atoms - cannot compute PPPM
+#    One or more atoms are attempting to map their charge to a PPPM grid point
+#    that is not owned by a processor. This is likely for one of two reasons,
+#    both of them bad. First, it may mean that an atom near the boundary of a
+#    processor's sub-domain has moved more than 1/2 the neighbor skin distance
+#    without neighbor lists being rebuilt and atoms being migrated to new
+#    processors. This also means you may be missing pairwise interactions that
+#    need to be computed. The solution is to change the re-neighboring criteria
+#    via the neigh_modify command. The safest settings are "delay 0 every 1
+#    check yes". Second, it may mean that an atom has moved far outside a
+#    processor's sub-domain or even the entire simulation box. This indicates
+#    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
+#    etc.
+
+if "${is_restart} == 0" then "atom_style      full"
+if "${is_restart} == 0" then "bond_style      harmonic"
+
+if "${is_restart} == 0" then "angle_style     charmm"
+# Source: http://lammps.sandia.gov/doc/angle_charmm.html
+# angle potential E = K * ( theta - theta_0)^2 + K_UB * ( r - r_UB )^2
+
+if "${is_restart} == 0" then "dihedral_style  charmmfsw"
+# Source: http://lammps.sandia.gov/doc/dihedral_charmm.html
+# dihedral potential E = K * [ 1 + cos( n*phi - d ) ]
+#
+# (MacKerell) MacKerell, Bashford, Bellott, Dunbrack, Evanseck, Field, Fischer,
+#             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
+
+if "${is_restart} == 0" then "improper_style  harmonic"
+
+if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" then &
+    "pair_style lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}" &
+elif "${is_restart} == 0 && ${use_eam} == 0" &
+    "pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}"
+
+# Quote from http://lammps.sandia.gov/doc/pair_charmm.html
+# The newer styles with charmmfsw or charmmfsh in their name replace the
+# energy switching with force switching (fsw) and force shifting (fsh)
+# functions, for LJ and Coulombic interactions respectively. These follow the
+# formulas and description given in (Steinbach) and (Brooks) to minimize these
+# artifacts.
+#
+# (Steinbach) Steinbach, Brooks, J Comput Chem, 15, 667 (1994).
+# (Brooks)    Brooks, et al, J Comput Chem, 30, 1545 (2009).
+
+# The newest CHARMM pair styles reset the Coulombic energy conversion factor
+# used internally in the code, from the LAMMPS value to the CHARMM value, as
+# if it were effectively a parameter of the force field. This is because the
+# CHARMM code uses a slightly different value for the this conversion factor
+# in real units (Kcal/mole), namely CHARMM = 332.0716, LAMMPS = 332.06371.
+# This is to enable more precise agreement by LAMMPS with the CHARMM force
+# field energies and forces, when using one of these two CHARMM pair styles.
+
+# #
+# Storm, S., Jakobtorweihen, S., Smirnova, I., Panagiotopoulos, A.Z., 2013.
+# Molecular dynamics simulation of SDS and CTAB micellization and prediction
+# of partition equilibria with COSMOmic. Langmuir 29, 11582-11592.
+#
+# recommend an 8 Ang inner cutoff:
+#
+# "Recently, Piggot el al. compared different force fields for lipids. Although
+# "their recommendations for CHARMM36 force field (CHARMM TIP3P water model,
+# "0.8 nm Lennard-Jones switching) are based on bilayer simulations, they were
+# "followed here
+#
+# #
+# http://www.gromacs.org/Documentation/Terminology/Force_Fields/CHARMM
+#
+# notes
+#
+# Please also note that the switching distance is a matter of some debate in
+# lipid bilayer simulations, and it is dependent to some extent on the nature
+# of the lipid. Some studies have found that an 0.8-1.0 nm switch is
+# appropriate, others argue 0.8-1.2 nm is best, and yet others stand by
+# 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
+# literature for their chosen lipid(s) before beginning a simulation!
+#
+# #
+# https://www.charmmtutorial.org/index.php/The_Energy_Function#Suggested_Nonbond_cutoff_scheme
+#
+# Suggested Nonbond cutoff scheme
+#
+# In general, it is a good idea to go with the nonbond cutoff scheme given in
+# the parameter file of the force field that you will be using. For example,
+# the CHARMM27 Protein/Nucleic acid force field gives default nonbond
+#  parameters of:
+#
+# NONBONDED nbxmod  5 atom cdiel shift -
+#  vatom vdistance vswitch -
+#  cutnb 14.0 ctofnb 12.0 ctonnb 10.0 -
+#  eps 1.0 e14fac 1.0 wmin 1.5
+#
+# These are good default values for most simulations. In some cases when running
+# in vacuum, it might be necessary to use VSHIft instead of VSWItch. There are a
+# couple other points to remember:
+#
+# 1    Always set INBFrq to -1 so nonbond updates are done heuristically.
+# 2    You can safely increase CUTNb to decrease the frequency of nonbond list
+#      updates (at the expense of a higher memory requirement for the nonbond
+#      list).
+# 3    In general, a nonbond cut off of less than 12 angstroms should not be
+#      used (the errors are too great).
+# 4    In Ewald calculations, the electrostatic cut-off method (SHIFt vs. SWITch
+#      is ignored as the Ewald summation is used to calculate long-range
+#      electrostatics. Replace this with the Ewald parameters described above.
+#
+# As an example, nonbond setup for a simulation using PBC might look like:
+#
+# nonbond nbxmod 5 atom cdiel -
+#  elec ewald pme kappa 0.34 spline order 6 -
+#  vdw vatom vswitch -
+#  cutnb 14.0 ctofnb 12.0 ctonnb 10.0
+#
+# Be very careful to check compatibility of your nonbond specification with the
+# force fields and implicit solvent models you're using (if any)! This is
+# critically important to the correctness of your simulation!
+
+if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
+  "pair_style hybrid lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy" &
+elif "${is_restart} == 0 && ${use_eam} > 0" &
+  "pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy"
+# The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
+# one simulation. With the hybrid style, exactly one pair style is assigned to
+# each pair of atom types. With the hybrid/overlay style, one or more pair
+# styles can be assigned to each pair of atom types. The assignment of pair
+# styles to type pairs is made via the pair_coeff command.
+
+if "${is_restart} == 0" then "pair_modify     mix arithmetic"
+# kspace_style    pppm 1e-6
+if "${use_ewald} > 0" then "kspace_style    pppm ${ewald_accuracy}"
+# Quote from http://lammps.sandia.gov/doc/kspace_style.html:
+# pppm value = accuracy
+#  accuracy = desired relative error in forces
+#
+# The pppm style invokes a particle-particle particle-mesh solver (Hockney)
+# which maps atom charge to a 3d mesh, uses 3d FFTs to solve Poisson's
+# equation on the mesh, then interpolates electric fields on the mesh points
+# back to the atoms. It is closely related to the particle-mesh Ewald
+# technique (PME) (Darden) used in AMBER and CHARMM. The cost of traditional
+# Ewald summation scales as N^(3/2) where N is the number of atoms in the
+# system. The PPPM solver scales as Nlog(N) due to the FFTs, so it is almost
+# always a faster choice (Pollock).
+#
+# [...]
+#
+# The specified accuracy determines the relative RMS error in per-atom forces
+# calculated by the long-range solver. It is set as a dimensionless number,
+# relative to the force that two unit point charges (e.g. 2 monovalent ions)
+# exert on each other at a distance of 1 Angstrom. This reference value was
+# chosen as representative of the magnitude of electrostatic forces in atomic
+#  systems. Thus an accuracy value of 1.0e-4 means that the RMS error will be
+#  a factor of 10000 smaller than the reference force.
+#
+# The accuracy setting is used in conjunction with the pairwise cutoff to
+# determine the number of K-space vectors for style ewald or the grid size for
+#  style pppm or msm.
+#
+# (Hockney)   Hockney and Eastwood, Computer Simulation Using Particles,
+#             Adam Hilger, NY (1989).
+# (Darden)    Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
+# (Pollock)   Pollock and Glosli, Comp Phys Comm, 95, 93 (1996).
+
+if "${pbc2d} > 0 && ${use_ewald} > 0" then &
+    "kspace_modify slab 3.0"
+# The slab keyword allows an Ewald or PPPM solver to be used for a systems that
+# are periodic in x,y but non-periodic in z - a boundary setting of
+# "boundary p p f". This is done by treating the system as if it were periodic
+# in z, but inserting empty volume between atom slabs and removing dipole
+# inter-slab interactions so that slab-slab interactions are effectively turned
+# off. The volfactor value sets the ratio of the extended dimension in z divided
+# by the actual dimension in z. The recommended value is 3.0. A larger value is
+# inefficient; a smaller value introduces unwanted slab-slab interactions. The
+# use of fixed boundaries in z means that the user must prevent particle
+# migration beyond the initial z-bounds, typically by providing a wall-style
+# fix. The methodology behind the slab option is explained in the paper by
+# (Yeh). The slab option is also extended to non-neutral systems (Ballenegger).
+#
+# An alternative slab option can be invoked with the nozforce keyword in lieu of
+# the volfactor. This turns off all kspace forces in the z direction. The
+# nozforce option is not supported by MSM. For MSM, any combination of periodic,
+# non-periodic, or shrink-wrapped boundaries can be set using boundary (the slab
+# approximation in not needed). The slab keyword is not currently supported by
+# Ewald or PPPM when using a triclinic simulation cell. The slab correction has
+# also been extended to point dipole interactions (Klapp) in kspace_style
+# ewald/disp.
+
+# If you wish to apply an electric field in the Z-direction, in conjunction with
+# the slab keyword, you should do it by adding explicit charged particles to the
+# +/- Z surfaces. If you do it via the fix efield command, it will not give the
+# correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
+# being compatible with how fix efield works.
+
+if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
+
+# shrink wrap if desired to "tighten" box around system:
+if "${shrink_wrap_once} > 0" then "change_box all boundary s s s"
+if "${shrink_wrap_once} > 0 && ${pbc2d} > 0" then &
+  "change_box all boundary p p f" &
+elif "${shrink_wrap_once} > 0" &
+  "change_box all boundary p p p"
+
+# add vacuum to box if specified
+if "${add_vacuum} > 0.0" then &
+  "change_box all z final $(zlo) $(zhi+v_add_vacuum) units box"
+
+# shift (periodic) box, but not atom coordinates:
+# This can be used to avoid having frozen substrate atoms close to the periodic
+# boundary, resulting in them transitioning across the boundary due to box
+# scaling in the NPT ensemble
+# By shifting, solvent molecules are likely to be split across the boundary.
+# For proper constraining, SHAKE (and RATTLE) need the image flags to be set
+# correctly in this case. change_box does not alter the image flags.
+# A combination of displace_atoms and change_box with remapping achieves
+# the preservation of atom coordinates and setting of image flags if crossing
+# a periodic boundary during the box shift. 
+if "${box_shift_z} > 0.0" then &
+  "variable desired_zlo equal $(zlo-v_box_shift_z)" &
+  "variable desired_zhi equal $(zhi-v_box_shift_z)" &
+  """print "Box current z range [$(zlo),$(zhi)], desired z range [${desired_zlo},${desired_zhi}]" """ &
+  "displace_atoms all move 0.0 0.0 ${box_shift_z} units box" &
+  "change_box all set z final ${desired_zlo} ${desired_zhi} remap units box"  
+
+# LAMMPS does not allow conditional includes. We simulate this by including
+# an empty file per default:
+shell touch coeff_dummy.input
+# read force field parameter from file if specified:
+include ${coeffInfile}
+
+# override Au-Au LJ interaction by EAM potential:
+# TODO: make an adaptive NULL string depending on used Au atom type
+if "${use_eam} > 0" then &
+  "pair_coeff * * eam/alloy ${eam_alloy_file} &
+    NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL Au"
+# https://lammps.sandia.gov/doc/pair_hybrid.html
+# For the hybrid style, each atom type pair I,J is assigned to exactly one
+# sub-style. Just as with a simulation using a single pair style, if you specify
+# the same atom type pair in a second pair_coeff command, the previous
+# assignment will be overwritten.
+#
+# A subset of atom types is assigned to the many-body potential with a single
+# pair_coeff command, using “* *” to include all types and the NULL keywords
+# described above to exclude specific types not assigned to that potential. If
+# types 1,3,4 were assigned in that way (but not type 2), this means that all
+# many-body interactions between all atoms of types 1,3,4 will be computed by
+# that potential. Pair_style hybrid allows interactions between type pairs 2-2,
+# 1-2, 2-3, 2-4 to be specified for computation by other pair styles. You could
+# even add a second interaction for 1-1 to be computed by another pair style,
+# assuming pair_style hybrid/overlay is used.
+#
+# https://lammps.sandia.gov/doc/pair_eam.html#pair-style-eam-fs-command
+# [...] All of these files are parameterized in terms of LAMMPS metal units.
+#
+# [...] where there are N additional arguments after the filename, where N is
+# the number of LAMMPS atom types. See the pair_coeff doc page for alternate
+# ways to specify the path for the potential file. The N values determine the
+# mapping of LAMMPS atom types to EAM elements in the file, as described above
+# for style eam/alloy. As with eam/alloy, if a mapping value is NULL, the
+# mapping is not performed. This can be used when an eam/fs potential is used as
+# part of the hybrid pair style. The NULL values are used as placeholders for
+# atom types that will be used with other potentials.
+
+# Setfl files in the potentials directory of the LAMMPS distribution have an
+# ".eam.alloy" suffix. A DYNAMO multi-element setfl file is formatted as
+# follows:
+#    lines 1,2,3 = comments (ignored)
+#    line 4: Nelements Element1 Element2 ... ElementN
+#    line 5: Nrho, drho, Nr, dr, cutoff
+#
+# FS EAM files include more information than the DYNAMO setfl format files read
+# by eam/alloy, in that i,j density functionals for all pairs of elements are
+# included as needed by the Finnis/Sinclair formulation of the EAM.
+#
+# FS EAM files in the potentials directory of the LAMMPS distribution have an
+# ".eam.fs" suffix. They are formatted as follows:
+#
+#     lines 1,2,3 = comments (ignored)
+#     line 4: Nelements Element1 Element2 ... ElementN
+#     line 5: Nrho, drho, Nr, dr, cutoff
+#
+# The 5-line header section is identical to an EAM setfl file.
+#
+# Following the header are Nelements sections, one for each element I, each with
+# the following format:
+#
+#     line 1 = atomic number, mass, lattice constant, lattice type (e.g. FCC)
+#     embedding function F(rho) (Nrho values)
+#     density function rho(r) for element I at element 1 (Nr values)
+#     density function rho(r) for element I at element 2
+#     ...
+#     density function rho(r) for element I at element Nelement
+#
+# The units of these quantities in line 1 are the same as for setfl files. Note
+# that the rho(r) arrays in Finnis/Sinclair can be asymmetric (i,j != j,i) so
+# there are Nelements^2 of them listed in the file.
+#
+# The eam pair styles do not write their information to binary restart files,
+# since it is stored in tabulated potential files. Thus, you need to re-specify
+# the pair_style and pair_coeff commands in an input script that reads a restart
+# file.
+
+# force field is defined completely at this point
+if "${write_coeff} > 0" then "write_coeff ${coeffOutfile}"
+
+
+# print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
+# info styles atom out log
+# info stylse bond out log
+# info styles angle out log
+# info styles dihedral out log
+# info sytles improper out log
+
+# print "Pair, kspace in lmp_header.input:"
+# info styles pair out log
+# info styles kspace out log
+
+
+# determine center
+variable x_center equal $(( xlo + xhi ) / 2.0)
+variable y_center equal $(( ylo + yhi ) / 2.0)
+variable z_center equal $(( zlo + zhi ) / 2.0)
+
+# For style plane, a plane is defined which contain the point (px,py,pz) and
+# has a normal vector (nx,ny,nz). The normal vector does not have to be of unit
+# length. The "inside" of the plane is the half-space in the direction of the
+# normal vector; see the discussion of the side option below.
+#
+# ATTENTION: if no manual indenter position and measures are specified, then
+# upper half of simulation box is used to select indenter.
+# if indenter protudes into lower half, this results in wrong atom selection!
+if "${manual_indenter_region} == 1" then &
+    "variable indenter_region_bottom equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist - v_region_tolerance))" &
+    "variable indenter_region_top equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist + v_indenter_height + v_region_tolerance))" &
+    "region indenter_region block INF INF INF INF ${indenter_region_bottom} ${indenter_region_top} units box" &
+else &
+    "region indenter_region plane 0  0  ${region_tolerance} 0 0 1 side in units box"
+#                                 ^x ^y ^z                  ^plane normal
+#                                                                 ^everything in direction of normal in region
+#                                                                         ^Ang as unit
+# 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
+region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in
+#                              ^cylinder axis
+#                                ^cylinder coordinates in x,y dim
+#                                                        ^cylinder radius
+#                                                             ^lower and ^upper point
+
+if "${is_restart} == 0" then "special_bonds   charmm"
+# http://lammps.sandia.gov/doc/special_bonds.html
+# The charmm keyword sets the 3 coefficients to 0.0, 0.0, 0.0 for both LJ and
+# Coulombic interactions, which is the default for a commonly used version of
+# the CHARMM force field. Note that in pair styles lj/charmm/coul/charmm and
+# lj/charmm/coul/long the 1-4 coefficients are defined explicitly, and these
+# pairwise contributions are computed as part of the charmm dihedral style
+# - see the pair_coeff and dihedral_style commands for more information.
+# See (MacKerell) for a description of the CHARMM force field.
+
+# if "${use_eam} > 0" then &
+#     "special_bonds  pair eam/fs 1.0 1.0 1.0"
+# The special and compute/tally keywords can only be used in conjunction with
+# the pair keyword and must directly follow it. special allows to override the
+# special_bonds settings for the specified sub-style. compute/tally allows to
+# disable or enable registering compute */tally computes for a given sub-style.
+# More details are given below.
+
+if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
+
+# pre-define groups:
+# Group[ 0]: all (static)
+# Group[ 0]: all (static)
+# Group[ 1]: frozen (static)
+# Group[ 2]: solvent (static)
+# Group[ 3]: solid (static)
+# Group[ 4]: ion (static)
+# Group[ 5]: surfactant (static)
+# Group[ 6]: nonwater (static)
+# Group[ 7]: nonsolid (static)
+# Group[ 8]: substrate (static)
+# Group[ 9]: nonsubstrate (static)
+# Group[10]: atoms_in_frozen_substrate_layer_region (static)
+# Group[11]: frozen_substrate_layer (static)
+# Group[12]: surface (static)
+# Group[13]: water (static)
+# Group[14]: nonsolvent (static)
+
+if "${is_restart} == 0" then &
+  "group atoms_in_central_column empty" &
+  "group atoms_in_frozen_substrate_layer_region empty" &
+  "group atoms_in_indenter_region empty" &
+  "group frozen empty" &
+  "group frozen_substrate_layer empty" &
+  "group indenter empty" &
+  "group indenter_apex empty" &
+  "group ion empty" &
+  "group nonwater empty" &
+  "group nonindenter empty" &
+  "group nonsolid empty" &
+  "group nonsolvent empty" &
+  "group nonsubstrate empty" &
+  "group solvent empty" &
+  "group solid empty" &
+  "group substrate empty" &
+  "group surfactant empty" &
+  "group surface empty" &
+  "group water empty"
+
+
+if "${is_restart} == 0 && ${surfactant_name} == SDS" then &
+  "group          solvent    type  8 9    #  8 - H, 10 - O" &
+  "group          solid      type  ${substrateType}     # 11 - Au" &
+  "group          ion        type  10     # 10 - Na+" &
+  "group          surfactant subtract all solvent solid ion" &
+  "group          nonwater   subtract all solvent" &
+  "group          nonsolid   subtract all solid" &
+elif "${is_restart} == 0 && ${surfactant_name} == CTAB" &
+  "group          solvent    type  8 9    #  8 - H, 10 - O" &
+  "group          solid      type  ${substrateType}     # 11 - Au" &
+  "group          ion        type  10     # 10 - Br-" &
+  "group          surfactant subtract all solvent solid ion" &
+  "group          nonwater   subtract all solvent" &
+  "group          nonsolid   subtract all solid"
+
+# correct if indenter is present
+if "${is_restart} == 0 && ${has_indenter} > 0" then &
+  "group atoms_in_indenter_region region indenter_region" &
+  "group atoms_in_central_column  region central_column" &
+  "group substrate      subtract  solid atoms_in_indenter_region" &
+  "group indenter       subtract  solid substrate" &
+  "group indenter_apex  intersect indenter atoms_in_central_column" &
+  "group nonindenter    subtract all indenter" &
+  "group nonsubstrate   subtract all substrate" &
+elif "${is_restart} == 0" &
+  "group substrate      intersect all solid" &
+  "group nonsubstrate   subtract all substrate"
+
+# freeze indenter if explicitly specified
+if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter} > 0" then &
+  "group frozen         union frozen indenter"
+
+# define region of frozen substrate layer if desired:
+if "${freeze_substrate_layer} > 0.0" then &
+  "region frozen_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
+
+# create substrate layer group to hold frozen at bottom if desired:
+if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
+  "group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region" &
+  "group frozen_substrate_layer intersect substrate atoms_in_frozen_substrate_layer_region" &
+  "group frozen union frozen frozen_substrate_layer"
+
+# If the group ID already exists, the group command adds the specified atoms to the group.
+# for compatibility reasons:
+if "${is_restart} == 0" then &
+    "group surface     intersect all substrate" &
+    "group water       intersect all solvent" &
+    "group nonsolvent  subtract all solvent"
+
+if "${read_groups_from_file} > 0" then &
+    "ndx2group ${ndx_file}" &
+    """print "#atoms atoms_in_central_column:                $(count(atoms_in_central_column))" """ &
+    """print "#atoms atoms_in_frozen_substrate_layer_region: $(count(atoms_in_frozen_substrate_layer_region))" """ &
+    """print "#atoms atoms_in_indenter_region:               $(count(atoms_in_indenter_region))" """ &
+    """print "#atoms frozen:                                 $(count(frozen))" """ &
+    """print "#atoms frozen_substrate_layer:                 $(count(frozen_substrate_layer))" """ &
+    """print "#atoms indenter:                               $(count(indenter))" """ &
+    """print "#atoms indenter_apex:                          $(count(indenter_apex))" """ &
+    """print "#atoms ion:                                    $(count(ion))" """ &
+    """print "#atoms nonwater:                               $(count(nonwater))" """ &
+    """print "#atoms nonindenter:                            $(count(nonindenter))" """ &
+    """print "#atoms nonsolid:                               $(count(nonsolid))" """ &
+    """print "#atoms nonsolvent:                             $(count(nonsolvent))" """ &
+    """print "#atoms nonsubstrate:                           $(count(nonsubstrate))" """ &
+    """print "#atoms solvent:                                $(count(solvent))" """ &
+    """print "#atoms solid:                                  $(count(solid))" """ &
+    """print "#atoms substrate:                              $(count(substrate))" """ &
+    """print "#atoms surfactant:                             $(count(surfactant))" """ &
+    """print "#atoms surface:                                $(count(surface))" """ &
+    """print "#atoms water:                                  $(count(water))" """ &
+elif "${write_groups_to_file} > 0" &
+    "group2ndx ${ndx_file}"
+# https://lammps.sandia.gov/doc/group2ndx.html#ndx2group-command
+# Without specifying any group IDs, all groups except System will be read from
+# the index file and the corresponding groups recreated. If a group of the same
+# name already exists, it will be completely reset. When specifying group IDs,
+# those groups, if present, will be read from the index file and restored.
+
+#################
+# define computes
+#################
+# kspace no: AU atoms neutral
+if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+    "compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no" &
+    "compute indenter_surfactant_interaction indenter group/group surfactant pair yes kspace no" &
+    "compute indenter_solvent_interaction indenter group/group solvent pair yes kspace no" &
+    "compute indenter_ion_interaction indenter group/group ion pair yes kspace no" &
+    "compute indenter_nonindenter_interaction indenter group/group nonindenter pair yes kspace no"
+# indenter_substrate_interaction indenter_surfactant_interaction
+# indenter_solvent_interaction indenter_ion_interaction
+
+if "${compute_interactions} > 0" then &
+    "compute substrate_solvent_interaction substrate group/group solvent pair yes kspace no" &
+    "compute substrate_surfactant_interaction substrate group/group surfactant pair yes kspace no" &
+    "compute substrate_ion_interaction substrate group/group ion pair yes kspace no" &
+    "compute surfactant_surfactant_intermolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule inter" &
+    "compute surfactant_surfactant_intramolecular_interaction surfactant group/group surfactant pair yes kspace yes molecule intra" &
+    "compute surfactant_solvent_interaction surfactant group/group solvent pair yes kspace yes" &
+    "compute surfactant_ion_interaction surfactant group/group solvent pair yes kspace yes" &
+# substrate_solvent_interaction substrate_surfactant_interaction
+# substrate_ion_interaction surfactant_surfactant_intermolecular_interaction
+# surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction
+# surfactant_solvent_interaction surfactant_ion_interaction
+
+# SDS - specific
+#       1      1.008  # HAL2
+#       2      1.008  # HAL3
+#       3     12.011  # CTL2
+#       4     12.011  # CTL3
+#       5    15.9994  # OSL
+#       6    15.9994  # O2L
+#       7      32.06  # SL
+#       8      1.008  # HT
+#       9    15.9994  # OT
+#      10   22.98977  # SOD
+#      11   196.9665  # AU
+
+# CTAB - specific
+#
+# group          water      type  8 9    #  8 - H, 10 - O
+# group          surface    type  11     # 11 - Au
+# group          ion        type  10     # 10 - Br-
+# group          surfactant subtract all water surface ion
+# group          nonwater   subtract all water
+#
+# From "41_CTAB_on_AU_111_21x12x2_bilayer_psfgen.data"
+#        1      1.008  # HL
+#        2      1.008  # HAL2
+#        3      1.008  # HAL3
+#        4     12.011  # CTL2
+#        5     12.011  # CTL3
+#        6     12.011  # CTL5
+#        7     14.007  # NTL
+#        8      1.008  # HT
+#        9    15.9994  # OT
+#       10     79.904  # BR
+#       11   196.9665  # AU
+
+
+# exclude intra-frozen interactions for rigid indenter and substrate
+variable number_of_frozen_atoms equal count(frozen)
+if "${number_of_frozen_atoms} > 0 " then &
+  "neigh_modify exclude group frozen frozen"
+
+
+# walls if box non-periodic, use AU paramters (sigma ignored)
+if "${pbc2d} > 0" then &
+  "fix upper_wall all wall/harmonic zhi EDGE 5.29 2.629 3.0" &
+  "fix_modify upper_wall energy yes virial yes"
+#                     ^style        ^face
+#                                          ^coord
+#                                               ^epsilon
+#                                                    ^sigma
+#                                                          ^cutoff
+# https://lammps.sandia.gov/doc/fix_wall.html
+# args = coord epsilon sigma cutoff
+#  coord = position of wall = EDGE or constant or variable
+#    EDGE = current lo or hi edge of simulation box
+#    constant = number like 0.0 or -30.0 (distance units)
+#    variable = equal-style variable like v_x or v_wiggle
+# epsilon = strength factor for wall-particle interaction (energy or energy/distance^2 units)
+#    epsilon can be a variable (see below)
+# sigma = size factor for wall-particle interaction (distance units)
+#    sigma can be a variable (see below)
+# cutoff = distance from wall at which wall-particle interaction is cut off (distance units)
+#
+# The harmonic style is a softer potential and does not blow up as r -> 0, but
+# you must use a large enough epsilon that particles always reamin on the
+# correct side of the wall (r > 0).
+#
+# The forces due to this fix are imposed during an energy minimization, invoked
+# by the minimize command.
+#
+# If you want the atom/wall interaction energy to be included in the total
+# potential energy of the system (the quantity being minimized), you MUST enable
+# the fix_modify energy option for this fix.
+#
+# No information about this fix is written to binary restart files.
+#
+# The fix_modify energy option is supported by this fix to add the energy of
+# interaction between atoms and each wall to the system's potential energy as
+# part of thermodynamic output.
+#
+# The fix_modify virial option is supported by this fix to add the contribution
+# due to the interaction between atoms and each wall to the system's virial as
+# part of thermodynamic output. The default is virial no
+
+# fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
+#   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
+#   c_thermo_edihed c_thermo_eimp c_thermo_epair c_thermo_evdwl c_thermo_ecoul  &
+#   c_thermo_elong c_thermo_etail c_thermo_vol &
+#   mode scalar file ${baseName}.out
+
+# (1) If the last printable character on the line is a "&" character, the
+# command is assumed to continue on the next line. The next line is concatenated
+# to the previous line by removing the "&" character and line break. This allows
+# long commands to be continued across two or more lines. See the discussion of
+# triple quotes in (6) for how to continue a command across multiple line
+# without using "&" characters.
+if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+ "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+   edihed eimp epair evdwl ecoul elong etail vol &
+   c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+   c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+   c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+   c_surfactant_surfactant_intermolecular_interaction &
+   c_surfactant_surfactant_intermolecular_interaction[*] &
+   c_surfactant_surfactant_intramolecular_interaction &
+   c_surfactant_surfactant_intramolecular_interaction[*] &
+   c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+   c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+   c_indenter_substrate_interaction c_indenter_substrate_interaction[*] &
+   c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
+   c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
+   c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
+elif "${compute_interactions} > 0" &
+  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
+else &
+  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol"
+
+# log output every 2 ps per default
+thermo         ${thermo_frequency}
+thermo_modify norm no flush yes
+# thermo_modify  norm no
+# Note that some computes calculate "intensive" global quantities like
+# temperature; others calculate "extensive" global quantities like kinetic
+# energy that are summed over all atoms in the compute group. Intensive
+# quantities are printed directly without normalization by thermo_style custom.
+# Extensive quantities may be normalized by the total number of atoms in the
+# simulation (NOT the number of atoms in the compute group) when output,
+# depending on the thermo_modify norm option being used.
+
+# averaging output
+#     v Nrepeat                   v Nfreq
+#   v Nevery
+if "${thermo_average_frequency} > 0 && ${compute_interactions} > 0 && &
+  ${has_indenter} > 0" then &
+  "fix thermo_average all ave/time &
+    1 ${thermo_average_frequency} ${thermo_average_frequency} &
+    c_thermo_pe c_thermo_temp c_thermo_press &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+    c_indenter_substrate_interaction c_indenter_substrate_interaction[*] &
+    c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
+    c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
+    c_indenter_ion_interaction c_indenter_ion_interaction[*] &
+    file thermo_ave.out" &
+elif "${thermo_average_frequency} > 0 && ${compute_interactions} > 0" &
+  "fix thermo_average all ave/time &
+    1 ${thermo_average_frequency} ${thermo_average_frequency} &
+    c_thermo_pe c_thermo_temp c_thermo_press &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+    file thermo_ave.out" &
+elif "${thermo_average_frequency} > 0" &
+  "fix thermo_average all ave/time &
+    1 ${thermo_average_frequency} ${thermo_average_frequency} &
+    c_thermo_pe c_thermo_temp c_thermo_press &
+    file thermo_ave.out"
+# https://lammps.sandia.gov/doc/fix_ave_time.html
+# Use one or more global values as inputs every few timesteps, and average them
+# over longer timescales. The resulting averages can be used by other output
+# commands such as thermo_style custom, and can also be written to a file.
+# Note that if no time averaging is done, this command can be used as a
+# convenient way to simply output one or more global values to a file.
+#
+# The group specified with this command is ignored. However, note that specified
+# values may represent calculations performed by computes and fixes which store
+# their own "group" definitions.
+#
+# Each listed value can be the result of a compute or fix or the evaluation of
+# an equal-style or vector-style variable. In each case, the compute, fix, or
+# variable must produce a global quantity, not a per-atom or local quantity. If
+# you wish to spatial- or time-average or histogram per-atom quantities from a
+# compute, fix, or variable, then see the fix ave/chunk, fix ave/atom, or fix
+# ave/histo commands. If you wish to sum a per-atom quantity into a single
+# global quantity, see the compute reduce command.
+#
+# The Nevery, Nrepeat, and Nfreq arguments specify on what timesteps the input
+# values will be used in order to contribute to the average. The final averaged
+# quantities are generated on timesteps that are a multiple of Nfreq. The
+# average is over Nrepeat quantities, computed in the preceding portion of the
+# simulation every Nevery timesteps. Nfreq must be a multiple of Nevery and
+# Nevery must be non-zero even if Nrepeat is 1. Also, the timesteps
+# contributing to the average value cannot overlap, i.e. Nrepeat*Nevery
+# can not exceed Nfreq.
+#
+# For example, if Nevery=2, Nrepeat=6, and Nfreq=100, then values on timesteps
+# 90,92,94,96,98,100 will be used to compute the final average on timestep 100.
+# Similarly for timesteps 190,192,194,196,198,200 on timestep 200, etc. If
+# Nrepeat=1 and Nfreq = 100, then no time averaging is done; values are simply
+# generated on timesteps 100,200,etc.
+#
+# Defaults: The option defaults are mode = scalar, ave = one, start = 0,
+# no file output, format = %g, title 1,2,3 = strings as described above,
+# and no off settings for any input values.
+
+print "Force field parameters in lmp_header.input:"
+info coeffs out screen
+info coeffs out log
+
+print "Computes in lmp_header.input:"
+info computes out screen
+info computes out log
+
+print "Fixes in lmp_header.input:"
+info fixes out screen
+info fixes out log
+
+print "Groups in lmp_header.input:"
+info groups out screen
+info groups out log
+
+print "Regions in lmp_header.input:"
+info regions out screen
+info regions out log
+
+print "System info in lmp_header.input:"
+info system out screen
+info system out log
+
+# print "Variables in lmp_header.input:"
+info variables out screen
+info variables out log
