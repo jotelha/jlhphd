@@ -1,0 +1,16 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, indenter file retrieval and preprocessing"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    indenter_file:  indenter.lammps
+
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - {{ indenter_identifier }}
+    new_file_names:
+    - indenter.lammps
+{% endblock %}
