@@ -16,7 +16,9 @@ if "${freeze_substrate_layer} > 0.0" then &
 if "(${has_indenter} > 0) && (${rigid_indenter} > 0)" then &
   "fix freeze indenter setforce 0.0 0.0 0.0"
 
-if "${is_restart} == 0" then "group tempered_group subtract all frozen"
+if "${is_restart} == 0" then &
+    "group tempered_group subtract all frozen" &
+    "group pressured_group subtract all solid"
 
 ###################
 # NPT equilibration
@@ -68,11 +70,11 @@ fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061
 
 # fix barostat all press/berendsen aniso 0 0 1000
 if "(${pbc2d} > 0) || (${has_vacuum} > 0)" then &
-  "fix barostat tempered_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+  "fix barostat pressured_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
 elif "(${pressurize_z_only} > 0)" &
-  "fix barostat tempered_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+  "fix barostat pressured_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
 else &
-  "fix barostat tempered_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial"
+  "fix barostat pressured_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial"
 # fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
 # fix ID group-ID press/berendsen keyword value ...
 # dilate partial
