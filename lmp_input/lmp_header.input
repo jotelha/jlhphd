@@ -8,12 +8,12 @@ variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
 variable read_groups_from_file   index  0 #
 
-
 # output settings
 variable coeffOutfile            index  coeff.input # file to store ff parameters
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
 variable mpiio                   index  1 # parallel io on or off
 variable netcdf_frequency        index  1000
+variable png_frequency           index  100000
 variable restart_frequency       index  100000
 variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
 variable thermo_frequency        index  1000 # outputs stats at single time step
@@ -360,13 +360,13 @@ if "${add_vacuum} > 0.0" then &
 # correctly in this case. change_box does not alter the image flags.
 # A combination of displace_atoms and change_box with remapping achieves
 # the preservation of atom coordinates and setting of image flags if crossing
-# a periodic boundary during the box shift. 
+# a periodic boundary during the box shift.
 if "${box_shift_z} > 0.0" then &
   "variable desired_zlo equal $(zlo-v_box_shift_z)" &
   "variable desired_zhi equal $(zhi-v_box_shift_z)" &
   """print "Box current z range [$(zlo),$(zhi)], desired z range [${desired_zlo},${desired_zhi}]" """ &
   "displace_atoms all move 0.0 0.0 ${box_shift_z} units box" &
-  "change_box all set z final ${desired_zlo} ${desired_zhi} remap units box"  
+  "change_box all set z final ${desired_zlo} ${desired_zhi} remap units box"
 
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:
@@ -628,6 +628,16 @@ elif "${write_groups_to_file} > 0" &
 # the index file and the corresponding groups recreated. If a group of the same
 # name already exists, it will be completely reset. When specifying group IDs,
 # those groups, if present, will be read from the index file and restored.
+
+################################################################################
+### define additional groups based on previously defined static groups
+if "${has_indenter} > 0 && ${rigid_indenter_core_radius} > 0.0" then &
+    "variable indenterComX equal xcm(indenter,x)" &
+    "variable indenterComY equal xcm(indenter,y)" &
+    "variable indenterComZ equal xcm(indenter,z)" &
+    "region rigid_indenter_core_region sphere ${indenterComX} ${indenterComY} &
+        ${indenterComZ} ${rigid_indenter_core_radius}" &
+    "group rigid_indenter_core region rigid_indenter_core_region"
 
 #################
 # define computes

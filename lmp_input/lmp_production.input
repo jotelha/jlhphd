@@ -1,3 +1,6 @@
+###############################################################################
+### Parameter definitions and header inclusion
+
 # define baseName via command line switch "-v baseName systemXYZ"
 # also define restartFile to override default name below
 
@@ -64,13 +67,12 @@ else &
 # files, a particular restart file must be both written and read using MPI-IO.
 #                       ^ every 200 ps
 
-##############
-# Store forces
-
+###############################################################################
+### Monitor unconstrained forces
 if "${store_forces} > 0" then &
     "fix storeUnconstrainedForces all store/force" &
-    "fix storeUnconstrainedForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeUnconstrainedForces[*]"
-
+    "fix storeUnconstrainedForcesAve all ave/atom 1 ${netcdf_frequency} &
+        ${netcdf_frequency} f_storeUnconstrainedForces[*]"
 # https://lammps.sandia.gov/doc/fix_store_force.html
 # Store the forces on atoms in the group at the point during each timestep when
 # the fix is invoked, as described below. This is useful for storing forces
@@ -93,13 +95,13 @@ if "${store_forces} > 0" then &
 # stored force, then it could be specified after some fixes and before others.
 
 
-######################
-# Collective variables
+################################################################################
+### Collective variables group interface
 
 # variable colvarsFile             index  colvars.inp
 # set in lmp_header.lammps
 
-if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
+if "${use_colvars} > 0" then "group2ndx colvars.ndx"
 # https://lammps.sandia.gov/doc/group2ndx.html
 # Write or read a Gromacs style index file in text format that associates atom
 # IDs with the corresponding group definitions. This index file can be used with
@@ -112,6 +114,9 @@ if "${use_colvars} > 0" then "group2ndx lmp_group_indices.ndx"
 # specifying group IDs, only those groups will be written to the index file. In
 # order to follow the Gromacs conventions, the group all will be renamed to
 # System in the index file.
+
+###############################################################################
+### Collective variables
 
 if "${use_colvars} > 0" then &
   "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap yes"
@@ -151,21 +156,24 @@ if "${use_colvars} > 0" then &
 # thermostats all atoms in the fix colvars group. This will be used to provide
 # the colvars module with the current thermostat target temperature.
 
-############
-# PRODUCTION
-#
+###############################################################################
+###  Monitor ante-freeze forces
+if "${store_forces} > 0" then &
+    "fix storeAnteFreezeForces all store/force" &
+    "fix storeAnteFreezeForcesAve all ave/atom 1 ${netcdf_frequency} &
+        ${netcdf_frequency} f_storeAnteFreezeForces[*]"
 
-# if "${has_indenter} > 0" then &
-#   "variable pressured_group string nonindenter" &
-# else &
-#   "variable pressured_group string all"
+################################################################################
+### con- & restraints
+if ${has_indenter} >0 && ${rigid_indenter_core_radius} > 0.0" then &
+    "group rigid_part_of_indenter intersect all rigid_indenter_core" &
+elif "${has_indenter} >0 && ${rigid_indent} > 0" &
+    "group rigid_part_of_indenter intersect all indenter"
 
-###################
-# con- & restraints
-###################
+# if indenter in system, then either move whole indenter or only frozen core
 if "${has_indenter} >0 && ${constant_indenter_velocity} != 0.0" then &
-  "velocity indenter set 0.0 0.0 ${constant_indenter_velocity} sum no units box"
-#                        ^vx ^vy ^vy
+    "velocity rigid_part_of_indenter set 0.0 0.0 ${constant_indenter_velocity} sum no units box"
+#                                        ^vx ^vy ^vy
 # The sum keyword is used by all styles, except zero. The new velocities will be
 # added to the existing ones if sum = yes, or will replace them if sum = no.
 # The units keyword is used by set and ramp. If units = box, the velocities and
@@ -179,12 +187,12 @@ if "${has_indenter} >0 && ${constant_indenter_velocity} != 0.0" then &
 # 20190227: doubts about performance of nve/noforce
 # 20190228: unjustified, same performance for both options
 if "${has_indenter} > 0 && ${indenter_nve_noforce} > 0 && ${constant_indenter_velocity} != 0.0" then &
-  "fix integrateIndenter indenter nve/noforce" &
+  "fix integrateIndenter rigid_part_of_indenter nve/noforce" &
 elif "${has_indenter} > 0 && ${constant_indenter_velocity} != 0.0" &
-  "fix freeze indenter setforce 0.0 0.0 0.0" &
-  "fix integrateIndenter indenter nve" &
-elif "${has_indenter} > 0" &
-  "fix freeze indenter setforce 0.0 0.0 0.0"
+  "fix freeze rigid_part_of_indenter setforce 0.0 0.0 0.0" &
+  "fix integrateIndenter rigid_part_of_indenter nve" &
+elif "${has_indenter} > 0 && ${rigid_indenter} > 0" &
+  "fix freeze rigid_part_of_indenter setforce 0.0 0.0 0.0"
 # source: https://lammps.sandia.gov/doc/fix_nve_noforce.html
 # Perform updates of position, but not velocity for atoms in the group each
 # timestep. In other words, the force on the atoms is ignored and their velocity
@@ -203,14 +211,16 @@ if "${freeze_substrate_layer} > 0.0" then &
   "velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box" &
   "fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0"
 
-# store forces before thermo- and barostatting, but after colvars contraints
+################################################################################
+### Monitor ante-npt-barostatting forces
+
+# store forces before thermo- and barostatting, but after contraints
 if "${store_forces} > 0" then &
   "fix storeAnteStatForces all store/force" &
   "fix storeAnteStatForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeAnteStatForces[*]"
 
-############
-# Thermostat
-############
+################################################################################
+### THERMOSTAT
 
 # only temper substrate, and only the non-frozen part:
 if "${is_restart} == 0" then "group tempered_group subtract substrate frozen"
@@ -256,8 +266,9 @@ fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061
 # gamma and viscosity in the documentation for the fix viscous command for
 # more details.
 
-##########
-# BAROSTAT
+################################################################################
+### BAROSTAT
+
 if "${is_restart} == 0" then "group pressured_group subtract all frozen"
 
 if "${pressurize_z_only} > 0" then &
@@ -269,8 +280,8 @@ else &
 # time integration. Fix press/berendsen does NOT, so it should be used with one
 # of the constant NVE fixes or with one of the NVT fixes.
 
-###############
-# DRIFT REMOVAL
+################################################################################
+### DRIFT REMOVAL
 
 # Keep substrate slab's position COM position fixed, remove relative drift
 if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
@@ -306,11 +317,13 @@ if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
 
 # Store forces before SHAKE constraint
 if "${store_forces} > 0" then &
-    "fix storeAnteSHAKEForces all store/force" &
-    "fix storeAnteSHAKEForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeAnteSHAKEForces[*]"
+    "fix storeAnteShakeForces all store/force" &
+    "fix storeAnteShakeForcesAve all ave/atom 1 ${netcdf_frequency} &
+        ${netcdf_frequency} f_storeAnteShakeForces[*]"
 
-############################################
-# RIGID TIP3P WATER and RIGID HYDROGEN BONDS
+################################################################################
+### RIGID TIP3P WATER and RIGID HYDROGEN BONDS
+
 #
 # fix equilibrateNVT all nvt temp ${temperatureT} ${temperatureT} 100 tchain 1
 #  WARNING: Fix rattle should come after all other integration fixes
@@ -342,10 +355,11 @@ fix rigidHbonds pressured_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # average final (constrained) forces
 if "${store_forces} > 0" then &
-  "fix storeForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} fx fy fz"
+  "fix storeForcesAve all ave/atom 1 ${netcdf_frequency} &
+    ${netcdf_frequency} fx fy fz"
 
 
-dump            dumpPng nonsolvent image 1000000 &
+dump            dumpPng nonsolvent image ${png_frequency} &
                 ${baseName}.*.png type type
 #                                      ^one image every 2 ns
 
@@ -360,22 +374,28 @@ if "${mpiio} > 0 && ${store_forces} > 0" then &
   "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
     ${baseName}.nc id mol type x y z fx fy fz &
-    f_storeAnteSHAKEForces[1] f_storeAnteSHAKEForces[2] f_storeAnteSHAKEForces[3] &
-    f_storeAnteStatForces[1] f_storeAnteStatForces[2] f_storeAnteStatForces[3] &
-    f_storeUnconstrainedForces[1] f_storeUnconstrainedForces[2] f_storeUnconstrainedForces[3] &
-    f_storeAnteSHAKEForcesAve[1] f_storeAnteSHAKEForcesAve[2] f_storeAnteSHAKEForcesAve[3] &
-    f_storeAnteStatForcesAve[1] f_storeAnteStatForcesAve[2] f_storeAnteStatForcesAve[3] &
-    f_storeUnconstrainedForcesAve[1] f_storeUnconstrainedForcesAve[2] f_storeUnconstrainedForcesAve[3]" &
+     f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+     f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+     f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+     f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+     f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+     f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+     f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+     f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
 elif "${store_forces} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
     ${baseName}.nc id mol type x y z fx fy fz &
-    f_storeAnteSHAKEForces[1] f_storeAnteSHAKEForces[2] f_storeAnteSHAKEForces[3] &
-    f_storeAnteStatForces[1] f_storeAnteStatForces[2] f_storeAnteStatForces[3] &
-    f_storeUnconstrainedForces[1] f_storeUnconstrainedForces[2] f_storeUnconstrainedForces[3] &
-    f_storeAnteSHAKEForcesAve[1] f_storeAnteSHAKEForcesAve[2] f_storeAnteSHAKEForcesAve[3] &
-    f_storeAnteStatForcesAve[1] f_storeAnteStatForcesAve[2] f_storeAnteStatForcesAve[3] &
-    f_storeUnconstrainedForcesAve[1] f_storeUnconstrainedForcesAve[2] f_storeUnconstrainedForcesAve[3]" &
+     f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+     f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+     f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+     f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+     f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+     f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+     f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+     f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
 elif "${mpiio} > 0" &
   "print 'netcdf/mpiio output'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
@@ -386,7 +406,6 @@ else &
     ${baseName}.nc id mol type x y z"
 
 # interestingly, wildcard * operator does not work for dump netcdf
-
 
 # What is the purpose of this line?
 # if "${store_forces} > 0" then "dump_modify dumpNetCDF append yes"
