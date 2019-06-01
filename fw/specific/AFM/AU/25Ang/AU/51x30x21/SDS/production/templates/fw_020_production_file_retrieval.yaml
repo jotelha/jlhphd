@@ -5,7 +5,7 @@ spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
     input_header:               lmp_header.input
-    input_production:           lmp_minimization.input
+    input_production:           lmp_production.input
     coeff_file:                 coeff_hybrid.input
 
   _tasks:

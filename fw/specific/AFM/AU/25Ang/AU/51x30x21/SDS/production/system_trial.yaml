@@ -3,21 +3,14 @@ metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
   machine:                NEMO
-  nodes:                  8
+  nodes:                  1
   ppn:                    20
-  walltime:               '48:00:00'
+  walltime:               '04:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
-  postp_worker:           nemo_noqueue
-  restart_worker:         nemo_queue_offline
-  max_restarts:           3
 
   # storage options
-  # remote_user:            testuser
-  # remote_dir:             /mnt/dat/work/testuser/interface/SDS/AU/111/51x30x21
-  # ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
 
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4
@@ -41,8 +34,6 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
-  constant_indenter_velocity:                   0.01
-  constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
   frozen_sb_layer_thickness:                    14.0
@@ -129,24 +120,12 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #ppn:                    20
     #walltime:               '00:05:00'
     #queue:                  express
-  fw_060_equilibration_nvt.yaml:
-  - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
-  fw_070_equilibration_npt.yaml:
-  - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
 
 persistent:
   fw_030_datafile_retrieval.yaml:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
-  - sf_nmolecules:        646
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0068
-  - sf_nmolecules:        1107
-    sf_preassembly:       bilayer
-    sf_concentration:     0.017
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
@@ -165,10 +144,7 @@ dependencies:
   fw_030_datafile_retrieval.yaml:
   - fw_050_production.yaml
 
-  fw_050_production.yaml:
-  - fw_060_recover_failed.yaml
-
-  fw_060_recover_failed.yaml:
+  fw_050_produtcion.yaml:
   - fw_100_extract_property.yaml
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml

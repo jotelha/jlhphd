@@ -14,19 +14,19 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{% set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s"|format(
+{% set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/%s%s"|format(
   indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
-  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly) %}
+  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly,constant_indenter_velocity,constant_indenter_velocity_unit) %}
 {# identifier for initial configuration datafile #}
-{% set datafile_identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/merged.lammps"|format(
+{# set datafile_identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/merged.lammps"|format(
   indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
-  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly) %}
-{% set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter"|format(
+  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly) #}
+{% set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s"|format(
   sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly,
-  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit) %}
+  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity,constant_indenter_velocity_unit) %}
 {# descriptive natural language title for display purposes #}
-{% set title = "%s %s r % s %s indenter on %d %s on %s %s %dx%dx%d substrate, %s"|format(
-  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, 
+{% set title = "%s %s r %s %s indenter at %s %s on %d %s on %s %s %dx%dx%d substrate, %s"|format(
+  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity, constant_indenter_velocity_unit,
   sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 {% macro render_metadata() %}
 machine:         {{ machine }}
@@ -41,6 +41,8 @@ neigh_check:     {{ neigh_check }}
 system_name:     {{ system_name }}
 
 ci_preassembly:                               {{ ci_preassembly }}
+constant_indenter_velocity:                   {{ constant_indenter_velocity }}
+constant_indenter_velocity_unit:              {{ constant_indenter_velocity_unit }}
 counterion:                                   {{ counterion }}
 force_field:                                  {{ force_field }}
 pbc:                                          {{ pbc }}

@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS NPT equilibration
+name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS production
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
@@ -11,9 +11,9 @@ spec:
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
-    input_equilibration_npt:    lmp_equilibration_npt.input
+    input_production:           lmp_production.input
     coeff_file:                 coeff.input
-    ndx_file:                   groups.ndx
+    # ndx_file:                   groups.ndx
   _files_out:
     data_file: default.lammps
     traj_file: default.nc
@@ -23,18 +23,19 @@ spec:
   - _fw_name: CmdTask
     cmd: lmp
     opt:
-    - -in lmp_equilibration_npt.input
-    - -v box_shift_z              {{ box_shift_z|default(10.0)|float }}
+    - -in lmp_production.input
     - -v coeffInfile              coeff.input
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         0
     - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             1
+    - -v rigid_indenter_core_radius {{ rigid_indenter_core_radius|default(12.0,true)|float }} # freeze core of 12.0 Angstrom radius within indenter
+    - -v constant_indenter_velocity {{ constant_indenter_velocity }}
     - -v has_vacuum               0
     - -v mpiio                    1
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v nptEqSteps               {{ npt_equilibration_steps|default(10000,true)|int }}
+    - -v productionSteps          {{ production_steps|default(10000,true)|int }}
     - -v pbc2d                    0
     - -v temperatureT             {{ temperature|default(298.0)|float }}
     - -v pressureP                {{ pressure|default(0.0,true)|float }}
@@ -43,7 +44,8 @@ spec:
     - -v read_groups_from_file    0
     - -v remove_drift             0
     - -v rigid_indenter           0
-    - -v restrained_indenter      1
+    - -v restrained_indenter      0
+    - -v restart_frequency        {{ restart_frequency|default(100,true)|int }}
     - -v shrink_wrap_once         0
     - -v store_forces             1 
     - -v surfactant_name          {{ surfactant|default("SDS") }}
@@ -68,6 +70,6 @@ spec:
   - filename: log.lammps
     nlines: 25
   metadata:
-    state: equilibration npt
+    state: production
     {{ render_metadata()|indent(4)}}
 {% endblock %}

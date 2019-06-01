@@ -165,9 +165,9 @@ if "${store_forces} > 0" then &
 
 ################################################################################
 ### con- & restraints
-if ${has_indenter} >0 && ${rigid_indenter_core_radius} > 0.0" then &
+if "${has_indenter} >0 && ${rigid_indenter_core_radius} > 0.0" then &
     "group rigid_part_of_indenter intersect all rigid_indenter_core" &
-elif "${has_indenter} >0 && ${rigid_indent} > 0" &
+elif "${has_indenter} >0 && ${rigid_indenter} > 0" &
     "group rigid_part_of_indenter intersect all indenter"
 
 # if indenter in system, then either move whole indenter or only frozen core

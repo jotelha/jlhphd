@@ -4,7 +4,7 @@ name: "{{ machine|default("NEMO",true) }}, {{ title }}, AFM force-distance curve
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
-    data_file: datafile.lammps
+    data_file: default.lammps
     ndx_file:  groups.ndx
 
   _tasks:
@@ -22,9 +22,9 @@ spec:
         sb_multiples:     {{ sb_multiples }}
 
         indenter:
-          substrate:      {{ substrate }}
-          initial_radius: {{ initial_radius }}
-          initial_radius_unit: {{ initial_radius_unit }}
+          substrate:      {{ indenter.substrate }}
+          initial_radius: {{ indenter.initial_radius }}
+          initial_radius_unit: {{ indenter.initial_radius_unit }}
 
         sb_in_dist:      {{ sb_in_dist }}
         sb_in_dist_unit: {{ sb_in_dist_unit }}

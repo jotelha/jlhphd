@@ -1,25 +1,33 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}, postprocessing
+name: {{ machine|default("NEMO",true) }}, {{ title }}, final postprocesing
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_in:
-    log_file:  log.lammps
+    joint_traj_file:       default.nc # from previous post-processing task
+    joint_thermo_file:     thermo.out
+    joint_ave_file:        thermo_ave.out
   _files_out:
-    thermo_out: thermo.out
+    indenter_forces:       indenter_z_forces.txt
+    nonindenter_forces:    nonindenter_z_forces.txt
   _tasks:
-
   - _fw_name: CmdTask
-    cmd: extract_thermo.sh # extracts thermo output from lammps log
+    cmd: extract_indenter_nonindenter_forces_from_netcdf.py
     opt:
-    - log.lammps # input file
-    - thermo.out # output file
-    stderr_file:   extract_thermo.err
-    stdout_file:   extract_thermo.out
-    use_shell:     true
+    - --element Au
+    - --dim 2
+    - --plane {{ sb_in_dist / 2.0 }}
+    - --netcdf-output-interval {{ netcdf_frequency }}
+    - --output-formats txt
+    - --verbose
+    - default.nc
+    - indenter_z_forces
+    - nonindenter_z_forces
+    stderr_file:   std.err
+    stdout_file:   std.out
     fizzle_bad_rc: true
-
+    use_shell:     true
   metadata:
-    state:              extract thermo
+    state: extract indenter forces
     {{ render_metadata()|indent(4)}}
 {% endblock %}

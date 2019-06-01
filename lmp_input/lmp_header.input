@@ -485,11 +485,12 @@ else &
 #                                                                 ^everything in direction of normal in region
 #                                                                         ^Ang as unit
 # 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
-region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in
-#                              ^cylinder axis
-#                                ^cylinder coordinates in x,y dim
-#                                                        ^cylinder radius
-#                                                             ^lower and ^upper point
+if "${is_restart} == 0" then &
+    "region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in"
+#                                   ^cylinder axis
+#                                     ^cylinder coordinates in x,y dim
+#                                                             ^cylinder radius
+#                                                                 ^lower and ^upper point
 
 if "${is_restart} == 0" then "special_bonds   charmm"
 # http://lammps.sandia.gov/doc/special_bonds.html
@@ -584,7 +585,7 @@ if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter} > 0" then &
   "group frozen         union frozen indenter"
 
 # define region of frozen substrate layer if desired:
-if "${freeze_substrate_layer} > 0.0" then &
+if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "region frozen_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
 
 # create substrate layer group to hold frozen at bottom if desired:
@@ -631,7 +632,7 @@ elif "${write_groups_to_file} > 0" &
 
 ################################################################################
 ### define additional groups based on previously defined static groups
-if "${has_indenter} > 0 && ${rigid_indenter_core_radius} > 0.0" then &
+if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter_core_radius} > 0.0" then &
     "variable indenterComX equal xcm(indenter,x)" &
     "variable indenterComY equal xcm(indenter,y)" &
     "variable indenterComZ equal xcm(indenter,z)" &
