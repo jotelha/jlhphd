@@ -35,7 +35,7 @@ spec:
   _tasks:
   - _fw_name: RecoverLammpsTask
     recover:                      True # filter most recent restart file and forward
-    repeated_recover_fw_name:     Recover failed LAMMPS run, repeatedly
+    repeated_recover_fw_name:      {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS run, repeatedly
     restart_file_glob_patterns:   "*.restart[0-9]"
     # recover input files, trajectory, log and thermo_ave
     other_glob_patterns:

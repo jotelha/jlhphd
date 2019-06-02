@@ -19,6 +19,7 @@ spec:
     - --plane {{ sb_in_dist / 2.0 }}
     - --netcdf-output-interval {{ netcdf_frequency }}
     - --output-formats txt
+    - --force-keys forces f_storeAnteShakeForces f_storeAnteStatForces f_storeAnteFreezeForces f_storeUnconstrainedForces f_storeAnteShakeForcesAve f_storeAnteStatForcesAve f_storeAnteFreezeForces f_storeUnconstrainedForcesAve
     - --verbose
     - default.nc
     - indenter_z_forces

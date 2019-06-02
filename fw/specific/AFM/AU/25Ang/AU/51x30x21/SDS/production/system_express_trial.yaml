@@ -13,11 +13,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   max_restarts:           3
 
   # storage options
-  # remote_user:            testuser
-  # remote_dir:             /mnt/dat/work/testuser/interface/SDS/AU/111/51x30x21
-  # ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
 
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4

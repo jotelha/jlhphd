@@ -1,4 +1,4 @@
-name: "NEMO: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
+name: "NEMO TRIAL: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -8,6 +8,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   walltime:               '04:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
+  postp_worker:           nemo_noqueue
+  restart_worker:         nemo_queue_offline
+  max_restarts:           3
 
   # storage options
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
@@ -23,6 +26,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_check:                                  1
   netcdf_frequency:                             1000
   thermo_frequency:                             1000
+  restart_frequency:                            10000
   minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
@@ -34,6 +38,8 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
+  constant_indenter_velocity:                   0.01
+  constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
   frozen_sb_layer_thickness:                    14.0
@@ -144,7 +150,10 @@ dependencies:
   fw_030_datafile_retrieval.yaml:
   - fw_050_production.yaml
 
-  fw_050_produtcion.yaml:
+  fw_050_production.yaml:
+  - fw_060_recover_failed.yaml
+
+  fw_060_recover_failed.yaml:
   - fw_100_extract_property.yaml
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml

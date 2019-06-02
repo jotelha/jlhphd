@@ -30,6 +30,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_check:                                  1
   netcdf_frequency:                             1000
   thermo_frequency:                             1000
+  restart_frequency:                            10000
   minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
