@@ -99,7 +99,7 @@ spec:
           - -v store_forces             1
           - -v surfactant_name          {{ surfactant|default("SDS") }}
           - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
-    - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)| int }}
+          - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)| int }}
           - -v use_eam                  1
           - -v use_ewald                1
           - -v write_coeff_to_datafile  0
