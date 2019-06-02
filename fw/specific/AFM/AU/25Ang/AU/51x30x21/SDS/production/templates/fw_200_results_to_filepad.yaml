@@ -4,26 +4,40 @@ name: {{machine}}, transfer '{{identifier}}' data to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
-    data_file: default.lammps
-    ndx_file:  groups.ndx
+    data_file:          default.lammps
+    ndx_file:           groups.ndx
+    indenter_forces:    indenter_forces.txt
+    log_file:           log.lammps
+    ndx_file:           groups.ndx
+    #joint_traj_file:    default.nc
+    joint_thermo_file:  thermo.out
+    joint_ave_file:     thermo_ave.out
   _tasks:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
     - {{ identifier }}/production/default.lammps
     - {{ identifier }}/production/groups.ndx
+    - {{ identifier }}/production/indenter_forces.txt
+    - {{ identifier }}/production/log.lammps
+    - {{ identifier }}/production/thermo.out
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
     - {{ identifier }}/production/default.lammps
     - {{ identifier }}/production/groups.ndx
+    - {{ identifier }}/production/indenter_forces.txt
+    - {{ identifier }}/production/log.lammps
+    - {{ identifier }}/production/thermo.out
     paths:
     - default.lammps
     - groups.ndx
+    - indenter_forces.txt
+    - log.lammps
+    - thermo.out
     metadata:
       state: AFM probe approached
       {{ render_metadata()|indent(6)}}
-
   metadata:
     state: AFM probe approached
     {{ render_metadata()|indent(4)}}

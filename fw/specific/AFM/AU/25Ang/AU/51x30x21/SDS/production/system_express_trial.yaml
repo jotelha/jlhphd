@@ -26,6 +26,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_check:                                  1
   netcdf_frequency:                             10
   thermo_frequency:                             10
+  thermo_average_frequency:                     10
   restart_frequency:                            100
   minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
@@ -34,7 +35,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   production_steps:                             1000
-  
+
 
   # system metadata
   ci_preassembly:                               at polar heads
