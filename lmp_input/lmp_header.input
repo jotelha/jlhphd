@@ -1,8 +1,18 @@
+###############################################################################
+### lmp_header.input
+
+# Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de, 2019
+
+###############################################################################
+### global parameters
+
 # index varibles can be overridden by command line parameters "-v varName value"
 
 # input settings
 variable baseName                index  "default"
 variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
+variable pairCoeffInfile         index  pair_coeff_dummy.input # allow to read non-bonded ...
+variable bondedCoeffInfile       index  bonded_coeff_dummy.input # ... and bonded coeffs from different files
 variable colvarsFile             index  colvars.inp
 variable dataFile                index  "datafile.lammps"
 variable read_datafile           index  1 # do not read data file if 0
@@ -22,6 +32,7 @@ variable write_coeff             index  0 # write force field parameters to inde
 variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
 variable write_groups_to_file    index  0 #
 variable ndx_file                index  groups.ndx
+variable verbose                 index  0 # log detailed system info at differents stages of input script
 
 # minimization-related settings:
 variable freeze_substrate        index  0 # keep substrate frozen (during minim)
@@ -42,6 +53,7 @@ variable neigh_page              index  100000
 variable neigh_one               index  2000
 
 # force field settings
+
 ## CHARMM-related:
 variable inner_cutoff            index  8.0 # CHARMM standard
 variable outer_cutoff            index  12.0 # CHARMM standard
@@ -50,9 +62,13 @@ variable rigid_h_bonds           index  1.0 # apply SHAPE or RATTLE to H bonds a
 ## EAM-related:
 variable use_eam                 index  0 # use pairstyle eam for solid
 variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
-## ewald summation settings:
+## Ewald summation settings:
 variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable ewald_accuracy          index  1e-4 # relative RMS
+## DPD thermostat related:
+variable dpd_cutoff              index  5.5 # Ang, matches EAM cutoff by Au-Grochola-JCP05
+variable dpd_damping_parameter   index  461.21 # kcal fs mol^-1 Ang^-2, converted from metal units 0.02 eV ps Ang^-2 (conversion factor 23.06*1000)
+variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd thermostat
 
 # other technical settings:
 variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
@@ -63,10 +79,12 @@ variable has_vacuum              index  0 # if > 0, z-direction not pressurized
 variable langevin_damping        index  1000 # fs, damping constant for langevin thermostat
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
+variable random_seed             index  29061988 # global random seed
 variable reinitialize_velocities index  0
 variable remove_drift            index  0 # remove substrate COM movement
 variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
 variable substrate_recenter      index  0 # same as remove drift
+variable timestep                index  2 # fs
 variable use_colvars             index  0
 
 # system settings
@@ -104,8 +122,19 @@ else &
 # per default substrate is gold and assumed to be type 11
 variable substrateType index 11
 
-# Intialization
+###############################################################################
+### system intialization
 if "${is_restart} == 0 && ${pbc2d} > 0" then "boundary p p f"
+
+if "${use_dpd_tstat} > 0" then "comm_modify vel yes"
+# https://lammps.sandia.gov/doc/comm_modify.html
+# The vel keyword enables velocity information to be communicated with ghost
+# particles. Depending on the atom_style, velocity info includes the
+# translational velocity, angular velocity, and angular momentum of a particle.
+# If the vel option is set to yes, then ghost atoms store these quantities; if
+# no then they do not. The yes setting is needed by some pair styles which
+# require the velocity state of both the I and J particles to compute a
+# pairwise I,J interaction, as well as by some compute and fix commands.
 
 if "${is_restart} == 0" then "units real"
 # http://lammps.sandia.gov/doc/units.html
@@ -162,6 +191,9 @@ else &
 #    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
+###############################################################################
+### CHARMM potential specific styles
+
 if "${is_restart} == 0" then "atom_style      full"
 if "${is_restart} == 0" then "bond_style      harmonic"
 
@@ -178,7 +210,20 @@ if "${is_restart} == 0" then "dihedral_style  charmmfsw"
 
 if "${is_restart} == 0" then "improper_style  harmonic"
 
-if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" then &
+###############################################################################
+### hybrid potential style descriptions
+
+### without EAM
+
+if "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0 && ${use_dpd_tstat} > 0" then &
+  "pair_style hybrid/overlay &
+    lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
+    dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}" &
+elif "${is_restart} == 0 && ${use_eam} == 0 && ${use_dpd_tstat} > 0" &
+  "pair_style hybrid/overlay &
+    lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
+    dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}" &
+elif "${is_restart} == 0 && ${use_eam} == 0 && ${use_ewald} > 0" &
     "pair_style lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}" &
 elif "${is_restart} == 0 && ${use_eam} == 0" &
     "pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}"
@@ -265,8 +310,22 @@ elif "${is_restart} == 0 && ${use_eam} == 0" &
 # force fields and implicit solvent models you're using (if any)! This is
 # critically important to the correctness of your simulation!
 
-if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" then &
-  "pair_style hybrid lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy" &
+### with EAM
+
+if "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0 && ${use_dpd_tstat} > 0" then &
+  "pair_style hybrid/overlay &
+    lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
+    eam/alloy &
+    dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}" &
+elif "${is_restart} == 0 && ${use_eam} > 0 && ${use_dpd_tstat} > 0" &
+  "pair_style hybrid/overlay &
+    lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
+    eam/alloy &
+    dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}" &
+elif "${is_restart} == 0 && ${use_eam} > 0 && ${use_ewald} > 0" &
+  "pair_style hybrid &
+    lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
+    eam/alloy" &
 elif "${is_restart} == 0 && ${use_eam} > 0" &
   "pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy"
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
@@ -340,7 +399,13 @@ if "${pbc2d} > 0 && ${use_ewald} > 0" then &
 # correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
 # being compatible with how fix efield works.
 
+###############################################################################
+### data file input
+
 if "(${is_restart} == 0) && (${read_datafile} == 1)" then "read_data ${dataFile}"
+
+###############################################################################
+### box modifications
 
 # shrink wrap if desired to "tighten" box around system:
 if "${shrink_wrap_once} > 0" then "change_box all boundary s s s"
@@ -370,11 +435,23 @@ if "${box_shift_z} > 0.0" then &
   "displace_atoms all move 0.0 0.0 ${box_shift_z} units box" &
   "change_box all set z final ${desired_zlo} ${desired_zhi} remap units box"
 
+###############################################################################
+### force field parameter input
+
 # LAMMPS does not allow conditional includes. We simulate this by including
 # an empty file per default:
 shell touch coeff_dummy.input
 # read force field parameter from file if specified:
 include ${coeffInfile}
+
+shell touch pair_coeff_dummy.input
+include ${pairCoeffInfile}
+
+shell touch bonded_coeff_dummy.input
+include ${bondedCoeffInfile}
+
+###############################################################################
+### EAM potential pair coeffs
 
 # override Au-Au LJ interaction by EAM potential:
 # TODO: make an adaptive NULL string depending on used Au atom type
@@ -448,21 +525,37 @@ if "${use_eam} > 0" then &
 # the pair_style and pair_coeff commands in an input script that reads a restart
 # file.
 
+###############################################################################
+### DPD thermostat pair coeffs
+
+# if using dpd/tstat, pair_style is hybrid/overlay, and thus AU-AU LJ
+# interactions must be switched of explicitely
+if "${use_dpd_tstat} > 0 && ${use_ewald} > 0" then &
+  "pair_coeff ${substrateType} ${substrateType} lj/charmmfsw/coul/long 0.0 0.0" &
+elif "${use_dpd_tstat} > 0" &
+  "pair_coeff ${substrateType} ${substrateType} lj/charmmfsw/coul/charmmfsh 0.0 0.0"
+
+if "${use_dpd_tstat} > 0" then &
+  "pair_coeff ${substrateType} ${substrateType} dpd/tstat ${dpd_damping_parameter}"
+# https://lammps.sandia.gov/doc/pair_hybrid.html
+# For the hybrid/overlay style, each atom type pair I,J can be assigned to one
+# or more sub-styles. If you specify the same atom type pair in a second
+# pair_coeff command with a new sub-style, then the second sub-style is
+# added to the list of potentials that will be calculated for two interacting
+# atoms of those types. If you specify the same atom type pair in a second
+# pair_coeff command with a sub-style that has already been defined for
+# that pair of atoms, then the new pair coefficients simply override the
+# previous ones, as in the normal usage of the pair_coeff command.
+#
+# If an assignment to none is made in a simulation with the hybrid/overlay
+# pair style, it wipes out all previous assignments of that atom type pair
+# to sub-styles.
+
 # force field is defined completely at this point
 if "${write_coeff} > 0" then "write_coeff ${coeffOutfile}"
 
-
-# print "Atoms, bonds, angles, dihedrals, impropers in lmp_header.input:"
-# info styles atom out log
-# info stylse bond out log
-# info styles angle out log
-# info styles dihedral out log
-# info sytles improper out log
-
-# print "Pair, kspace in lmp_header.input:"
-# info styles pair out log
-# info styles kspace out log
-
+###############################################################################
+### region definitions
 
 # determine center
 variable x_center equal $(( xlo + xhi ) / 2.0)
@@ -512,7 +605,10 @@ if "${is_restart} == 0" then "special_bonds   charmm"
 # disable or enable registering compute */tally computes for a given sub-style.
 # More details are given below.
 
-if "${is_restart} == 0" then "timestep       2.0 # 0.002 ps = 2 fs"
+if "${is_restart} == 0" then "timestep       ${timestep} # 0.002 ps = 2 fs"
+
+###############################################################################
+### group definitions
 
 # pre-define groups:
 # Group[ 0]: all (static)
@@ -640,9 +736,9 @@ elif "${write_groups_to_file} > 0" &
 # name already exists, it will be completely reset. When specifying group IDs,
 # those groups, if present, will be read from the index file and restored.
 
-#################
-# define computes
-#################
+###############################################################################
+### compute definitions
+
 # kspace no: AU atoms neutral
 if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
     "compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no" &
@@ -700,12 +796,13 @@ if "${compute_interactions} > 0" then &
 #       10     79.904  # BR
 #       11   196.9665  # AU
 
+###############################################################################
+### group-based modifications, etc.
 
 # exclude intra-frozen interactions for rigid indenter and substrate
 variable number_of_frozen_atoms equal count(frozen)
 if "${number_of_frozen_atoms} > 0 " then &
   "neigh_modify exclude group frozen frozen"
-
 
 # walls if box non-periodic, use AU paramters (sigma ignored)
 if "${pbc2d} > 0" then &
@@ -748,6 +845,9 @@ if "${pbc2d} > 0" then &
 # The fix_modify virial option is supported by this fix to add the contribution
 # due to the interaction between atoms and each wall to the system's virial as
 # part of thermodynamic output. The default is virial no
+
+###############################################################################
+### thermo outputs
 
 # fix thermoAveOut all ave/time 1 100 100 c_thermo_etotal c_thermo_ke c_thermo_pe &
 #   c_thermo_temp c_thermo_press c_thermo_enthalpy c_thermo_ebond c_thermo_eangle &
@@ -884,30 +984,28 @@ elif "${thermo_average_frequency} > 0" &
 # no file output, format = %g, title 1,2,3 = strings as described above,
 # and no off settings for any input values.
 
-print "Force field parameters in lmp_header.input:"
-info coeffs out screen
-info coeffs out log
+###############################################################################
+### system info
 
-print "Computes in lmp_header.input:"
-info computes out screen
-info computes out log
-
-print "Fixes in lmp_header.input:"
-info fixes out screen
-info fixes out log
-
-print "Groups in lmp_header.input:"
-info groups out screen
-info groups out log
-
-print "Regions in lmp_header.input:"
-info regions out screen
-info regions out log
-
-print "System info in lmp_header.input:"
-info system out screen
-info system out log
-
-# print "Variables in lmp_header.input:"
-info variables out screen
-info variables out log
+if "${verbose} > 0" then &
+    """print "Force field parameters in lmp_header.input:" """ &
+    "info coeffs out screen" &
+    "info coeffs out log" &
+    """print "Computes in lmp_header.input:" """&
+    "info computes out screen" &
+    "info computes out log" &
+    """print "Fixes in lmp_header.input:" """ &
+    "info fixes out screen" &
+    "info fixes out log" &
+    """print "Groups in lmp_header.input:" """ &
+    "info groups out screen" &
+    "info groups out log" &
+    """print "Regions in lmp_header.input:" """ &
+    "info regions out screen" &
+    "info regions out log" &
+    """print "System info in lmp_header.input:" """ &
+    "info system out screen" &
+    "info system out log" &
+    """print "Variables in lmp_header.input:" """ &
+    "info variables out screen" &
+    "info variables out log"

@@ -1,4 +1,26 @@
+# serves to determine DPD damping coefficient for EAM Au
+# based on lammps.heat.in by W. Noehring
 include lmp_header.input
+
+variable thermo_file          index "thermo.out"
+
+# Output, override defaults
+
+thermo 10
+
+thermo_style custom step temp press ke pe vol
+
+variable S equal step
+variable X equal time
+variable T equal temp
+variable P equal press
+variable fmt_S format S %.0f
+variable fmt_X format X %.4f
+variable fmt_T format T %.8f
+variable fmt_P format P %.8f
+
+print "#step, time (ps), temperature (K), pressure (bar)" file ${thermo_file}
+
 ##############
 # restraints I
 ##############
@@ -16,60 +38,15 @@ if "(${has_indenter} > 0) && (${rigid_indenter} > 0)" then &
 
 if "${is_restart} == 0" then "group tempered_group subtract all frozen"
 
-###################
-# NVT equilibration
-###################
-fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 29061988
-#   ^ID                 ^group-ID
-#                           ^langevin
-#                                    ^Tstart         ^Tstop          ^damp
-#                                                                        ^seed
-# source: https://lammps.sandia.gov/doc/fix_langevin.html
-# fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
-# Apply a Langevin thermostat as described in (Schneider) to a group of atoms
-# which models an interaction with a background implicit solvent. Used with
-# fix nve, this command performs Brownian dynamics (BD), since the total force
-# on each atom will have the form:
-#
-# F = Fc + Ff + Fr
-# Ff = - (m / damp) v
-# Fr is proportional to sqrt(Kb T m / (dt damp))
-#
-# Note that unless you use the omega or angmom keywords, the thermostat effect
-# of this fix is applied to only the translational degrees of freedom for the
-# particles, which is an important consideration for finite-size particles,
-# which have rotational degrees of freedom, are being thermostatted. The
-# translational degrees of freedom can also have a bias velocity removed
-# from them before thermostatting takes place; see the description below.
-#
-# Unlike the fix nvt command which performs Nose/Hoover thermostatting
-# AND time integration, this fix does NOT perform time integration. It
-# only modifies forces to effect thermostatting. Thus you must use a
-# separate time integration fix, like fix nve to actually update the
-# velocities and positions of atoms using the modified forces. Likewise,
-# this fix should not normally be used on atoms that also have their
-# temperature controlled by another fix - e.g. by fix nvt or fix
-# temp/rescale commands.
-#
-# The damp parameter is specified in time units and determines how rapidly the
-# temperature is relaxed. For example, a value of 100.0 means to relax the
-# temperature in a timespan of (roughly) 100 time units (tau or fmsec or psec
-# - see the units command). The damp factor can be thought of as inversely
-# related to the viscosity of the solvent. I.e. a small relaxation time
-# implies a hi-viscosity solvent and vice versa. See the discussion about
-# gamma and viscosity in the documentation for the fix viscous command for
-# more details.
-#
-# The keyword zero can be used to eliminate drift due to the thermostat. Because
-# the random forces on different atoms are independent, they do not sum exactly
-# to zero. As a result, this fix applies a small random force to the entire
-# system, and the center-of-mass of the system undergoes a slow random walk.
-# If the keyword zero is set to yes, the total random force is set exactly to
-# zero by subtracting off an equal part of it from each atom in the group. As
-# a result, the center-of-mass of a system with zero initial momentum will not
-# drift over time.
 
-fix timeIntegration     tempered_group nve # necessary for nvt via langevin
+
+fix thermo_print all print 10 "${fmt_S} ${fmt_X} ${fmt_T} ${fmt_P}" append ${thermo_file}
+
+################
+# NVE production
+################
+
+fix timeIntegration     tempered_group nve
 
 ###############
 # restraints II
@@ -165,7 +142,7 @@ if "(${remove_drift} > 0) || (${substrate_recenter} > 0)" then &
 # specified as INIT which means to constrain the center-of-mass to its initial
 # value at the beginning of the run.
 
-velocity        tempered_group create ${initialT} 29061988 rot yes mom yes dist gaussian
+# velocity        tempered_group create ${initialT} 29061988 rot yes mom yes dist gaussian
 
 # Quote from http://lammps.sandia.gov/doc/velocity.html
 # The mom and rot keywords are used by create. If mom = yes, the linear momentum
@@ -190,10 +167,10 @@ else &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} ${baseName}.nc id mol type x y z"
 
 if "${verbose} > 0" then &
-  """print "LAMMPS state before NVT equilibrations:" """ &
+  """print "LAMMPS state before run command:" """ &
   "info all"
 
-run             ${nvtEqSteps}
+run             ${productionSteps}
 
 if "${write_coeff_to_datafile} > 0" then &
   "write_data     ${baseName}.lammps" &
