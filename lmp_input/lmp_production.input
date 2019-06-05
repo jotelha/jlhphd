@@ -225,11 +225,11 @@ if "${store_forces} > 0" then &
 # only temper substrate, and only the non-frozen part:
 if "${is_restart} == 0" then "group tempered_group subtract substrate frozen"
 # only temper substrate
-fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061988
+fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} ${langevin_damping} 29061988
 #   ^ID        ^group-ID
 #                             ^langevin
 #                                      ^Tstart         ^Tstop          ^damp
-#                                                                          ^seed
+#                                                                                          ^seed
 # source: https://lammps.sandia.gov/doc/fix_langevin.html
 # fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
 # Apply a Langevin thermostat as described in (Schneider) to a group of atoms
@@ -272,9 +272,9 @@ fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061
 if "${is_restart} == 0" then "group pressured_group subtract all frozen"
 
 if "${pressurize_z_only} > 0" then &
-  "fix barostat pressured_group nph z ${pressureP} ${pressureP} 1000" &
+  "fix barostat pressured_group nph z ${pressureP} ${pressureP} 1000 dilate partial fixedpoint $(xlo) $(ylo) $(zlo)" &
 else &
-  "fix barostat pressured_group nph aniso ${pressureP} ${pressureP} 1000"
+  "fix barostat pressured_group nph aniso ${pressureP} ${pressureP} 1000 dilate partial fixedpoint $(xlo) $(ylo) $(zlo)"
 # source https://lammps.sandia.gov/doc/fix_nh.html#fix-nph-command
 # As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
 # time integration. Fix press/berendsen does NOT, so it should be used with one
@@ -328,8 +328,8 @@ if "${store_forces} > 0" then &
 # fix equilibrateNVT all nvt temp ${temperatureT} ${temperatureT} 100 tchain 1
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
-
-fix rigidHbonds pressured_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+if "${rigid_h_bonds} > 0" then &
+  "fix rigidHbonds pressured_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}"
 # fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.

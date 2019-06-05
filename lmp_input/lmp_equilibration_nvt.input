@@ -106,7 +106,8 @@ if "(${has_indenter} > 0) && (${restrained_indenter} > 0)" then &
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+if "${rigid_h_bonds} > 0" then &
+  "fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}"
 
 # The b constraint lists bond types that will be constrained.
 # The t constraint lists atom types. All bonds connected to an

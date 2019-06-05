@@ -1,0 +1,55 @@
+{#
+# sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
+# identifier composition:
+#                        ^surfactant            ^initial config
+#                            ^surfactant molcules             ^indenter name (not real measures)
+#                                ^substrate material                ^indenter structure
+#                                   ^substrate crytal plane                 ^initial indenter substrate distance
+#                                       ^substrate unit cell multiples            ^steps to contact
+#
+# regular expression to turn metadata into placholder lines:
+#   pattern:      ^([[:space:]]+)([^:[:space:]]+):([[:space:]]+)[^[:space:]]+.*$
+#   replacement:  \1\2:\3{{ \2 }}
+# {% set datafile_identifier = "interface/%s/%d/%s/%s/%dx%dx%d/%s/initial_config.lammps"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
+# {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
+#}
+{# identifier for results, used as sub-path AND as filepad prefix #}
+{% set identifier = "substrate/%s/%s/%s%s/%s"|format(substrate,sb_crystal_plane,sb_base_length,sb_base_length_unit,sb_shape) %}
+{% set file_identifier = "substrate_%s_%s_%s%s_%s"|format(substrate,sb_crystal_plane,sb_base_length,sb_base_length_unit,sb_shape) %}
+{# descriptive natural language title for display purposes #}
+{% set title = "substrate %s"|format(sb_name) %}
+{% macro render_metadata() %}
+machine:         {{ machine }}
+
+ewald_accuracy:  {{ ewald_accuracy }}
+coulomb_cutoff:  {{ coulomb_cutoff }}
+skin_distance:   {{ skin_distance }}
+neigh_delay:     {{ neigh_delay }}
+neigh_every:     {{ neigh_every }}
+neigh_check:     {{ neigh_check }}
+
+system_name:     {{ system_name }}
+
+force_field:                                  {{ force_field }}
+pbc:                                          {{ pbc }}
+pressure:                                     {{ pressure }}
+pressure_unit:                                {{ pressure_unit }}
+sb_name:                                      {{ sb_name }}
+sb_area:                                      {{ sb_area }}
+sb_area_unit:                                 {{ sb_area_unit }}
+sb_base_length:                               {{ sb_base_length }}
+sb_base_length_unit:                          {{ sb_base_length_unit }}
+sb_crystal_plane:                             {{ sb_crystal_plane }}
+sb_measures:                                  {{ sb_measures }}
+sb_measures_unit:                             {{ sb_measures_unit }}
+sb_normal:                                    {{ sb_normal }}
+sb_shape:                                     {{ sb_shape }}
+sb_thickness:                                 {{ sb_thickness }}
+sb_thickness_unit:                            {{ sb_thickness_unit }}
+sb_volume:                                    {{ sb_volume }}
+sb_volume_unit:                               {{ sb_volume_unit }}
+substrate:                                    {{ substrate }}
+temperature:                                  {{ temperature }}
+temperature_unit:                             {{ temperature_unit }}
+{% endmacro %}
+{% block body %}{% endblock %}

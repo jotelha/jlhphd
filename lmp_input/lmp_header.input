@@ -46,6 +46,7 @@ variable neigh_one               index  2000
 variable inner_cutoff            index  8.0 # CHARMM standard
 variable outer_cutoff            index  12.0 # CHARMM standard
 variable coulomb_cutoff          index  12.0 # Coulomb cutoff
+variable rigid_h_bonds           index  1.0 # apply SHAPE or RATTLE to H bonds and TIP3P water angle
 ## EAM-related:
 variable use_eam                 index  0 # use pairstyle eam for solid
 variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
@@ -59,6 +60,7 @@ variable box_shift_z             index  0.0 # shift box once in negative directi
 variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
 variable is_restart              index  0 # marks current run as restart
 variable has_vacuum              index  0 # if > 0, z-direction not pressurized
+variable langevin_damping        index  1000 # fs, damping constant for langevin thermostat
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
 variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
 variable reinitialize_velocities index  0
@@ -582,7 +584,15 @@ elif "${is_restart} == 0" &
 
 # freeze indenter if explicitly specified
 if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter} > 0" then &
-  "group frozen         union frozen indenter"
+    "group frozen         union frozen indenter" &
+elif "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter_core_radius} > 0.0" &
+    "variable indenterComX equal xcm(indenter,x)" &
+    "variable indenterComY equal xcm(indenter,y)" &
+    "variable indenterComZ equal xcm(indenter,z)" &
+    "region rigid_indenter_core_region sphere ${indenterComX} ${indenterComY} &
+        ${indenterComZ} ${rigid_indenter_core_radius}" &
+    "group rigid_indenter_core  region  rigid_indenter_core_region" &
+    "group frozen               union   frozen rigid_indenter_core"
 
 # define region of frozen substrate layer if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
@@ -629,16 +639,6 @@ elif "${write_groups_to_file} > 0" &
 # the index file and the corresponding groups recreated. If a group of the same
 # name already exists, it will be completely reset. When specifying group IDs,
 # those groups, if present, will be read from the index file and restored.
-
-################################################################################
-### define additional groups based on previously defined static groups
-if "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter_core_radius} > 0.0" then &
-    "variable indenterComX equal xcm(indenter,x)" &
-    "variable indenterComY equal xcm(indenter,y)" &
-    "variable indenterComZ equal xcm(indenter,z)" &
-    "region rigid_indenter_core_region sphere ${indenterComX} ${indenterComY} &
-        ${indenterComZ} ${rigid_indenter_core_radius}" &
-    "group rigid_indenter_core region rigid_indenter_core_region"
 
 #################
 # define computes

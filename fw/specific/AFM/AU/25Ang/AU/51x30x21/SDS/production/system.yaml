@@ -43,7 +43,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
-  constant_indenter_velocity:                   0.01
+  constant_indenter_velocity:                   1.0e-5
   constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
@@ -123,32 +123,49 @@ std: # standard settings to be applied to all fireworks, if not ...
 transient: # ...overridden by these transient settings, which do not affect children
   fw_050_production.yaml:
   - worker:                 nemo_queue_offline
-    nodes:                  1
+    nodes:                  8
     ppn:                    20
-    walltime:               '04:00:00'
-    # for testing:
-    #nodes:                  2
-    #ppn:                    20
-    #walltime:               '00:05:00'
-    #queue:                  express
-  fw_060_equilibration_nvt.yaml:
-  - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
-  fw_070_equilibration_npt.yaml:
-  - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
+    walltime:               '96:00:00'
 
 persistent:
   fw_030_datafile_retrieval.yaml:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
+
   - sf_nmolecules:        646
     sf_preassembly:       monolayer
     sf_concentration:     0.0068
+
   - sf_nmolecules:        1107
     sf_preassembly:       bilayer
     sf_concentration:     0.017
+
+  fw_050_production.yaml:
+  - netcdf_frequency:           500
+    thermo_frequency:           50
+    thermo_average_frequency:   50
+    restart_frequency:          500
+    production_steps:           150000
+    constant_indenter_velocity: -1.0e-4
+    walltime:                   '24:00:00'
+
+  - netcdf_frequency:           5000
+    thermo_frequency:           500
+    thermo_average_frequency:   500
+    restart_frequency:          5000
+    production_steps:           1500000
+    constant_indenter_velocity: -1.0e-5
+    walltime:                   '96:00:00'
+
+  - netcdf_frequency:           50000
+    thermo_frequency:           5000
+    thermo_average_frequency:   5000
+    restart_frequency:          50000
+    production_steps:           15000000
+    constant_indenter_velocity: -1.0e-6
+    walltime:                   '96:00:00'
+
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
