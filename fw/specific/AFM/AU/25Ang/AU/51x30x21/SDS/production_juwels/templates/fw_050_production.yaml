@@ -4,7 +4,7 @@ name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS production
 spec:
   _category: {{ worker|default("juwels_queue",true) }}
   _queueadapter:
-    {{ render_queueadapter()|indent(4)}}
+    {{ render_queueadapter()|safe|indent(4) }}
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
@@ -48,16 +48,16 @@ spec:
     - -v surfactant_name          {{ surfactant|default("SDS") }}
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
-    - -v use_barostat             {{ use_barostat|default(1,true)|int }}
+    - -v use_barostat             {{ use_barostat|default(1,false)|int }}
     - -v use_eam                  1
     - -v use_ewald                1
     - -v write_coeff_to_datafile  0
     - -v write_groups_to_file     1
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
     - -v ewald_accuracy           {{ ewald_accuracy|default('1.0e-4',true) }}
-    - -v neigh_delay              {{ neigh_delay|default(2,true)|int }}
-    - -v neigh_every              {{ neigh_every|default(1,true)|int }}
-    - -v neigh_check              {{ neigh_check|default(1,true) }}
+    - -v neigh_delay              {{ neigh_delay|default(2,false)|int }}
+    - -v neigh_every              {{ neigh_every|default(1,false)|int }}
+    - -v neigh_check              {{ neigh_check|default(1,false) }}
     - -v skin_distance            {{ skin_distance|default(3.0,true)|float }}
     stderr_file:    std.err
     stdout_file:    std.out

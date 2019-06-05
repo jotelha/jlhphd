@@ -126,7 +126,12 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
 persistent:
   fw_030_datafile_retrieval.yaml:
-  - sf_nmolecules:        646
+  - use_barostat:         0
+    sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+  - use_barostat:         1
+    sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
