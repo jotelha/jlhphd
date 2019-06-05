@@ -4,12 +4,7 @@ name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS production
 spec:
   _category: {{ worker|default("juwels_queue",true) }}
   _queueadapter:
-    walltime:         {{ walltime|default("24:00:00") }}
-    ntasks:           {{ ntasks|default(96,true)|int }}
-    cpus_per_task:    {{ cpus_per_task|default(1,true)|int }}
-    ntasks_per_node:  {{ ntasks_per_node|default(96,true)|int }}
-    queue:            {{ queue|default("batch") }}
-    account:          {{ account|default("hfr13") }}
+    {{ render_queueadapter()|indent(4)}}
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
@@ -52,7 +47,8 @@ spec:
     - -v store_forces             1
     - -v surfactant_name          {{ surfactant|default("SDS") }}
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
-    - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)| int }}
+    - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
+    - -v use_barostat             {{ use_barostat|default(1,true)|int }}
     - -v use_eam                  1
     - -v use_ewald                1
     - -v write_coeff_to_datafile  0

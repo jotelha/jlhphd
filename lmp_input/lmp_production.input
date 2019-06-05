@@ -119,7 +119,7 @@ if "${use_colvars} > 0" then "group2ndx colvars.ndx"
 ### Collective variables
 
 if "${use_colvars} > 0" then &
-  "fix cv all colvars ${colvarsFile} seed 29061988 output ${baseName} unwrap yes"
+  "fix cv all colvars ${colvarsFile} seed ${random_seed} output ${baseName} unwrap yes"
 #      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
 # source: https://lammps.sandia.gov/doc/fix_colvars.html
 # This fix interfaces LAMMPS to the collective variables "Colvars" library,
@@ -224,12 +224,13 @@ if "${store_forces} > 0" then &
 
 # only temper substrate, and only the non-frozen part:
 if "${is_restart} == 0" then "group tempered_group subtract substrate frozen"
-# only temper substrate
-fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} ${langevin_damping} 29061988
-#   ^ID        ^group-ID
-#                             ^langevin
-#                                      ^Tstart         ^Tstop          ^damp
-#                                                                                          ^seed
+# if not applying DPD thermostat
+if "${use_dpd_tstat} == 0" then &
+    "fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} &
+        ${langevin_damping} ${random_seed}"
+#   ^ID             ^group-ID      ^langevin
+#                                           ^Tstart         ^Tstop
+#       ^damp               ^seed
 # source: https://lammps.sandia.gov/doc/fix_langevin.html
 # fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
 # Apply a Langevin thermostat as described in (Schneider) to a group of atoms
@@ -271,10 +272,12 @@ fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} ${langevi
 
 if "${is_restart} == 0" then "group pressured_group subtract all frozen"
 
-if "${pressurize_z_only} > 0" then &
-  "fix barostat pressured_group nph z ${pressureP} ${pressureP} 1000 dilate partial fixedpoint $(xlo) $(ylo) $(zlo)" &
-else &
-  "fix barostat pressured_group nph aniso ${pressureP} ${pressureP} 1000 dilate partial fixedpoint $(xlo) $(ylo) $(zlo)"
+if "${use_barostat} > 0 && ${pressurize_z_only} > 0" then &
+  "fix barostat pressured_group nph z ${pressureP} ${pressureP} &
+    ${barostat_damping} dilate partial fixedpoint $(xlo) $(ylo) $(zlo)" &
+elif "${use_barostat} > 0" &
+  "fix barostat pressured_group nph aniso ${pressureP} ${pressureP} &
+    ${barostat_damping} dilate partial fixedpoint $(xlo) $(ylo) $(zlo)"
 # source https://lammps.sandia.gov/doc/fix_nh.html#fix-nph-command
 # As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
 # time integration. Fix press/berendsen does NOT, so it should be used with one
@@ -417,7 +420,8 @@ else &
 # will be created which will overwrite an existing file with the same name.
 
 if "${reinitialize_velocities} > 0" then &
-  "velocity pressured_group create ${temperatureT} 29061988 rot yes mom yes dist gaussian"
+  "velocity pressured_group create ${temperatureT} ${random_seed} &
+    rot yes mom yes dist gaussian"
 
 print "LAMMPS state before production:"
 info all

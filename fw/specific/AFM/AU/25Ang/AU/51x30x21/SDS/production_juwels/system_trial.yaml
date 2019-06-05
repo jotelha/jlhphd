@@ -38,11 +38,12 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   production_steps:                             1500000
+  use_barostat:                                 0
 
 
   # system metadata
   ci_preassembly:                               at polar heads
-  constant_indenter_velocity:                   1.0e-5
+  constant_indenter_velocity:                   -1.0e-5
   constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
@@ -125,25 +126,28 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
 persistent:
   fw_030_datafile_retrieval.yaml:
-  - sf_nmolecules:              646
-    sf_preassembly:             hemicylinders
-    sf_concentration:           0.0068
-    netcdf_frequency:           500
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+
+  fw_050_production.yaml:
+  - netcdf_frequency:           500
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
     production_steps:           150000
-    constant_indenter_velocity: 1.0e-4
+    constant_indenter_velocity: -1.0e-4
 
-  - sf_nmolecules:              646
-    sf_preassembly:             hemicylinders
-    sf_concentration:           0.0068
-    netcdf_frequency:           5000
+  - netcdf_frequency:           5000
     thermo_frequency:           500
     thermo_average_frequency:   500
     restart_frequency:          5000
     production_steps:           1500000
-    constant_indenter_velocity: 1.0e-5
+    constant_indenter_velocity: -1.0e-5
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps

@@ -65,10 +65,20 @@ variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
 ## Ewald summation settings:
 variable use_ewald               index  1 # switch ewald summation (kspace solver)
 variable ewald_accuracy          index  1e-4 # relative RMS
+
+# thermostat-related
+## Langevin thermostat related:
+variable langevin_damping        index  1000 # fs, damping parameter for Langevin thermostat
+
 ## DPD thermostat related:
 variable dpd_cutoff              index  5.5 # Ang, matches EAM cutoff by Au-Grochola-JCP05
 variable dpd_damping_parameter   index  461.21 # kcal fs mol^-1 Ang^-2, converted from metal units 0.02 eV ps Ang^-2 (conversion factor 23.06*1000)
-variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd thermostat
+variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd thermostat (instead of Langevin)
+
+# barostat-related
+variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
+variable use_barostat            index  1 # if 0, run NVT instead of NPT or NVE instead of NPH
+variable barostat_damping        index  1000 # fs, damping parameter for Parrinello-Rahman barostat
 
 # other technical settings:
 variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
@@ -76,9 +86,7 @@ variable box_shift_z             index  0.0 # shift box once in negative directi
 variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
 variable is_restart              index  0 # marks current run as restart
 variable has_vacuum              index  0 # if > 0, z-direction not pressurized
-variable langevin_damping        index  1000 # fs, damping constant for langevin thermostat
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
-variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
 variable random_seed             index  29061988 # global random seed
 variable reinitialize_velocities index  0
 variable remove_drift            index  0 # remove substrate COM movement
