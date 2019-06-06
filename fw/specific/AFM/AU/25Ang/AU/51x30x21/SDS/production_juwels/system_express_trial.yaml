@@ -27,8 +27,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
-  netcdf_frequency:                             10
-  thermo_frequency:                             10
+  netcdf_frequency:                             1
+  thermo_frequency:                             1
   thermo_average_frequency:                     10
   restart_frequency:                            100
   minimization_ftol:                            1.0e-5
@@ -43,7 +43,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
-  constant_indenter_velocity:                   -1.0e-4
+  constant_indenter_velocity:                   -1.0e-5
   constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
