@@ -22,6 +22,7 @@ spec:
     opt:
     - -in lmp_production.input
     - -v coeffInfile              coeff.input
+    - -v coeffOutfile             coeff.input.transient
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         0
@@ -30,7 +31,7 @@ spec:
     - -v rigid_indenter_core_radius {{ rigid_indenter_core_radius|default(12.0,true)|float }} # freeze core of 12.0 Angstrom radius within indenter
     - -v constant_indenter_velocity {{ constant_indenter_velocity }}
     - -v has_vacuum               0
-    - -v mpiio                    1
+    - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
     - -v productionSteps          {{ production_steps|default(10000,true)|int }}
     - -v pbc2d                    0
@@ -49,8 +50,10 @@ spec:
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
     - -v use_barostat             {{ use_barostat|default(1,false)|int }}
+    - -v use_dpd_tstat            {{ use_dpd_tstat|default(1,false)|int }}
     - -v use_eam                  1
     - -v use_ewald                1
+    - -v write_coeff              1
     - -v write_coeff_to_datafile  0
     - -v write_groups_to_file     1
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}

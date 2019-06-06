@@ -24,6 +24,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   coulomb_cutoff_unit:                          Ang
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
+  mpiio:                                        0
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
@@ -38,6 +39,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   production_steps:                             1000
+  use_dpd_tstat:                                1
   use_barostat:                                 0
 
 
@@ -77,10 +79,13 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_unit_cell_unit:                            m
   sb_volume:                                    3.37e-24
   sb_volume_unit:                               m^3
-  sf_concentration:                             0
+  sf_concentration:                             0.0068
+  #sf_concentration:                             0
   sf_concentration_unit:                        M # M = mol L^-3
-  sf_nmolecules:                                0
-  sf_preassembly:                               none
+  sf_nmolecules:                                646
+  sf_preassembly:                               hemicylinders
+  #sf_nmolecules:                                0
+  #sf_preassembly:                               none
   solvent:                                      H2O
   substrate:                                    AU
   surfactant:                                   SDS
@@ -125,15 +130,9 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:                     juwels_queue
 
 persistent:
-  fw_030_datafile_retrieval.yaml:
-  - use_barostat:         0
-    sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-  - use_barostat:         1
-    sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
+  fw_050_production.yaml:
+  - use_dpd_tstat:        0
+  - use_dpd_tstat:        1
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
