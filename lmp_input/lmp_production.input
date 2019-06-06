@@ -381,7 +381,7 @@ dump            dumpPng nonsolvent image ${png_frequency} &
 if "${mpiio} > 0 && ${store_forces} > 0" then &
   "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
-    ${baseName}.nc id mol type x y z fx fy fz &
+    ${baseName}.nc id mol type mass x y z vx vy vz fx fy fz &
      f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
      f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
      f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
@@ -390,11 +390,12 @@ if "${mpiio} > 0 && ${store_forces} > 0" then &
      f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
-     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+     thermo yes" &
 elif "${store_forces} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
-    ${baseName}.nc id mol type x y z fx fy fz &
+    ${baseName}.nc id mol type mass x y z vx vy vz fx fy fz &
      f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
      f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
      f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
@@ -403,15 +404,16 @@ elif "${store_forces} > 0" &
      f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
-     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+     thermo yes" &
 elif "${mpiio} > 0" &
   "print 'netcdf/mpiio output'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
-    ${baseName}.nc id mol type x y z" &
+    ${baseName}.nc id mol type mass x y z vx vy vz thermo yes" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
-    ${baseName}.nc id mol type x y z"
+    ${baseName}.nc id mol type mass x y z vx vy vz thermo yes"
 
 # interestingly, wildcard * operator does not work for dump netcdf
 
