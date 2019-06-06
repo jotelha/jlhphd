@@ -439,7 +439,7 @@ if "${reinitialize_velocities} > 0" then &
     rot yes mom yes dist gaussian"
 
 # groups immediately before run, for debugging
-elif "${write_groups_to_file} > 0" &
+if "${write_groups_to_file} > 0" then &
     "group2ndx ${ndx_file}.transient"
 
 print "LAMMPS state before production:"
