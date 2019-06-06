@@ -51,6 +51,7 @@ variable neigh_every             index  1
 variable neigh_check             index  1
 variable neigh_page              index  100000
 variable neigh_one               index  2000
+variable exclude_frozen_interactions index 0 # do not compute interactions between frozen atoms
 
 # force field settings
 
@@ -809,7 +810,7 @@ if "${compute_interactions} > 0" then &
 
 # exclude intra-frozen interactions for rigid indenter and substrate
 variable number_of_frozen_atoms equal count(frozen)
-if "${number_of_frozen_atoms} > 0 " then &
+if "${number_of_frozen_atoms} > 0 && ${exclude_frozen_interactions} > 0" then &
   "neigh_modify exclude group frozen frozen"
 
 # walls if box non-periodic, use AU paramters (sigma ignored)
