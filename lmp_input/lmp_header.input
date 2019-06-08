@@ -562,6 +562,9 @@ if "${use_dpd_tstat} > 0" then &
 
 # force field is defined completely at this point
 if "${write_coeff} > 0" then "write_coeff ${coeffOutfile}"
+# The write_coeff command is not yet fully implemented as some pair styles do
+# not output their coefficient information. This means you will need to add/copy
+# this information manually.
 
 ###############################################################################
 ### region definitions

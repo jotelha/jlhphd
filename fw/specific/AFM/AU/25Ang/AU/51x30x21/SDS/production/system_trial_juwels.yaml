@@ -15,6 +15,17 @@ std: # standard settings to be applied to all fireworks, if not ...
   restart_worker:         juwels_queue
   max_restarts:           5
 
+  # NEMO
+  # machine:                NEMO
+  # nodes:                  8
+  # ppn:                    20
+  # walltime:               '96:00:00'
+  # queue:                  ''
+  # worker:                 nemo_noqueue
+  # postp_worker:           nemo_noqueue
+  # restart_worker:         nemo_queue_offline
+  # max_restarts:           5
+
   # storage options
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
 
@@ -142,6 +153,15 @@ persistent:
     restart_frequency:          500
     production_steps:           150000
     constant_indenter_velocity: -1.0e-4
+    use_dpd_tstat:              0
+
+  - netcdf_frequency:           500
+    thermo_frequency:           50
+    thermo_average_frequency:   50
+    restart_frequency:          500
+    production_steps:           150000
+    constant_indenter_velocity: -1.0e-4
+    use_dpd_tstat:              1
 
   - netcdf_frequency:           5000
     thermo_frequency:           500
