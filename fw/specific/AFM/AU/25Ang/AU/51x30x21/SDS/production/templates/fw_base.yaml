@@ -28,6 +28,11 @@
 {%- set title = "%s %s r %s %s indenter at %s %s on %d %s on %s %s %dx%dx%d substrate, %s"|format(
   indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity, constant_indenter_velocity_unit,
   sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) -%}
+{%- if worker is in ['juwels_queue','juwels_noqueue'] -%}
+{%- set shell_exe = "/usr/bin/bash" -%}
+{%- else -%}
+{%- set shell_exe = "/bin/bash" -%}
+{%- endif -%}
 {%- macro render_queueadapter() -%}
 {%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
 nodes:            {{ nodes|default(8,true)|int }}

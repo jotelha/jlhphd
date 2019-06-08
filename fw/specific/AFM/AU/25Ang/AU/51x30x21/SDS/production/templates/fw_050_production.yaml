@@ -66,6 +66,7 @@ spec:
     stdout_file:    std.out
     store_stdout:   true
     store_stderr:   true
+    shell_exe:      {{ shell_exe }}
     use_shell:      true
     fizzle_bad_rc:  true
   _trackers:
