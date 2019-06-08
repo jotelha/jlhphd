@@ -1,18 +1,15 @@
-name: "JUWELS: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
+name: "NEMO: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
-  machine:                JUWELS
-  walltime:               '24:00:00'
-  queue:                  batch
-  ntasks:                 192
-  cpus_per_task:          1
-  ntasks_per_node:        96
-  account:                hfr13
-
-  worker:                 juwels_noqueue
-  postp_worker:           juwels_noqueue
-  restart_worker:         juwels_queue
+  machine:                NEMO
+  nodes:                  8
+  ppn:                    20
+  walltime:               '48:00:00'
+  queue:                  ''
+  worker:                 nemo_noqueue
+  postp_worker:           nemo_noqueue
+  restart_worker:         nemo_queue_offline
   max_restarts:           5
 
   # storage options
@@ -28,7 +25,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   coulomb_cutoff_unit:                          Ang
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
-  mpiio:                                        1
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
@@ -43,12 +39,11 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   production_steps:                             1500000
-  use_dpd_tstat:                                1
-  use_barostat:                                 0
+
 
   # system metadata
   ci_preassembly:                               at polar heads
-  constant_indenter_velocity:                   -1.0e-5
+  constant_indenter_velocity:                   1.0e-5
   constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
   force_field:                                  charmm36
@@ -127,19 +122,50 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_050_production.yaml:
-  - worker:                     juwels_queue
+  - worker:                 nemo_queue_offline
+    nodes:                  8
+    ppn:                    20
+    walltime:               '96:00:00'
 
 persistent:
   fw_030_datafile_retrieval.yaml:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
+
   - sf_nmolecules:        646
     sf_preassembly:       monolayer
     sf_concentration:     0.0068
+
   - sf_nmolecules:        1107
     sf_preassembly:       bilayer
     sf_concentration:     0.017
+
+  fw_050_production.yaml:
+  - netcdf_frequency:           500
+    thermo_frequency:           50
+    thermo_average_frequency:   50
+    restart_frequency:          500
+    production_steps:           150000
+    constant_indenter_velocity: -1.0e-4
+    walltime:                   '24:00:00'
+
+  - netcdf_frequency:           5000
+    thermo_frequency:           500
+    thermo_average_frequency:   500
+    restart_frequency:          5000
+    production_steps:           1500000
+    constant_indenter_velocity: -1.0e-5
+    walltime:                   '96:00:00'
+
+  - netcdf_frequency:           50000
+    thermo_frequency:           5000
+    thermo_average_frequency:   5000
+    restart_frequency:          50000
+    production_steps:           15000000
+    constant_indenter_velocity: -1.0e-6
+    walltime:                   '96:00:00'
+
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps

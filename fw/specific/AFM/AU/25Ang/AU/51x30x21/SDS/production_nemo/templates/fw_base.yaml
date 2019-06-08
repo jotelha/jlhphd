@@ -14,36 +14,21 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/%s%s"|format(
+{% set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/%s%s"|format(
   indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
-  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly,constant_indenter_velocity,constant_indenter_velocity_unit) -%}
+  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly,constant_indenter_velocity,constant_indenter_velocity_unit) %}
 {# identifier for initial configuration datafile #}
 {# set datafile_identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/merged.lammps"|format(
   indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
   substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly) #}
-{%- set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s"|format(
+{% set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s"|format(
   sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly,
-  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity,constant_indenter_velocity_unit) -%}
+  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity,constant_indenter_velocity_unit) %}
 {# descriptive natural language title for display purposes #}
-{%- set title = "%s %s r %s %s indenter at %s %s on %d %s on %s %s %dx%dx%d substrate, %s"|format(
+{% set title = "%s %s r %s %s indenter at %s %s on %d %s on %s %s %dx%dx%d substrate, %s"|format(
   indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity, constant_indenter_velocity_unit,
-  sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) -%}
-{%- macro render_queueadapter() -%}
-{%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
-nodes:            {{ nodes|default(8,true)|int }}
-ppn:              {{ ppn|default(20,true)|int }}
-queue:            {{ queue|default('',true) }}
-walltime:         {{ walltime|default("96:00:00") }}
-{%- elif worker is in ['juwels_queue'] -%}
-account:          {{ account|default("hfr13") }}
-cpus_per_task:    {{ cpus_per_task|default(1,true)|int }}
-ntasks_per_node:  {{ ntasks_per_node|default(96,true)|int }}
-ntasks:           {{ ntasks|default(192,true)|int }}
-queue:            {{ queue|default("batch") }}
-walltime:         {{ walltime|default("24:00:00") }}
-{%- endif -%}
-{%- endmacro -%}
-{%- macro render_metadata() -%}
+  sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
+{% macro render_metadata() %}
 machine:         {{ machine }}
 
 ewald_accuracy:  {{ ewald_accuracy }}
@@ -119,5 +104,6 @@ indenter:
   time_step:                    {{ indenter.time_step }}
   time_step_unit:               {{ indenter.time_step_unit }}
   type:                         {{ indenter.type }}
-{%- endmacro -%}
-{%- block body -%}{%- endblock -%}
+
+{% endmacro %}
+{% block body %}{% endblock %}
