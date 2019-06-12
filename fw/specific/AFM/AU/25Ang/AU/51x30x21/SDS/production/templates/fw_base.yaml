@@ -58,6 +58,9 @@ neigh_delay:     {{ neigh_delay }}
 neigh_every:     {{ neigh_every }}
 neigh_check:     {{ neigh_check }}
 
+use_barostat     [[ use_barostat }}
+use_dpd_tstat:   {{ use_dpd_tstat }}
+
 system_name:     {{ system_name }}
 
 ci_preassembly:                               {{ ci_preassembly }}
@@ -68,6 +71,7 @@ force_field:                                  {{ force_field }}
 pbc:                                          {{ pbc }}
 pressure:                                     {{ pressure }}
 pressure_unit:                                {{ pressure_unit }}
+production_steps:                             {{ production_steps }}
 sb_name:                                      {{ sb_name }}
 sb_area:                                      {{ sb_area }}
 sb_area_unit:                                 {{ sb_area_unit }}

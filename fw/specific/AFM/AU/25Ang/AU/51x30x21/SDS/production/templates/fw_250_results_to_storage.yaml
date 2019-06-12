@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{machine}}, sync '{{identifier}}' results to file pad
+name: {{machine}}, sync '{{identifier}}' results to RZ storage
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
@@ -22,7 +22,7 @@ spec:
     - --server_port 445
     - --verbose
     - .
-    - hoermannj/2019/md/{{ identifier }}/equilibration_npt
+    - hoermannj/2019/md/{{ identifier }}/production
     stderr_file:   std.err
     stdout_file:   std.out
     store_stdout:  true
