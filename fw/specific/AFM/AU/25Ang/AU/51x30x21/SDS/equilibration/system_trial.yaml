@@ -3,18 +3,13 @@ metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
   machine:                NEMO
-  nodes:                  1
+  nodes:                  8
   ppn:                    20
   walltime:               '04:00:00'
   queue:                  ''
   worker:                 nemo_noqueue
 
-  # storage options
-  # remote_user:            testuser
-  # remote_dir:             /mnt/dat/work/testuser/interface/SDS/AU/111/51x30x21
-  # ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
 
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4
@@ -22,6 +17,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   coulomb_cutoff_unit:                          Ang
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
+  mpiio:                                        1
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
@@ -31,10 +27,11 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
   minimization_maxeval:                         100000
-  nvt_equilibration_steps:                      10000
-  npt_equilibration_steps:                      10000
-  # production_steps:                             100000
-  
+  nvt_equilibration_steps:                      100000
+  npt_equilibration_steps:                      100000
+  #production_steps:                             1500000
+  use_dpd_tstat:                                1
+  use_barostat:                                 1
 
   # system metadata
   ci_preassembly:                               at polar heads
@@ -126,16 +123,23 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #queue:                  express
   fw_060_equilibration_nvt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
+    walltime:               '24:00:00'
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '04:00:00'
+    walltime:               '24:00:00'
 
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
+  fw_030_minimization.yaml:
+  - step: minimization
+  fw_060_equilibration_nvt.yaml:
+  - step: equilibration_nvt
+  fw_070_equilibration_npt.yaml:
+  - step: equilibration_nvt
+
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
@@ -164,14 +168,21 @@ dependencies:
 
   fw_030_minimization.yaml:
   - fw_060_equilibration_nvt.yaml
+  - fw_100_extract_property:        30
+  - fw_200_results_to_filepad.yaml: 30
+  - fw_250_results_to_storage.yaml: 30
 
   fw_060_equilibration_nvt.yaml:
   - fw_070_equilibration_npt.yaml
+  - fw_100_extract_property:        60
+  - fw_200_results_to_filepad.yaml: 60
+  - fw_250_results_to_storage.yaml: 60
 
   fw_070_equilibration_npt.yaml:
   - fw_100_extract_property.yaml
-  - fw_200_results_to_filepad.yaml
-  - fw_250_results_to_storage.yaml
+  - fw_100_extract_property:        70
+  - fw_200_results_to_filepad.yaml: 70
+  - fw_250_results_to_storage.yaml: 70
 
   fw_100_extract_property.yaml:
   - fw_200_results_to_filepad.yaml

@@ -32,9 +32,9 @@ spec:
     - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             1
     - -v has_vacuum               0
-    - -v mpiio                    1
+    - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v nptEqSteps               {{ npt_equilibration_steps|default(10000,true)|int }}
+    - -v productionSteps          {{ production_steps|default(10000,true)|int }}
     - -v pbc2d                    0
     - -v temperatureT             {{ temperature|default(298.0)|float }}
     - -v pressureP                {{ pressure|default(0.0,true)|float }}
@@ -45,9 +45,11 @@ spec:
     - -v rigid_indenter           0
     - -v restrained_indenter      1
     - -v shrink_wrap_once         0
-    - -v store_forces             1 
+    - -v store_forces             1
     - -v surfactant_name          {{ surfactant|default("SDS") }}
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
+    - -v use_barostat             {{ use_barostat|default(1,false)|int }}
+    - -v use_dpd_tstat            {{ use_dpd_tstat|default(1,false)|int }}
     - -v use_eam                  1
     - -v use_ewald                1
     - -v write_coeff_to_datafile  0

@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{machine}}, transfer '{{identifier}}/{{ step }}' to file pad
+name: {{machine}}, transfer '{{identifier}}/minimization' to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
@@ -12,29 +12,29 @@ spec:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
-    - {{ identifier }}/{{ step }}/default.lammps
-    - {{ identifier }}/{{ step }}/groups.ndx
-    - {{ identifier }}/{{ step }}/log.lammps
-    - {{ identifier }}/{{ step }}/thermo.out
+    - {{ identifier }}/minimization/default.lammps
+    - {{ identifier }}/minimization/groups.ndx
+    - {{ identifier }}/minimization/log.lammps
+    - {{ identifier }}/minimization/thermo.out
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
-    - {{ identifier }}/{{ step }}/default.lammps
-    - {{ identifier }}/{{ step }}/groups.ndx
-    - {{ identifier }}/{{ step }}/log.lammps
-    - {{ identifier }}/{{ step }}/thermo.out
+    - {{ identifier }}/minimization/default.lammps
+    - {{ identifier }}/minimization/groups.ndx
+    - {{ identifier }}/minimization/log.lammps
+    - {{ identifier }}/minimization/thermo.out
     paths:
     - default.lammps
     - groups.ndx
     - log.lammps
     - thermo.out
     metadata:
-      state: minimized, nvt- and npt-equilibrated with eam potential after indenter inserion
-      step:  {{ step }}
+      state: minimized with eam potential after indenter inserion
+      step:  minimization
       {{ render_metadata()|indent(6)}}
 
   metadata:
     state: file transfer to filepad
-    step:  {{ step }}
+    step:  minimization
     {{ render_metadata()|indent(4)}}
 {% endblock %}

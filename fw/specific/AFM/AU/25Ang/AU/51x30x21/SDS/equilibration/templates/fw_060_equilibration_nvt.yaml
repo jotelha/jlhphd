@@ -4,10 +4,7 @@ name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS NVT equilibration
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
-    nodes:    {{ nodes|default(8,true)|int }}
-    ppn:      {{ ppn|default(20,true)|int }}
-    queue:    '{{ queue|default('',true) }}'
-    walltime: {{ walltime|default("24:00:00") }}
+    {{ render_queueadapter()|safe|indent(4) }}
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
@@ -31,7 +28,7 @@ spec:
     - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             1
     - -v has_vacuum               0
-    - -v mpiio                    1
+    - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
     - -v nvtEqSteps               {{ nvt_equilibration_steps|default(10000,true)|int }}
     - -v pbc2d                    0
@@ -42,7 +39,7 @@ spec:
     - -v rigid_indenter           0
     - -v restrained_indenter      1
     - -v shrink_wrap_once         0
-    - -v store_forces             1 
+    - -v store_forces             1
     - -v surfactant_name          {{ surfactant|default("SDS") }}
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v use_eam                  1
@@ -51,9 +48,9 @@ spec:
     - -v write_groups_to_file     1
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
     - -v ewald_accuracy           {{ ewald_accuracy|default('1.0e-4',true) }}
-    - -v neigh_delay              {{ neigh_delay|default(2,true)|int }}
-    - -v neigh_every              {{ neigh_every|default(1,true)|int }}
-    - -v neigh_check              {{ neigh_check|default(1,true) }}
+    - -v neigh_delay              {{ neigh_delay|default(2,false)|int }}
+    - -v neigh_every              {{ neigh_every|default(1,false)|int }}
+    - -v neigh_check              {{ neigh_check|default(1,false) }}
     - -v skin_distance            {{ skin_distance|default(3.0,true)|float }}
     stderr_file:    std.err
     stdout_file:    std.out
