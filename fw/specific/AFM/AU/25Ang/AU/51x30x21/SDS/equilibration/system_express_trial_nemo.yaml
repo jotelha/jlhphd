@@ -53,13 +53,12 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_maxeval:                         1000
   nvt_equilibration_steps:                      100
   npt_equilibration_steps:                      100
-  # production_steps:                             100000
-    use_barostat:                                 1
-    use_berenden_bstat:                           1
-    use_dpd_tstat:                                1
-    use_eam:                                      1
-    use_ewald:                                    1
-
+  # production_steps:                           100000
+  use_barostat:                                 1
+  use_berenden_bstat:                           1
+  use_dpd_tstat:                                1
+  use_eam:                                      1
+  use_ewald:                                    1
 
   # system metadata
   ci_preassembly:                               at polar heads
@@ -150,9 +149,9 @@ transient: # ...overridden by these transient settings, which do not affect chil
     use_dpd_tstat:            1
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
-      use_barostat:             1
-      use_berenden_bstat:       1
-      use_dpd_tstat:            1
+    use_barostat:             1
+    use_berenden_bstat:       1
+    use_dpd_tstat:            1
 
 persistent:
   fw_010_datafile_retrieval.yaml:
