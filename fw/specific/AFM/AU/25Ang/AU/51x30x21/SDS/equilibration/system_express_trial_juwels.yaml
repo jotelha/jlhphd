@@ -7,7 +7,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                JUWELS
   worker:                 juwels_noqueue
   walltime:               '00:15:00'
-  queue:                  batch
+  queue:                  devel
   ntasks:                 96
   cpus_per_task:          1
   ntasks_per_node:        96
@@ -39,9 +39,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
-  netcdf_frequency:                             1000
-  thermo_frequency:                             1000
-  thermo_average_frequency:                     1000
+  netcdf_frequency:                             10
+  thermo_frequency:                             10
+  thermo_average_frequency:                     10
 
   minimization_ftol:                            10.0
   minimization_ftol_unit:                       kcal

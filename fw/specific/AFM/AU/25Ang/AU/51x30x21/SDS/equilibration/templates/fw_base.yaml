@@ -92,6 +92,29 @@ walltime:         {{ walltime|default("24:00:00") }}
 {%- endif -%}
 {%- endmacro -%}
 
+{%- macro render_smb_forward() -%}
+{%- if worker is in ['juwels_noqueue'] -%}
+_background_tasks:
+- _fw_name: BackgroundTask
+  num_launches:  1
+  run_on_finish: false
+  sleep_time:    10
+  tasks:
+  - _fw_name: PyTask
+    func:     ssh_forward.forward
+    kwargs:   
+      remote_host:  {{ smb_host|default("ufr2.isi1.public.ads.uni-freiburg.de",true) }}
+      remote_port:  {{ smb_port|default(445,true)|int }}
+      ssh_host:     {{ smb_gateway|default("132.230.102.164",true) }}
+      ssh_user:     {{ smb_gateway_user|default("sshclient",true) }}
+      ssh_keyfile:  {{ smb_gateway_ssh_id|default("~/.ssh/sshclient-frrzvm",true) }}
+      port_file:    .port
+{%- set smb_port_provider = "localhost" -%}
+{%- else -%}
+{%- set smb_port_provider = smb_host -%}
+{%- endif -%}
+{%- endmacro -%}
+
 {%- macro render_metadata() -%}
 machine:         {{ machine }}
 

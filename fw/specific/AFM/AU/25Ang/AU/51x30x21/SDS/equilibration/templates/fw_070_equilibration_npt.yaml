@@ -29,7 +29,7 @@ spec:
     - -v has_indenter             1
     - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v productionSteps          {{ production_steps|default(100000,true)|int }}
+    - -v productionSteps          {{ npt_equilibration_steps|default(100000,true)|int }}
     - -v temperatureT             {{ temperature|default(298.0)|float }}
     - -v pressureP                {{ pressure|default(0.0,true)|float }}
     - -v pressurize_z_only        1

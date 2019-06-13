@@ -6,9 +6,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   # JUWELS
   machine:                JUWELS
   worker:                 juwels_noqueue
-  walltime:               '24:00:00'
+  walltime:               '06:00:00'
   queue:                  batch
-  ntasks:                 192
+  ntasks:                 384
   cpus_per_task:          1
   ntasks_per_node:        96
   account:                hfr13
@@ -20,6 +20,13 @@ std: # standard settings to be applied to all fireworks, if not ...
   # walltime:               '04:00:00'
   # queue:                  ''
   # worker:                 nemo_noqueue
+
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port_remote:        445
+  # smb_port_local:         8445
 
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
 
@@ -149,7 +156,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
+    sf_preassembly:       bilayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization

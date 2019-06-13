@@ -4,19 +4,38 @@ name: {{machine}}, sync '{{identifier}}/{{ step }}' results to RZ storage
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
+    ave_file:              thermo_ave.out
     log_file:              log.lammps
     data_file:             datafile.lammps
     thermo_out:            thermo.out
     ndx_file:              groups.ndx
+  {{ render_smb_forward()|indent(2) }}
   _tasks:
+  - _fw_name: ScriptTask
+    script: >-
+      counter=0; 
+      while [ ! -f .port ]; do 
+        sleep 1; 
+        counter=$((counter + 1)); 
+        if [ $counter -ge 10 ]; then 
+          echo "Timed out waiting for port!"; 
+          exit 126;
+        fi;
+      done
+    stderr_file:   wait.err
+    stdout_file:   wait.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
   - _fw_name: CmdTask
     cmd: smbsync.py
     opt:
-    - --server_name ufr2.isi1.public.ads.uni-freiburg.de
-    - --share pastewka
-    - --domain PUBLIC
-    - --username pastewka
-    - --server_port 445
+    - --server_name {{ smb_port_provider|default("localhost",true) }}
+    - --share       {{ smb_share|default("pastewka",true) }}
+    - --domain      {{ smb_domain|default("PUBLIC",true) }}
+    - --username    {{ smb_user|default("pastewka",true) }}
+    - --server_port {{ smb_port_local|default("$(cat .port)",true) }}
     - --verbose
     - .
     - hoermannj/2019/md/{{ identifier }}/{{ step }}
