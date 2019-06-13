@@ -768,7 +768,7 @@ if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "group frozen union frozen frozen_substrate_layer"
 # create substrate layer group to hold frozen at bottom if desired:
 if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
-  "group atoms_in_restrained_substrate_layer_region region restraied_substrate_layer_region" &
+  "group atoms_in_restrained_substrate_layer_region region restrained_substrate_layer_region" &
   "group restrained_substrate_layer intersect substrate atoms_in_restrained_substrate_layer_region" &
 
 # If the group ID already exists, the group command adds the specified atoms to the group.
