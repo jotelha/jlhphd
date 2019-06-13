@@ -37,6 +37,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   coulomb_cutoff_unit:                          Ang
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
+  
   mpiio:                                        1
   neigh_delay:                                  2
   neigh_every:                                  1

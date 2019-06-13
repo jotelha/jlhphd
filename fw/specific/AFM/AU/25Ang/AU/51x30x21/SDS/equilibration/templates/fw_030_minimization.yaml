@@ -4,10 +4,7 @@ name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS minimization
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
-    nodes:    {{ nodes|default(1,true)|int }}
-    ppn:      {{ ppn|default(20,true)|int }}
-    queue:    '{{ queue|default('',true) }}'
-    walltime: {{ walltime|default("00:15:00") }}
+    {{ render_queueadapter()|safe|indent(4) }}
   _files_in:
     data_file: datafile.lammps
     input_header:               lmp_header.input
@@ -28,18 +25,16 @@ spec:
     - -v freeze_substrate         1    # hold entire substrate fixed
     - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # only for group definition for subsequent steps
     - -v has_indenter             1
-    - -v has_vacuum               0
     - -v minimization_ftol        {{ minimization_ftol|default('1.0e-5',true) }}
     - -v minimization_maxiter     {{ minimization_maxiter|default(10000,true)|int }}
     - -v minimization_maxeval     {{ minimization_maxeval|default(100000,true)|int }}
-    - -v mpiio                    1
-    - -v pbc2d                    0
-    - -v relax_box                0
+    - -v mpiio                    {{ mpiio|default(1,false)|int }}
+    - -v relax_box                {{ relax_box|default(1,false)|int }}
     - -v robust_minimization      0
     - -v store_forces             0
     - -v surfactant_name          {{ surfactant|default("SDS") }}
-    - -v use_eam                  1
-    - -v use_ewald                1
+    - -v use_eam                  {{ use_eam|default(1,false)|int }}
+    - -v use_ewald                {{ use_ewald|default(1,false)|int }}
     - -v write_coeff_to_datafile  0
     - -v write_groups_to_file     1
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}

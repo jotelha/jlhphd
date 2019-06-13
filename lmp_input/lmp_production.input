@@ -20,7 +20,6 @@
 # expects variables ${baseName} and ${restartFile}
 
 # technical settings
-variable mpiio          index  1         # parallel io on or off
 variable is_restart     index  0         # marks current run as restart
 
 # for the initial run, a small file called system_specific.input is expected
@@ -226,9 +225,9 @@ if "${store_forces} > 0" then &
 if "${is_restart} == 0" then "group tempered_group subtract substrate frozen"
 # if not applying DPD thermostat
 if "${use_dpd_tstat} == 0" then &
-    "fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} &
+    "fix thermostat tempered_group langevin ${initialT} ${temperatureT} &
         ${langevin_damping} ${random_seed}"
-#   ^ID             ^group-ID      ^langevin
+#        ^ID        ^group-ID      ^langevin
 #                                           ^Tstart         ^Tstop
 #       ^damp               ^seed
 # source: https://lammps.sandia.gov/doc/fix_langevin.html
@@ -271,9 +270,20 @@ if "${use_dpd_tstat} == 0" then &
 ### BAROSTAT
 
 # the "pressured" group are all atoms, except the frozen ones
-if "${is_restart} == 0" then "group pressured_group subtract all frozen"
+if "${is_restart} == 0 && ${pressurize_solution_only} == 0" then &
+    "group pressured_group subtract all frozen" &
+elif "${is_restart} == 0" &
+    "group pressured_group subtract all frozen solid"
 
-if "${use_barostat} > 0 && ${pressurize_z_only} > 0" then &
+
+# Berendsen barostat for equilibration
+if "(${use_berendsen_bstat} > 0) && ( (${pbc2d} > 0) || (${has_vacuum} > 0) )" then &
+  "fix barostat pressured_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+elif "${use_berendsen_bstat} > 0 && ${pressurize_z_only} > 0" &
+  "fix barostat pressured_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+elif "${use_berendsen_bstat} > 0" &
+  "fix barostat pressured_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial" &
+elif "${use_barostat} > 0 && ${pressurize_z_only} > 0" &
   "fix barostat pressured_group nph z ${pressureP} ${pressureP} &
     ${barostat_damping} dilate pressured_group fixedpoint $(xlo) $(ylo) $(zlo)" &
 elif "${use_barostat} > 0" &
@@ -287,6 +297,37 @@ else &
 # As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
 # time integration. Fix press/berendsen does NOT, so it should be used with one
 # of the constant NVE fixes or with one of the NVT fixes.
+
+################################################################################
+### INDENTER AND SUBSTRATE RESTRAINT
+
+if "${restrain_substrate_layer} > 0" then &
+  "fix restrain_substrate restrained_substrate_layer momentum 1 linear 1 1 1 angular rescale"
+
+if "${has_indenter} > 0 && ${restrained_indenter} > 0" then &
+  "fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale"
+#                                          ^N       ^xyz          ^preserve kinetic energy
+# source: https://lammps.sandia.gov/doc/fix_momentum.html
+# If the linear keyword is used, the linear momentum is zeroed by subtracting
+# the center-of-mass velocity of the group from each atom. This does not change
+# the relative velocity of any pair of atoms. One or more dimensions can be
+# excluded from this operation by setting the corresponding flag to 0.
+#
+# If the angular keyword is used, the angular momentum is zeroed by subtracting
+# a rotational component from each atom.
+#
+# This command can be used to insure the entire collection of atoms (or a
+# subset of them) does not drift or rotate during the simulation due to random
+# perturbations (e.g. fix langevin thermostatting).
+#
+# The rescale keyword enables conserving the kinetic energy of the group of
+# atoms by rescaling the velocities after the momentum was removed.
+#
+# No information about this fix is written to binary restart files. None of the
+# fix_modify options are relevant to this fix. No global or per-atom quantities
+# are stored by this fix for access by various output commands. No parameter of
+# this fix can be used with the start/stop keywords of the run command. This
+# fix is not invoked during energy minimization.
 
 ################################################################################
 ### DRIFT REMOVAL
@@ -360,6 +401,9 @@ if "${rigid_h_bonds} > 0" then &
 # The degrees-of-freedom removed by SHAKE bonds and angles are accounted for in
 # temperature and pressure computations. Similarly, the SHAKE contribution to
 # the pressure of the system (virial) is also accounted for.
+
+################################################################################
+### OUTPUT
 
 # average final (constrained) forces
 if "${store_forces} > 0" then &

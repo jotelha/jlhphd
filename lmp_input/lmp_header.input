@@ -8,6 +8,55 @@
 
 # index varibles can be overridden by command line parameters "-v varName value"
 
+# suggested overrides for
+#
+# * minimization
+# - -v freeze_substrate         1    # hold entire substrate fixed
+# - -v has_indenter             1
+# - -v minimization_ftol        1.0e-5
+# - -v minimization_maxiter     10000
+# - -v minimization_maxeval     100000
+# - -v relax_box                0
+# - -v robust_minimization      0
+# - -v surfactant_name          SDS
+# - -v thermo_frequency         100
+# - -v use_eam                  1
+# - -v use_ewald                1
+#
+# * NVT equilibration
+# - -v restrain_substrate_layer 14.0
+# - -v has_indenter             1
+# - -v netcdf_frequency         1000
+# - -v productionSteps          100000
+# - -v temperatureT             298
+# - -v reinitialize_velocities  1
+# - -v restrained_indenter      1
+# - -v surfactant_name          SDS
+# - -v thermo_frequency         1000
+# - -v use_barostat             0
+# - -v use_berendsen_bstat      0
+# - -v use_dpd_tstat            1
+# - -v use_eam                  1
+# - -v use_ewald                1
+
+# * NPT equilibration
+# - -v restrain_substrate_layer 14.0
+# - -v has_indenter             1
+# - -v netcdf_frequency         1000
+# - -v productionSteps          100000
+# - -v temperatureT             298
+# - -v pressureP                1
+# - -v pressurize_solution_only 0
+# - -v pressurize_z_only        1
+# - -v reinitialize_velocities  0
+# - -v restrained_indenter      1
+# - -v surfactant_name          SDS
+# - -v thermo_frequency         1000
+# - -v use_berendsen_bstat      1
+# - -v use_dpd_tstat            1
+# - -v use_eam                  1
+# - -v use_ewald                1
+
 # input settings
 variable baseName                index  "default"
 variable coeffInfile             index  coeff_dummy.input # file to read ff parameters
@@ -19,18 +68,18 @@ variable read_datafile           index  1 # do not read data file if 0
 variable read_groups_from_file   index  0 #
 
 # output settings
-variable coeffOutfile            index  coeff.input # file to store ff parameters
+variable coeffOutfile            index  coeff.input.transient # file to store ff parameters
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
 variable mpiio                   index  1 # parallel io on or off
 variable netcdf_frequency        index  1000
 variable png_frequency           index  100000
 variable restart_frequency       index  100000
-variable store_forces            index  0 # store constrained AND unconstrained forces in NetcDF
+variable store_forces            index  1 # store constrained AND unconstrained forces in NetcDF
 variable thermo_frequency        index  1000 # outputs stats at single time step
-variable thermo_average_frequency index 0 # outputs stats averaged over N timesteps. 0: disabled
-variable write_coeff             index  0 # write force field parameters to independent file
-variable write_coeff_to_datafile index  1 # write force filed parameters to system datafile
-variable write_groups_to_file    index  0 #
+variable thermo_average_frequency index ${thermo_frequency} # outputs stats averaged over N timesteps. 0: disabled
+variable write_coeff             index  1 # write force field parameters to independent file
+variable write_coeff_to_datafile index  0 # write force filed parameters to system datafile
+variable write_groups_to_file    index  1 #
 variable ndx_file                index  groups.ndx
 variable verbose                 index  0 # log detailed system info at differents stages of input script
 
@@ -78,13 +127,16 @@ variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd 
 
 # barostat-related
 variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
+variable pressurize_solution_only index 0 # if 0, pressurizes all non-frozen atoms, otherwise only liquid
 variable use_barostat            index  1 # if 0, run NVT instead of NPT or NVE instead of NPH
+variable use_berendsen_bstat     index  0 # use Berenden instead of Parinell-Rahman barostat (i.e. for NPT equilibration)
 variable barostat_damping        index  1000 # fs, damping parameter for Parrinello-Rahman barostat
 
 # other technical settings:
 variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
 variable box_shift_z             index  0.0 # shift box once in negative direction by this distance
 variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
+variable restrain_substrate_layer index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
 variable is_restart              index  0 # marks current run as restart
 variable has_vacuum              index  0 # if > 0, z-direction not pressurized
 variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
@@ -705,12 +757,19 @@ elif "${is_restart} == 0 && ${has_indenter} > 0 && ${rigid_indenter_core_radius}
 # define region of frozen substrate layer if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "region frozen_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box"
+# define region of restrained substrate layer if desired:
+if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
+  "region restrained_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_restrain_substrate_layer)) 0 0 1 side out units box"
 
 # create substrate layer group to hold frozen at bottom if desired:
 if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region" &
   "group frozen_substrate_layer intersect substrate atoms_in_frozen_substrate_layer_region" &
   "group frozen union frozen frozen_substrate_layer"
+# create substrate layer group to hold frozen at bottom if desired:
+if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
+  "group atoms_in_restrained_substrate_layer_region region restraied_substrate_layer_region" &
+  "group restrained_substrate_layer intersect substrate atoms_in_restrained_substrate_layer_region" &
 
 # If the group ID already exists, the group command adds the specified atoms to the group.
 # for compatibility reasons:

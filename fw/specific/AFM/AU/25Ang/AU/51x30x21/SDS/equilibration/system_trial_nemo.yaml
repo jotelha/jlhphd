@@ -2,6 +2,22 @@ name: "NEMO TRIAL: LAMMPS minimization and equilibration of r = 25 Ang AU AFM pr
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
+
+  # JUWELS
+  # machine:                JUWELS
+  # walltime:               '24:00:00'
+  # queue:                  batch
+  # ntasks:                 192
+  # cpus_per_task:          1
+  # ntasks_per_node:        96
+  # account:                hfr13
+  #
+  # worker:                 juwels_noqueue
+  # postp_worker:           juwels_noqueue
+  # restart_worker:         juwels_queue
+  # max_restarts:           5
+
+  # NEMO
   machine:                NEMO
   nodes:                  8
   ppn:                    20
@@ -17,12 +33,15 @@ std: # standard settings to be applied to all fireworks, if not ...
   coulomb_cutoff_unit:                          Ang
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
+
   mpiio:                                        1
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
   netcdf_frequency:                             1000
   thermo_frequency:                             1000
+  thermo_average_frequency:                     1000
+
   minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
@@ -30,15 +49,21 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      100000
   npt_equilibration_steps:                      100000
   #production_steps:                             1500000
-  use_dpd_tstat:                                1
   use_barostat:                                 1
+  use_berenden_bstat:                           1
+  use_dpd_tstat:                                1
+  use_eam:                                      1
+  use_ewald:                                    1
+
 
   # system metadata
   ci_preassembly:                               at polar heads
   counterion:                                   NA
   force_field:                                  charmm36
-  frozen_sb_layer_thickness:                    14.0
-  frozen_sb_layer_thickness_unit:               Ang
+  #frozen_sb_layer_thickness:                    14.0
+  #frozen_sb_layer_thickness_unit:               Ang
+  restrained_sb_layer_thickness:                14.0
+  restrained_sb_layer_thickness_unit:           Ang
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
@@ -121,12 +146,26 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #ppn:                    20
     #walltime:               '00:05:00'
     #queue:                  express
+
   fw_060_equilibration_nvt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '24:00:00'
+    nodes:                  8
+    ppn:                    20
+    walltime:               '12:00:00'
+
+    use_barostat:             0
+    use_berenden_bstat:       0
+    use_dpd_tstat:            1
+
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
-    walltime:               '24:00:00'
+    nodes:                  8
+    ppn:                    20
+    walltime:               '12:00:00'
+
+    use_barostat:             1
+    use_berenden_bstat:       1
+    use_dpd_tstat:            1
 
 persistent:
   fw_010_datafile_retrieval.yaml:
@@ -139,15 +178,6 @@ persistent:
   - step: equilibration_nvt
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
-
-#1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#377_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
-#377_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#646_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#75_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-
 
 dependencies:
   # single dependency entries result in one instance only

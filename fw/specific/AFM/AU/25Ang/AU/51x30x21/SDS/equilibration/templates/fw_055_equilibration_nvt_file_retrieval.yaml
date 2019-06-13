@@ -5,7 +5,7 @@ spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
     input_header:               lmp_header.input
-    input_equilibration_nvt:    lmp_equilibration_nvt.input
+    input_equilibration_nvt:    lmp_production.input
     coeff_file:                 coeff_hybrid.input
 
   _tasks:
@@ -13,8 +13,8 @@ spec:
   - _fw_name: GetFilesTask
     identifiers:
     - lmp_header.input
-    - lmp_equilibration_nvt.input
-    
+    - lmp_production.input
+
   - _fw_name: GetFilesTask
     identifiers:
     - {{ coeff_identifier }}

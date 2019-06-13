@@ -4,6 +4,7 @@ name: {{machine}}, transfer '{{identifier}}/{{ step }}' to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
+    ave_file:     thermo_ave.out
     data_file:    default.lammps
     ndx_file:     groups.ndx
     log_file:     log.lammps
@@ -12,6 +13,7 @@ spec:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
+    - {{ identifier }}/{{ step }}/thermo_ave.out
     - {{ identifier }}/{{ step }}/default.lammps
     - {{ identifier }}/{{ step }}/groups.ndx
     - {{ identifier }}/{{ step }}/log.lammps
@@ -19,11 +21,13 @@ spec:
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
+    - {{ identifier }}/{{ step }}/thermo_ave.out
     - {{ identifier }}/{{ step }}/default.lammps
     - {{ identifier }}/{{ step }}/groups.ndx
     - {{ identifier }}/{{ step }}/log.lammps
     - {{ identifier }}/{{ step }}/thermo.out
     paths:
+    - thermo_ave.out
     - default.lammps
     - groups.ndx
     - log.lammps

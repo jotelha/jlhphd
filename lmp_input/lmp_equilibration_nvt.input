@@ -19,11 +19,13 @@ if "${is_restart} == 0" then "group tempered_group subtract all frozen"
 ###################
 # NVT equilibration
 ###################
-fix thermostat          tempered_group langevin ${initialT} ${temperatureT} 100 29061988
-#   ^ID                 ^group-ID
-#                           ^langevin
-#                                    ^Tstart         ^Tstop          ^damp
-#                                                                        ^seed
+if "${use_dpd_tstat} == 0" then &
+    "fix thermostat tempered_group langevin ${initialT} ${temperatureT} &
+        ${langevin_damping} ${random_seed}"
+#        ^ID        ^group-ID
+#                                   ^langevin
+#                                            ^Tstart    ^Tstop
+#       ^damp               ^seed
 # source: https://lammps.sandia.gov/doc/fix_langevin.html
 # fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
 # Apply a Langevin thermostat as described in (Schneider) to a group of atoms
