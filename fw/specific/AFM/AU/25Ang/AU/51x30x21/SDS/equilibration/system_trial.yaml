@@ -138,7 +138,7 @@ persistent:
   fw_060_equilibration_nvt.yaml:
   - step: equilibration_nvt
   fw_070_equilibration_npt.yaml:
-  - step: equilibration_nvt
+  - step: equilibration_npt
 
 #1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 #129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
@@ -168,22 +168,29 @@ dependencies:
 
   fw_030_minimization.yaml:
   - fw_060_equilibration_nvt.yaml
-  - fw_100_extract_property:        30
-  - fw_200_results_to_filepad.yaml: 30
-  - fw_250_results_to_storage.yaml: 30
+  - fw_080_extract_property.yaml
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
 
   fw_060_equilibration_nvt.yaml:
   - fw_070_equilibration_npt.yaml
-  - fw_100_extract_property:        60
-  - fw_200_results_to_filepad.yaml: 60
-  - fw_250_results_to_storage.yaml: 60
+  - fw_090_extract_property.yaml
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
 
   fw_070_equilibration_npt.yaml:
   - fw_100_extract_property.yaml
-  - fw_100_extract_property:        70
-  - fw_200_results_to_filepad.yaml: 70
-  - fw_250_results_to_storage.yaml: 70
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
 
   fw_100_extract_property.yaml:
-  - fw_200_results_to_filepad.yaml
-  - fw_250_results_to_storage.yaml
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_090_extract_property.yaml:
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
+
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml

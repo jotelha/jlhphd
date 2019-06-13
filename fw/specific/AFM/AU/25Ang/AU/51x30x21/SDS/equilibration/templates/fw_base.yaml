@@ -93,7 +93,6 @@ walltime:         {{ walltime|default("24:00:00") }}
 {%- endmacro -%}
 
 {%- macro render_metadata() -%}
-{% macro render_metadata() %}
 machine:         {{ machine }}
 
 ewald_accuracy:  {{ ewald_accuracy }}
@@ -103,7 +102,7 @@ neigh_delay:     {{ neigh_delay }}
 neigh_every:     {{ neigh_every }}
 neigh_check:     {{ neigh_check }}
 
-use_barostat     [[ use_barostat }}
+use_barostat:    {{ use_barostat }}
 use_dpd_tstat:   {{ use_dpd_tstat }}
 
 system_name:     {{ system_name }}
@@ -170,5 +169,5 @@ indenter:
   time_step:                    {{ indenter.time_step }}
   time_step_unit:               {{ indenter.time_step_unit }}
   type:                         {{ indenter.type }}
-{% endmacro %}
-{% block body %}{% endblock %}
+{%- endmacro -%}
+{%- block body -%}{%- endblock -%}

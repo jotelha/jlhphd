@@ -1,40 +1,40 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{machine}}, transfer '{{identifier}}/equilibration_nvt' to file pad
+name: {{machine}}, transfer '{{identifier}}/{{ step }}' to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
     data_file:    default.lammps
     ndx_file:     groups.ndx
     log_file:     log.lammps
-    thermo_file:  thermo.out
+    thermo_out:  thermo.out
   _tasks:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
-    - {{ identifier }}/equilibration_nvt/default.lammps
-    - {{ identifier }}/equilibration_nvt/groups.ndx
-    - {{ identifier }}/equilibration_nvt/log.lammps
-    - {{ identifier }}/equilibration_nvt/thermo.out
+    - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/groups.ndx
+    - {{ identifier }}/{{ step }}/log.lammps
+    - {{ identifier }}/{{ step }}/thermo.out
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
-    - {{ identifier }}/equilibration_nvt/default.lammps
-    - {{ identifier }}/equilibration_nvt/groups.ndx
-    - {{ identifier }}/equilibration_nvt/log.lammps
-    - {{ identifier }}/equilibration_nvt/thermo.out
+    - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/groups.ndx
+    - {{ identifier }}/{{ step }}/log.lammps
+    - {{ identifier }}/{{ step }}/thermo.out
     paths:
     - default.lammps
     - groups.ndx
     - log.lammps
     - thermo.out
     metadata:
-      state: minimized and nvt-equilibrated with eam potential after indenter inserion
-      step:  equilibration_nvt
+      state: minimized, nvt- and npt-equilibrated with eam potential after indenter inserion
+      step:  {{ step }}
       {{ render_metadata()|indent(6)}}
 
   metadata:
     state: file transfer to filepad
-    step:  equilibration_nvt
+    step:  {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}
