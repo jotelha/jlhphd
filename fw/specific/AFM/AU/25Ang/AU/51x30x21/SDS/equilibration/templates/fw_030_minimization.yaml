@@ -29,7 +29,7 @@ spec:
     - -v minimization_maxiter     {{ minimization_maxiter|default(10000,true)|int }}
     - -v minimization_maxeval     {{ minimization_maxeval|default(100000,true)|int }}
     - -v mpiio                    {{ mpiio|default(1,false)|int }}
-    - -v relax_box                {{ relax_box|default(1,false)|int }}
+    - -v relax_box                {{ relax_box|default(0,false)|int }}
     - -v robust_minimization      0
     - -v store_forces             0
     - -v surfactant_name          {{ surfactant|default("SDS") }}

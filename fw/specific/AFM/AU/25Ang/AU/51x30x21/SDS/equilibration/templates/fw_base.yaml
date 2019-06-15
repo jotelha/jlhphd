@@ -29,8 +29,8 @@
   surfactant,
   sf_nmolecules,
   sf_preassembly) -%}
-{# identifier for initial configuration datafile #}
 
+{# identifier for initial configuration datafile #}
 {%- set datafile_identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/merged.lammps"|format(
   indenter.substrate,
   indenter.crystal_plane,
@@ -46,6 +46,7 @@
   surfactant,
   sf_nmolecules,
   sf_preassembly) -%}
+
 {%- set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter"|format(
   sf_nmolecules,
   surfactant,
@@ -61,7 +62,6 @@
   indenter.initial_radius_unit) -%}
 
 {# descriptive natural language title for display purposes #}
-
 {%- set title = "%s %s r % s %s indenter on %d %s on %s %s %dx%dx%d substrate, %s"|format(
   indenter.substrate,
   indenter.crystal_plane,
@@ -76,6 +76,8 @@
   sb_multiples[2],
   sf_preassembly) -%}
 
+{# depending on machine, different queue settings are necessary #}
+{# JUWELS uses SLURM, NEMO MOAB #}
 {%- macro render_queueadapter() -%}
 {%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
 nodes:            {{ nodes|default(8,true)|int }}
@@ -92,6 +94,16 @@ walltime:         {{ walltime|default("24:00:00") }}
 {%- endif -%}
 {%- endmacro -%}
 
+{%- if worker is in ['juwels_noqueue'] -%}
+{%- set smb_port_provider = "localhost" -%}
+{%- set smb_port_local    = "$(cat .port)" -%}
+{%- else -%}
+{%- set smb_port_provider = smb_host|default("ufr2.isi1.public.ads.uni-freiburg.de",true) -%}
+{%- set smb_port_local    = smb_port -%}
+{%- endif -%}
+
+{# JUWELS has to transfer results via ssh port forwarding to RZ storage #}
+{# for this purpose, a background task can establish the ssh connection #}
 {%- macro render_smb_forward() -%}
 {%- if worker is in ['juwels_noqueue'] -%}
 _background_tasks:
@@ -109,11 +121,32 @@ _background_tasks:
       ssh_user:     {{ smb_gateway_user|default("sshclient",true) }}
       ssh_keyfile:  {{ smb_gateway_ssh_id|default("~/.ssh/sshclient-frrzvm",true) }}
       port_file:    .port
-{%- set smb_port_provider = "localhost" -%}
-{%- else -%}
-{%- set smb_port_provider = smb_host -%}
 {%- endif -%}
 {%- endmacro -%}
+
+{# a simple script waiting for the ssh connection port to be allocated #}
+{%- macro render_wait_for_port() -%}
+{%- if worker is in ['juwels_noqueue'] -%}
+- _fw_name: ScriptTask
+  script: >-
+    counter=0; 
+    while [ ! -f .port ]; do 
+      sleep 1; 
+      counter=$((counter + 1)); 
+      if [ $counter -ge 10 ]; then 
+        echo "Timed out waiting for port!"; 
+        exit 126;
+      fi;
+    done
+  stderr_file:   wait.err
+  stdout_file:   wait.out
+  store_stdout:  true
+  store_stderr:  true
+  fizzle_bad_rc: true
+  use_shell:     true
+{%- endif -%}
+{%- endmacro -%}
+
 
 {%- macro render_metadata() -%}
 machine:         {{ machine }}

@@ -25,8 +25,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   smb_gateway_user:       sshclient
   smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
   smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
-  smb_port_remote:        445
-  # smb_port_local:         8445
+  smb_port:               445
 
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
 
@@ -45,7 +44,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_frequency:                             1000
   thermo_average_frequency:                     1000
 
-  minimization_ftol:                            1.0e-5
+  minimization_ftol:                            1.0e-6
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
   minimization_maxeval:                         100000
@@ -139,16 +138,21 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_030_minimization.yaml:
-  - worker:                 juwels_queue
+  - worker:                   juwels_queue
+    netcdf_frequency:         100
+    thermo_frequency:         10
+    thermo_average_frequency: 100
 
   fw_060_equilibration_nvt.yaml:
-  - worker:                 juwels_queue
+  - worker:                   juwels_queue
+    thermo_frequency:         100
     use_barostat:             0
     use_berenden_bstat:       0
-    use_dpd_tstat:            1
+    use_dpd_tstat:            0
 
   fw_070_equilibration_npt.yaml:
   - worker:                 juwels_queue
+    thermo_frequency:         100
     use_barostat:             1
     use_berenden_bstat:       1
     use_dpd_tstat:            1
@@ -156,7 +160,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       bilayer
+    sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization

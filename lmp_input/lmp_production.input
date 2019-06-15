@@ -221,8 +221,13 @@ if "${store_forces} > 0" then &
 ################################################################################
 ### THERMOSTAT
 
-# only temper substrate, and only the non-frozen part:
-if "${is_restart} == 0" then "group tempered_group subtract substrate frozen"
+# either only temper solid, and only the non-frozen part,
+# or everything (except frozen atoms):
+if "${is_restart} == 0 && ${temper_solid_only} > 0" then &
+  "group tempered_group subtract solid frozen" &
+elif "${is_restart} == 0" &
+  "group tempered_group subtract all frozen"
+
 # if not applying DPD thermostat
 if "${use_dpd_tstat} == 0" then &
     "fix thermostat tempered_group langevin ${initialT} ${temperatureT} &
@@ -479,7 +484,7 @@ dump_modify dumpNetCDF thermo yes flush yes
 # will be created which will overwrite an existing file with the same name.
 
 if "${reinitialize_velocities} > 0" then &
-  "velocity pressured_group create ${temperatureT} ${random_seed} &
+  "velocity pressured_group create ${initialT} ${random_seed} &
     rot yes mom yes dist gaussian"
 
 # groups immediately before run, for debugging

@@ -19,18 +19,19 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # NEMO
   machine:                NEMO
-  nodes:                  1
+  nodes:                  8
   ppn:                    20
   walltime:               '00:15:00'
   queue:                  express
   worker:                 nemo_noqueue
 
-  # storage options
-  # remote_user:            testuser
-  # remote_dir:             /mnt/dat/work/testuser/interface/SDS/AU/111/51x30x21
-  # ssh_key:                /home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port:               445
+
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
-  # datafile_identifier:    interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
 
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4
@@ -47,12 +48,12 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_frequency:                             10
   thermo_average_frequency:                     10
 
-  minimization_ftol:                            10.0
+  minimization_ftol:                            0.1
   minimization_ftol_unit:                       kcal
-  minimization_maxiter:                         100
+  minimization_maxiter:                         500
   minimization_maxeval:                         1000
-  nvt_equilibration_steps:                      100
-  npt_equilibration_steps:                      100
+  nvt_equilibration_steps:                      1000
+  npt_equilibration_steps:                      1000
   # production_steps:                           100000
   use_barostat:                                 1
   use_berenden_bstat:                           1
@@ -143,10 +144,10 @@ transient: # ...overridden by these transient settings, which do not affect chil
   fw_030_minimization.yaml:
   - worker:                 nemo_queue_offline
   fw_060_equilibration_nvt.yaml:
-  - worker:                 nemo_queue_offline
+  - worker:                   nemo_queue_offline
     use_barostat:             0
     use_berenden_bstat:       0
-    use_dpd_tstat:            1
+    use_dpd_tstat:            0
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
     use_barostat:             1

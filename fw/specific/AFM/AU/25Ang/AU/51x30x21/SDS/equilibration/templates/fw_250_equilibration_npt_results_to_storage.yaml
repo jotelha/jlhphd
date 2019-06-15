@@ -11,23 +11,7 @@ spec:
     ndx_file:              groups.ndx
   {{ render_smb_forward()|indent(2) }}
   _tasks:
-  - _fw_name: ScriptTask
-    script: >-
-      counter=0; 
-      while [ ! -f .port ]; do 
-        sleep 1; 
-        counter=$((counter + 1)); 
-        if [ $counter -ge 10 ]; then 
-          echo "Timed out waiting for port!"; 
-          exit 126;
-        fi;
-      done
-    stderr_file:   wait.err
-    stdout_file:   wait.out
-    store_stdout:  true
-    store_stderr:  true
-    fizzle_bad_rc: true
-    use_shell:     true
+  {% autoescape false %}{{ render_wait_for_port()|indent(2) }}{% endautoescape %}
   - _fw_name: CmdTask
     cmd: smbsync.py
     opt:
@@ -35,7 +19,7 @@ spec:
     - --share       {{ smb_share|default("pastewka",true) }}
     - --domain      {{ smb_domain|default("PUBLIC",true) }}
     - --username    {{ smb_user|default("pastewka",true) }}
-    - --server_port {{ smb_port_local|default("$(cat .port)",true) }}
+    - --server_port {{ smb_port_local|default("445",true) }}
     - --verbose
     - .
     - hoermannj/2019/md/{{ identifier }}/{{ step }}

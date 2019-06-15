@@ -32,6 +32,7 @@
 # - -v reinitialize_velocities  1
 # - -v restrained_indenter      1
 # - -v surfactant_name          SDS
+# - -v temper_solid_only        0  
 # - -v thermo_frequency         1000
 # - -v use_barostat             0
 # - -v use_berendsen_bstat      0
@@ -51,8 +52,25 @@
 # - -v reinitialize_velocities  0
 # - -v restrained_indenter      1
 # - -v surfactant_name          SDS
+# - -v temper_solid_only        0  
 # - -v thermo_frequency         1000
 # - -v use_berendsen_bstat      1
+# - -v use_dpd_tstat            1
+# - -v use_eam                  1
+# - -v use_ewald                1
+#
+# * production
+# - -v freeze_substrate_layer   14.0
+# - -v has_indenter             1
+# - -v netcdf_frequency         1000
+# - -v productionSteps          100000
+# - -v temperatureT             298
+# - -v reinitialize_velocities  0
+# - -v surfactant_name          SDS
+# - -v temper_solid_only        1
+# - -v thermo_frequency         1000
+# - -v use_barostat             0
+# - -v use_berendsen_bstat      0
 # - -v use_dpd_tstat            1
 # - -v use_eam                  1
 # - -v use_ewald                1
@@ -117,8 +135,10 @@ variable use_ewald               index  1 # switch ewald summation (kspace solve
 variable ewald_accuracy          index  1e-4 # relative RMS
 
 # thermostat-related
+variable temper_solid_only       index  1 # if 0, everything (except frozen atoms) is tempered 
 ## Langevin thermostat related:
-variable langevin_damping        index  1000 # fs, damping parameter for Langevin thermostat
+variable langevin_damping        index  100 # fs, damping parameter for Langevin thermostat
+# 100 fs seem harsh, but usually used for equilibration purposes
 
 ## DPD thermostat related:
 variable dpd_cutoff              index  5.5 # Ang, matches EAM cutoff by Au-Grochola-JCP05
