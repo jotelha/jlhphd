@@ -39,9 +39,9 @@ spec:
     - -v temper_solid_only        0
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
-    - -v use_barostat             {{ use_barostat|default(0,false)|int }}
-    - -v use_berendsen_bstat      {{ use_berenden_bstat|default(0,false)|int }}
-    - -v use_dpd_tstat            {{ use_dpd_tstat|default(1,false)|int }}
+    - -v use_barostat             0
+    - -v use_berendsen_bstat      0
+    - -v use_dpd_tstat            0
     - -v use_eam                  {{ use_eam|default(1,false)|int }}
     - -v use_ewald                {{ use_ewald|default(1,false)|int }}
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
