@@ -157,14 +157,14 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #use_berenden_bstat:       1
     #use_dpd_tstat:            1
 
-  fw_072_equilibration_dpd.yaml:
+  fw_075_equilibration_dpd.yaml:
   - worker:                   juwels_queue
     thermo_frequency:         100
 
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       bilayer
+    sf_preassembly:       monolayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization
@@ -172,7 +172,7 @@ persistent:
   - step: equilibration_nvt
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
-  fw_072_equilibration_dpd.yaml:
+  fw_075_equilibration_dpd.yaml:
   - step: equilibration_dpd
 
 dependencies:

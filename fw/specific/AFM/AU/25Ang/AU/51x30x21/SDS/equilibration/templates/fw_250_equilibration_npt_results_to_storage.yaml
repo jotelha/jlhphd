@@ -8,6 +8,7 @@ spec:
     log_file:              log.lammps
     data_file:             datafile.lammps
     thermo_out:            thermo.out
+    traj_file:             default.nc
     ndx_file:              groups.ndx
   {{ render_smb_forward()|indent(2) }}
   _tasks:

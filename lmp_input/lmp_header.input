@@ -23,7 +23,7 @@
 # - -v use_eam                  1
 # - -v use_ewald                1
 #
-# * NVT equilibration
+# * NVT equilibration, Langevin
 # - -v restrain_substrate_layer 14.0
 # - -v has_indenter             1
 # - -v netcdf_frequency         1000
@@ -36,7 +36,7 @@
 # - -v thermo_frequency         1000
 # - -v use_barostat             0
 # - -v use_berendsen_bstat      0
-# - -v use_dpd_tstat            1
+# - -v use_dpd_tstat            0
 # - -v use_eam                  1
 # - -v use_ewald                1
 
@@ -54,12 +54,13 @@
 # - -v surfactant_name          SDS
 # - -v temper_solid_only        0  
 # - -v thermo_frequency         1000
-# - -v use_berendsen_bstat      1
-# - -v use_dpd_tstat            1
+# - -v use_barostat             1
+# - -v use_berendsen_bstat      0
+# - -v use_dpd_tstat            0
 # - -v use_eam                  1
 # - -v use_ewald                1
 #
-# * production
+# * DPD equilibration
 # - -v freeze_substrate_layer   14.0
 # - -v has_indenter             1
 # - -v netcdf_frequency         1000
