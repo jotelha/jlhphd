@@ -8,7 +8,7 @@ fws:
       func: fwtools.testuser.get_inputs
       inputs: [dimensions, surfactants,sf_nmolecules,counterion,preassembly,sb_unit]
       outputs: [inputs]
-    dimensions: ['51','30','16']
+    dimensions: ['51','30','21']
     surfactants: ["SDS"]
     sf_nmolecules: '646'
     counterion: 'NA'
