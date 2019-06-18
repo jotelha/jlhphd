@@ -48,6 +48,7 @@
 # - -v temperatureT             298
 # - -v pressureP                1
 # - -v pressurize_solution_only 0
+# - -v dilate_solution_only     1
 # - -v pressurize_z_only        1
 # - -v reinitialize_velocities  0
 # - -v restrained_indenter      1
@@ -147,6 +148,7 @@ variable dpd_damping_parameter   index  461.21 # kcal fs mol^-1 Ang^-2, converte
 variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd thermostat (instead of Langevin)
 
 # barostat-related
+variable dilate_solution_only    index  1 # if 1, only solution (i.e. non solid, non-frozen) atoms are rescaled with a change of volume
 variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
 variable pressurize_solution_only index 0 # if 0, pressurizes all non-frozen atoms, otherwise only liquid
 variable use_barostat            index  1 # if 0, run NVT instead of NPT or NVE instead of NPH
