@@ -24,6 +24,7 @@ spec:
     cmd: lmp
     opt:
     - -in lmp_equilibration_npt.input
+    - -v box_shift_z              {{ box_shift_z|default(10.0)|float }}
     - -v coeffInfile              coeff.input
     - -v compute_interactions     0
     - -v dataFile                 datafile.lammps
@@ -41,6 +42,8 @@ spec:
     - -v reinitialize_velocities  0
     - -v read_groups_from_file    0
     - -v remove_drift             0
+    - -v rigid_indenter           0
+    - -v restrained_indenter      1
     - -v shrink_wrap_once         0
     - -v store_forces             1 
     - -v surfactant_name          {{ surfactant|default("SDS") }}

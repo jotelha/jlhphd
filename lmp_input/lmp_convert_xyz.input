@@ -1,0 +1,24 @@
+# convert xyz file to "atom_style full" LAMMPS data file
+variable substrate_type index 11
+variable in_file        index AU_111_r_25.xyz
+variable out_file       index AU_111_r_25.lammps
+
+dimension      3
+
+units          real
+boundary f f f 
+atom_style     full
+
+# must be large enough, exact measures do not matter
+region domain block 0 1000 0 1000 0 1000 units box
+create_box   ${substrate_type} domain 
+include      masses.input
+
+read_dump    ${in_file} 0 x y z box no purge yes add yes replace no trim no scaled no wrapped no format xyz
+set          group all type ${substrate_type}
+
+change_box   all boundary s s s
+# center COM at origin:
+change_box   all set x final $(xlo-xcm(all,x)) $(xhi-xcm(all,x)) y final $(ylo-xcm(all,y)) $(yhi-xcm(all,y)) z final $(zlo-xcm(all,z)) $(zhi-xcm(all,z)) remap units box 
+
+write_data   ${out_file}

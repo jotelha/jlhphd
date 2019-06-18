@@ -1,0 +1,24 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, transfer results to remote
+spec:
+  _category: "{{ worker|default("nemo_noqueue",true) }}"
+  _files_in:
+    log_file:   {{ file_identifier }}.log
+    thermo_out: {{ file_identifier }}_thermo.out
+  _tasks:
+  - _fw_name: FileTransferTask
+    files:
+    - {{ file_identifier }}.log
+    - {{ file_identifier }}_thermo.out
+    dest:   {{ remote_dir|default("/mnt/dat/work/testuser/sandbox",true) }}
+    mode:   rtransfer
+    server: {{ remote_ip|default("192.52.32.115",true) }}
+    user:   {{ remote_user|default("testuser",true) }}
+    key_filename: {{ ssh_key|default("/home/fr/fr_fr/fr_jh1130/.ssh/testuser-bwCloud",true) }}
+    ignore_errors: False
+
+  metadata:
+    state:              remote transfer to bwCloud
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

@@ -1,8 +1,8 @@
 include lmp_header.input
 
-############
-# restraints
-############
+##############
+# restraints I
+##############
 
 # Keep substrate layer frozen
 if "${freeze_substrate_layer} > 0.0" then &
@@ -14,33 +14,11 @@ if "${freeze_substrate_layer} > 0.0" then &
 
 # Keep indenter rigid or restrained at its initial position
 if "(${has_indenter} > 0) && (${rigid_indenter} > 0)" then &
-  "fix freeze indenter setforce 0.0 0.0 0.0" &
-if "(${has_indenter} > 0) && (${restrained_indenter} > 0)" then &
-  "fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale"
-#                                          ^N       ^xyz          ^preserve kinetic energy
-# source: https://lammps.sandia.gov/doc/fix_momentum.html
-# If the linear keyword is used, the linear momentum is zeroed by subtracting
-# the center-of-mass velocity of the group from each atom. This does not change
-# the relative velocity of any pair of atoms. One or more dimensions can be
-# excluded from this operation by setting the corresponding flag to 0.
-#
-# If the angular keyword is used, the angular momentum is zeroed by subtracting
-# a rotational component from each atom.
-#
-# This command can be used to insure the entire collection of atoms (or a
-# subset of them) does not drift or rotate during the simulation due to random
-# perturbations (e.g. fix langevin thermostatting).
-#
-# The rescale keyword enables conserving the kinetic energy of the group of
-# atoms by rescaling the velocities after the momentum was removed.
-#
-# No information about this fix is written to binary restart files. None of the
-# fix_modify options are relevant to this fix. No global or per-atom quantities
-# are stored by this fix for access by various output commands. No parameter of
-# this fix can be used with the start/stop keywords of the run command. This
-# fix is not invoked during energy minimization.
+  "fix freeze indenter setforce 0.0 0.0 0.0"
 
-if "${is_restart} == 0" then "group tempered_group subtract all frozen"
+if "${is_restart} == 0" then &
+    "group tempered_group subtract all frozen" &
+    "group pressured_group subtract all solid"
 
 ###################
 # NPT equilibration
@@ -92,11 +70,11 @@ fix thermostat tempered_group langevin ${temperatureT} ${temperatureT} 100 29061
 
 # fix barostat all press/berendsen aniso 0 0 1000
 if "(${pbc2d} > 0) || (${has_vacuum} > 0)" then &
-  "fix barostat tempered_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+  "fix barostat pressured_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
 elif "(${pressurize_z_only} > 0)" &
-  "fix barostat tempered_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
+  "fix barostat pressured_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial" &
 else &
-  "fix barostat tempered_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial"
+  "fix barostat pressured_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial"
 # fix barostat all press/berendsen iso 1.0 1.0 1000.0 dilate partial
 # fix ID group-ID press/berendsen keyword value ...
 # dilate partial
@@ -143,6 +121,34 @@ else &
 
 fix timeIntegration tempered_group nve # necessary for nvt via langevin
 
+###############
+# restraints II
+###############
+if "(${has_indenter} > 0) && (${restrained_indenter} > 0)" then &
+  "fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale"
+#                                          ^N       ^xyz          ^preserve kinetic energy
+# source: https://lammps.sandia.gov/doc/fix_momentum.html
+# If the linear keyword is used, the linear momentum is zeroed by subtracting
+# the center-of-mass velocity of the group from each atom. This does not change
+# the relative velocity of any pair of atoms. One or more dimensions can be
+# excluded from this operation by setting the corresponding flag to 0.
+#
+# If the angular keyword is used, the angular momentum is zeroed by subtracting
+# a rotational component from each atom.
+#
+# This command can be used to insure the entire collection of atoms (or a
+# subset of them) does not drift or rotate during the simulation due to random
+# perturbations (e.g. fix langevin thermostatting).
+#
+# The rescale keyword enables conserving the kinetic energy of the group of
+# atoms by rescaling the velocities after the momentum was removed.
+#
+# No information about this fix is written to binary restart files. None of the
+# fix_modify options are relevant to this fix. No global or per-atom quantities
+# are stored by this fix for access by various output commands. No parameter of
+# this fix can be used with the start/stop keywords of the run command. This
+# fix is not invoked during energy minimization.
+
 ############################################
 # RIGID TIP3P WATER and RIGID HYDROGEN BONDS
 #
@@ -150,7 +156,8 @@ fix timeIntegration tempered_group nve # necessary for nvt via langevin
 #  WARNING: Fix rattle should come after all other integration fixes
 #    (../fix_rattle.cpp:147)
 
-fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}
+if "${rigid_h_bonds} > 0" then &
+  "fix rigidHbonds tempered_group rattle 1e-6 500 0 m 1.0 a ${angleIdWater}"
 # fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angleIdWater}
 
 # The b constraint lists bond types that will be constrained.

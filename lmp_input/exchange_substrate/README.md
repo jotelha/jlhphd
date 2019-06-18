@@ -12,9 +12,9 @@ filepad.py --action pull --file substrate.lammps --verbose \
 filepad.py --action pull --file interface.lammps --verbose \
   646_SDS_on_AU_111_51x30x2_hemicylinders_with_counterion_10ns.lammps
 filepad.py --action pull --file coeff_nonbonded.input --verbose \
-  SDS/in/H2O/on/AU/coeff/nonbonded.input 
+  SDS/in/H2O/on/AU/coeff/nonbonded.input
 filepad.py --action pull --file coeff.input --verbose \
-  SDS/in/H2O/on/AU/coeff.input 
+  SDS/in/H2O/on/AU/coeff.input
 
 # replace substrate with lammps commands only
 
@@ -40,7 +40,7 @@ lmp -in lmp_shift_surface_to_zero_z.input \
 
 # shift solution in order to align its lower liquid-vacuum interface
 # with origin in z direction and tighten box around content:
-lmp -in lmp_shift_solution_to_zero.input \
+lmp -in lmp_shift_solution_to_zero_z.input \
   -v coeffFile      coeff.input \
   -v dataFile       solution.lammps \
   -v outfile        shiftedSolution.lammps

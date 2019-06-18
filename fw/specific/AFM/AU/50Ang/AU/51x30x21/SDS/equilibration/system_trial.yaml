@@ -5,8 +5,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                NEMO
   nodes:                  1
   ppn:                    20
-  walltime:               '00:15:00'
-  queue:                  express
+  walltime:               '04:00:00'
+  queue:                  ''
   worker:                 nemo_noqueue
 
   # storage options
@@ -25,14 +25,14 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
-  netcdf_frequency:                             10
-  thermo_frequency:                             1
-  minimization_ftol:                            10.0
+  netcdf_frequency:                             1000
+  thermo_frequency:                             1000
+  minimization_ftol:                            1.0e-5
   minimization_ftol_unit:                       kcal
-  minimization_maxiter:                         100
-  minimization_maxeval:                         1000
-  nvt_equilibration_steps:                      100
-  npt_equilibration_steps:                      100
+  minimization_maxiter:                         10000
+  minimization_maxeval:                         100000
+  nvt_equilibration_steps:                      10000
+  npt_equilibration_steps:                      10000
   # production_steps:                             100000
   
 
@@ -114,10 +114,20 @@ std: # standard settings to be applied to all fireworks, if not ...
 transient: # ...overridden by these transient settings, which do not affect children
   fw_030_minimization.yaml:
   - worker:                 nemo_queue_offline
+    nodes:                  1
+    ppn:                    20
+    walltime:               '04:00:00'
+    # for testing:
+    #nodes:                  2
+    #ppn:                    20
+    #walltime:               '00:05:00'
+    #queue:                  express
   fw_060_equilibration_nvt.yaml:
   - worker:                 nemo_queue_offline
+    walltime:               '04:00:00'
   fw_070_equilibration_npt.yaml:
   - worker:                 nemo_queue_offline
+    walltime:               '04:00:00'
 
 persistent:
   fw_010_datafile_retrieval.yaml:
