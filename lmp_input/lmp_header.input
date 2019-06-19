@@ -98,6 +98,7 @@ variable restart_frequency       index  100000
 variable store_forces            index  1 # store constrained AND unconstrained forces in NetcDF
 variable thermo_frequency        index  1000 # outputs stats at single time step
 variable thermo_average_frequency index ${thermo_frequency} # outputs stats averaged over N timesteps. 0: disabled
+variable thermo_to_netcdf        index  0 # if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style
 variable write_coeff             index  1 # write force field parameters to independent file
 variable write_coeff_to_datafile index  0 # write force filed parameters to system datafile
 variable write_groups_to_file    index  1 #
@@ -798,7 +799,7 @@ if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
 # create groups of substrate and indenter without frozen parts for computes
 if "${is_restart} == 0" then &
     "group warm_substrate   subtract substrate      frozen" &
-    "group warm_indenter    subtract indenter       frozen"
+    "group warm_indenter    subtract indenter       frozen" &
     "group warm_nonindenter subtract nonindenter    frozen"
 
 # If the group ID already exists, the group command adds the specified atoms to the group.
@@ -875,7 +876,7 @@ if "${compute_group_properties} > 0" then &
     "compute substrate_temp     warm_substrate  temp" &
     "compute surfactant_temp    surfactant      temp" &
     "compute peratom_stress     all stress/atom NULL" &
-    "compute peratom_indenter_stress warm_nonindenter &
+    "compute peratom_indenter_stress warm_indenter &
         stress/atom indenter_temp" &
     "compute indenter_stress_biased warm_indenter reduce &
         sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
@@ -895,13 +896,13 @@ if "${compute_group_properties} > 0" then &
     "variable indenter_press equal &
         -(c_indenter_stress[1]+c_indenter_stress[2]+c_indenter_stress[3])/(3*vol)" &
     "variable ion_press equal &
-        -(c_ion_press[1]+c_ion_press[2]+c_ion_press[3])/(3*vol)" &
+        -(c_ion_stress[1]+c_ion_stress[2]+c_ion_stress[3])/(3*vol)" &
     "variable solvent_press equal &
-        -(c_solvent_press[1]+c_solvent_press[2]+c_solvent_press[3])/(3*vol)" &
+        -(c_solvent_stress[1]+c_solvent_stress[2]+c_solvent_stress[3])/(3*vol)" &
     "variable substrate_press equal &
         -(c_substrate_stress[1]+c_substrate_stress[2]+c_substrate_stress[3])/(3*vol)" &
     "variable surfactant_press equal &
-        -(c_surfactant_press[1]+c_surfactant_press[2]+c_surfactant_press[3])/(3*vol)"
+        -(c_surfactant_stress[1]+c_surfactant_stress[2]+c_surfactant_stress[3])/(3*vol)"
 # https://lammps.sandia.gov/doc/compute_temp.html
 # A kinetic energy tensor, stored as a 6-element vector, is also calculated by
 # this compute for use in the computation of a pressure tensor. The formula for

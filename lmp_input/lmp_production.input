@@ -480,7 +480,11 @@ else &
     ${baseName}.nc id mol type mass x y z vx vy vz"
 # interestingly, wildcard * operator does not work for dump netcdf
 
-dump_modify dumpNetCDF thermo yes flush yes
+if "${thermo_to_netcdf} > 0" then &
+  "dump_modify dumpNetCDF thermo yes flush yes" &
+else &
+  "dump_modify dumpNetCDF flush yes"
+
 # The flush keyword determines whether a flush operation is invoked after a dump
 # snapshot is written to the dump file. A flush insures the output in that file
 # is current (no buffering by the OS), even if LAMMPS halts before the
