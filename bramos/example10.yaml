@@ -21,7 +21,7 @@ fws:
     _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_minimize
+      func: fwtools.testuser.run_minimize_cmd
       inputs: [inputs]
     inputs: inputs
     
@@ -31,7 +31,7 @@ fws:
     _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_nvtEquilibrate
+      func: fwtools.testuser.run_nvtEquilibrate_cmd
       inputs: [inputs]
     inputs: inputs
     
@@ -41,7 +41,7 @@ fws:
     _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_nptEquilibrate
+      func: fwtools.testuser.run_nptEquilibrate_cmd
       inputs: [inputs]
     inputs: inputs
     
@@ -51,7 +51,7 @@ fws:
     _category: "nemo_noqueue"
     _tasks:
     - _fw_name: PyTask
-      func: fwtools.testuser.run_production
+      func: fwtools.testuser.run_production_cmd
       inputs: [inputs]
     inputs: inputs    
 
