@@ -164,7 +164,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization

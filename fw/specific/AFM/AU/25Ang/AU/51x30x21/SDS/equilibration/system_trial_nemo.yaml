@@ -29,7 +29,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   smb_gateway_user:       sshclient
   smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
   smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
-  smb_port_remote:        445
+  smb_port:               445
 
   coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
 
@@ -48,7 +48,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_frequency:                             1000
   thermo_average_frequency:                     1000
 
-  minimization_ftol:                            1.0e-5
+  minimization_ftol:                            1.0e-6
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
   minimization_maxeval:                         100000
@@ -148,8 +148,9 @@ transient: # ...overridden by these transient settings, which do not affect chil
     ppn:                    20
     walltime:               '04:00:00'
 
-    netcdf_frequency:       100
-    thermo_frequency:       10
+    netcdf_frequency:         100
+    thermo_frequency:         10
+    thermo_average_frequency: 100
     # for testing:
     #nodes:                  2
     #ppn:                    20
@@ -157,26 +158,22 @@ transient: # ...overridden by these transient settings, which do not affect chil
     #queue:                  express
 
   fw_060_equilibration_nvt.yaml:
-  - worker:                 nemo_queue_offline
-    nodes:                  8
-    ppn:                    20
-    walltime:               '12:00:00'
-
-    thermo_frequency:         10
-    use_barostat:             0
-    use_berenden_bstat:       0
-    use_dpd_tstat:            0
+  - worker:                   nemo_queue_offline
+    thermo_frequency:         100
+    #use_barostat:             0
+    #use_berenden_bstat:       0
+    #use_dpd_tstat:            0
 
   fw_070_equilibration_npt.yaml:
-  - worker:                 nemo_queue_offline
-    nodes:                  8
-    ppn:                    20
-    walltime:               '12:00:00'
+  - worker:                   nemo_queue_offline
+    thermo_frequency:         100
+    #use_barostat:             1
+    #use_berenden_bstat:       1
+    #use_dpd_tstat:            1
 
-    thermo_frequency:         10
-    use_barostat:             1
-    use_berenden_bstat:       1
-    use_dpd_tstat:            1
+  fw_075_equilibration_dpd.yaml:
+  - worker:                   nemo_queue_offline
+    thermo_frequency:         100
 
 persistent:
   fw_010_datafile_retrieval.yaml:
@@ -189,6 +186,8 @@ persistent:
   - step: equilibration_nvt
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
+  fw_075_equilibration_dpd.yaml:
+  - step: equilibration_dpd
 
 dependencies:
   # single dependency entries result in one instance only
@@ -200,12 +199,16 @@ dependencies:
   - fw_030_minimization.yaml
   - fw_055_equilibration_nvt_file_retrieval.yaml
   - fw_065_equilibration_npt_file_retrieval.yaml
+  - fw_072_equilibration_dpd_file_retrieval.yaml
 
   fw_055_equilibration_nvt_file_retrieval.yaml:
   - fw_060_equilibration_nvt.yaml
 
   fw_065_equilibration_npt_file_retrieval.yaml:
   - fw_070_equilibration_npt.yaml
+
+  fw_072_equilibration_dpd_file_retrieval.yaml:
+  - fw_075_equilibration_dpd.yaml
 
   fw_030_minimization.yaml:
   - fw_060_equilibration_nvt.yaml
@@ -220,18 +223,28 @@ dependencies:
   - fw_240_equilibration_nvt_results_to_storage.yaml
 
   fw_070_equilibration_npt.yaml:
+  - fw_075_equilibration_dpd.yaml
   - fw_100_extract_property.yaml
   - fw_200_equilibration_npt_results_to_filepad.yaml
   - fw_250_equilibration_npt_results_to_storage.yaml
 
-  fw_100_extract_property.yaml:
-  - fw_200_equilibration_npt_results_to_filepad.yaml
-  - fw_250_equilibration_npt_results_to_storage.yaml
+  fw_075_equilibration_dpd.yaml:
+  - fw_110_extract_property.yaml
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml
+
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
 
   fw_090_extract_property.yaml:
   - fw_190_equilibration_nvt_results_to_filepad.yaml
   - fw_240_equilibration_nvt_results_to_storage.yaml
 
-  fw_080_extract_property.yaml:
-  - fw_180_minimization_results_to_filepad.yaml
-  - fw_230_minimization_results_to_storage.yaml
+  fw_100_extract_property.yaml:
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_110_extract_property.yaml:
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml

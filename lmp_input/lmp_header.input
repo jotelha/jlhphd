@@ -41,19 +41,19 @@
 # - -v use_ewald                1
 
 # * NPT equilibration
-# - -v restrain_substrate_layer 14.0
+# - -v dilate_solution_only     1
 # - -v has_indenter             1
 # - -v netcdf_frequency         1000
 # - -v productionSteps          100000
-# - -v temperatureT             298
 # - -v pressureP                1
 # - -v pressurize_solution_only 0
-# - -v dilate_solution_only     1
 # - -v pressurize_z_only        1
 # - -v reinitialize_velocities  0
+# - -v restrain_substrate_layer 14.0
 # - -v restrained_indenter      1
 # - -v surfactant_name          SDS
-# - -v temper_solid_only        0  
+# - -v temperatureT             298
+# - -v temper_solid_only        1
 # - -v thermo_frequency         1000
 # - -v use_barostat             1
 # - -v use_berendsen_bstat      0
@@ -958,6 +958,7 @@ if "${pbc2d} > 0" then &
 if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
+   pxx pyy pzz pxy pxz pyz &
    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -974,6 +975,7 @@ if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
 elif "${compute_interactions} > 0" &
   "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
     c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
     c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
     c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -985,7 +987,8 @@ elif "${compute_interactions} > 0" &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
 else &
   "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
-    edihed eimp epair evdwl ecoul elong etail vol"
+    edihed eimp epair evdwl ecoul elong etail vol &
+     pxx pyy pzz pxy pxz pyz"
 
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
