@@ -307,6 +307,19 @@ else &
 # time integration. Fix press/berendsen does NOT, so it should be used with one
 # of the constant NVE fixes or with one of the NVT fixes.
 
+# In some cases (e.g. for solids) the pressure (volume) and/or temperature of
+# the system can oscillate undesirably when a Nose/Hoover barostat and
+# thermostat is applied. The optional drag keyword will damp these oscillations,
+# although it alters the Nose/Hoover equations. A value of 0.0 (no drag) leaves
+# the Nose/Hoover formalism unchanged. A non-zero value adds a drag term; the
+# larger the value specified, the greater the damping effect. Performing a short
+# run and monitoring the pressure and temperature is the best way to determine
+# if the drag term is working. Typically a value between 0.2 to 2.0 is
+# sufficient to damp oscillations after a few periods. Note that use of the drag
+# keyword will interfere with energy conservation and will also change the
+# distribution of positions and velocities so that they do not correspond to the
+# nominal NVT, NPT, or NPH ensembles.
+
 ################################################################################
 ### INDENTER AND SUBSTRATE RESTRAINT
 

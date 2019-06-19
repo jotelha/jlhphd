@@ -32,7 +32,7 @@
 # - -v reinitialize_velocities  1
 # - -v restrained_indenter      1
 # - -v surfactant_name          SDS
-# - -v temper_solid_only        0  
+# - -v temper_solid_only        0
 # - -v thermo_frequency         1000
 # - -v use_barostat             0
 # - -v use_berendsen_bstat      0
@@ -90,6 +90,7 @@ variable read_groups_from_file   index  0 #
 # output settings
 variable coeffOutfile            index  coeff.input.transient # file to store ff parameters
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
+variable compute_group_properties index 0 # compute and output distinct temperatures and pressures for components of the system
 variable mpiio                   index  1 # parallel io on or off
 variable netcdf_frequency        index  1000
 variable png_frequency           index  100000
@@ -137,7 +138,7 @@ variable use_ewald               index  1 # switch ewald summation (kspace solve
 variable ewald_accuracy          index  1e-4 # relative RMS
 
 # thermostat-related
-variable temper_solid_only       index  1 # if 0, everything (except frozen atoms) is tempered 
+variable temper_solid_only       index  1 # if 0, everything (except frozen atoms) is tempered
 ## Langevin thermostat related:
 variable langevin_damping        index  100 # fs, damping parameter for Langevin thermostat
 # 100 fs seem harsh, but usually used for equilibration purposes
@@ -794,6 +795,12 @@ if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
   "group atoms_in_restrained_substrate_layer_region region restrained_substrate_layer_region" &
   "group restrained_substrate_layer intersect substrate atoms_in_restrained_substrate_layer_region" &
 
+# create groups of substrate and indenter without frozen parts for computes
+if "${is_restart} == 0" then &
+    "group warm_substrate   subtract substrate      frozen" &
+    "group warm_indenter    subtract indenter       frozen"
+    "group warm_nonindenter subtract nonindenter    frozen"
+
 # If the group ID already exists, the group command adds the specified atoms to the group.
 # for compatibility reasons:
 if "${is_restart} == 0" then &
@@ -856,6 +863,115 @@ if "${compute_interactions} > 0" then &
 # surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction
 # surfactant_solvent_interaction surfactant_ion_interaction
 
+# in the follwoing, only "warm" (i.e. not frozen) parts are considered for
+# temperature and pressure computations. Two temperatures and pressures are
+# determined for the indenter, namely biased and unbiased, latter corrected
+# for some possibly prescribed indenter center of mass velocity:
+if "${compute_group_properties} > 0" then &
+    "compute indenter_temp_biased warm_indenter temp" &
+    "compute indenter_temp      warm_indenter   temp/com" &
+    "compute ion_temp           ion             temp" &
+    "compute solvent_temp       solvent         temp" &
+    "compute substrate_temp     warm_substrate  temp" &
+    "compute surfactant_temp    surfactant      temp" &
+    "compute peratom_stress     all stress/atom NULL" &
+    "compute peratom_indenter_stress warm_nonindenter &
+        stress/atom indenter_temp" &
+    "compute indenter_stress_biased warm_indenter reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute indenter_stress warm_indenter reduce &
+        sum c_peratom_indenter_stress[1] c_peratom_indenter_stress[2] &
+            c_peratom_indenter_stress[3]" &
+    "compute ion_stress ion reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute solvent_stress solvent reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute substrate_stress warm_substrate reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute surfactant_stress surfactant reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "variable indenter_press_biased equal &
+        -(c_indenter_stress_biased[1]+c_indenter_stress_biased[2]+c_indenter_stress_biased[3])/(3*vol)" &
+    "variable indenter_press equal &
+        -(c_indenter_stress[1]+c_indenter_stress[2]+c_indenter_stress[3])/(3*vol)" &
+    "variable ion_press equal &
+        -(c_ion_press[1]+c_ion_press[2]+c_ion_press[3])/(3*vol)" &
+    "variable solvent_press equal &
+        -(c_solvent_press[1]+c_solvent_press[2]+c_solvent_press[3])/(3*vol)" &
+    "variable substrate_press equal &
+        -(c_substrate_stress[1]+c_substrate_stress[2]+c_substrate_stress[3])/(3*vol)" &
+    "variable surfactant_press equal &
+        -(c_surfactant_press[1]+c_surfactant_press[2]+c_surfactant_press[3])/(3*vol)"
+# https://lammps.sandia.gov/doc/compute_temp.html
+# A kinetic energy tensor, stored as a 6-element vector, is also calculated by
+# this compute for use in the computation of a pressure tensor. The formula for
+# the components of the tensor is the same as the above formula, except that v^2
+# is replaced by vx*vy for the xy component, etc. The 6 components of the vector
+# are ordered xx, yy, zz, xy, xz, yz.
+#
+# This compute subtracts out degrees-of-freedom due to fixes that constrain
+# molecular motion, such as fix shake and fix rigid. This means the temperature
+# of groups of atoms that include these constraints will be computed correctly.
+# If needed, the subtracted degrees-of-freedom can be altered using the extra
+# option of the compute_modify command.
+
+# https://lammps.sandia.gov/doc/compute_temp_com.html
+# Define a computation that calculates the temperature of a group of atoms,
+# after subtracting out the center-of-mass velocity of the group. This is useful
+# if the group is expected to have a non-zero net velocity for some reason. A
+# compute of this style can be used by any command that computes a temperature,
+# e.g. thermo_modify, fix temp/rescale, fix npt, etc.
+#
+# The removal of the center-of-mass velocity by this fix is essentially
+# computing the temperature after a "bias" has been removed from the velocity of
+# the atoms. If this compute is used with a fix command that performs
+# thermostatting then this bias will be subtracted from each atom,
+# thermostatting of the remaining thermal velocity will be performed, and the
+# bias will be added back in. Thermostatting fixes that work in this way include
+# fix nvt, fix temp/rescale, fix temp/berendsen, and fix langevin.
+
+# https://lammps.sandia.gov/doc/compute_stress_atom.html
+# The temp-ID argument can be used to affect the per-atom velocities used in the
+# kinetic energy contribution to the total stress. If the kinetic energy is not
+# included in the stress, than the temperature compute is not used and can be
+# specified as NULL. If the kinetic energy is included and you wish to use atom
+# velocities as-is, then temp-ID can also be specified as NULL. If desired, the
+# specified temperature compute can be one that subtracts off a bias to leave
+# each atom with only a thermal velocity to use in the formula above, e.g. by
+# subtracting a background streaming velocity. See the doc pages for individual
+# compute commands to determine which ones include a bias.
+#
+# Note that as defined in the formula, per-atom stress is the negative of the
+# per-atom pressure tensor. It is also really a stress*volume formulation,
+# meaning the computed quantity is in units of pressure*volume. It would need to
+# be divided by a per-atom volume to have units of stress (pressure), but an
+# individual atom's volume is not well defined or easy to compute in a deformed
+# solid or a liquid. See the compute voronoi/atom command for one possible way
+# to estimate a per-atom volume.
+#
+# Thus, if the diagonal components of the per-atom stress tensor are summed for
+# all atoms in the system and the sum is divided by dV, where d = dimension and
+# V is the volume of the system, the result should be -P, where P is the total
+# pressure of the system.
+#
+# The per-atom array values will be in pressure*volume units as discussed above.
+#
+# The per-atom stress does not include any Lennard-Jones tail corrections to the
+# pressure added by the pair_modify tail yes command, since those are
+# contributions to the global system pressure.
+
+# https://lammps.sandia.gov/doc/compute_reduce.html
+# Define a calculation that "reduces" one or more vector inputs into scalar
+# values, one per listed input.
+#
+# Each listed input is operated on independently. For per-atom inputs, the group
+# specified with this command means only atoms within the group contribute to
+# the result. For per-atom inputs, if the compute reduce/region command is used,
+# the atoms must also currently be within the region. Note that an input that
+# produces per-atom quantities may define its own group which affects the
+# quantities it returns. For example, if a compute is used as an input which
+# generates a per-atom vector, it will generate values of 0.0 for atoms that are
+# not in the group specified for that compute.
 # SDS - specific
 #       1      1.008  # HAL2
 #       2      1.008  # HAL3
@@ -955,7 +1071,43 @@ if "${pbc2d} > 0" then &
 # long commands to be continued across two or more lines. See the discussion of
 # triple quotes in (6) for how to continue a command across multiple line
 # without using "&" characters.
-if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+
+# output cases
+#
+# index | indenter  | c_inter   | c_group
+# 1     | yes       | yes       | yes
+# 2     | yes       | yes       | no
+# 3     | yes       | no        | yes
+# 4     | yes       | no        | no        same as no no no
+# 5     | no        | yes       | yes
+# 6     | no        | yes       | no
+# 7     | no        | no        | yes
+# 8     | no        | no        | no        covers case 4 as well
+
+if "${compute_group_properties} > 0 && ${compute_interactions} > 0 && ${has_indenter} > 0" then &
+ "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+   edihed eimp epair evdwl ecoul elong etail vol &
+   pxx pyy pzz pxy pxz pyz &
+   c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
+   c_substrate_temp c_surfactant_temp &
+   v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
+   v_substrate_press v_surfactant_press &
+   c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
+   c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
+   c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+   c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+   c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+   c_surfactant_surfactant_intermolecular_interaction &
+   c_surfactant_surfactant_intermolecular_interaction[*] &
+   c_surfactant_surfactant_intramolecular_interaction &
+   c_surfactant_surfactant_intramolecular_interaction[*] &
+   c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+   c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+   c_indenter_substrate_interaction c_indenter_substrate_interaction[*] &
+   c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
+   c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
+   c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
+elif "${compute_interactions} > 0 && ${has_indenter} > 0" &
  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
    pxx pyy pzz pxy pxz pyz &
@@ -972,8 +1124,37 @@ if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
    c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
    c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
    c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
+elif "${compute_group_properties} > 0 && ${has_indenter} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press &
+    c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
+    c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*]" &
+elif "${compute_group_properties} > 0 && ${compute_interactions} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press &
+    c_ion_stress[*] c_solvent_stress[*] &
+    c_substrate_stress[*] c_surfactant_stress[*] &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
 elif "${compute_interactions} > 0" &
-  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz &
     c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
@@ -985,10 +1166,20 @@ elif "${compute_interactions} > 0" &
     c_surfactant_surfactant_intramolecular_interaction[*] &
     c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
-else &
-  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+elif "${compute_group_properties} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
-     pxx pyy pzz pxy pxz pyz"
+    pxx pyy pzz pxy pxz pyz &
+    c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press &
+    c_ion_stress[*] c_solvent_stress[*] &
+    c_substrate_stress[*] c_surfactant_stress[*]" &
+else &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz"
 
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
