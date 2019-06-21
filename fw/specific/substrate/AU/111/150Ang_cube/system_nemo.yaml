@@ -128,12 +128,12 @@ dependencies:
   fw_020_minimization_fixed_box.yaml:
   - fw_030_minimization_relaxed_box.yaml
   - fw_110_minimization_fixed_box_extract_thermo.yaml
-  - fw_170_minimization_fixed_to_filepad.yaml
-  - fw_220_minimization_fixed_to_storage.yaml
+  - fw_170_minimization_fixed_box_to_filepad.yaml
+  - fw_220_minimization_fixed_box_to_storage.yaml
 
   fw_110_minimization_fixed_box_extract_thermo.yaml:
-  - fw_170_minimization_fixed_to_filepad.yaml
-  - fw_220_minimization_fixed_to_storage.yaml
+  - fw_170_minimization_fixed_box_to_filepad.yaml
+  - fw_220_minimization_fixed_box_to_storage.yaml
 
   fw_025_minimization_relaxed_box_file_retrieval.yaml:
   - fw_030_minimization_relaxed_box.yaml
@@ -141,12 +141,12 @@ dependencies:
   fw_030_minimization_relaxed_box.yaml:
   - fw_060_equilibration_nvt_bulk.yaml
   - fw_120_minimization_relaxed_box_extract_thermo.yaml
-  - fw_180_minimization_relaxed_to_filepad.yaml
-  - fw_230_minimization_relaxed_to_storage.yaml
+  - fw_180_minimization_relaxed_box_to_filepad.yaml
+  - fw_230_minimization_relaxed_box_to_storage.yaml
 
   fw_120_minimization_relaxed_box_extract_thermo.yaml:
-  - fw_180_minimization_relaxed_to_filepad.yaml
-  - fw_230_minimization_relaxed_to_storage.yaml
+  - fw_180_minimization_relaxed_box_to_filepad.yaml
+  - fw_230_minimization_relaxed_box_to_storage.yaml
 
   fw_055_equilibration_nvt_file_retrieval.yaml:
   - fw_060_equilibration_nvt_bulk.yaml
