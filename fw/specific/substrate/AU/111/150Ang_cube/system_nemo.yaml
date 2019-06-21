@@ -136,7 +136,7 @@ dependencies:
   - fw_220_minimization_fixed_to_storage.yaml
 
   fw_025_minimization_relaxed_box_file_retrieval.yaml:
-  - fw_030_minimization_relaxed_box
+  - fw_030_minimization_relaxed_box.yaml
 
   fw_030_minimization_relaxed_box.yaml:
   - fw_060_equilibration_nvt_bulk.yaml
@@ -148,8 +148,8 @@ dependencies:
   - fw_180_minimization_relaxed_to_filepad.yaml
   - fw_230_minimization_relaxed_to_storage.yaml
 
-  fw_055_equilibration_nvt_file_retrieval:
-  - fw_060_equilibration_nvt_bulk
+  fw_055_equilibration_nvt_file_retrieval.yaml:
+  - fw_060_equilibration_nvt_bulk.yaml
 
   fw_060_equilibration_nvt_bulk.yaml:
   - fw_070_equilibration_npt_bulk.yaml
@@ -162,7 +162,7 @@ dependencies:
   - fw_240_equilibration_nvt_to_storage.yaml
 
   fw_065_equilibration_npt_file_retrieval:
-  - fw_070_equilibration_npt_bulk
+  - fw_070_equilibration_npt_bulk.yaml
 
   fw_070_equilibration_npt_bulk.yaml:
   - fw_100_extract_rdf.yaml
