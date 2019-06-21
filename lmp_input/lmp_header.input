@@ -891,6 +891,8 @@ if "${compute_group_properties} > 0" then &
         sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
     "compute surfactant_stress surfactant reduce &
         sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute total_stress all reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
     "variable indenter_press_biased equal &
         -(c_indenter_stress_biased[1]+c_indenter_stress_biased[2]+c_indenter_stress_biased[3])/(3*vol)" &
     "variable indenter_press equal &
@@ -902,7 +904,12 @@ if "${compute_group_properties} > 0" then &
     "variable substrate_press equal &
         -(c_substrate_stress[1]+c_substrate_stress[2]+c_substrate_stress[3])/(3*vol)" &
     "variable surfactant_press equal &
-        -(c_surfactant_stress[1]+c_surfactant_stress[2]+c_surfactant_stress[3])/(3*vol)"
+        -(c_surfactant_stress[1]+c_surfactant_stress[2]+c_surfactant_stress[3])/(3*vol)" &
+    "variable total_press equal &
+        -(c_total_stress[1]+c_total_stress[2]+c_total_stress[3])/(3*vol)"
+# ATTENTION: the "pressures" here are not normalized by group volume, but by
+#            total system volume!
+
 # https://lammps.sandia.gov/doc/compute_temp.html
 # A kinetic energy tensor, stored as a 6-element vector, is also calculated by
 # this compute for use in the computation of a pressure tensor. The formula for
@@ -1092,9 +1099,10 @@ if "${compute_group_properties} > 0 && ${compute_interactions} > 0 && ${has_inde
    c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
    c_substrate_temp c_surfactant_temp &
    v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
-   v_substrate_press v_surfactant_press &
+   v_substrate_press v_surfactant_press v_total_press &
    c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
    c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
+   c_total_stress[*] &
    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -1132,9 +1140,10 @@ elif "${compute_group_properties} > 0 && ${has_indenter} > 0" &
     c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
     c_substrate_temp c_surfactant_temp &
     v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
-    v_substrate_press v_surfactant_press &
+    v_substrate_press v_surfactant_press v_total_press &
     c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
-    c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*]" &
+    c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
+    c_total_stress[*]" &
 elif "${compute_group_properties} > 0 && ${compute_interactions} > 0" &
   "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
@@ -1142,9 +1151,9 @@ elif "${compute_group_properties} > 0 && ${compute_interactions} > 0" &
     c_ion_temp c_solvent_temp &
     c_substrate_temp c_surfactant_temp &
     v_ion_press v_solvent_press &
-    v_substrate_press v_surfactant_press &
+    v_substrate_press v_surfactant_press v_total_press &
     c_ion_stress[*] c_solvent_stress[*] &
-    c_substrate_stress[*] c_surfactant_stress[*] &
+    c_substrate_stress[*] c_surfactant_stress[*] c_total_stress[*] &
     c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
     c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
     c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -1174,9 +1183,9 @@ elif "${compute_group_properties} > 0" &
     c_ion_temp c_solvent_temp &
     c_substrate_temp c_surfactant_temp &
     v_ion_press v_solvent_press &
-    v_substrate_press v_surfactant_press &
+    v_substrate_press v_surfactant_press v_total_press &
     c_ion_stress[*] c_solvent_stress[*] &
-    c_substrate_stress[*] c_surfactant_stress[*]" &
+    c_substrate_stress[*] c_surfactant_stress[*] c_total_stress[*]" &
 else &
   "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
