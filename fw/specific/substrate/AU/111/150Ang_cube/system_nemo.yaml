@@ -161,7 +161,7 @@ dependencies:
   - fw_190_equilibration_nvt_to_filepad.yaml
   - fw_240_equilibration_nvt_to_storage.yaml
 
-  fw_065_equilibration_npt_file_retrieval:
+  fw_065_equilibration_npt_file_retrieval.yaml:
   - fw_070_equilibration_npt_bulk.yaml
 
   fw_070_equilibration_npt_bulk.yaml:
