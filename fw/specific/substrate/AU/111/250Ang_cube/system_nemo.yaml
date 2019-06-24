@@ -102,7 +102,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:               nemo_queue_offline
   fw_070_equilibration_npt_bulk.yaml:
   - worker:               nemo_queue_offline
-     queue:                ''
+    queue:                ''
     walltime:             '1:00:00'
 
 persistent:
