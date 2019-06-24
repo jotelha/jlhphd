@@ -1,11 +1,78 @@
+# sample usage:
+#  lmp -in lmp_fcc_AU_111.input -v width 250.0 -v depth 250.0 -v height 250.0 -v out_file AU_111_250Ang_cube.lammps
+
 # prepares AU crystal with the 111 direction aligned to z axis
+variable out_file         index AU_111_block.lammps
+
+variable width            index 250.0
+variable depth            index 250.0
+variable height           index 250.0
+
+variable xFactor          index 0.174   # 25.5 / 150, see below
+variable yFactor          index 0.150   # 22.5 / 150, see below
+variable zFactor          index 0.142   # 21.0 / 150, see below
+
 variable substrateType    index 11
 
 # default lattice constant for Au
 variable substrate_lattice_constant index 4.075
 
+# define crystal plane constants
+# we orient the FCC crystal to have its 111 plane face positive z direction
+# consequently, e choose the 1 -1 9 plane to face positive x
+# an 1 1 -2 to face positive y
+# 
+# Now, crystal plane spacings d_hkl for a plane with Miller indices hkl and 
+# FCC lattice constant a are related by
+#
+#   1 / d_hkl^2 = ( h^2 + k^2 + l^2 ) / a^2
+# 
+# or 
+#
+#   a = sqrt( h^2 + k^2 + l^2 ) * d_hkl
+# 
+# Thus, we have the following crystal plane spacings in our cartesian
+# spatial directions
+# 
+#   d_(1,-1,0) = a/sqrt(2)
+#   d_(1,1,-2) = a/sqrt(6)
+#   d_(1,1,1)  = a/sqrt(3)
+
+variable sqrtSumHKLx equal "sqrt(2.0)"
+variable sqrtSumHKLy equal "sqrt(6.0)"
+variable sqrtSumHKLz equal "sqrt(3.0)"
+
+variable dx equal "v_substrate_lattice_constant / v_sqrtSumHKLx"
+variable dy equal "v_substrate_lattice_constant / v_sqrtSumHKLy"
+variable dz equal "v_substrate_lattice_constant / v_sqrtSumHKLz"
+
+print "Crystal plane spacings: "
+print "   (1,-1,0): ${dx}"
+print "   (1,1,-2): ${dy}"
+print "   (1,1,1):  ${dz}"
+
+# now, we want every spatial measure to be an exact multiple of such 
+# planar spacings. What is more, the structure only repeats
+# at (2,1,3) multiples of planes.
+
+variable dx_in_unit_cell equal 2
+variable dy_in_unit_cell equal 1
+variable dz_in_unit_cell equal 3
+
+variable actual_width  equal "round(v_width  / (v_dx_in_unit_cell*v_dx))*v_dx_in_unit_cell*v_dx"
+variable actual_depth  equal "round(v_depth  / (v_dy_in_unit_cell*v_dy))*v_dy_in_unit_cell*v_dy"
+variable actual_height equal "round(v_height / (v_dz_in_unit_cell*v_dz))*v_dz_in_unit_cell*v_dz"
+
+print "Measures of box corrected for whole crystal plane spacing multiples:"
+print "  ${actual_width} ${actual_depth} ${actual_height}"
+
+variable lat_width        equal "v_actual_width  * v_xFactor"
+variable lat_depth        equal "v_actual_depth  * v_yFactor"
+variable lat_height       equal "v_actual_height * v_zFactor"
+
+print "Lattice measures of box: ${lat_width} ${lat_depth} ${lat_height}"
+
 ### General LAMMPS parameters ###
-# include     lmp_header.input
 
 # Two-dimensional system (each atom has two degrees-of-freedom)
 dimension      3
@@ -31,7 +98,12 @@ lattice fcc ${substrate_lattice_constant} orient x 1 -1 0 orient y 1 1 -2 orient
 # 51x90x63 crystal planes:
 # 51x30x21 6 atom unit cells
 # 25.5x22.5x21 LAMMPS lattice constants
-region         box block 0 25.5 0 22.5 0 21
+# region         box block 0 25.5 0 22.5 0 21
+
+# here, we shift by 1/3rd of a lattice spacing in each direction to have no atoms
+# on the periodic boundaries
+region         box block $(v_dx/3.0) $(v_actual_width+(v_dx/3.0)) $(v_dy/3.0) $(v_actual_depth+(v_dy/3.0)) $(v_dz/2.0) $(v_actual_height+(v_dz/3.0)) units box
+#region         box block 0 ${lat_width} 0 ${lat_depth} 0 ${lat_height}
 #               |    |   | |  | |  | |
 #               ^name of region
 #                    ^type of region (rectangular block)
@@ -52,25 +124,25 @@ create_atoms   ${substrateType} box
 set group all type ${substrateType}
 
 # shrink box around created atoms
-change_box all boundary s s s
-print "Post shrink-wrap box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+# change_box all boundary s s s
+# print "Post shrink-wrap box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
 
 # zero-align system
 # get minimum substrate coordinates
-variable x_subst equal (bound(all,xmin))
-variable y_subst equal (bound(all,ymin))
-variable z_subst equal (bound(all,zmin))
-variable precision equal (1.0e-5)
-info variables
-print "Minimum coordinates: ${x_subst} ${y_subst} ${z_subst}"
+# variable x_subst equal (bound(all,xmin))
+# variable y_subst equal (bound(all,ymin))
+# variable z_subst equal (bound(all,zmin))
+# variable precision equal (1.0e-5)
+# info variables
+# print "Minimum coordinates: ${x_subst} ${y_subst} ${z_subst}"
 
-displace_atoms all move $((-xlo)) $((-ylo)) $((-zlo)) units box
+# displace_atoms all move $((-xlo)) $((-ylo)) $((-zlo)) units box
 #displace_atoms all move $((v_precision-v_x_subst)) $((v_precision-v_y_subst)) &
 #    $((v_precision-v_z_subst)) units box
-print "Post-displacement box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+# print "Post-displacement box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
 
 # switch on periodic bc again
-change_box all boundary p p p
+# change_box all boundary p p p
 
 # add one lattice constant in each direction
 
@@ -96,9 +168,9 @@ change_box all boundary p p p
 #   n = [2, 4, 3] = l / d (element-wise)
 # crystal planes withinin each dimension within the LAMMPS-computed 
 # lattice spacings.
-print "LAMMPS-calculated lattice constants: $(xlat) $(ylat) $(zlat)"
-change_box all x final $(xlo) $(xhi+(xlat/2.0)) y final $(ylo) $(yhi+(ylat/4.0)) z final $(zlo) $(zhi+(zlat/3.0)) units box
-print "Extended box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
+# print "LAMMPS-calculated lattice constants: $(xlat) $(ylat) $(zlat)"
+# change_box all x final $(xlo) $(xhi+(xlat/2.0)) y final $(ylo) $(yhi+(ylat/4.0)) z final $(zlo) $(zhi+(zlat/3.0)) units box
+# print "Extended box measures: $(xlo) $(xhi), $(ylo) $(yhi), $(zlo) $(zhi)"
 
 # Set mass for each atoms, necessary, otherwise trows error
 #mass * ${substrateMass}
@@ -107,4 +179,4 @@ include masses.input
 
 # write data file
 write_dump     all image substrate.*.png type type modify backcolor white
-write_data     AU_111_51x30x21.lammps
+write_data     ${out_file}

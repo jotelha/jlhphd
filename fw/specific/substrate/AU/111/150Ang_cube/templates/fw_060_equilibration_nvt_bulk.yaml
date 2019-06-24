@@ -11,6 +11,7 @@ spec:
     input_equilibration_nvt:    lmp_equilibration_nvt.input
     coeff_file:                 coeff.input
   _files_out:
+    ave_file:  thermo_ave.out
     data_file: default.lammps
     traj_file: default.nc
     log_file:  log.lammps
@@ -21,6 +22,7 @@ spec:
     - -in lmp_equilibration_nvt.input
     - -v coeffInfile              coeff.input
     - -v compute_interactions     0
+    - -v compute_group_properties 1
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         0
     - -v has_indenter             0

@@ -432,6 +432,11 @@ if "${store_forces} > 0" then &
   "fix storeForcesAve all ave/atom 1 ${netcdf_frequency} &
     ${netcdf_frequency} fx fy fz"
 
+# average per atom stress
+if "${compute_group_properties} > 0" then &
+  "fix peratom_stress_ave all ave/atom &
+    1 ${netcdf_frequency} ${netcdf_frequency} c_peratom_stress[*]"
+
 
 dump            dumpPng nonsolvent image ${png_frequency} &
                 ${baseName}.*.png type type
@@ -469,7 +474,8 @@ if "${compute_group_properties} > 0 && ${mpiio} > 0 && ${store_forces} > 0" then
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
      f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
-     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3]" &
+     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
 elif "${mpiio} > 0 && ${store_forces} > 0" &
   "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
@@ -505,7 +511,8 @@ elif "${compute_group_properties} > 0 && ${store_forces} > 0" &
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
      f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
-     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3]" &
+     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
 elif "${store_forces} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
@@ -523,7 +530,8 @@ elif "${compute_group_properties} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store per atom stresses'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
     ${baseName}.nc id mol type mass x y z vx vy vz &
-    c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+     c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &

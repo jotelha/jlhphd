@@ -32,6 +32,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
   smb_port:               445
 
+  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh/nonbonded.input
+
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4
   coulomb_cutoff:                               8.0
@@ -101,7 +103,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
   fw_070_equilibration_npt_bulk.yaml:
   - worker:               nemo_queue_offline
     queue:                ''
-    walltime:             1:00:00
+    walltime:             '1:00:00'
 
 persistent:
   fw_020_minimization_fixed_box.yaml:
