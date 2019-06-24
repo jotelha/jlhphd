@@ -29,7 +29,6 @@ spec:
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
     - -v productionSteps          {{ npt_equilibration_steps|default(100000,true)|int }}
     - -v pressureP                {{ pressure|default(1.0,true)|float }}
-    - -v pressurize_z_only        1
     - -v pressurize_solution_only 0
     - -v reinitialize_velocities  0
     - -v read_groups_from_file    0
