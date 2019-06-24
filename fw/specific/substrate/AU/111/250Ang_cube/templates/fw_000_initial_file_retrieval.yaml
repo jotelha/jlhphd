@@ -6,8 +6,6 @@ spec:
   _files_out:
     input_header:               lmp_header.input
     input_minimization:         lmp_minimization.input
-    input_equilibration_nvt:    lmp_equilibration_nvt.input
-    input_equilibration_npt:    lmp_equilibration_npt.input
     coeff_file:                 coeff_hybrid.input
   _tasks:
 
@@ -15,8 +13,6 @@ spec:
     identifiers:
     - lmp_header.input
     - lmp_minimization.input
-    - lmp_equilibration_nvt.input
-    - lmp_equilibration_npt.input
 
   - _fw_name: GetFilesTask
     identifiers:
