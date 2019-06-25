@@ -12,6 +12,7 @@ spec:
     coeff_file:                 coeff.input
     ndx_file:                   groups.ndx
   _files_out:
+    ave_file:  thermo_ave.out
     data_file: default.lammps
     traj_file: default.nc
     log_file:  log.lammps
