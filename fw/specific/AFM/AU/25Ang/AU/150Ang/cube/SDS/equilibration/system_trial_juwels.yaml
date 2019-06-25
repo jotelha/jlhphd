@@ -79,6 +79,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   - 52
   - 90
   - 63
+  sb_in_dist:                                   30.0
+  sb_in_dist_unit:                              Ang
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
   sb_measures:
