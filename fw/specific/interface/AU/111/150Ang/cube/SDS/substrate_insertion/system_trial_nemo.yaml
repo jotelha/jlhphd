@@ -1,0 +1,118 @@
+name: "NEMO: Substrate insertion into previously equilibrated systems [AU (111) 150 Ang cube]"
+metadata: {}
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+
+  # JUWELS
+  # machine:                JUWELS
+  # walltime:               '24:00:00'
+  # queue:                  batch
+  # ntasks:                 192
+  # cpus_per_task:          1
+  # ntasks_per_node:        96
+  # account:                hfr13
+  #
+  # worker:                 juwels_noqueue
+  # postp_worker:           juwels_noqueue
+  # restart_worker:         juwels_queue
+  # max_restarts:           5
+
+  # NEMO
+  machine:                NEMO
+  worker:                 bwcloud_std
+
+  coeff_nonbonded_identifier: SDS/in/H2O/on/AU/coeff/nonbonded.input
+  coeff_identifier:           SDS/in/H2O/on/AU/coeff.input
+  #substrate_identifier:       substrate/AU/111/51x30x21/equilibrated.lammps
+  #interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
+
+  # system metadata
+  state:                                        intial config
+  ci_preassembly:                               at_polar_head
+  counterion:                                   NA
+  force_field:
+    solution_solution:                          "charmm36-jul2017"
+    substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
+    substrate_solution:                         "interface_ff_1_5"
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_150Ang_cube
+  sb_area:                                      2.25e-16
+  sb_area_unit:                                 m^2
+  sb_base_length:                               150
+  sb_base_length_unit:                          Ang
+  sb_crystal_plane:                             111
+  sb_crystal_plane_multiples:
+  - 52
+  - 90
+  - 63
+  sb_lattice_constant:                          4.075
+  sb_lattice_constant_unit:                     Ang
+  sb_measures:
+  - 149.836e-10
+  - 149.725e-10
+  - 147.828e-10
+  sb_measures_unit:                             m
+  sb_multiples: # multiples of unit cell
+  - 52
+  - 30
+  - 21
+  sb_natoms:                                    196560
+  sb_normal:                                    2 # z
+  sb_shape:                                     cube
+  sb_thickness:                                 150.0e-10
+  sb_thickness_unit:                            m
+  sb_volume:                                    3.375e-23
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+
+# if more than one set of contexts given, dependency tree will fork
+transient:  # ...overridden by these transient settings, which do not affect children
+  fw_010_datafile_retrieval.yaml:
+  - sb_multiples:
+    - 51
+    - 30
+    - 2
+
+  #fw_020_exchange_substrate.yaml:
+  #- worker:   nemo_queue_offline
+  #  nodes:    1
+  #  ppn:      1
+  #  walltime: '00:05:00'
+  #  queue:    express
+
+persistent:
+  fw_015_interface_datafile_retrieval.yaml:
+  - sf_nmolecules:        75
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000453
+  fw_020_exchange_substrate:
+  - step: initial_config
+
+dependencies:
+  fw_005_input_file_retrieval.yaml:
+  - fw_010_substrate_datafile_retrieval.yaml
+  - fw_015_interface_datafile_retrieval.yaml
+  - fw_020_exchange_substrate.yaml
+
+  fw_010_substrate_datafile_retrieval.yaml:
+  - fw_020_exchange_substrate.yaml
+
+  fw_015_interface_datafile_retrieval.yaml:
+  - fw_020_exchange_substrate.yaml
+
+  fw_020_exchange_substrate.yaml:
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml

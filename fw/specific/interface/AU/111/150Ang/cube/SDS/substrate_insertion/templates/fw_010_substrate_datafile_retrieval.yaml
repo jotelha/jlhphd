@@ -1,0 +1,19 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, substrate datafile retrieval"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    substrate_file: "*.lammps"
+  _tasks:
+
+  - _fw_name: GetFilesByQueryTask
+    query:
+      metadata:
+        sb_name:        {{ sb_name }}
+        state:          "minimized, nvt- and npt-equilibrated with eam potential"
+
+  metadata:
+    state: "substrate datafile retrieval"
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

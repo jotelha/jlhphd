@@ -1,0 +1,41 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, substrate exchange"
+spec:
+  _category: {{ worker|default("bwcloud_std",true) }}
+  _files_out:
+    input_header:               lmp_header.input
+    input_minimal_header:       lmp_minimal_header.input
+    input_delete_subst:         lmp_delete_subst.input
+    input_snapshot:             lmp_snapshot.input
+    input_shift_surface_to_zero_z:      lmp_shift_surface_to_zero_z.input
+    input_shift_solution_to_zero_z:     lmp_shift_solution_to_zero_z.input
+    input_scale_solution_to_substrate:  lmp_scale_solution_to_substrate.input
+    input_merge:                lmp_merge.input
+    coeff_nonbonded_file:       coeff_nonbonded.input
+    coeff_file:                 coeff.input
+
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - lmp_header.input
+    - lmp_minimal_header.input
+    - lmp_delete_subst.input
+    - lmp_snapshot.input
+    - lmp_shift_surface_to_zero_z.input
+    - lmp_shift_solution_to_zero_z.input
+    - lmp_scale_solution_to_substrate.input
+    - lmp_merge.input
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - {{ coeff_identifier }}
+    - {{ coeff_nonbonded_identifier }}
+    new_file_names:
+    - coeff.input
+    - coeff_nonbonded.input
+  metadata:
+    state:  input file retrieval
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
