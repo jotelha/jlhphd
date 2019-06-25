@@ -19,7 +19,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # NEMO
   machine:                NEMO
-  worker:                 bwcloud_std
+  worker:                 nemo_noqueue
 
   coeff_nonbonded_identifier: SDS/in/H2O/on/AU/coeff/nonbonded.input
   coeff_identifier:           SDS/in/H2O/on/AU/coeff.input
@@ -81,7 +81,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient:  # ...overridden by these transient settings, which do not affect children
-  fw_010_substrate_datafile_retrieval.yaml:
+  fw_015_interface_datafile_retrieval.yaml:
   - sb_multiples:
     - 51
     - 30
@@ -97,7 +97,7 @@ transient:  # ...overridden by these transient settings, which do not affect chi
 persistent:
   fw_015_interface_datafile_retrieval.yaml:
   - sf_nmolecules:        75
-    sf_preassembly:       bilayer
+    sf_preassembly:       monolayer
     sf_concentration:     0.000453
 
 dependencies:

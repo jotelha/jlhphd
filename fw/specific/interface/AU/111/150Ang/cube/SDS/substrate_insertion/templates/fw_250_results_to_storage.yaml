@@ -5,7 +5,7 @@ spec:
   _category: {{ worker|default("bwcloud_std",true) }}
   _files_in:
     data_file:             datafile.lammps
-
+  {{ render_smb_forward()|indent(2) }}
   _tasks:
   {% autoescape false %}{{ render_wait_for_port()|indent(2) }}{% endautoescape %}
   - _fw_name: CmdTask

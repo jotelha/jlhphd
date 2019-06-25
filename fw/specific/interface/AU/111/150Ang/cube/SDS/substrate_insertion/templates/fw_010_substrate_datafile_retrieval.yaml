@@ -4,7 +4,7 @@ name: "{{ machine|default("NEMO",true) }}, {{ title }}, substrate datafile retri
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
-    substrate_file: "*.lammps"
+    substrate_file: "default.lammps"
   _tasks:
 
   - _fw_name: GetFilesByQueryTask
