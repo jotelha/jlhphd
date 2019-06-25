@@ -57,33 +57,42 @@ std: # standard settings to be applied to all fireworks, if not ...
   # system metadata
   ci_preassembly:                               at polar heads
   counterion:                                   NA
-  force_field:                                  charmm36
-  #frozen_sb_layer_thickness:                    14.0
-  #frozen_sb_layer_thickness_unit:               Ang
+  force_field:
+    solution_solution:                          "charmm36-jul2017"
+    substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
+    substrate_solution:                         "interface_ff_1_5"
   restrained_sb_layer_thickness:                14.0
   restrained_sb_layer_thickness_unit:           Ang
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
-  sb_name:                                      AU_111_51x30x21
-  sb_area:                                      2.2351e-16
+  sb_name:                                      AU_111_150Ang_cube
+  sb_area:                                      2.25e-16
   sb_area_unit:                                 m^2
+  sb_base_length:                               150
+  sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
+  sb_crystal_plane_multiples:
+  - 52
+  - 90
+  - 63
+  sb_lattice_constant:                          4.075
+  sb_lattice_constant_unit:                     Ang
   sb_measures:
-  - 1.48e-8
-  - 1.51e-8
-  - 1.51e-8
+  - 149.836e-10
+  - 149.725e-10
+  - 147.828e-10
   sb_measures_unit:                             m
-  sb_multiples:
-  - 51
+  sb_multiples: # multiples of unit cell
+  - 52
   - 30
   - 21
+  sb_natoms:                                    196560
   sb_normal:                                    2 # z
-  sb_thickness:                                 1.51e-8
+  sb_shape:                                     cube
+  sb_thickness:                                 150.0e-10
   sb_thickness_unit:                            m
-
-  sb_unit_cell_unit:                            m
-  sb_volume:                                    3.37e-24
+  sb_volume:                                    3.375e-23
   sb_volume_unit:                               m^3
   sf_concentration:                             0
   sf_concentration_unit:                        M # M = mol L^-3
