@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{machine}}, transfer '{{identifier}}' data to file pad
+name: {{machine}}, transfer '{{identifier}}/{{ step }}' data to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
@@ -15,19 +15,19 @@ spec:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
-    - {{ identifier }}/production/default.lammps
-    - {{ identifier }}/production/groups.ndx
-    - {{ identifier }}/production/indenter_forces.txt
-    - {{ identifier }}/production/log.lammps
-    - {{ identifier }}/production/thermo.out
+    - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/groups.ndx
+    - {{ identifier }}/{{ step }}/indenter_forces.txt
+    - {{ identifier }}/{{ step }}/log.lammps
+    - {{ identifier }}/{{ step }}/thermo.out
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
-    - {{ identifier }}/production/default.lammps
-    - {{ identifier }}/production/groups.ndx
-    - {{ identifier }}/production/indenter_forces.txt
-    - {{ identifier }}/production/log.lammps
-    - {{ identifier }}/production/thermo.out
+    - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/groups.ndx
+    - {{ identifier }}/{{ step }}/indenter_forces.txt
+    - {{ identifier }}/{{ step }}/log.lammps
+    - {{ identifier }}/{{ step }}/thermo.out
     paths:
     - default.lammps
     - groups.ndx
@@ -36,8 +36,10 @@ spec:
     - thermo.out
     metadata:
       state: AFM probe approached
+      step:  {{ step }}
       {{ render_metadata()|indent(6)}}
   metadata:
-    state: AFM probe approached
+    state: file transfer to filepad
+    step:  {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}

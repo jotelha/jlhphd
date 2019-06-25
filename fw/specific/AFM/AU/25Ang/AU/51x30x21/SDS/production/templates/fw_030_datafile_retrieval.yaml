@@ -28,8 +28,8 @@ spec:
 
         sb_in_dist:      {{ sb_in_dist }}
         sb_in_dist_unit: {{ sb_in_dist_unit }}
-  
-        state: "minimized, nvt- and npt-equilibrated with eam potential after indenter inserion"
+
+        state: "minimized, nvt-, npt-, and dpd thermostat-equilibrated with eam potential after indenter inserion"
 
   metadata:
     state: "production initial configuration data files"

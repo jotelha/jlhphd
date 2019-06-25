@@ -16,6 +16,7 @@ spec:
     traj_file: default.nc
     log_file:  log.lammps
     ndx_file:  groups.ndx
+    ave_file:  thermo_ave.out
   _tasks:
   - _fw_name: CmdTask
     cmd: lmp
@@ -49,7 +50,7 @@ spec:
     - -v surfactant_name          {{ surfactant|default("SDS") }}
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
-    - -v use_barostat             {{ use_barostat|default(1,false)|int }}
+    - -v use_barostat             {{ use_barostat|default(0,false)|int }}
     - -v use_dpd_tstat            {{ use_dpd_tstat|default(1,false)|int }}
     - -v use_eam                  1
     - -v use_ewald                1
@@ -66,7 +67,6 @@ spec:
     stdout_file:    std.out
     store_stdout:   true
     store_stderr:   true
-    shell_exe:      {{ shell_exe }}
     use_shell:      true
     fizzle_bad_rc:  true
   _trackers:

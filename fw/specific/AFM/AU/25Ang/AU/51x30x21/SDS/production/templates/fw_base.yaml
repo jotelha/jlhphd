@@ -15,19 +15,57 @@
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
 {%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/%s%s"|format(
-  indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
-  substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly,constant_indenter_velocity,constant_indenter_velocity_unit) -%}
+  indenter.substrate,
+  indenter.crystal_plane,
+  indenter.initial_radius,
+  indenter.initial_radius_unit,
+  indenter.quenching_time_span,
+  indenter.quenching_time_span_unit,
+  substrate,
+  sb_crystal_plane,
+  sb_multiples[0],
+  sb_multiples[1],
+  sb_multiples[2],
+  surfactant,
+  sf_nmolecules,
+  sf_preassembly,
+  constant_indenter_velocity,
+  constant_indenter_velocity_unit) -%}
 {# identifier for initial configuration datafile #}
 {# set datafile_identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%dx%dx%d/%s/%d/%s/merged.lammps"|format(
   indenter.substrate,indenter.crystal_plane,indenter.initial_radius,indenter.initial_radius_unit,indenter.quenching_time_span,indenter.quenching_time_span_unit,
   substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],surfactant,sf_nmolecules,sf_preassembly) #}
 {%- set system_name = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s"|format(
-  sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly,
-  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity,constant_indenter_velocity_unit) -%}
+  sf_nmolecules,
+  surfactant,
+  substrate,
+  sb_crystal_plane,
+  sb_multiples[0],
+  sb_multiples[1],
+  sb_multiples[2],
+  sf_preassembly,
+  indenter.substrate,
+  indenter.crystal_plane,
+  indenter.initial_radius,
+  indenter.initial_radius_unit,
+  constant_indenter_velocity,
+  constant_indenter_velocity_unit) -%}
 {# descriptive natural language title for display purposes #}
 {%- set title = "%s %s r %s %s indenter at %s %s on %d %s on %s %s %dx%dx%d substrate, %s"|format(
-  indenter.substrate, indenter.crystal_plane, indenter.initial_radius, indenter.initial_radius_unit, constant_indenter_velocity, constant_indenter_velocity_unit,
-  sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) -%}
+  indenter.substrate,
+  indenter.crystal_plane,
+  indenter.initial_radius,
+  indenter.initial_radius_unit,
+  constant_indenter_velocity,
+  constant_indenter_velocity_unit,
+  sf_nmolecules,
+  surfactant,
+  substrate,
+  sb_crystal_plane,
+  sb_multiples[0],
+  sb_multiples[1],
+  sb_multiples[2],
+  sf_preassembly) -%}
 {%- if worker is in ['juwels_queue','juwels_noqueue'] -%}
 {%- set shell_exe = "/usr/bin/bash" -%}
 {%- else -%}
@@ -48,6 +86,60 @@ queue:            {{ queue|default("batch") }}
 walltime:         {{ walltime|default("24:00:00") }}
 {%- endif -%}
 {%- endmacro -%}
+
+{%- if worker is in ['juwels_noqueue'] -%}
+{%- set smb_port_provider = "localhost" -%}
+{%- set smb_port_local    = "$(cat .port)" -%}
+{%- else -%}
+{%- set smb_port_provider = smb_host|default("ufr2.isi1.public.ads.uni-freiburg.de",true) -%}
+{%- set smb_port_local    = smb_port -%}
+{%- endif -%}
+
+{# JUWELS has to transfer results via ssh port forwarding to RZ storage #}
+{# for this purpose, a background task can establish the ssh connection #}
+{%- macro render_smb_forward() -%}
+{%- if worker is in ['juwels_noqueue'] -%}
+_background_tasks:
+- _fw_name: BackgroundTask
+  num_launches:  1
+  run_on_finish: false
+  sleep_time:    10
+  tasks:
+  - _fw_name: PyTask
+    func:     ssh_forward.forward
+    kwargs:
+      remote_host:  {{ smb_host|default("ufr2.isi1.public.ads.uni-freiburg.de",true) }}
+      remote_port:  {{ smb_port|default(445,true)|int }}
+      ssh_host:     {{ smb_gateway|default("132.230.102.164",true) }}
+      ssh_user:     {{ smb_gateway_user|default("sshclient",true) }}
+      ssh_keyfile:  {{ smb_gateway_ssh_id|default("~/.ssh/sshclient-frrzvm",true) }}
+      port_file:    .port
+{%- endif -%}
+{%- endmacro -%}
+
+{# a simple script waiting for the ssh connection port to be allocated #}
+{%- macro render_wait_for_port() -%}
+{%- if worker is in ['juwels_noqueue'] -%}
+- _fw_name: ScriptTask
+  script: >-
+    counter=0;
+    while [ ! -f .port ]; do
+      sleep 1;
+      counter=$((counter + 1));
+      if [ $counter -ge 10 ]; then
+        echo "Timed out waiting for port!";
+        exit 126;
+      fi;
+    done
+  stderr_file:   wait.err
+  stdout_file:   wait.out
+  store_stdout:  true
+  store_stderr:  true
+  fizzle_bad_rc: true
+  use_shell:     true
+{%- endif -%}
+{%- endmacro -%}
+
 {%- macro render_metadata() -%}
 machine:         {{ machine }}
 
