@@ -26,5 +26,7 @@ spec:
     fizzle_bad_rc: true
     use_shell:     true
   metadata:
-    {{ render_metadata()|indent(4)}}
+    state: file transfer to RZ storage
+    step:  {{ step }}
+    {% autoescape false %}{{ render_metadata()|indent(4)}}{% endautoescape %}
 {% endblock %}

@@ -37,5 +37,6 @@ spec:
     - coeff_nonbonded.input
   metadata:
     state:  input file retrieval
-    {{ render_metadata()|indent(4)}}
+    step: {{ step }}
+    {% autoescape false %}{{ render_metadata()|indent(4)}}{% endautoescape %}
 {% endblock %}

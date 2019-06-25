@@ -15,5 +15,6 @@ spec:
 
   metadata:
     state: "substrate datafile retrieval"
-    {{ render_metadata()|indent(4)}}
+    step: {{ step }}
+    {% autoescape false %}{{ render_metadata()|indent(4)}}{% endautoescape %}
 {% endblock %}

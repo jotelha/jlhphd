@@ -28,6 +28,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   state:                                        intial config
+  step:                                         intial_config
   ci_preassembly:                               at_polar_head
   counterion:                                   NA
   force_field:
@@ -80,26 +81,24 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient:  # ...overridden by these transient settings, which do not affect children
-  fw_010_datafile_retrieval.yaml:
+  fw_010_substrate_datafile_retrieval.yaml:
   - sb_multiples:
     - 51
     - 30
     - 2
 
-  #fw_020_exchange_substrate.yaml:
-  #- worker:   nemo_queue_offline
-  #  nodes:    1
-  #  ppn:      1
-  #  walltime: '00:05:00'
-  #  queue:    express
+  fw_020_exchange_substrate.yaml:
+  - worker:   nemo_queue_offline
+    nodes:    1
+    ppn:      1
+    walltime: '00:05:00'
+    queue:    express
 
 persistent:
   fw_015_interface_datafile_retrieval.yaml:
   - sf_nmolecules:        75
     sf_preassembly:       bilayer
     sf_concentration:     0.000453
-  fw_020_exchange_substrate:
-  - step: initial_config
 
 dependencies:
   fw_005_input_file_retrieval.yaml:

@@ -14,10 +14,10 @@ spec:
     input_minimal_header:       lmp_minimal_header.input
     input_delete_subst:         lmp_delete_subst.input
     input_snapshot:             lmp_snapshot.input
-    input_shift_surface_to_zero_z:      lmp_shift_surface_to_zero_z.input    
-    input_shift_solution_to_zero_z:     lmp_shift_solution_to_zero_z.input    
+    input_shift_surface_to_zero_z:      lmp_shift_surface_to_zero_z.input
+    input_shift_solution_to_zero_z:     lmp_shift_solution_to_zero_z.input
     input_scale_solution_to_substrate:  lmp_scale_solution_to_substrate.input
-    input_merge:                lmp_merge.input    
+    input_merge:                lmp_merge.input
     coeff_nonbonded_file:       coeff_nonbonded.input
     coeff_file:                 coeff.input
     interface_file:             interface.lammps
@@ -169,5 +169,10 @@ spec:
     store_stderr:  true
     use_shell:     true
     fizzle_bad_rc: true
+
+  metadata:
+    state: susbtrate exchange
+    step:  {{ step }}
+    {% autoescape false %}{{ render_metadata()|indent(4)}}{% endautoescape %}
 
 {% endblock %}
