@@ -50,7 +50,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_maxeval:                         100000
   nvt_equilibration_steps:                      100000
   npt_equilibration_steps:                      100000
-  #production_steps:                             1500000
+  dpd_equilibration_steps:                      100000
   use_barostat:                                 1
   use_berenden_bstat:                           1
   use_dpd_tstat:                                1
@@ -146,16 +146,10 @@ transient: # ...overridden by these transient settings, which do not affect chil
   fw_060_equilibration_nvt.yaml:
   - worker:                   juwels_queue
     thermo_frequency:         100
-    #use_barostat:             0
-    #use_berenden_bstat:       0
-    #use_dpd_tstat:            0
 
   fw_070_equilibration_npt.yaml:
   - worker:                   juwels_queue
     thermo_frequency:         100
-    #use_barostat:             1
-    #use_berenden_bstat:       1
-    #use_dpd_tstat:            1
 
   fw_075_equilibration_dpd.yaml:
   - worker:                   juwels_queue
@@ -164,7 +158,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization

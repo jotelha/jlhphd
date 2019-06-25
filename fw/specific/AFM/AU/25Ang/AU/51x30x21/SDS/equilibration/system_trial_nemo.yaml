@@ -54,7 +54,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_maxeval:                         100000
   nvt_equilibration_steps:                      100000
   npt_equilibration_steps:                      100000
-  #production_steps:                             1500000
+  dpd_equilibration_steps:                      100000
   use_barostat:                                 1
   use_berenden_bstat:                           1
   use_dpd_tstat:                                1
@@ -144,10 +144,6 @@ std: # standard settings to be applied to all fireworks, if not ...
 transient: # ...overridden by these transient settings, which do not affect children
   fw_030_minimization.yaml:
   - worker:                 nemo_queue_offline
-    nodes:                  8
-    ppn:                    20
-    walltime:               '04:00:00'
-
     netcdf_frequency:         100
     thermo_frequency:         10
     thermo_average_frequency: 100
@@ -178,7 +174,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
+    sf_preassembly:       bilayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization

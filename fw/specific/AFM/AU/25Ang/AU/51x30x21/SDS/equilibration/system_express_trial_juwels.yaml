@@ -48,8 +48,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         500
   minimization_maxeval:                         1000
-  nvt_equilibration_steps:                      1000
-  npt_equilibration_steps:                      1000
+  nvt_equilibration_steps:                      500
+  npt_equilibration_steps:                      500
+  dpd_equilibration_steps:                      500
   # production_steps:                           100000
   use_barostat:                                 1
   use_berenden_bstat:                           1
@@ -138,23 +139,21 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_030_minimization.yaml:
-  - worker:                 juwels_queue
+  - worker: juwels_queue
 
   fw_060_equilibration_nvt.yaml:
-  - worker:                   juwels_queue
-    use_barostat:             0
-    use_berenden_bstat:       0
-    use_dpd_tstat:            0
+  - worker: juwels_queue
+
   fw_070_equilibration_npt.yaml:
-  - worker:                 juwels_queue
-    use_barostat:             1
-    use_berenden_bstat:       1
-    use_dpd_tstat:            1
+  - worker: juwels_queue
+
+  fw_075_equilibration_dpd.yaml:
+  - worker: juwels_queue
 
 persistent:
   fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.0068
   fw_030_minimization.yaml:
   - step: minimization
@@ -162,6 +161,8 @@ persistent:
   - step: equilibration_nvt
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
+  fw_075_equilibration_dpd.yaml:
+  - step: equilibration_dpd
 
 dependencies:
   # single dependency entries result in one instance only
@@ -173,12 +174,16 @@ dependencies:
   - fw_030_minimization.yaml
   - fw_055_equilibration_nvt_file_retrieval.yaml
   - fw_065_equilibration_npt_file_retrieval.yaml
+  - fw_072_equilibration_dpd_file_retrieval.yaml
 
   fw_055_equilibration_nvt_file_retrieval.yaml:
   - fw_060_equilibration_nvt.yaml
 
   fw_065_equilibration_npt_file_retrieval.yaml:
   - fw_070_equilibration_npt.yaml
+
+  fw_072_equilibration_dpd_file_retrieval.yaml:
+  - fw_075_equilibration_dpd.yaml
 
   fw_030_minimization.yaml:
   - fw_060_equilibration_nvt.yaml
@@ -193,18 +198,28 @@ dependencies:
   - fw_240_equilibration_nvt_results_to_storage.yaml
 
   fw_070_equilibration_npt.yaml:
+  - fw_075_equilibration_dpd.yaml
   - fw_100_extract_property.yaml
   - fw_200_equilibration_npt_results_to_filepad.yaml
   - fw_250_equilibration_npt_results_to_storage.yaml
 
-  fw_100_extract_property.yaml:
-  - fw_200_equilibration_npt_results_to_filepad.yaml
-  - fw_250_equilibration_npt_results_to_storage.yaml
+  fw_075_equilibration_dpd.yaml:
+  - fw_110_extract_property.yaml
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml
+
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
 
   fw_090_extract_property.yaml:
   - fw_190_equilibration_nvt_results_to_filepad.yaml
   - fw_240_equilibration_nvt_results_to_storage.yaml
 
-  fw_080_extract_property.yaml:
-  - fw_180_minimization_results_to_filepad.yaml
-  - fw_230_minimization_results_to_storage.yaml
+  fw_100_extract_property.yaml:
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_110_extract_property.yaml:
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml

@@ -1,10 +1,10 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: "{{ machine|default("NEMO",true) }}, {{ title }}, AFM force-distance curve file retrieval and preprocessing"
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, initial configuration datafile retrieval and preprocessing"
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_out:
-    data_file: default.lammps
+    data_file: "*.lammps"
 
   _tasks:
 
