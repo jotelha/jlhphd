@@ -1,0 +1,169 @@
+name: "NEMO: Insertion of AU radius 25 Ang indenter into SDS on AU (111) 150 Ang cube (EAM) interfacial systems"
+metadata: {}
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+  machine:                NEMO
+  worker:                 nemo_noqueue
+
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port:               445
+
+  step: initial_config
+
+  # system metadata
+  ci_preassembly:                               at polar heads
+  counterion:                                   NA
+  force_field:
+    solution_solution:                          "charmm36-jul2017"
+    substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
+    substrate_solution:                         "interface_ff_1_5"
+  restrained_sb_layer_thickness:                14.0
+  restrained_sb_layer_thickness_unit:           Ang
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_150Ang_cube
+  sb_area:                                      2.25e-16
+  sb_area_unit:                                 m^2
+  sb_base_length:                               150
+  sb_base_length_unit:                          Ang
+  sb_crystal_plane:                             111
+  sb_crystal_plane_multiples:
+  - 52
+  - 90
+  - 63
+  sb_lattice_constant:                          4.075
+  sb_lattice_constant_unit:                     Ang
+  sb_measures:
+  - 149.836e-10
+  - 149.725e-10
+  - 147.828e-10
+  sb_measures_unit:                             m
+  sb_multiples: # multiples of unit cell
+  - 52
+  - 30
+  - 21
+  sb_natoms:                                    196560
+  sb_normal:                                    2 # z
+  sb_shape:                                     cube
+  sb_thickness:                                 150.0e-10
+  sb_thickness_unit:                            m
+  sb_volume:                                    3.375e-23
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+
+  indenter:
+    equilibration_time_span:      50
+    equilibration_time_span_unit: ps
+    initial_radius:               25
+    initial_radius_unit:          Ang
+    initial_shape:                sphere
+    lammps_units:                 real
+    melting_final_temperature:    1800
+    melting_time_span:            10
+    melting_time_span_unit:       ns
+    melting_time_step:            5
+    melting_time_step_unit:       fs
+    minimization_ftol:            1e-5
+    minimization_ftol_unit:       kcal
+    natoms:                       3873
+    crystal_plane:                111
+    orientation:                  111 facet facing negative z
+    potential:                    Au-Grochola-JCP05-units-real.eam.alloy
+    quenching_time_span:          100
+    quenching_time_span_unit:     ns
+    quenching_time_step:          5
+    quenching_time_step_unit:     fs
+    substrate:                    AU
+    temperature:                  298
+    temperature_unit:             K
+    time_step:                    2
+    time_step_unit:               fs
+    type:                         AFM tip
+
+# if more than one set of contexts given, dependency tree will fork
+transient: # ...overridden by these transient settings, which do not affect children
+  fw_020_insert_indenter.yaml:
+  - worker:                 nemo_queue_offline
+    nodes:                  1
+    ppn:                    1
+    walltime:               '00:15:00'
+    queue:                  ''
+
+persistent:
+  fw_010_interface_file_retrieval.yaml:
+  - sf_nmolecules:        75
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        75
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        129
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0006
+  - sf_nmolecules:        220
+    sf_preassembly:       bilayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        220
+    sf_preassembly:       monolayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        377
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        377
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        646
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       cylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        1107
+    sf_preassembly:       bilayer
+    sf_concentration:     0.017
+#1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#646_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#75_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+
+dependencies:
+  fw_000_indenter_file_retrieval.yaml:
+  - fw_010_interface_file_retrieval.yaml
+  - fw_020_insert_indenter.yaml
+
+  fw_010_interface_file_retrieval.yaml:
+  - fw_020_insert_indenter.yaml
+  - fw_030_restore_types.yaml
+
+  fw_020_insert_indenter.yaml:
+  - fw_030_restore_types.yaml
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml
+
+  fw_030_restore_types.yaml:
+  - fw_200_results_to_filepad.yaml
+  - fw_250_results_to_storage.yaml

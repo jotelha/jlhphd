@@ -1,0 +1,24 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, interface file retrieval and preprocessing"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    interface_file: default.lammps
+
+  _tasks:
+
+  - _fw_name: GetFilesByQueryTask
+    query:
+      metadata:
+        sb_name:          {{ sb_name }}
+        solvent:          {{ solvent }}
+        surfactant:       {{ surfactant }}
+        sf_nmolecules:    {{ sf_nmolecules }}
+        sf_preassembly:   {{ sf_preassembly }}
+        state:            "minimized, nvt-, npt-, and dpd thermostat-equilibrated with eam potential"
+
+  metadata:
+    state: interface datafile retrieval
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
