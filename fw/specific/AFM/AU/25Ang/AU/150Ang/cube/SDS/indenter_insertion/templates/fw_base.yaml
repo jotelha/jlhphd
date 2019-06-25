@@ -142,13 +142,6 @@ _background_tasks:
 {%- macro render_metadata() -%}
 machine:         {{ machine }}
 
-ewald_accuracy:  {{ ewald_accuracy }}
-coulomb_cutoff:  {{ coulomb_cutoff }}
-skin_distance:   {{ skin_distance }}
-neigh_delay:     {{ neigh_delay }}
-neigh_every:     {{ neigh_every }}
-neigh_check:     {{ neigh_check }}
-
 system_name:     {{ system_name }}
 
 ci_preassembly:                               {{ ci_preassembly }}
