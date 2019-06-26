@@ -1,3 +1,4 @@
+
 {#
 # sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
 # identifier composition:
@@ -117,16 +118,40 @@ _background_tasks:
 {%- endmacro -%}
 
 {%- macro render_metadata() -%}
-machine:         {{ machine }}
+#technical
+machine:                                      {{ machine }}
 
-ewald_accuracy:  {{ ewald_accuracy }}
-coulomb_cutoff:  {{ coulomb_cutoff }}
-skin_distance:   {{ skin_distance }}
-neigh_delay:     {{ neigh_delay }}
-neigh_every:     {{ neigh_every }}
-neigh_check:     {{ neigh_check }}
+ewald_accuracy:                               {{ ewald_accuracy }}
+coulomb_cutoff:                               {{ coulomb_cutoff }}
+coulomb_cutoff_unit:                          {{ coulomb_cutoff_unit }}
+skin_distance:                                {{ skin_distance }}
+skin_distance_unit:                           {{ skin_distance_unit }}
 
-system_name:     {{ system_name }}
+neigh_delay:                                  {{ neigh_delay }}
+neigh_every:                                  {{ neigh_every }}
+neigh_check:                                  {{ neigh_check }}
+
+compute_group_properties:                     {{ compute_group_properties }}
+mpiio:                                        {{ mpiio }}
+
+netcdf_frequency:                             {{ netcdf_frequency }}
+thermo_frequency:                             {{ thermo_frequency }}
+thermo_average_frequency:                     {{ thermo_average_frequency }}
+
+minimization_ftol:                            {{ minimization_ftol }}
+minimization_ftol_unit:                       {{ minimization_ftol_unit }}
+minimization_maxiter:                         {{ minimization_maxiter }}
+minimization_maxeval:                         {{ minimization_maxeval }}
+
+nvt_equilibration_steps:                      {{ nvt_equilibration_steps }}
+npt_equilibration_steps:                      {{ npt_equilibration_steps }}
+dpd_equilibration_steps:                      {{ dpd_equilibration_steps }}
+
+use_eam:                                      {{ use_eam }}
+use_ewald:                                    {{ use_ewald }}
+
+# system
+system_name:                                  {{ system_name }}
 
 ci_preassembly:                               {{ ci_preassembly }}
 counterion:                                   {{ counterion }}
@@ -165,5 +190,7 @@ sv_density_unit:                              {{ sv_density_unit }}
 sv_preassembly:                               {{ sv_preassembly }}
 temperature:                                  {{ temperature }}
 temperature_unit:                             {{ temperature_unit }}
+
+workflow_creation_date:                       {{ datetime() }}
 {%- endmacro -%}
 {%- block body -%}{%- endblock -%}

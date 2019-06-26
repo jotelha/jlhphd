@@ -1,0 +1,273 @@
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of SDS on AU (111) 150 Ang cube substrate"
+metadata: {}
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+
+  # two general options
+  # - machine: NEMO or JUWELS
+  # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
+
+  machine:                {{ machine }}
+  # JUWELS
+{%- if machine is in ['JUWELS'] -%}
+  {%- set queue_worker = "juwels_queue" }
+  worker:                 juwels_noqueue
+  walltime:               '06:00:00'
+  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  queue:                  devel
+  ntasks:                 192
+  {%- else -%}
+  queue:                  batch
+  ntasks:                 384
+  {%- endif -%}
+  cpus_per_task:          1
+  ntasks_per_node:        96
+  account:                hfr13
+{%- elif machine is in ['NEMO'] -%}
+  {%- set queue_worker = "nemo_queue_offline" }
+  nodes:                  8
+  ppn:                    20
+  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  walltime:               '00:15:00'
+  queue:                  express
+  {%- else -%}
+  walltime:               '24:00:00'
+  queue:                  ''
+  {%- endif -%}
+  worker:                 nemo_noqueue
+{%- endif -%}
+
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port:               445
+
+  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
+
+  # technical LAMMPS options
+  ewald_accuracy:                               1.0e-4
+  coulomb_cutoff:                               8.0
+  coulomb_cutoff_unit:                          Ang
+  skin_distance:                                3.0
+  skin_distance_unit:                           Ang
+
+  neigh_delay:                                  2
+  neigh_every:                                  1
+  neigh_check:                                  1
+
+  compute_group_properties:                     1
+  mpiio:                                        1
+  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  netcdf_frequency:                             10
+  thermo_frequency:                             10
+  thermo_average_frequency:                     10
+
+  minimization_ftol:                            0.1
+  minimization_ftol_unit:                       kcal
+  minimization_maxiter:                         500
+  minimization_maxeval:                         1000
+
+  nvt_equilibration_steps:                      100
+  npt_equilibration_steps:                      100
+  dpd_equilibration_steps:                      100
+  {%- else -%}
+  netcdf_frequency:                             1000
+  thermo_frequency:                             100
+  thermo_average_frequency:                     1000
+
+  minimization_ftol:                            1.0e-6
+  minimization_ftol_unit:                       kcal
+  minimization_maxiter:                         10000
+  minimization_maxeval:                         10000
+
+  nvt_equilibration_steps:                      10000  #  20 ps
+  npt_equilibration_steps:                      500000 #   1 ns
+  dpd_equilibration_steps:                      100000 # 200 ps
+  {% endif -%}
+
+  use_eam:                                      1
+  use_ewald:                                    1
+
+  # system metadata
+  ci_preassembly:                               at polar heads
+  counterion:                                   NA
+  force_field:
+    solution_solution:                          "charmm36-jul2017"
+    substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
+    substrate_solution:                         "interface_ff_1_5"
+  restrained_sb_layer_thickness:                14.0
+  restrained_sb_layer_thickness_unit:           Ang
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_150Ang_cube
+  sb_area:                                      2.25e-16
+  sb_area_unit:                                 m^2
+  sb_base_length:                               150
+  sb_base_length_unit:                          Ang
+  sb_crystal_plane:                             111
+  sb_crystal_plane_multiples:
+  - 52
+  - 90
+  - 63
+  sb_lattice_constant:                          4.075
+  sb_lattice_constant_unit:                     Ang
+  sb_measures:
+  - 149.836e-10
+  - 149.725e-10
+  - 147.828e-10
+  sb_measures_unit:                             m
+  sb_multiples: # multiples of unit cell
+  - 52
+  - 30
+  - 21
+  sb_natoms:                                    196560
+  sb_normal:                                    2 # z
+  sb_shape:                                     cube
+  sb_thickness:                                 150.0e-10
+  sb_thickness_unit:                            m
+  sb_volume:                                    3.375e-23
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+
+# if more than one set of contexts given, dependency tree will fork
+transient: # ...overridden by these transient settings, which do not affect children
+  fw_030_minimization.yaml:
+  - worker:                   {{ queue_worker }}
+    thermo_frequency:         10
+    thermo_average_frequency: 100
+
+  fw_060_equilibration_nvt.yaml:
+  - worker:                   {{ queue_worker }}
+    thermo_frequency:         100
+
+  fw_070_equilibration_npt.yaml:
+  - worker:                   {{ queue_worker }}
+
+  fw_075_equilibration_dpd.yaml:
+  - worker:                   {{ queue_worker }}
+
+persistent:
+  fw_010_datafile_retrieval.yaml:
+  {%- if mode is in ['PRODUCTION'] -%}
+  - sf_nmolecules:        75
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        75
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        129
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0006
+  - sf_nmolecules:        220
+    sf_preassembly:       bilayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        220
+    sf_preassembly:       monolayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        377
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        377
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        646
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       cylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        1107
+    sf_preassembly:       bilayer
+    sf_concentration:     0.017
+  {%- else -%}
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  {%- endif -%}
+  fw_030_minimization.yaml:
+  - step: minimization
+  fw_060_equilibration_nvt.yaml:
+  - step: equilibration_nvt
+  fw_070_equilibration_npt.yaml:
+  - step: equilibration_npt
+  fw_075_equilibration_dpd.yaml:
+  - step: equilibration_dpd
+
+dependencies:
+  # single dependency entries result in one instance only
+  fw_000_minimization_file_retrieval.yaml:
+  - fw_010_datafile_retrieval.yaml
+  - fw_030_minimization.yaml
+
+  fw_010_datafile_retrieval.yaml:
+  - fw_030_minimization.yaml
+  - fw_055_equilibration_nvt_file_retrieval.yaml
+  - fw_065_equilibration_npt_file_retrieval.yaml
+  - fw_072_equilibration_dpd_file_retrieval.yaml
+
+  fw_055_equilibration_nvt_file_retrieval.yaml:
+  - fw_060_equilibration_nvt.yaml
+
+  fw_065_equilibration_npt_file_retrieval.yaml:
+  - fw_070_equilibration_npt.yaml
+
+  fw_072_equilibration_dpd_file_retrieval.yaml:
+  - fw_075_equilibration_dpd.yaml
+
+  fw_030_minimization.yaml:
+  - fw_060_equilibration_nvt.yaml
+  - fw_080_extract_property.yaml
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
+
+  fw_060_equilibration_nvt.yaml:
+  - fw_070_equilibration_npt.yaml
+  - fw_090_extract_property.yaml
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
+
+  fw_070_equilibration_npt.yaml:
+  - fw_075_equilibration_dpd.yaml
+  - fw_100_extract_property.yaml
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_075_equilibration_dpd.yaml:
+  - fw_110_extract_property.yaml
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml
+
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
+
+  fw_090_extract_property.yaml:
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
+
+  fw_100_extract_property.yaml:
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_110_extract_property.yaml:
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml

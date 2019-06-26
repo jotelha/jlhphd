@@ -28,7 +28,7 @@ spec:
     - -v has_indenter             0
     - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v productionSteps          {{ npt_equilibration_steps|default(10000,true)|int }}
+    - -v productionSteps          {{ dpd_equilibration_steps|default(10000,true)|int }}
     - -v pressureP                {{ pressure|default(1.0,true)|float }}
     - -v pressurize_solution_only 0
     - -v reinitialize_velocities  0
