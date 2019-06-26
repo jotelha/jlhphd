@@ -150,7 +150,7 @@ neigh_delay:     {{ neigh_delay }}
 neigh_every:     {{ neigh_every }}
 neigh_check:     {{ neigh_check }}
 
-use_barostat     [[ use_barostat }}
+use_barostat:    {{ use_barostat }}
 use_dpd_tstat:   {{ use_dpd_tstat }}
 
 system_name:     {{ system_name }}
