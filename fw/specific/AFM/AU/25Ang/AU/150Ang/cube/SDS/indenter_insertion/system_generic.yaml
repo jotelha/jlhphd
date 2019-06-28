@@ -1,9 +1,31 @@
-name: "NEMO: Insertion of AU radius 25 Ang indenter into SDS on AU (111) 150 Ang cube (EAM) interfacial systems"
+cdname: "{{ machine }} {{ mode }}:: Insertion of AU radius 25 Ang indenter into SDS on AU (111) 150 Ang cube (EAM) interfacial systems"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
-  machine:                NEMO
+
+  # two general options
+  # - machine: NEMO or JUWELS
+  # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
+
+  machine:                {{ machine }}
+  # JUWELS
+{%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker = "juwels_queue" %}
+  worker:                 juwels_noqueue
+  walltime:               '00:05:00'
+  queue:                  devel
+  ntasks:                 1
+  cpus_per_task:          1
+  ntasks_per_node:        1
+  account:                hfr13
+{%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker = "nemo_queue_offline" %}
   worker:                 nemo_noqueue
+  nodes:                  1
+  ppn:                    1
+  walltime:               '00:15:00'
+  queue:                  '' # express queue can only run one job at a time
+{%- endif %}
 
   smb_gateway:            132.230.102.164
   smb_gateway_user:       sshclient
@@ -98,14 +120,13 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_020_insert_indenter.yaml:
-  - worker:                 nemo_queue_offline
-    nodes:                  1
-    ppn:                    1
-    walltime:               '00:15:00'
-    queue:                  ''
+  - worker:                 {{ queue_worker }}
+
+
 
 persistent:
   fw_010_interface_file_retrieval.yaml:
+  {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        75
     sf_preassembly:       bilayer
     sf_concentration:     0.000453
@@ -142,13 +163,11 @@ persistent:
   - sf_nmolecules:        1107
     sf_preassembly:       bilayer
     sf_concentration:     0.017
-#1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#377_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
-#377_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#646_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
-#75_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+  {%- else %}
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  {%- endif %}
 
 dependencies:
   fw_000_indenter_file_retrieval.yaml:
