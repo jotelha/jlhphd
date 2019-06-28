@@ -86,8 +86,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   dpd_equilibration_steps:                      100000 # 200 ps
   {% endif %}
 
-  langevin_damping                              100
-  barostat_damping                              1000
+  langevin_damping:                             100.0
+  barostat_damping:                             1000.0
   use_eam:                                      1
   use_ewald:                                    1
 
@@ -160,6 +160,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
   fw_075_equilibration_dpd.yaml:
   - worker:                   {{ queue_worker }}
+    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
 
 persistent:
   fw_010_datafile_retrieval.yaml:
