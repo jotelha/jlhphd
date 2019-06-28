@@ -1,29 +1,41 @@
-name: "NEMO TRIAL: LAMMPS minimization and equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
 
-  # JUWELS
-  # machine:                JUWELS
-  # walltime:               '24:00:00'
-  # queue:                  batch
-  # ntasks:                 192
-  # cpus_per_task:          1
-  # ntasks_per_node:        96
-  # account:                hfr13
-  #
-  # worker:                 juwels_noqueue
-  # postp_worker:           juwels_noqueue
-  # restart_worker:         juwels_queue
-  # max_restarts:           5
+  # two general options
+  # - machine: NEMO or JUWELS
+  # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
 
-  # NEMO
-  machine:                NEMO
+  machine:                {{ machine }}
+  # JUWELS
+{%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker = "juwels_queue" %}
+  worker:                 juwels_noqueue
+  walltime:               '06:00:00'
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  queue:                  devel
+  ntasks:                 192
+  {%- else %}
+  queue:                  batch
+  ntasks:                 384
+  {%- endif %}
+  cpus_per_task:          1
+  ntasks_per_node:        96
+  account:                hfr13
+{%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker = "nemo_queue_offline" %}
   nodes:                  8
   ppn:                    20
-  walltime:               '08:00:00'
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:15:00'
+  queue:                  express
+  {%- else %}
+  walltime:               '24:00:00'
   queue:                  ''
+  {%- endif %}
   worker:                 nemo_noqueue
+{%- endif %}
 
   smb_gateway:            132.230.102.164
   smb_gateway_user:       sshclient
@@ -40,10 +52,26 @@ std: # standard settings to be applied to all fireworks, if not ...
   skin_distance:                                3.0
   skin_distance_unit:                           Ang
 
-  mpiio:                                        1
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
+
+  compute_group_properties:                     1
+  mpiio:                                        1
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  netcdf_frequency:                             10
+  thermo_frequency:                             10
+  thermo_average_frequency:                     10
+
+  minimization_ftol:                            0.1
+  minimization_ftol_unit:                       kcal
+  minimization_maxiter:                         500
+  minimization_maxeval:                         1000
+
+  nvt_equilibration_steps:                      100
+  npt_equilibration_steps:                      100
+  dpd_equilibration_steps:                      100
+  {%- else %}
   netcdf_frequency:                             1000
   thermo_frequency:                             1000
   thermo_average_frequency:                     1000
@@ -51,16 +79,17 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_ftol:                            1.0e-6
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
-  minimization_maxeval:                         100000
-  nvt_equilibration_steps:                      100000
-  npt_equilibration_steps:                      100000
-  dpd_equilibration_steps:                      100000
-  use_barostat:                                 1
-  use_berenden_bstat:                           1
-  use_dpd_tstat:                                1
+  minimization_maxeval:                         10000
+
+  nvt_equilibration_steps:                      10000  #  20 ps
+  npt_equilibration_steps:                      500000 #   1 ns
+  dpd_equilibration_steps:                      100000 # 200 ps
+  {% endif %}
+
+  langevin_damping:                             100.0
+  barostat_damping:                             1000.0
   use_eam:                                      1
   use_ewald:                                    1
-
 
   # system metadata
   ci_preassembly:                               at polar heads
@@ -149,39 +178,64 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_030_minimization.yaml:
-  - worker:                 nemo_queue_offline
-    netcdf_frequency:         100
+  - worker:                   {{ queue_worker }}
     thermo_frequency:         10
     thermo_average_frequency: 100
-    # for testing:
-    #nodes:                  2
-    #ppn:                    20
-    #walltime:               '00:05:00'
-    #queue:                  express
 
   fw_060_equilibration_nvt.yaml:
-  - worker:                   nemo_queue_offline
-    thermo_frequency:         100
-    #use_barostat:             0
-    #use_berenden_bstat:       0
-    #use_dpd_tstat:            0
+  - worker:                   {{ queue_worker }}
 
   fw_070_equilibration_npt.yaml:
-  - worker:                   nemo_queue_offline
-    thermo_frequency:         100
-    #use_barostat:             1
-    #use_berenden_bstat:       1
-    #use_dpd_tstat:            1
+  - worker:                   {{ queue_worker }}
 
   fw_075_equilibration_dpd.yaml:
-  - worker:                   nemo_queue_offline
-    thermo_frequency:         100
+  - worker:                   {{ queue_worker }}
+    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
 
 persistent:
   fw_010_datafile_retrieval.yaml:
+  {%- if mode is in ['PRODUCTION'] %}
+  - sf_nmolecules:        75
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        75
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        129
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0006
+  - sf_nmolecules:        220
+    sf_preassembly:       bilayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        220
+    sf_preassembly:       monolayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        377
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        377
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0034
   - sf_nmolecules:        646
     sf_preassembly:       bilayer
     sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       cylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        1107
+    sf_preassembly:       bilayer
+    sf_concentration:     0.017
+  {%- else %}
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization
   fw_060_equilibration_nvt.yaml:

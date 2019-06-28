@@ -23,6 +23,7 @@ spec:
     opt:
     - -in lmp_equilibration_nvt.input
     - -v coeffInfile              coeff.input
+    - -v compute_group_properties {{ compute_group_properties|default(1,false)|int }}
     - -v dataFile                 datafile.lammps
     - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v has_indenter             1
@@ -61,5 +62,6 @@ spec:
     nlines: 25
   metadata:
     state: equilibration nvt
+    step:  {{ step }}
     {{ render_metadata()|indent(4) }}
 {% endblock %}
