@@ -9,33 +9,33 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   machine:                {{ machine }}
   # JUWELS
-{%- if machine is in ['JUWELS'] -%}
-  {%- set queue_worker = "juwels_queue" }
+{%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker = "juwels_queue" %}
   worker:                 juwels_noqueue
   walltime:               '06:00:00'
-  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  {%- if mode is in ['EXPRESS TRIAL'] %}
   queue:                  devel
   ntasks:                 192
-  {%- else -%}
+  {%- else %}
   queue:                  batch
   ntasks:                 384
-  {%- endif -%}
+  {%- endif %}
   cpus_per_task:          1
   ntasks_per_node:        96
   account:                hfr13
-{%- elif machine is in ['NEMO'] -%}
-  {%- set queue_worker = "nemo_queue_offline" }
+{%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker = "nemo_queue_offline" %}
   nodes:                  8
   ppn:                    20
-  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  {%- if mode is in ['EXPRESS TRIAL'] %}
   walltime:               '00:15:00'
   queue:                  express
-  {%- else -%}
+  {%- else %}
   walltime:               '24:00:00'
   queue:                  ''
-  {%- endif -%}
+  {%- endif %}
   worker:                 nemo_noqueue
-{%- endif -%}
+{%- endif %}
 
   smb_gateway:            132.230.102.164
   smb_gateway_user:       sshclient
@@ -58,7 +58,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   compute_group_properties:                     1
   mpiio:                                        1
-  {%- if mode is in ['EXPRESS TRIAL'] -%}
+  {%- if mode is in ['EXPRESS TRIAL'] %}
   netcdf_frequency:                             10
   thermo_frequency:                             10
   thermo_average_frequency:                     10
@@ -71,7 +71,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      100
   npt_equilibration_steps:                      100
   dpd_equilibration_steps:                      100
-  {%- else -%}
+  {%- else %}
   netcdf_frequency:                             1000
   thermo_frequency:                             100
   thermo_average_frequency:                     1000
@@ -84,7 +84,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000  #  20 ps
   npt_equilibration_steps:                      500000 #   1 ns
   dpd_equilibration_steps:                      100000 # 200 ps
-  {% endif -%}
+  {% endif %}
 
   use_eam:                                      1
   use_ewald:                                    1
@@ -161,7 +161,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
 persistent:
   fw_010_datafile_retrieval.yaml:
-  {%- if mode is in ['PRODUCTION'] -%}
+  {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        75
     sf_preassembly:       bilayer
     sf_concentration:     0.000453
@@ -198,11 +198,11 @@ persistent:
   - sf_nmolecules:        1107
     sf_preassembly:       bilayer
     sf_concentration:     0.017
-  {%- else -%}
+  {%- else %}
   - sf_nmolecules:        646
     sf_preassembly:       monolayer
     sf_concentration:     0.0068
-  {%- endif -%}
+  {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization
   fw_060_equilibration_nvt.yaml:

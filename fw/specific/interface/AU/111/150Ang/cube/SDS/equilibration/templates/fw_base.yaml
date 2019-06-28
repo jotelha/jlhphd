@@ -191,6 +191,6 @@ sv_preassembly:                               {{ sv_preassembly }}
 temperature:                                  {{ temperature }}
 temperature_unit:                             {{ temperature_unit }}
 
-workflow_creation_date:                       {{ datetime() }}
+workflow_creation_date:                       {{ "now"|datetime }}
 {%- endmacro -%}
 {%- block body -%}{%- endblock -%}
