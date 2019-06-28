@@ -1,4 +1,4 @@
-cdname: "{{ machine }} {{ mode }}:: Insertion of AU radius 25 Ang indenter into SDS on AU (111) 150 Ang cube (EAM) interfacial systems"
+name: "{{ machine }} {{ mode }}: Insertion of AU radius 25 Ang indenter into SDS on AU (111) 150 Ang cube (EAM) interfacial systems"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
