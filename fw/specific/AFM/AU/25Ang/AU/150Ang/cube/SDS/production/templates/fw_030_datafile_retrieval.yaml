@@ -1,0 +1,41 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, AFM force-distance curve initial configuration data files retrieval"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    data_file: default.lammps
+    ndx_file:  groups.ndx
+
+  _tasks:
+
+  - _fw_name: GetFilesByQueryTask
+    query:
+      identifier:
+        '$regex': 'AFM/.*/langevin_1000.0/parrinello_10000.0/.*/default\.lammps$'
+      metadata:
+        surfactant:       {{ surfactant }}
+        sf_preassembly:   {{ sf_preassembly }}
+        sf_nmolecules:    {{ sf_nmolecules }}
+        counterion:       {{ counterion }}
+        solvent:          {{ solvent }}
+        substrate:        {{ substrate }}
+        sb_crystal_plane: {{ sb_crystal_plane }}
+        sb_base_length:   {{ sb_base_length }}
+        sb_shape:         {{ sb_shape }}
+
+        indenter:
+          substrate:      {{ indenter.substrate }}
+          initial_radius: {{ indenter.initial_radius }}
+          initial_radius_unit: {{ indenter.initial_radius_unit }}
+
+        sb_in_dist:      {{ sb_in_dist }}
+        sb_in_dist_unit: {{ sb_in_dist_unit }}
+
+        state: "minimized, nvt- and npt-equilibrated with eam potential after indenter inserion"
+        step: "equilibration_npt"
+
+  metadata:
+    state: "production initial configuration data files"
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
