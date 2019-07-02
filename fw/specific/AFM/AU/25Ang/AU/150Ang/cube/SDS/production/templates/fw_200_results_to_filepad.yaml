@@ -5,17 +5,19 @@ spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
     data_file:          default.lammps
+    filtered_traj_file: filtered.nc
     indenter_forces:    indenter_forces.txt
-    log_file:           log.lammps
-    ndx_file:           groups.ndx
     #joint_traj_file:    default.nc
     joint_thermo_file:  thermo.out
     joint_ave_file:     thermo_ave.out
+    log_file:           log.lammps
+    ndx_file:           groups.ndx
   _tasks:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
     - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/filtered.nc
     - {{ identifier }}/{{ step }}/groups.ndx
     - {{ identifier }}/{{ step }}/indenter_forces.txt
     - {{ identifier }}/{{ step }}/log.lammps
@@ -24,12 +26,14 @@ spec:
   - _fw_name: AddFilesTask
     identifiers:
     - {{ identifier }}/{{ step }}/default.lammps
+    - {{ identifier }}/{{ step }}/filtered.nc
     - {{ identifier }}/{{ step }}/groups.ndx
     - {{ identifier }}/{{ step }}/indenter_forces.txt
     - {{ identifier }}/{{ step }}/log.lammps
     - {{ identifier }}/{{ step }}/thermo.out
     paths:
     - default.lammps
+    - filtered.nc
     - groups.ndx
     - indenter_forces.txt
     - log.lammps

@@ -5,6 +5,7 @@ spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
     data_file:          default.lammps
+    filtered_traj_file: filtered.nc
     indenter_forces:    indenter_forces.txt
     log_file:           log.lammps
     ndx_file:           groups.ndx

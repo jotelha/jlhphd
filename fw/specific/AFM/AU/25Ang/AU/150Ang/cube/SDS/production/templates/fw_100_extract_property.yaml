@@ -4,7 +4,7 @@ name: {{ machine|default("NEMO",true) }}, {{ title }}, final postprocesing
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_in:
-    joint_traj_file:       default.nc # from previous post-processing task
+    filtered_traj_file:     default.nc # from previous post-processing task
     #joint_thermo_file:     thermo.out
     #joint_ave_file:        thermo_ave.out
   _files_out:
