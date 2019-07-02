@@ -135,6 +135,12 @@ fp.add_file(
         'usecase':  'create png snapshot of data file for testing purposes'})
 
 
-
-
-
+# NCO:
+fp.delete_file(identifier='selectByAtomID.nco')
+fp.add_file(
+    os.path.join(template_prefix,'nco','selectByAtomID.nco'),
+    identifier='selectByAtomID.nco',
+    metadata={
+        'type':     'nco',
+        'language': 'NetCDF operators ncap2 arithemtic processor ',
+        'usecase':  'filter all frames of NetCDF by values of arbitrary variable in first frame'})
