@@ -14,11 +14,12 @@ std: # standard settings to be applied to all fireworks, if not ...
   queue_worker:           juwels_queue
   worker:                 juwels_noqueue
   postp_worker:           juwels_noqueue
-  walltime:               '06:00:00'
   {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:05:00'
   queue:                  devel
   ntasks:                 192
   {%- else %}
+  walltime:               '06:00:00'
   queue:                  batch
   ntasks:                 384
   {%- endif %}
@@ -36,7 +37,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   walltime:               '00:15:00'
   queue:                  express
   {%- else %}
-  walltime:               '24:00:00'
+  walltime:               '96:00:00'
   queue:                  ''
   {%- endif %}
 {%- endif %}
@@ -78,6 +79,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   dpd_equilibration_steps:                      100
   production_steps:                             100
 
+  max_restarts:                                 1
   {%- else %}
   netcdf_frequency:                             5000
   restart_frequency:                            5000
@@ -92,8 +94,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000  #  20 ps
   npt_equilibration_steps:                      500000 #   1 ns
   dpd_equilibration_steps:                      100000 # 200 ps
-  production_steps:                             1500000
+  production_steps:                             1750000
 
+  max_restarts:                                 10
   {% endif %}
 
   langevin_damping:                             1000.0 # in previous npt equilibration
@@ -197,7 +200,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:                   {{ queue_worker }}
 
 persistent:
-  fw_010_datafile_retrieval.yaml:
+  fw_030_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        75
     sf_preassembly:       bilayer
@@ -247,29 +250,65 @@ persistent:
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
-    production_steps:           150000
+    production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              0
+    {%- if machine is in ['NEMO'] %}
+    step:                       "production_nemo_trial_wo_dpd_tstat"
+    {%- elif machine is in ['JUWELS'] %}
+    step:                       "production_juwels_trial_wo_dpd_tstat"
+    {%- else %}
+    step:                       "production_trial_wo_dpd_tstat"
+    {%- endif %}
 
   - netcdf_frequency:           500
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
-    production_steps:           150000
+    production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              1
+    {%- if machine is in ['NEMO'] %}
+    step:                       "production_nemo_trial_with_dpd_tstat"
+    {%- elif machine is in ['JUWELS'] %}
+    step:                       "production_juwels_trial_with_dpd_tstat"
+    {%- else %}
+    step:                       "production_trial_with_dpd_tstat"
+    {%- endif %}
 
   - netcdf_frequency:           5000
     thermo_frequency:           500
     thermo_average_frequency:   500
     restart_frequency:          5000
-    production_steps:           1500000
+    production_steps:           1750000
     constant_indenter_velocity: -1.0e-5
     use_dpd_tstat:              1
+    {%- if machine is in ['NEMO'] %}
+    step:                       "production_nemo_trial_with_dpd_tstat"
+    {%- elif machine is in ['JUWELS'] %}
+    step:                       "production_juwels_trial_with_dpd_tstat"
+    {%- else %}
+    step:                       "production_trial_with_dpd_tstat"
+    {%- endif %}
+
   {%- elif mode is in ['EXPRESS TRIAL'] %}
   fw_050_production.yaml:
-    - use_dpd_tstat:        0
-    - use_dpd_tstat:        1
+  - use_dpd_tstat:        0
+    {%- if machine is in ['NEMO'] %}
+    step:                       "production_nemo_express_trial_wo_dpd_tstat"
+    {%- elif machine is in ['JUWELS'] %}
+    step:                       "production_juwels_express_trial_wo_dpd_tstat"
+    {%- else %}
+    step:                       "production_express_trial_wo_dpd_tstat"
+    {%- endif %}
+  - use_dpd_tstat:        1
+    {%- if machine is in ['NEMO'] %}
+    step:                       "production_nemo_express_trial_with_dpd_tstat"
+    {%- elif machine is in ['JUWELS'] %}
+    step:                       "production_juwels_express_trial_with_dpd_tstat"
+    {%- else %}
+    step:                       "production_express_trial_with_dpd_tstat"
+    {%- endif %}
   {%- endif %}
 
 
