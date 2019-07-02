@@ -1,0 +1,60 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, final postprocesing
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    joint_traj_file:      default.nc
+  _files_out:
+    joint_traj_file:      filtered.nc
+  _tasks:
+
+  - _fw_name: GetFilesTask
+    identifiers:
+    - selectIndenterByAtomID.nco
+
+  # first, remove irrelevant variables for following postprocessing step
+  - _fw_name: CmdTask
+    cmd: ncks
+    opt:
+    - -x 
+    - -v cell_angles,cell_angular,cell_lengths,cell_origin,cell_spatial,c_peratom_stress,f_peratom_stress_ave,mass,mol,velocities
+    - default.nc 01_ncks.nc
+    stderr_file:   01_ncks.err
+    stdout_file:   01_ncks.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
+
+  # second, "hyperslab" by type and position to only select indenter
+  - _fw_name: CmdTask
+    cmd: ncap2
+    opt:
+    - -D5 -v -O -S select.nco
+    - 01_ncks.nc
+    - 02_ncap2.nc
+    stderr_file:   02_ncap2.err
+    stdout_file:   02_ncap2.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
+
+  # third, drop old atom dimension
+  - _fw_name: CmdTask
+    cmd: ncks 
+    - -O -x -v atom 
+    - 02_ncap2.nc
+    - 03_ncks.nc
+    stderr_file:   03_ncks.err
+    stdout_file:   03_ncks.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
+
+  metadata:
+    state: filter trajectory
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
