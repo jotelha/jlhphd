@@ -59,5 +59,5 @@ dependencies:
   - fw_100_postprocessing.yaml
   - fw_200_results_to_filepad.yaml
 
-  fw_100_extract_property.yaml:
+  fw_100_postprocessing.yaml:
   - fw_200_results_to_filepad.yaml

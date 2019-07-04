@@ -111,7 +111,27 @@ dependencies:
   - fw_200_results_to_filepad.yaml
 ```
 
-The decision for an execution environment can be made via
+The decision for an execution environment can be made via the tiny tool
+
+```console
+$ render -h
+usage: render [-h] [--context CONTEXT] [--verbose] [--debug] infile outfile
+
+Quickly renders a single jinja2 template file from command line.
+
+positional arguments:
+  infile             Template .yaml input file
+  outfile            Rendered .yaml output file
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --context CONTEXT  Context (default: {'machine': 'NEMO', 'mode':
+                     'PRODUCTION'})
+  --verbose, -v      Make this tool more verbose (default: False)
+  --debug            Make this tool print debug info (default: False)
+```
+
+evoked like
 
 ```bash
 render --context '{"machine":"NEMO"}' system_generic.yaml system_nemo.yaml
@@ -131,35 +151,45 @@ content
 The prefix `fw` and integer indices are no imperative and only serve better
 readability within the file system. Each template just is a normal Fireworks
 description in yaml format, enhanced by Jinja2 bits, i.e.
-`fw_030_datafile_retrieval.yaml`:
+`fw_050_production.yaml`:
 
 ```yaml
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ title }}, file retrieval
+name: {{ title }}, production, {{ comment }}
 spec:
-  _category: {{ worker|default("nemo_noqueue",true) }}
+  _category: {{ worker|default("juwels_queue",true) }}
+  _queueadapter:
+    {{ render_queueadapter()|safe|indent(4) }}
+  _files_in:
+    data_file:  datafile.lammps
+    input_file: production.input
   _files_out:
-    input_file: "lammps.input"
-    data_file:  "*.lammps"
+    data_file: final.lammps
+    log_file:  log.lammps
   _tasks:
-
-  - _fw_name: GetFilesTask
-    identifiers:
-    - lammps.input
-
-  - _fw_name: GetFilesByQueryTask
-    query:
-      metadata:
-        temperature:      {{ temperature }}
-        pressure:         {{ pressure }}
-        type:             initial_config
-
+  - _fw_name: CmdTask
+    cmd: lmp
+    opt:
+    - -in production.input
+    - -v productionSteps  {{ production_steps|default(10000,true)|int }}
+    - -v pressureP        {{ pressure|default(0.0,true)|float }}
+    - -v temperatureT     {{ temperature|default(298.0)|float }}
+    stderr_file:    std.err
+    stdout_file:    std.out
+    store_stdout:   true
+    store_stderr:   true
+    use_shell:      true
+    fizzle_bad_rc:  true
+  _trackers:
+  - filename: log.lammps
+    nlines: 25
   metadata:
-    step: "datafile retrieval"
+    step:  production, {{ comment }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}
 ```
+
 The template `fw_base.yaml` has a special status. Just as in object oriented
 programming languages, all Fireworks templates are *derived* from
 `fw_base.yaml`:
@@ -206,6 +236,33 @@ There are several advantages in doing so:
 * The macro `render_metadata` can insert the same set of metadata at any desired
   position.
 
+Now, create an empty directory `build` and use the *Workflow Builder Tool*
+
+```console
+$ wfb -h
+usage: wfb [-h] [--template-dir template-directory] [--verbose] [--debug]
+           system.yaml build-directory
+
+Workflow Builder, facilitates workflow construction
+
+positional arguments:
+  system.yaml           .yaml input file.
+  build-directory       output directory.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --template-dir template-directory
+                        Directory containing templates. (default: templates)
+  --verbose, -v         Make this tool more verbose (default: False)
+  --debug               Make this tool print debug info (default: False)
+```
+
+to compile `system_nemo.yaml` and Fireworks templates into a static workflow
+description `build/wf.yaml` with
+
+```bash
+wfb --debug system_nemo.yaml build
+```
 
 ## Notes
 

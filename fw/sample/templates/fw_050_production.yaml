@@ -6,11 +6,11 @@ spec:
   _queueadapter:
     {{ render_queueadapter()|safe|indent(4) }}
   _files_in:
-    data_file:                  datafile.lammps
-    input_file:                 production.input
+    data_file:  datafile.lammps
+    input_file: production.input
   _files_out:
-    data_file: final.lammps
-    log_file:  log.lammps
+    data_file:  final.lammps
+    log_file:   log.lammps
   _tasks:
   - _fw_name: CmdTask
     cmd: lmp
