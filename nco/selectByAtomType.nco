@@ -6,92 +6,125 @@
 //
 // Modified for LAMMPS NetCDF trajectory.
 //
-// 2019, Johannes Hörmann, johannes.hoermann@imtek.uni-freiburg.de 
+// Copyright (C) 2019 IMTEK Simulation
+// Author: Johannes Hörmann, johannes.hoermann@imtek.uni-freiburg.de 
 //
 // execute with
 //
-//  ncap2 -D9 -v -O -S select.nco in.nc first_intermmediate.nc
+//  ncap2 -D9 -v -O -S selectByAtomType.nco in.nc first_intermediate.nc
 //
 // Afterwards, drop obsolete dimension with
 //
-//  ncks -O -x -v atom first_intermmediate.nc second_intermmediate.nc
+//  ncks -O -x -v atom first_intermediate.nc second_intermediate.nc
 //
 // and rename the new output dimension
 //
-//  ncrename -O -d atom_out,atom second_intermmediate.nc final.out
+//  ncrename -O -d atom_out,atom second_intermediate.nc final.out
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
-// The LAMMPS NetCDF structure is expected to comply with (ncinfo output)
+// The LAMMPS NetCDF structure (with some custom outputs) 
+// looks like this (ncdump -c output):
 //
-//  <class 'netCDF4._netCDF4.Dataset'>
-//  root group (NETCDF3_64BIT_OFFSET data model, file format NETCDF3):
-//      Conventions: AMBER
-//      ConventionVersion: 1.0
-//      program: LAMMPS
-//      programVersion: 16 Mar 2018
-//      dimensions(sizes): spatial(3), label(10), frame(351), cell_spatial(3),
-//        cell_angular(3), atom(547576), Voigt(6)
-//      variables(dimensions): |S1 spatial(spatial), |S1 cell_spatial(spatial),
-//        |S1 cell_angular(spatial,label), float64 time(frame),
-//        float64 cell_origin(frame,cell_spatial),
-//        float64 cell_lengths(frame,cell_spatial),
-//        float64 cell_angles(frame,cell_angular),
-//        int32 id(frame,atom), int32 mol(frame,atom), int32 type(frame,atom),
-//        float32 mass(frame,atom), float32 coordinates(frame,atom,spatial),
-//        float32 velocities(frame,atom,spatial),
-//        float32 forces(frame,atom,spatial),
-//        float32 f_storeAnteShakeForces(frame,atom,spatial),
-//        float32 f_storeAnteStatForces(frame,atom,spatial),
-//        float32 f_storeAnteFreezeForces(frame,atom,spatial),
-//        float32 f_storeUnconstrainedForces(frame,atom,spatial),
-//        float32 f_storeForcesAve(frame,atom,spatial),
-//        float32 f_storeAnteShakeForcesAve(frame,atom,spatial),
-//        float32 f_storeAnteStatForcesAve(frame,atom,spatial),
-//        float32 f_storeAnteFreezeForcesAve(frame,atom,spatial),
-//        float32 f_storeUnconstrainedForcesAve(frame,atom,spatial),
-//        float32 c_peratom_stress(frame,atom,Voigt),
-//        float32 f_peratom_stress_ave(frame,atom,Voigt)
-//
-// or (ncdump -c output)
-//
-//  netcdf frame0 {
+//  netcdf default {
 //  dimensions:
-//          frame = UNLIMITED ; // (1 currently)
-//          atom = 547576 ;
-//          Voigt = 6 ;
-//          cell_angular = 3 ;
-//          spatial = 3 ;
-//          label = 10 ;
-//          cell_spatial = 3 ;
+//    spatial = 3 ;
+//    label = 10 ;
+//    frame = UNLIMITED ; // (351 currently)
+//    cell_spatial = 3 ;
+//    cell_angular = 3 ;
+//    atom = 547576 ;
+//    Voigt = 6 ;
 //  variables:
-//          char cell_spatial(spatial) ;
-//          float coordinates(frame, atom, spatial) ;
-//          float f_peratom_stress_ave(frame, atom, Voigt) ;
-//          float f_storeAnteFreezeForces(frame, atom, spatial) ;
-//          float f_storeAnteFreezeForcesAve(frame, atom, spatial) ;
-//          float f_storeAnteShakeForces(frame, atom, spatial) ;
-//          float f_storeAnteShakeForcesAve(frame, atom, spatial) ;
-//          float f_storeAnteStatForces(frame, atom, spatial) ;
-//          float f_storeAnteStatForcesAve(frame, atom, spatial) ;
-//          float f_storeForcesAve(frame, atom, spatial) ;
-//          float f_storeUnconstrainedForces(frame, atom, spatial) ;
-//          float f_storeUnconstrainedForcesAve(frame, atom, spatial) ;
-//          float forces(frame, atom, spatial) ;
-//          int id(frame, atom) ;
-//          char spatial(spatial) ;
-//          double time(frame) ;
-//                  time:units = "femtosecond" ;
-//                  time:scale_factor = 2. ;
-//          int type(frame, atom) ;
+//    char spatial(spatial) ;
+//    char cell_spatial(spatial) ;
+//    char cell_angular(spatial, label) ;
+//    double time(frame) ;
+//      time:units = "femtosecond" ;
+//      time:scale_factor = 2. ;
+//    double cell_origin(frame, cell_spatial) ;
+//      cell_origin:units = "Angstrom" ;
+//      cell_origin:scale_factor = 1. ;
+//    double cell_lengths(frame, cell_spatial) ;
+//      cell_lengths:units = "Angstrom" ;
+//      cell_lengths:scale_factor = 1. ;
+//    double cell_angles(frame, cell_angular) ;
+//      cell_angles:units = "degree" ;
+//    int id(frame, atom) ;
+//    int mol(frame, atom) ;
+//    int type(frame, atom) ;
+//    float mass(frame, atom) ;
+//    float coordinates(frame, atom, spatial) ;
+//    float velocities(frame, atom, spatial) ;
+//    float forces(frame, atom, spatial) ;
+//    float f_storeAnteShakeForces(frame, atom, spatial) ;
+//    float f_storeAnteStatForces(frame, atom, spatial) ;
+//    float f_storeAnteFreezeForces(frame, atom, spatial) ;
+//    float f_storeUnconstrainedForces(frame, atom, spatial) ;
+//    float f_storeForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteShakeForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteStatForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteFreezeForcesAve(frame, atom, spatial) ;
+//    float f_storeUnconstrainedForcesAve(frame, atom, spatial) ;
+//    float c_peratom_stress(frame, atom, Voigt) ;
+//    float f_peratom_stress_ave(frame, atom, Voigt) ;
 //  
 //  // global attributes:
-//                  :Conventions = "AMBER" ;
-//                  :ConventionVersion = "1.0" ;
-//                  :program = "LAMMPS" ;
-//                  :programVersion = "16 Mar 2018" ;
-//                  :history = "Mon Jul  1 19:32:18 2019: ncks -d frame,0 default.nc frame0.nc" ;
-//                  :NCO = "netCDF Operators version 4.7.9 (Homepage = http://nco.sf.net, Code = http://github.com/nco/nco)" ;
+//      :Conventions = "AMBER" ;
+//      :ConventionVersion = "1.0" ;
+//      :program = "LAMMPS" ;
+//      :programVersion = "16 Mar 2018" ;
+//  data:
+//  
+//   spatial = "" ;
+//  
+//   cell_spatial = "" ;
+//  }
+//
+// This script, however, expects a different permutation of dimensions:
+//  
+//  netcdf _thinned_permuted_sorted_default_indenter_only {
+//  dimensions:
+//    frame = 351 ;
+//    cell_angular = 3 ;
+//    spatial = 3 ;
+//    label = 10 ;
+//    cell_spatial = 3 ;
+//    atom = UNLIMITED ; // (547576 currently)
+//  variables:
+//    double cell_angles(frame, cell_angular) ;
+//      cell_angles:units = "degree" ;
+//    char cell_angular(spatial, label) ;
+//    double cell_lengths(frame, cell_spatial) ;
+//      cell_lengths:units = "Angstrom" ;
+//      cell_lengths:scale_factor = 1. ;
+//    double cell_origin(frame, cell_spatial) ;
+//      cell_origin:units = "Angstrom" ;
+//      cell_origin:scale_factor = 1. ;
+//    char cell_spatial(spatial) ;
+//    float coordinates(atom, frame, spatial) ;
+//    float f_storeAnteFreezeForces(atom, frame, spatial) ;
+//    float f_storeAnteFreezeForcesAve(atom, frame, spatial) ;
+//    float f_storeAnteShakeForces(atom, frame, spatial) ;
+//    float f_storeAnteShakeForcesAve(atom, frame, spatial) ;
+//    float f_storeAnteStatForces(atom, frame, spatial) ;
+//    float f_storeAnteStatForcesAve(atom, frame, spatial) ;
+//    float f_storeForcesAve(atom, frame, spatial) ;
+//    float f_storeUnconstrainedForces(atom, frame, spatial) ;
+//    float f_storeUnconstrainedForcesAve(atom, frame, spatial) ;
+//    float forces(atom, frame, spatial) ;
+//    int id(atom, frame) ;
+//    char spatial(spatial) ;
+//    double time(frame) ;
+//      time:units = "femtosecond" ;
+//      time:scale_factor = 2. ;
+//    int type(atom, frame) ;
+//  
+//  // global attributes:
+//      :Conventions = "AMBER" ;
+//      :ConventionVersion = "1.0" ;
+//      :program = "LAMMPS" ;
+//      :programVersion = "16 Mar 2018" ;
 //  data:
 //  
 //   cell_spatial = "" ;
@@ -99,6 +132,56 @@
 //   spatial = "" ;
 //  }
 //
+// The following workflow (bash) suggests how comply with this format:
+// (see accompanying file selectByAtomID.sh)
+//
+//  #!/bin/bash
+//  set -e
+//  
+//  # This is a sample on how to use selectByAtomType.nco
+//  # perf stat -B prints performance statistics for each step
+//  
+//  # The -D5 option makes NetCDF operators print level five debug information
+//  
+//  # delete unwanted quantities
+//  echo "01 -- DELETE"
+//  perf stat -B ncks -D5 -O -x \
+//    -v c_peratom_stress,f_peratom_stress_ave,mass,mol,velocities \
+//    $1 _thinned_$2
+//  
+//  # permute dimensions (apparently, this is the most demanding step)
+//  echo "02 -- PERMUTE"
+//  perf stat -B ncpdq -D5 -O \
+//    -a atom,frame,spatial _thinned_$2 _thinned_permuted_sorted_$2
+//  
+//  # If NetCDF is NOT YET sorted by atom id, then sorting is needed here
+//  
+//  # select based on variable-dependent criterion
+//  # You must sort and copy all variables of interest explicitly within
+//  # selectByAtomType.nco! Otherwise, they will not appear in the output.
+//  echo "03 -- SELECT"
+//  perf stat -B ncap2 -D5 -O -v -S selectByAtomType.nco \
+//    _thinned_permuted_sorted_$2 _thinned_permuted_sorted_selected_$2
+//  
+//  # drop old atom coordinate
+//  echo "04 -- DROP"
+//  perf stat -B ncks -D5 -O -x -v atom \
+//    _thinned_permuted_sorted_selected_$2 \
+//    _thinned_permuted_sorted_selected_deleted_$2
+//  
+//  # rename new atom coordinate to
+//  echo "05 -- RENAME"
+//  perf stat -B ncrename -D5 -O -d atom_out,atom \
+//    _thinned_permuted_sorted_selected_deleted_$2 \
+//    _thinned_permuted_sorted_selected_deleted_renamed_$2
+//  
+//  # permute back
+//  echo "06 -- PERMUTE"
+//  perf stat -B ncpdq -D5 -O -a frame,atom,spatial \
+//    _thinned_permuted_sorted_selected_deleted_renamed_$2 $2
+//  
+//  # now, you have a NetCDF trajectory of your designated atom subset only
+//  
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Following fields are to be copied as they are:
@@ -118,13 +201,17 @@
 //          time:units = "femtosecond" ;
 //          time:scale_factor = 2. ;
 //
-// Interestingly, all "scale_factor" attributes must be copied explicitly.
+// Interestingly, "scale_factor" attributes are not copied. Instead, 
+// the variable of interest is apparently stored with correct scaling 
+// aplied. Thus, copying scale factors manually will result in wrong
+// variable values later on.
 //
 // Following fields are "hyperslabbed" by atom type:
 //
-//  float c_peratom_stress(frame, atom, Voigt) ;
+//  int id(frame, atom) ;
+//  int type(frame, atom) ;
 //  float coordinates(frame, atom, spatial) ;
-//  float f_peratom_stress_ave(frame, atom, Voigt) ;
+//  float forces(frame, atom, spatial) ;
 //  float f_storeAnteFreezeForces(frame, atom, spatial) ;
 //  float f_storeAnteFreezeForcesAve(frame, atom, spatial) ;
 //  float f_storeAnteShakeForces(frame, atom, spatial) ;
@@ -134,12 +221,8 @@
 //  float f_storeForcesAve(frame, atom, spatial) ;
 //  float f_storeUnconstrainedForces(frame, atom, spatial) ;
 //  float f_storeUnconstrainedForcesAve(frame, atom, spatial) ;
-//  float forces(frame, atom, spatial) ;
-//  int id(frame, atom) ;
-//  float mass(frame, atom) ;
-//  int mol(frame, atom) ;
-//  int type(frame, atom) ;
-//  float velocities(frame, atom, spatial) ;
+//
+// All other variables are dropped.
 //
 // Use and modify the following regex to manipulate 
 // the list of variables above:
@@ -150,7 +233,7 @@
 
 
 //////////////////////////////////////
-// allocate intermmediate variables //
+// allocate intermediate variables //
 //////////////////////////////////////
 
 print("Reading data...\n");
@@ -339,9 +422,10 @@ cell_spatial=cell_spatial;
 spatial=spatial;
 time=time;
 
-cell_lengths@scale_factor=cell_lengths@scale_factor;
-cell_origin@scale_factor=cell_origin@scale_factor;
-time@scale_factor=time@scale_factor;
+// scale factors not copied explicitly, see comment in header
+// cell_lengths@scale_factor=cell_lengths@scale_factor;
+// cell_origin@scale_factor=cell_origin@scale_factor;
+// time@scale_factor=time@scale_factor;
 
 // initialize output
 // number literal samples from http://nco.sourceforge.net/nco.html#Number-literals:

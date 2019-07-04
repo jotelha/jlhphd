@@ -28,10 +28,11 @@
   sb_shape,
   surfactant,
   sf_nmolecules,
-  sf_preassembly) -%}
+  sf_preassembly,
+  constant_indenter_velocity,
+  constant_indenter_velocity_unit) -%}
 
-
-{%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s_approach_velocity|format(
+{%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s_approach_velocity"|format(
   sf_nmolecules,
   surfactant,
   sf_preassembly,
@@ -66,12 +67,12 @@
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
 {%- macro render_queueadapter() -%}
-{%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
+{%- if machine is in ['NEMO'] -%}
 nodes:            {{ nodes|default(8,true)|int }}
 ppn:              {{ ppn|default(20,true)|int }}
 queue:            {{ queue|default('',true) }}
 walltime:         {{ walltime|default("96:00:00") }}
-{%- elif worker is in ['juwels_queue'] -%}
+{%- elif machine is in ['JUWELS'] -%}
 account:          {{ account|default("hfr13") }}
 cpus_per_task:    {{ cpus_per_task|default(1,true)|int }}
 ntasks_per_node:  {{ ntasks_per_node|default(96,true)|int }}
@@ -172,7 +173,6 @@ frozen_sb_layer_thickness_unit:               {{ frozen_sb_layer_thickness_unit 
 pbc:                                          {{ pbc }}
 pressure:                                     {{ pressure }}
 pressure_unit:                                {{ pressure_unit }}
-production_steps:                             {{ production_steps }}
 sb_name:                                      {{ sb_name }}
 sb_area:                                      {{ sb_area }}
 sb_area_unit:                                 {{ sb_area_unit }}

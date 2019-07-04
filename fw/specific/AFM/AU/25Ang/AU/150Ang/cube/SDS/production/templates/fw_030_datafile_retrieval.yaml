@@ -12,7 +12,7 @@ spec:
   - _fw_name: GetFilesByQueryTask
     query:
       identifier:
-        '$regex': 'AFM/.*/langevin_1000.0/parrinello_10000.0/.*/default\.lammps$'
+        '$regex': 'AFM/.*/default\.lammps$'
       metadata:
         surfactant:       {{ surfactant }}
         sf_preassembly:   {{ sf_preassembly }}

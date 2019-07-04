@@ -136,10 +136,10 @@ fp.add_file(
 
 
 # NCO:
-fp.delete_file(identifier='selectByAtomID.nco')
+fp.delete_file(identifier='selectByAtomType.nco')
 fp.add_file(
-    os.path.join(template_prefix,'nco','selectByAtomID.nco'),
-    identifier='selectByAtomID.nco',
+    os.path.join(template_prefix,'nco','selectByAtomType.nco'),
+    identifier='selectByAtomType.nco',
     metadata={
         'type':     'nco',
         'language': 'NetCDF operators ncap2 arithemtic processor ',

@@ -53,7 +53,7 @@ spec:
       spec:
         _category: {{ queue_worker|default("juwels_queue",true) }}
         _queueadapter:
-          {{ render_queueadapter(queue_worker)|safe|indent(10) }}
+          {{ render_queueadapter()|safe|indent(10) }}
         _files_in:
           restart_file:               default.mpiio.restart
           input_header:               lmp_header.input
@@ -61,7 +61,7 @@ spec:
           coeff_file:                 coeff.input
           # ndx_file:                   groups.ndx
         _files_out:
-    ave_file:  thermo_ave.out
+          ave_file:  thermo_ave.out
           data_file: default.lammps
           traj_file: default.nc
           log_file:  log.lammps

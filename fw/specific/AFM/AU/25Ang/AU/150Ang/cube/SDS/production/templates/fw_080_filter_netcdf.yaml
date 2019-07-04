@@ -17,7 +17,7 @@ spec:
   - _fw_name: CmdTask
     cmd: ncks
     opt:
-    - -D5 -O -x -v cell_angles,cell_angular,cell_lengths,cell_origin,cell_spatial,c_peratom_stress,f_peratom_stress_ave,mass,mol,velocities
+    - -D5 -O -x -v c_peratom_stress,f_peratom_stress_ave,mass,mol,velocities
     - default.nc 01_ncks.nc
     stderr_file:   01_ncks.err
     stdout_file:   01_ncks.out
@@ -55,6 +55,7 @@ spec:
   # drop old atom dimension
   - _fw_name: CmdTask
     cmd: ncks
+    opt:
     - -D5 -O -x -v atom
     - 03_ncap2.nc
     - 04_ncks.nc
@@ -68,6 +69,7 @@ spec:
   # rename new dimension
   - _fw_name: CmdTask
     cmd: ncrename
+    opt:
     - -D5 -O -d atom_out,atom
     - 04_ncks.nc
     - 05_ncrename.nc
@@ -81,6 +83,7 @@ spec:
   # undo dimension permutation
   - _fw_name: CmdTask
     cmd: ncpdq
+    opt:
     - -D5 -O -a frame,atom,spatial
     - 05_ncrename.nc
     - filtered.nc
