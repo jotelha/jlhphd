@@ -37,14 +37,13 @@ In static yaml files, the same parameters
 have to be specified multiple times at different places.
 
 Thus, yaml files here are formatted as [Jinja2](http://jinja.pocoo.org)
-templates and go through a two preprocessing layers.
-In the following, we refer to (AFM/AU/25Ang/AU/150Ang/cibe/SDS/production) as
-an example.
+templates and go through two preprocessing layers before handing them to
+FireWorks. In the following, we refer to the `fw/sample` for illustration.
 
-On the topmost layer, there is a `system_generic.yaml` file. This file describes
-the specific workflow and does not prescribe any machine and environment for
-execution. It must have the top level keys `name`, `metadata`, `std`,
-`transient`, `persistent` and `dependencies`.
+On the topmost layer, there is the `system_generic.yaml` file. This file
+describes the specific workflow and does not prescribe any machine and
+environment for execution. It must have the top level keys `name`, `metadata`,
+`std`, `transient`, `persistent` and `dependencies`:
 
 ```yaml
 name: "Workflow's descriptive title"
@@ -63,17 +62,18 @@ std:
   # a minimum here and always be due to simple case discriminations in the
   # Jinja2 template language:
   {%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker='juwels_queue' %}
   worker:           juwels_noqueue
-  queue_worker:     juwels_queue
   {%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker='nemo_queue' %}
   worker:           nemo_noqueue
-  queue_worker:     nemo_queue
   {%- endif %}
 
 # the following 'transient' section can contain Fireworks-wise entries, i.e...
 transient:
   fw_050_production.yaml:
-  - description: >-
+  - pressure: 0
+    description: >-
       Parameters defined here will only be available to the very Firework and
       possibly override a parameter of the same name defined within 'std'.
       These transient settings will not affect any children Fireworks.
@@ -107,7 +107,7 @@ dependencies:
   - fw_100_postprocessing.yaml
   - fw_200_results_to_filepad.yaml
 
-  fw_100_extract_property.yaml:
+  fw_100_postprocessing.yaml:
   - fw_200_results_to_filepad.yaml
 ```
 
@@ -265,13 +265,73 @@ wfb --debug system_nemo.yaml build
 ```
 
 The `--debug` switch is recommended to see exactly where failures occur.
-Within `build`, you will find one single yaml file for each rendered instance
-of a Firework. 
+Within `build`, you will find the `wf.yaml` file ready to hand to Fireworks for
+execution with
+
+```bash
+lpad add build/wf.yaml
+```
+
+Beyond that, you will find one single yaml file for each rendered instance
+of a Firework, i.e. `build/fw_050_production.yaml_000030` with content
+
+```yaml
+name: 298 K, 1 atm sample workflow, production, long run
+spec:
+  _category: nemo_queue
+  _queueadapter:
+    nodes:            1
+    ppn:              20
+    queue:            express
+    walltime:         00:01:00
+  _files_in:
+    data_file:  datafile.lammps
+    input_file: production.input
+  _files_out:
+    data_file:  final.lammps
+    log_file:   log.lammps
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: lmp
+    opt:
+    - -in production.input
+    - -v productionSteps  100000
+    - -v pressureP        1.0
+    - -v temperatureT     298.0
+    stderr_file:    std.err
+    stdout_file:    std.out
+    store_stdout:   true
+    store_stderr:   true
+    use_shell:      true
+    fizzle_bad_rc:  true
+  _trackers:
+  - filename: log.lammps
+    nlines: 25
+  metadata:
+    step:  production, long run
+    production_steps: 100000
+    pressure:         1
+    pressure_unit:    atm
+    temperature:      298
+    temperature_unit: K
+```
+
+among `fw_050_production.yaml_000020`, `fw_050_production.yaml_000040`, and  
+`fw_050_production.yaml_000050` for the other three parameter sets.
+Such a file can be modified, renamed and then appended manually with
+
+```bash
+lpad append_wflow -i 123,125 -f fw_050_modified_production.yaml
+```
+by explicitly specifying the Firework IDs of its designated parents
+(here 123 and 125). Fireworks will only accept `.yaml`-suffixed files.
 
 ## Notes
 
-The workflow descriptions shall become independent on the actual execution of
-tasks on different machines (NEMO, JUWELS, ...) - except the queue parameters
-(walltime, nodes, ppn, ...). This is achieved by
+The workflow descriptions as introduced above are to be as independent as
+possible on the actual execution environment (except for the queue parameters
+walltime, nodes, ppn, ...). This is achieved by
 
-* CmdTask implemented in [`fireworks/user_objects/firetasks/jlh_tasks.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fw-hpc-worker-jlh)
+* `CmdTask` implemented in [`fireworks/user_objects/firetasks/jlh_tasks.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py)
+* `render` implemented in [`fireworks/utilities/render_template.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/render_template.py)
+* `wfb` implemented in [`fireworks/utilities/wfb.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/wfb.py)
