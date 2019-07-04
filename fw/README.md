@@ -197,9 +197,9 @@ programming languages, all Fireworks templates are *derived* from
 ```yaml
 {%- set title = "%s %s, %s %s sample workflow"|format(
   temperature,
-  temperature_unit.
+  temperature_unit,
   pressure,
-  pressure_unit -%}
+  pressure_unit) -%}
 
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
@@ -263,6 +263,10 @@ description `build/wf.yaml` with
 ```bash
 wfb --debug system_nemo.yaml build
 ```
+
+The `--debug` switch is recommended to see exactly where failures occur.
+Within `build`, you will find one single yaml file for each rendered instance
+of a Firework. 
 
 ## Notes
 

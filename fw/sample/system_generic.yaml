@@ -14,11 +14,11 @@ std:
   # a minimum here and always be due to simple case discriminations in the
   # Jinja2 template language:
   {%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker='juwels_queue' %}
   worker:           juwels_noqueue
-  queue_worker:     juwels_queue
   {%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker='nemo_queue' %}
   worker:           nemo_noqueue
-  queue_worker:     nemo_queue
   {%- endif %}
 
 # the following 'transient' section can contain Fireworks-wise entries, i.e...
