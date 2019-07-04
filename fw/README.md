@@ -341,6 +341,6 @@ walltime, nodes, ppn, ...). This is achieved by
   https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml)
   in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fw-hpc-worker-jlh)
 * `render` implemented in [`fireworks/utilities/render_template.py`](
-  https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/  render_template.py)
+  https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/render_template.py)
 * `wfb` implemented in [`fireworks/utilities/wfb.py`](
   https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/wfb.py)
