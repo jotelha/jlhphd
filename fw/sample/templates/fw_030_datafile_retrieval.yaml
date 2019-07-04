@@ -16,7 +16,7 @@ spec:
     query:
       metadata:
         temperature:      {{ temperature }}
-        pressure:         {{ temperature }}
+        pressure:         {{ pressure }}
         type:             initial_config
 
   metadata:

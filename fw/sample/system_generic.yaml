@@ -24,7 +24,8 @@ std:
 # the following 'transient' section can contain Fireworks-wise entries, i.e...
 transient:
   fw_050_production.yaml:
-  - description: >-
+  - pressure: 0
+    description: >-
       Parameters defined here will only be available to the very Firework and
       possibly override a parameter of the same name defined within 'std'.
       These transient settings will not affect any children Fireworks.
