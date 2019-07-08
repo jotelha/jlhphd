@@ -256,6 +256,8 @@ persistent:
     production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              0
+    temper_substrate_only:      1
+    temper_solid_only:          0
     {%- if machine is in ['NEMO'] %}
     step:                       "production_nemo_trial_wo_dpd_tstat"
     {%- elif machine is in ['JUWELS'] %}
@@ -271,6 +273,8 @@ persistent:
     production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              1
+    temper_substrate_only:      0
+    temper_solid_only:          1
     {%- if machine is in ['NEMO'] %}
     step:                       "production_nemo_trial_with_dpd_tstat"
     {%- elif machine is in ['JUWELS'] %}
