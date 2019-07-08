@@ -15,7 +15,7 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "interface/%s/%s/%s%s/%s/%s/%s/%s"|format(
+{%- set identifier = "interface/%s/%s/%s%s/%s/%s/%s/%s/%s"|format(
   substrate,
   sb_crystal_plane,
   sb_base_length,
@@ -23,7 +23,8 @@
   sb_shape,
   surfactant,
   sf_nmolecules,
-  sf_preassembly) -%}
+  sf_preassembly,
+  "now"|datetime('%Y%m%d%H%M') -%}
 
 {%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s"|format(
   sf_nmolecules,
@@ -49,12 +50,12 @@
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
 {%- macro render_queueadapter() -%}
-{%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
+{%- if machine is in ['NEMO'] -%}
 nodes:            {{ nodes|default(8,true)|int }}
 ppn:              {{ ppn|default(20,true)|int }}
 queue:            {{ queue|default('',true) }}
 walltime:         {{ walltime|default("96:00:00") }}
-{%- elif worker is in ['juwels_queue'] -%}
+{%- elif machine is in ['JUWELS'] -%}
 account:          {{ account|default("hfr13") }}
 cpus_per_task:    {{ cpus_per_task|default(1,true)|int }}
 ntasks_per_node:  {{ ntasks_per_node|default(96,true)|int }}
@@ -120,6 +121,7 @@ _background_tasks:
 {%- macro render_metadata() -%}
 #technical
 machine:                                      {{ machine }}
+mode:            {{ mode }}
 
 ewald_accuracy:                               {{ ewald_accuracy }}
 coulomb_cutoff:                               {{ coulomb_cutoff }}
@@ -147,6 +149,10 @@ nvt_equilibration_steps:                      {{ nvt_equilibration_steps }}
 npt_equilibration_steps:                      {{ npt_equilibration_steps }}
 dpd_equilibration_steps:                      {{ dpd_equilibration_steps }}
 
+langevin_damping:                             {{ langevin_damping }}
+barostat_damping:                             {{ barostat_damping }}
+use_barostat:                                 {{ use_barostat }}
+use_dpd_tstat:                                {{ use_dpd_tstat }}
 use_eam:                                      {{ use_eam }}
 use_ewald:                                    {{ use_ewald }}
 
@@ -156,9 +162,13 @@ system_name:                                  {{ system_name }}
 ci_preassembly:                               {{ ci_preassembly }}
 counterion:                                   {{ counterion }}
 force_field:                                  {{ force_field }}
+frozen_sb_layer_thickness:                    {{ frozen_sb_layer_thickness }}
+frozen_sb_layer_thickness_unit:               {{ frozen_sb_layer_thickness_unit }}
 pbc:                                          {{ pbc }}
 pressure:                                     {{ pressure }}
 pressure_unit:                                {{ pressure_unit }}
+restrained_sb_layer_thickness:                {{ restrained_sb_layer_thickness }}
+restrained_sb_layer_thickness_unit:           {{ restrained_sb_layer_thickness_unit }}
 sb_name:                                      {{ sb_name }}
 sb_area:                                      {{ sb_area }}
 sb_area_unit:                                 {{ sb_area_unit }}

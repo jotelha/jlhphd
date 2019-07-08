@@ -8,6 +8,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
 
   machine:                {{ machine }}
+  mode:                   {{ mode }}
+
   # JUWELS
 {%- if machine is in ['JUWELS'] %}
   {%- set queue_worker = "juwels_queue" %}

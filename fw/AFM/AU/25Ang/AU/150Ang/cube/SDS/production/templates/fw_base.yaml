@@ -14,7 +14,7 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%s%s/%s/%s/%s/%s/%s%s"|format(
+{%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%s%s/%s/%s/%s/%s/%s%s/%s/%s"|format(
   indenter.substrate,
   indenter.crystal_plane,
   indenter.initial_radius,
@@ -30,7 +30,9 @@
   sf_nmolecules,
   sf_preassembly,
   constant_indenter_velocity,
-  constant_indenter_velocity_unit) -%}
+  constant_indenter_velocity_unit,
+  step,
+  "now"|datetime('%Y%m%d%H%M') -%}
 
 {%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s_approach_velocity"|format(
   sf_nmolecules,
@@ -90,10 +92,10 @@ walltime:         {{ walltime|default("24:00:00") }}
 {%- set smb_port_local    = smb_port -%}
 {%- endif -%}
 
-{# JUWELS has to transfer results via ssh port forwarding to RZ storage #}
+{# JUWELS and bwCloud have to transfer results via ssh port forwarding to RZ storage #}
 {# for this purpose, a background task can establish the ssh connection #}
 {%- macro render_smb_forward() -%}
-{%- if worker is in ['juwels_noqueue'] -%}
+{%- if worker is in ['bwcloud_std','juwels_noqueue'] -%}
 _background_tasks:
 - _fw_name: BackgroundTask
   num_launches:  1
@@ -114,7 +116,7 @@ _background_tasks:
 
 {# a simple script waiting for the ssh connection port to be allocated #}
 {%- macro render_wait_for_port() -%}
-{%- if worker is in ['juwels_noqueue'] -%}
+{%- if worker is in ['bwcloud_std','juwels_noqueue'] -%}
 - _fw_name: ScriptTask
   script: >-
     counter=0;
@@ -137,11 +139,16 @@ _background_tasks:
 
 {%- macro render_metadata() -%}
 # technical settings
-machine:         {{ machine }}
+machine:          {{ machine }}
+mode:             {{ mode }}
+step:             {{ step }}
 
-ewald_accuracy:  {{ ewald_accuracy }}
-coulomb_cutoff:  {{ coulomb_cutoff }}
-skin_distance:   {{ skin_distance }}
+ewald_accuracy:       {{ ewald_accuracy }}
+coulomb_cutoff:       {{ coulomb_cutoff }}
+coulomb_cutoff_unit:  {{ coulomb_cutoff_unit }}
+skin_distance:        {{ skin_distance }}
+skin_distance_unit:   {{ skin_distance_unit }}
+
 neigh_delay:     {{ neigh_delay }}
 neigh_every:     {{ neigh_every }}
 neigh_check:     {{ neigh_check }}
@@ -160,8 +167,8 @@ use_dpd_tstat:                                {{ use_dpd_tstat }}
 use_eam:                                      {{ use_eam }}
 use_ewald:                                    {{ use_ewald }}
 
-# system secription
-system_name:     {{ system_name }}
+# system
+system_name:                                  {{ system_name }}
 
 ci_preassembly:                               {{ ci_preassembly }}
 constant_indenter_velocity:                   {{ constant_indenter_velocity }}
@@ -173,6 +180,8 @@ frozen_sb_layer_thickness_unit:               {{ frozen_sb_layer_thickness_unit 
 pbc:                                          {{ pbc }}
 pressure:                                     {{ pressure }}
 pressure_unit:                                {{ pressure_unit }}
+restrained_sb_layer_thickness:                {{ restrained_sb_layer_thickness }}
+restrained_sb_layer_thickness_unit:           {{ restrained_sb_layer_thickness_unit }}
 sb_name:                                      {{ sb_name }}
 sb_area:                                      {{ sb_area }}
 sb_area_unit:                                 {{ sb_area_unit }}
@@ -233,5 +242,7 @@ indenter:
   time_step:                    {{ indenter.time_step }}
   time_step_unit:               {{ indenter.time_step_unit }}
   type:                         {{ indenter.type }}
+
+workflow_creation_date:                       {{ "now"|datetime }}
 {%- endmacro -%}
 {%- block body -%}{%- endblock -%}

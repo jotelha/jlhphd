@@ -65,6 +65,5 @@ spec:
     nlines: 25
   metadata:
     state: equilibration dpd
-    step:  {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}
