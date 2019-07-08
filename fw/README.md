@@ -332,6 +332,15 @@ The workflow descriptions as introduced above are to be as independent as
 possible on the actual execution environment (except for the queue parameters
 walltime, nodes, ppn, ...). This is achieved by
 
-* `CmdTask` implemented in [`fireworks/user_objects/firetasks/jlh_tasks.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py)
-* `render` implemented in [`fireworks/utilities/render_template.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/render_template.py)
-* `wfb` implemented in [`fireworks/utilities/wfb.py`](https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py) of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks) together with environment-specific command aliases in worker files such as [`etc/nemo_noqueue_worker.yaml`](https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml) in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/wfb.py)
+* `CmdTask` implemented in
+  [`fireworks/user_objects/firetasks/jlh_tasks.py`](
+  https://github.com/jotelha/fireworks/blob/master/fireworks/user_objects/firetasks/jlh_tasks.py)
+  of the fork [jotelha/fireworks](https://github.com/jotelha/fireworks)
+  together with environment-specific command aliases in worker files such as
+  [`etc/nemo_noqueue_worker.yaml`](
+  https://github.com/jotelha/fw-hpc-worker-jlh/blob/master/etc/nemo_noqueue_worker.yaml)
+  in [jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fw-hpc-worker-jlh)
+* `render` implemented in [`fireworks/utilities/render_template.py`](
+  https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/render_template.py)
+* `wfb` implemented in [`fireworks/utilities/wfb.py`](
+  https://github.com/jotelha/fireworks/blob/master/fireworks/utilities/wfb.py)
