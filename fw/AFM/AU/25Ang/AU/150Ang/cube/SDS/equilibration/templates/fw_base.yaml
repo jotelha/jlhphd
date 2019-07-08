@@ -14,7 +14,7 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%s%s/%s/%s/%s/%s/%s"|format(
+{%- set identifier = "AFM/%s/%s/%s%s/%s%s/%s/%s/%s%s/%s/%s/%s/%s/%s/%s"|format(
   indenter.substrate,
   indenter.crystal_plane,
   indenter.initial_radius,
