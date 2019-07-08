@@ -11,8 +11,6 @@ spec:
 
   - _fw_name: GetFilesByQueryTask
     query:
-      identifier:
-        '$regex': 'AFM/.*/default\.lammps$'
       metadata:
         surfactant:       {{ surfactant }}
         sf_preassembly:   {{ sf_preassembly }}

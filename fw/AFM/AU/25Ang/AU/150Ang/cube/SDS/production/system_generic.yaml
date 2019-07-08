@@ -1,4 +1,4 @@
-name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 51x30x21 (EAM)"
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) on 646 SDS on AU (111) 150 Ang cube (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
