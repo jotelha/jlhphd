@@ -32,7 +32,7 @@
   constant_indenter_velocity,
   constant_indenter_velocity_unit,
   step,
-  "now"|datetime('%Y%m%d%H%M') -%}
+  "now"|datetime('%Y%m%d%H%M') ) -%}
 
 {%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s_with_%s_%s_r_%s%s_indenter_at_%s_%s_approach_velocity"|format(
   sf_nmolecules,

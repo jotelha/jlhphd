@@ -30,7 +30,7 @@
   sf_nmolecules,
   sf_preassembly,
   step,
-  "now"|datetime('%Y%m%d%H%M') -%}
+  "now"|datetime('%Y%m%d%H%M') ) -%}
 
 {%- set indenter_identifier = "indenter/%s/%s/%s%s/%s%s.lammps"|format(
   indenter.substrate,
