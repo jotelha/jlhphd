@@ -191,18 +191,9 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
   fw_070_equilibration_npt.yaml:
   - worker:                   {{ queue_worker }}
-    use_barostat:             1
 
   fw_075_equilibration_dpd.yaml:
   - worker:                   {{ queue_worker }}
-    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
-    use_dpd_tstat:            1
-  {%- if mode is in ['TRIAL'] %}
-  - worker:                   {{ queue_worker }}
-    use_barostat:             1
-    use_dpd_tstat:            1
-  {%- endif %}
-
 
 persistent:
   fw_010_datafile_retrieval.yaml:
@@ -250,12 +241,24 @@ persistent:
   {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization
+  
   fw_060_equilibration_nvt.yaml:
   - step: equilibration_nvt
+    use_barostat:             0
+
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
+    use_barostat:             1
+
   fw_075_equilibration_dpd.yaml:
   - step: equilibration_dpd
+    use_dpd_tstat:            1
+    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
+  {%- if mode is in ['TRIAL'] %}
+  - step: equilibration_dpd
+    use_dpd_tstat:            1
+    use_barostat:             1
+  {%- endif %}
 
 dependencies:
   # single dependency entries result in one instance only
