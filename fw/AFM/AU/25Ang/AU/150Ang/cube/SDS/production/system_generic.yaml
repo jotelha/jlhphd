@@ -299,7 +299,9 @@ persistent:
     {%- endif %}
 
   {%- elif mode is in ['EXPRESS TRIAL'] %}
-  - use_dpd_tstat:        0
+  - use_dpd_tstat:              0
+    temper_substrate_only:      1
+    temper_solid_only:          0
     {%- if machine is in ['NEMO'] %}
     step:                       "production_nemo_express_trial_wo_dpd_tstat"
     {%- elif machine is in ['JUWELS'] %}
@@ -307,7 +309,9 @@ persistent:
     {%- else %}
     step:                       "production_express_trial_wo_dpd_tstat"
     {%- endif %}
-  - use_dpd_tstat:        1
+  - use_dpd_tstat:              1
+    temper_substrate_only:      0
+    temper_solid_only:          1
     {%- if machine is in ['NEMO'] %}
     step:                       "production_nemo_express_trial_with_dpd_tstat"
     {%- elif machine is in ['JUWELS'] %}
