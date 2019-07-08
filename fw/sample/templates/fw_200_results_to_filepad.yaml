@@ -15,11 +15,10 @@ spec:
     - log.lammps
     - thermo.out
     metadata:
-      state: {{ }}
+      type: final_config
       {{ render_metadata()|indent(6)}}
 
   metadata:
     step: results to filepad
-    step:  {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}

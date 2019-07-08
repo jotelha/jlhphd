@@ -1,8 +1,8 @@
 {%- set title = "%s %s, %s %s sample workflow"|format(
   temperature,
-  temperature_unit.
+  temperature_unit,
   pressure,
-  pressure_unit -%}
+  pressure_unit) -%}
 
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
