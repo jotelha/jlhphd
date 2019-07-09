@@ -893,7 +893,7 @@ elif "${write_groups_to_file} > 0" &
 # compute temperature based upon non-frozen components of system:
 compute system_temp warm_system temp
 # however, compute pressure for all atoms in whole volume based on this temp:
-compute system_press all pressure warm_system
+compute system_press all pressure system_temp
 # compute the virial
 compute system_virial all pressure NULL virial
 # https://lammps.sandia.gov/doc/compute_pressure.html
