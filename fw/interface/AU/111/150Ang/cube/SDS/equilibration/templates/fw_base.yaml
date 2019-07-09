@@ -25,7 +25,7 @@
   sf_nmolecules,
   sf_preassembly,
   step,
-  "now"|datetime('%Y%m%d%H%M') -%}
+  "now"|datetime('%Y%m%d%H%M') ) -%}
 
 {%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s"|format(
   sf_nmolecules,
