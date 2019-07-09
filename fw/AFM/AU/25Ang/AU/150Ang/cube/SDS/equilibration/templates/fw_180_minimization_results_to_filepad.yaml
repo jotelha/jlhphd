@@ -29,7 +29,7 @@ spec:
     - log.lammps
     - thermo.out
     metadata:
-      state: minimized, nvt- and npt-equilibrated with eam potential after indenter inserion
+      state: minimized with eam potential after indenter inserion
       {{ render_metadata()|indent(6)}}
 
   metadata:

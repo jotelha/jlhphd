@@ -15,7 +15,7 @@
 # {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "interface/%s/%s/%s%s/%s/%s/%s/%s/%s"|format(
+{%- set identifier = "interface/%s/%s/%s%s/%s/%s/%s/%s/%s/%s"|format(
   substrate,
   sb_crystal_plane,
   sb_base_length,
@@ -24,6 +24,7 @@
   surfactant,
   sf_nmolecules,
   sf_preassembly,
+  step,
   "now"|datetime('%Y%m%d%H%M') -%}
 
 {%- set system_name = "%d_%s_%s_on_%s_%s_%s%s_%s"|format(
@@ -119,15 +120,17 @@ _background_tasks:
 {%- endmacro -%}
 
 {%- macro render_metadata() -%}
-#technical
-machine:                                      {{ machine }}
-mode:            {{ mode }}
+# technical settings
+machine:          {{ machine }}
+mode:             {{ mode }}
+type:             {{ type }}
+step:             {{ step }}
 
-ewald_accuracy:                               {{ ewald_accuracy }}
-coulomb_cutoff:                               {{ coulomb_cutoff }}
-coulomb_cutoff_unit:                          {{ coulomb_cutoff_unit }}
-skin_distance:                                {{ skin_distance }}
-skin_distance_unit:                           {{ skin_distance_unit }}
+ewald_accuracy:       {{ ewald_accuracy }}
+coulomb_cutoff:       {{ coulomb_cutoff }}
+coulomb_cutoff_unit:  {{ coulomb_cutoff_unit }}
+skin_distance:        {{ skin_distance }}
+skin_distance_unit:   {{ skin_distance_unit }}
 
 neigh_delay:                                  {{ neigh_delay }}
 neigh_every:                                  {{ neigh_every }}

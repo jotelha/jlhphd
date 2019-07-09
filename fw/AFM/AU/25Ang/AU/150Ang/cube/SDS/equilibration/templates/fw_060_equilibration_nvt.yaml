@@ -30,7 +30,7 @@ spec:
     - -v langevin_damping         {{ langevin_damping|default(100,false) }}
     - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v productionSteps          {{ nvt_equilibration_steps|default(100000,true)|int }}
+    - -v productionSteps          {{ nvt_equilibration_steps|default(10000,true)|int }}
     - -v initialT                 {{ initialT|default(298.0,false)|float }}
     - -v temperatureT             {{ temperature|default(298.0,false)|float }}
     - -v reinitialize_velocities  {{ reinitialize_velocities|default(1,false)|int}}

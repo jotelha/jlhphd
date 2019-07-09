@@ -13,8 +13,8 @@ spec:
     query:
       metadata:
         surfactant:       {{ surfactant }}
-        sf_preassembly:   {{ sf_preassembly }}
         sf_nmolecules:    {{ sf_nmolecules }}
+        sf_preassembly:   {{ sf_preassembly }}
         counterion:       {{ counterion }}
         solvent:          {{ solvent }}
         substrate:        {{ substrate }}

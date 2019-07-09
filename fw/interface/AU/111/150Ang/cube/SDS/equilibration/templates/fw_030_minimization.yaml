@@ -33,6 +33,7 @@ spec:
     - -v robust_minimization      0
     - -v store_forces             0
     - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v thermo_frequency         {{ thermo_frequency|default(100,true)|int }}
     - -v use_eam                  {{ use_eam|default(1,false)|int }}
     - -v use_ewald                {{ use_ewald|default(1,false)|int }}
     - -v write_coeff_to_datafile  0
@@ -54,6 +55,5 @@ spec:
     nlines: 25
   metadata:
     state: minimization
-    step: {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}

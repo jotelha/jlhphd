@@ -8,6 +8,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
 
   machine:                {{ machine }}
+  mode:                   {{ mode }}
+  type:                   interface
+
   # JUWELS
 {%- if machine is in ['JUWELS'] %}
   {%- set queue_worker = "juwels_queue" %}
@@ -25,16 +28,16 @@ std: # standard settings to be applied to all fireworks, if not ...
   account:                hfr13
 {%- elif machine is in ['NEMO'] %}
   {%- set queue_worker = "nemo_queue_offline" %}
+  worker:                 nemo_noqueue
   nodes:                  8
   ppn:                    20
   {%- if mode is in ['EXPRESS TRIAL'] %}
   walltime:               '00:15:00'
   queue:                  express
   {%- else %}
-  walltime:               '24:00:00'
+  walltime:               '96:00:00'
   queue:                  ''
   {%- endif %}
-  worker:                 nemo_noqueue
 {%- endif %}
 
   smb_gateway:            132.230.102.164
@@ -73,7 +76,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   dpd_equilibration_steps:                      100
   {%- else %}
   netcdf_frequency:                             1000
-  thermo_frequency:                             100
+  thermo_frequency:                             1000
   thermo_average_frequency:                     1000
 
   minimization_ftol:                            1.0e-6
@@ -83,11 +86,13 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   nvt_equilibration_steps:                      10000  #  20 ps
   npt_equilibration_steps:                      500000 #   1 ns
-  dpd_equilibration_steps:                      100000 # 200 ps
+  dpd_equilibration_steps:                      250000 # 500 ps
   {% endif %}
 
-  langevin_damping:                             100.0
-  barostat_damping:                             1000.0
+  langevin_damping:                             1000.0
+  barostat_damping:                             10000.0
+  use_barostat:                                 0
+  use_dpd_tstat:                                0
   use_eam:                                      1
   use_ewald:                                    1
 
@@ -98,11 +103,11 @@ std: # standard settings to be applied to all fireworks, if not ...
     solution_solution:                          "charmm36-jul2017"
     substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
     substrate_solution:                         "interface_ff_1_5"
-  restrained_sb_layer_thickness:                14.0
-  restrained_sb_layer_thickness_unit:           Ang
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
+  restrained_sb_layer_thickness:                14.0
+  restrained_sb_layer_thickness_unit:           Ang
   sb_name:                                      AU_111_150Ang_cube
   sb_area:                                      2.25e-16
   sb_area_unit:                                 m^2
@@ -153,14 +158,12 @@ transient: # ...overridden by these transient settings, which do not affect chil
 
   fw_060_equilibration_nvt.yaml:
   - worker:                   {{ queue_worker }}
-    thermo_frequency:         100
 
   fw_070_equilibration_npt.yaml:
   - worker:                   {{ queue_worker }}
 
   fw_075_equilibration_dpd.yaml:
   - worker:                   {{ queue_worker }}
-    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
 
 persistent:
   fw_010_datafile_retrieval.yaml:
@@ -208,12 +211,24 @@ persistent:
   {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization
+
   fw_060_equilibration_nvt.yaml:
   - step: equilibration_nvt
+    use_barostat:             0
+
   fw_070_equilibration_npt.yaml:
   - step: equilibration_npt
+    use_barostat:             1
+
   fw_075_equilibration_dpd.yaml:
   - step: equilibration_dpd
+    use_dpd_tstat:            1
+    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
+  {%- if mode is in ['TRIAL'] %}
+  - step: equilibration_dpd_w_barostat
+    use_dpd_tstat:            1
+    use_barostat:             1
+  {%- endif %}
 
 dependencies:
   # single dependency entries result in one instance only
