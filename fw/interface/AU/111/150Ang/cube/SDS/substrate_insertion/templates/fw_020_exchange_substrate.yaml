@@ -75,7 +75,7 @@ spec:
     cmd: lmp
     opt:
     - -in lmp_shift_surface_to_zero_z.input
-    - -v coeffFile  coeff_nonbonded.input
+    - -v coeffFile  coeff.input
     - -v dataFile   substrate.lammps
     - -v outfile    shiftedSubstrate.lammps
     stderr_file: 040_shift_surface_to_zero_z.err
