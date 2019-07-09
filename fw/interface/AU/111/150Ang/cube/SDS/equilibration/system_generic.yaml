@@ -15,11 +15,12 @@ std: # standard settings to be applied to all fireworks, if not ...
 {%- if machine is in ['JUWELS'] %}
   {%- set queue_worker = "juwels_queue" %}
   worker:                 juwels_noqueue
-  walltime:               '06:00:00'
   {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:05:00'
   queue:                  devel
   ntasks:                 192
   {%- else %}
+  walltime:               '06:00:00'
   queue:                  batch
   ntasks:                 384
   {%- endif %}
