@@ -11,7 +11,8 @@ spec:
     query:
       metadata:
         sb_name:        {{ sb_name }}
-        state:          "minimized, nvt- and npt-equilibrated with eam potential"
+        type:           substrate
+        step:           equilibration_npt
 
   metadata:
     state: "substrate datafile retrieval"
