@@ -141,6 +141,7 @@ _background_tasks:
 # technical settings
 machine:          {{ machine }}
 mode:             {{ mode }}
+type:             {{ type }}
 step:             {{ step }}
 
 ewald_accuracy:       {{ ewald_accuracy }}

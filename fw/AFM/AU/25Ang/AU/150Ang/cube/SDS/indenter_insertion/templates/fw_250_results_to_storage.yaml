@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{machine}}, sync '{{identifier}}' results to file pad
+name: {{machine}}, sync '{{identifier}}' results to RZ storage
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
@@ -30,5 +30,6 @@ spec:
     fizzle_bad_rc: true
     use_shell:     true
   metadata:
-    {{ render_metadata()|indent(4)}}
+    state: file transfer to RZ storage
+    {{ render_metadata()|indent(4) }}
 {% endblock %}

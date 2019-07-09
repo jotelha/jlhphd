@@ -15,6 +15,5 @@ spec:
 
   metadata:
     state: "interface datafile retrieval"
-    step: {{ step }}
-    {% autoescape false %}{{ render_metadata()|indent(4)}}{% endautoescape %}
+    {{ render_metadata()|indent(4)}}
 {% endblock %}

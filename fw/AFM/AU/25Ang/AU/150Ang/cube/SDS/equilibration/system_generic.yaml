@@ -9,6 +9,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   machine:                {{ machine }}
   mode:                   {{ mode }}
+  type:                   AFM
 
   # JUWELS
 {%- if machine is in ['JUWELS'] %}
@@ -241,7 +242,7 @@ persistent:
   {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization
-  
+
   fw_060_equilibration_nvt.yaml:
   - step: equilibration_nvt
     use_barostat:             0

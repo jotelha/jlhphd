@@ -1,19 +1,26 @@
-name: "bwCloud: Substrate insertion into previously equilibrated systems [AU (111) 150 Ang cube]"
+name: "bwCloud {{ mode }}: Substrate insertion into previously equilibrated systems [AU (111) 150 Ang cube]"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
   machine:                bwCloud
+  mode:                   {{ mode }}
+  type:                   interface
+  step:                   initial_config
+
+  worker:                 std_bwcloud
   worker:                 bwcloud_std
 
   coeff_nonbonded_identifier: SDS/in/H2O/on/AU/coeff/nonbonded.input
   coeff_identifier:           SDS/in/H2O/on/AU/coeff.input
-  #substrate_identifier:       substrate/AU/111/51x30x21/equilibrated.lammps
-  #interface/SDS/646/AU/111/51x30x21/monolayer/initial_config.lammps
+
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port:               445
 
   # system metadata
-  state:                                        intial config
-  step:                                         intial_config
-  ci_preassembly:                               at_polar_head
+  ci_preassembly:                               at polar heads
   counterion:                                   NA
   force_field:
     solution_solution:                          "charmm36-jul2017"
@@ -73,9 +80,55 @@ transient:  # ...overridden by these transient settings, which do not affect chi
 
 persistent:
   fw_015_interface_datafile_retrieval.yaml:
+  {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        75
     sf_preassembly:       bilayer
     sf_concentration:     0.000453
+  - sf_nmolecules:        75
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000453
+  - sf_nmolecules:        129
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0006
+  - sf_nmolecules:        220
+    sf_preassembly:       bilayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        220
+    sf_preassembly:       monolayer
+    sf_concentration:     0.00099
+  - sf_nmolecules:        377
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        377
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0034
+  - sf_nmolecules:        646
+    sf_preassembly:       bilayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       cylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  - sf_nmolecules:        1107
+    sf_preassembly:       bilayer
+    sf_concentration:     0.017
+  {%- else %}
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+  {%- endif %}
+#1107_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#129_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#220_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_cylinders_with_counterion_10ns.lammps
+#377_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#646_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
+#75_SDS_on_AU_111_51x30x2_inverse_monolayer_with_counterion_10ns.lammps
 
 dependencies:
   fw_005_input_file_retrieval.yaml:

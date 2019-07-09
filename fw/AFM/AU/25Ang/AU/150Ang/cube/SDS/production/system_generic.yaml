@@ -10,6 +10,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   machine:                {{ machine }}
   mode:                   {{ mode }}
   step:                   approach
+  type:                   AFM
 
   # JUWELS
 {%- if machine is in ['JUWELS'] %}

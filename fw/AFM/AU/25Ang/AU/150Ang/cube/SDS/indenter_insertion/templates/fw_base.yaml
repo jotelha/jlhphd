@@ -145,6 +145,7 @@ _background_tasks:
 # technical settings
 machine:         {{ machine }}
 mode:            {{ mode }}
+type:            {{ type }}
 step:            {{ step }}
 
 system_name:     {{ system_name }}
