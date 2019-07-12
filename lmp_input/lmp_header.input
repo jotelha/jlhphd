@@ -325,7 +325,6 @@ else &
 #    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
-if "${is_restart} == 0" then "timestep ${timestep}"
 ###############################################################################
 ### CHARMM potential specific styles
 
