@@ -202,6 +202,17 @@ std: # standard settings to be applied to all fireworks, if not ...
 transient: # ...overridden by these transient settings, which do not affect children
   fw_050_production.yaml:
   - worker:                   {{ queue_worker }}
+  {%- if machine is in ['NEMO'] %}
+  fw_080_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
+  - worker:                   {{ queue_worker }}
+    nodes:                  1
+    ppn:                    20
+    walltime:               '00:15:00'
+    {%- if mode is in ['EXPRESS TRIAL'] %}
+    queue:                  express
+    {%- else %}
+    queue:                  ''
+    {%- endif %}
 
 persistent:
   fw_030_datafile_retrieval.yaml:
