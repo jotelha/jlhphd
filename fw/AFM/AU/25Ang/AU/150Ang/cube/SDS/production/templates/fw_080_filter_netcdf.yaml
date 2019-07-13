@@ -3,12 +3,16 @@
 name: {{ machine|default("NEMO",true) }}, {{ title }}, filter trajectory
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
+  _queueadapter:
+    {{ render_queueadapter()|safe|indent(4) }}
   _files_in:
     joint_traj_file:      default.nc
+    ndx_file:             groups.ndx
   _files_out:
     filtered_traj_file:   filtered.nc
   _tasks:
-
+  {%- if machine is in ['JUWELS'] -%}
+  # on JUWELS, use NCO (netCDF operators) on login node
   - _fw_name: GetFilesTask
     identifiers:
     - selectByAtomType.nco
@@ -93,7 +97,24 @@ spec:
     store_stderr:  true
     fizzle_bad_rc: true
     use_shell:     true
-
+  {%- else }
+  # otherwise (i.e. on NEMO), use custom ncfilter.py for quick parallel
+  # processing on a node
+  - _fw_name: CmdTask
+    cmd: ncfilzer
+    opt:
+    - --debug
+    - default.nc
+    - filtered.nc
+    - groups.ndx
+    - indenter
+    stderr_file:   std.err
+    stdout_file:   std.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
+  {%- endif %}
   metadata:
     state: filter trajectory
     {{ render_metadata()|indent(4)}}
