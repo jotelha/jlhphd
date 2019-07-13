@@ -213,6 +213,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
     {%- else %}
     queue:                  ''
     {%- endif %}
+  {%- endif %}
 
 persistent:
   fw_030_datafile_retrieval.yaml:
