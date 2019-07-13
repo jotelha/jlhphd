@@ -86,8 +86,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_maxeval:                         10000
 
   nvt_equilibration_steps:                      10000  #  20 ps
-  npt_equilibration_steps:                      500000 #   1 ns
-  dpd_equilibration_steps:                      250000 # 500 ps
+  npt_equilibration_steps:                      100000 # 200 ps
+  dpd_equilibration_steps:                      100000 # 200 ps
   {% endif %}
 
   langevin_damping:                             1000.0
