@@ -207,7 +207,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:                   {{ queue_worker }}
     nodes:                  1
     ppn:                    20
-    walltime:               '00:15:00'
+    walltime:               '02:00:00'
     {%- if mode is in ['EXPRESS TRIAL'] %}
     queue:                  express
     {%- else %}
