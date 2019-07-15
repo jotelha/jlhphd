@@ -97,11 +97,11 @@ spec:
     store_stderr:  true
     fizzle_bad_rc: true
     use_shell:     true
-  {%- else }
+  {%- else %}
   # otherwise (i.e. on NEMO), use custom ncfilter.py for quick parallel
   # processing on a node
   - _fw_name: CmdTask
-    cmd: ncfilzer
+    cmd: ncfilter.py
     opt:
     - --debug
     - default.nc

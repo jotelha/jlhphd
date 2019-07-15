@@ -10,10 +10,14 @@ spec:
   _tasks:
 
   - _fw_name: GetFilesByQueryTask
+    sort_key:       workflow_creation_date
+    sort_direction: 1 #ascending, i.e. oldest files first, newest written last
+
     query:
       metadata:
-        type:             AFM
-        step:             equilibration_dpd
+        mode: "PRODUCTION"
+        type: "AFM"
+        step: "equilibration_dpd"
 
         surfactant:       {{ surfactant }}
         sf_preassembly:   {{ sf_preassembly }}
@@ -32,7 +36,6 @@ spec:
 
         sb_in_dist:      {{ sb_in_dist }}
         sb_in_dist_unit: {{ sb_in_dist_unit }}
-
 
   metadata:
     state: "production initial configuration data files"
