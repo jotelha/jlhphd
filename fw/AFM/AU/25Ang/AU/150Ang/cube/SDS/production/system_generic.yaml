@@ -35,7 +35,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   queue_worker:           nemo_queue_offline
   worker:                 nemo_noqueue
   postp_worker:           nemo_noqueue
-  nodes:                  8
+  nodes:                  16
   ppn:                    20
   {%- if mode is in ['EXPRESS TRIAL'] %}
   walltime:               '00:15:00'

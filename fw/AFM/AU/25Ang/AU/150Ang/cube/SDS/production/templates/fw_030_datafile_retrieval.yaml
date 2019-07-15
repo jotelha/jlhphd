@@ -12,6 +12,9 @@ spec:
   - _fw_name: GetFilesByQueryTask
     query:
       metadata:
+        type:             AFM
+        step:             equilibration_dpd
+
         surfactant:       {{ surfactant }}
         sf_preassembly:   {{ sf_preassembly }}
         sf_nmolecules:    {{ sf_nmolecules }}
@@ -30,8 +33,6 @@ spec:
         sb_in_dist:      {{ sb_in_dist }}
         sb_in_dist_unit: {{ sb_in_dist_unit }}
 
-        state: "minimized, nvt-, npt-, and dpd thermostat-equilibrated with eam potential after indenter inserion"
-        step: "equilibration_dpd"
 
   metadata:
     state: "production initial configuration data files"
