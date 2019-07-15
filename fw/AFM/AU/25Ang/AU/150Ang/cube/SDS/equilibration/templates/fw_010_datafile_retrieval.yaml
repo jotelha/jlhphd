@@ -34,10 +34,8 @@ spec:
           initial_radius: {{ indenter.initial_radius }}
           initial_radius_unit: {{ indenter.initial_radius_unit }}
 
-        #sb_in_dist:      {{ sb_in_dist }}
-        #sb_in_dist_unit: {{ sb_in_dist_unit }}
-
-        #state: "minimized, nvt-, npt-, and dpf thermostat-equilibrated with eam potential, then indenter inserted"
+        sb_in_dist:      {{ sb_in_dist }}
+        sb_in_dist_unit: {{ sb_in_dist_unit }}
 
   metadata:
     state: "equilibration initial configuration data files"
