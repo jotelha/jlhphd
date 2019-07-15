@@ -21,7 +21,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   ntasks:                 192
   {%- else %}
   queue:                  batch
-  ntasks:                 384
+  ntasks:                 768
   {%- endif %}
   cpus_per_task:          1
   ntasks_per_node:        96
@@ -85,8 +85,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_maxeval:                         10000
 
   nvt_equilibration_steps:                      10000  #  20 ps
-  npt_equilibration_steps:                      500000 #   1 ns
-  dpd_equilibration_steps:                      500000 #   1 ns
+  npt_equilibration_steps:                      250000 #   0.5 ns
+  dpd_equilibration_steps:                      250000 #   0.5 ns
   {% endif %}
 
   langevin_damping:                             1000.0

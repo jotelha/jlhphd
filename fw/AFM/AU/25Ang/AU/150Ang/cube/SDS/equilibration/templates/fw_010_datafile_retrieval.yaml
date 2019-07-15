@@ -17,8 +17,8 @@ spec:
       metadata:
         mode: "PRODUCTION"
         type: "AFM"
-        step: "equilibration_dpd"
-        
+        step: "initial_config"
+
         surfactant:       {{ surfactant }}
         sf_nmolecules:    {{ sf_nmolecules }}
         sf_preassembly:   {{ sf_preassembly }}
