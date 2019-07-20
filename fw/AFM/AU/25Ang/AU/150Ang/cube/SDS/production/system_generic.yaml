@@ -335,7 +335,7 @@ persistent:
     step:                       "production_express_trial_with_dpd_tstat"
     {%- endif %}
 
-  {%- else % } # production, 10 m / s and 1 m / s
+  {%- else %} # production, 10 m / s and 1 m / s
   - netcdf_frequency:           500
     thermo_frequency:           50
     thermo_average_frequency:   50
@@ -352,8 +352,6 @@ persistent:
     constant_indenter_velocity: -1.0e-5
     step:                       "approach"
   {%- endif %}
-
-
 
 dependencies:
   # single dependency entries result in one instance only
