@@ -207,10 +207,12 @@ transient: # ...overridden by these transient settings, which do not affect chil
   - worker:                   {{ queue_worker }}
     nodes:                  1
     ppn:                    20
-    walltime:               '02:00:00'
+
     {%- if mode is in ['EXPRESS TRIAL'] %}
+    walltime:               '00:15:00'
     queue:                  express
     {%- else %}
+    walltime:               '02:00:00'
     queue:                  ''
     {%- endif %}
   {%- endif %}
@@ -218,18 +220,18 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_030_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
-  - sf_nmolecules:        75
-    sf_preassembly:       bilayer
-    sf_concentration:     0.000453
+  #- sf_nmolecules:        75
+  #  sf_preassembly:       bilayer
+  #  sf_concentration:     0.000453
   - sf_nmolecules:        75
     sf_preassembly:       monolayer
     sf_concentration:     0.000453
   - sf_nmolecules:        129
     sf_preassembly:       monolayer
     sf_concentration:     0.0006
-  - sf_nmolecules:        220
-    sf_preassembly:       bilayer
-    sf_concentration:     0.00099
+  #- sf_nmolecules:        220
+  #  sf_preassembly:       bilayer
+  #  sf_concentration:     0.00099
   - sf_nmolecules:        220
     sf_preassembly:       monolayer
     sf_concentration:     0.00099
@@ -332,7 +334,25 @@ persistent:
     {%- else %}
     step:                       "production_express_trial_with_dpd_tstat"
     {%- endif %}
+
+  {%- else % } # production, 10 m / s and 1 m / s
+  - netcdf_frequency:           500
+    thermo_frequency:           50
+    thermo_average_frequency:   50
+    restart_frequency:          500
+    production_steps:           175000
+    constant_indenter_velocity: -1.0e-4
+    step:                       "approach"
+
+  - netcdf_frequency:           5000
+    thermo_frequency:           500
+    thermo_average_frequency:   500
+    restart_frequency:          5000
+    production_steps:           1750000
+    constant_indenter_velocity: -1.0e-5
+    step:                       "approach"
   {%- endif %}
+
 
 
 dependencies:
