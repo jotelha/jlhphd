@@ -14,26 +14,25 @@ spec:
     sort_direction: 1 #ascending, i.e. oldest files first, newest written last
 
     query:
-      metadata.mode: "PRODUCTION"
-      metadata.type: "AFM"
-      metadata.step: "equilibration_dpd"
+      "metadata.mode": "PRODUCTION"
+      "metadata.type": "AFM"
+      "metadata.step": "equilibration_dpd"
 
-      metadata.surfactant:       {{ surfactant }}
-      metadata.sf_preassembly:   {{ sf_preassembly }}
-      metadata.sf_nmolecules:    {{ sf_nmolecules }}
-      metadata.counterion:       {{ counterion }}
-      metadata.solvent:          {{ solvent }}
-      metadata.substrate:        {{ substrate }}
-      metadata.sb_crystal_plane: {{ sb_crystal_plane }}
-      metadata.sb_base_length:   {{ sb_base_length }}
-      metadata.sb_shape:         {{ sb_shape }}
+      "metadata.counterion":       {{ counterion }}
+      "metadata.surfactant":       {{ surfactant }}
+      "metadata.sf_preassembly":   {{ sf_preassembly }}
+      "metadata.sf_nmolecules":    {{ sf_nmolecules }}
+      "metadata.solvent":          {{ solvent }}
+      "metadata.substrate":        {{ substrate }}
+      "metadata.sb_crystal_plane": {{ sb_crystal_plane }}
+      "metadata.sb_base_length":   {{ sb_base_length }}
+      "metadata.sb_shape":         {{ sb_shape }}
+      "metadata.sb_in_dist":       {{ sb_in_dist }}
+      "metadata.sb_in_dist_unit":  {{ sb_in_dist_unit }}
 
-      metadata.indenter.substrate:      {{ indenter.substrate }}
-      metadata.indenter.initial_radius: {{ indenter.initial_radius }}
-      metadata.indenter.initial_radius_unit: {{ indenter.initial_radius_unit }}
-
-      metadata.sb_in_dist:      {{ sb_in_dist }}
-      metadata.sb_in_dist_unit: {{ sb_in_dist_unit }}
+      "metadata.indenter.substrate":           {{ indenter.substrate }}
+      "metadata.indenter.initial_radius":      {{ indenter.initial_radius }}
+      "metadata.indenter.initial_radius_unit": {{ indenter.initial_radius_unit }}
 
   metadata:
     state: "production initial configuration data files"
