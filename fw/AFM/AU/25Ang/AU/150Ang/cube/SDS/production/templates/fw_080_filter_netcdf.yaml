@@ -104,6 +104,7 @@ spec:
     cmd: ncfilter.py
     opt:
     - --debug
+    - --log ncfilter.log
     - default.nc
     - filtered.nc
     - groups.ndx
