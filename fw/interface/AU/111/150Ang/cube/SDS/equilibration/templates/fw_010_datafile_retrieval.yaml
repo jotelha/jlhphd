@@ -13,19 +13,18 @@ spec:
     sort_direction: 1 #ascending, i.e. oldest files first, newest written last
 
     query:
-      metadata:
-        type:             interface
-        step:             initial_config
-        
-        surfactant:       {{ surfactant }}
-        sf_nmolecules:    {{ sf_nmolecules }}
-        sf_preassembly:   {{ sf_preassembly }}
-        counterion:       {{ counterion }}
-        solvent:          {{ solvent }}
-        substrate:        {{ substrate }}
-        sb_crystal_plane: {{ sb_crystal_plane }}
-        sb_base_length:   {{ sb_base_length }}
-        sb_shape:         {{ sb_shape }}
+      metadata->type:             interface
+      metadata->step:             initial_config
+
+      metadata->counterion:       {{ counterion }}
+      metadata->surfactant:       {{ surfactant }}
+      metadata->sf_nmolecules:    {{ sf_nmolecules }}
+      metadata->sf_preassembly:   {{ sf_preassembly }}
+      metadata->solvent:          {{ solvent }}
+      metadata->substrate:        {{ substrate }}
+      metadata->sb_crystal_plane: {{ sb_crystal_plane }}
+      metadata->sb_base_length:   {{ sb_base_length }}
+      metadata->sb_shape:         {{ sb_shape }}
 
   metadata:
     state: minimized, nvt- and npt-equilibrated with eam potential, then indenter inserted

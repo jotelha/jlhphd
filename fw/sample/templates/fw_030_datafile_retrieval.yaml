@@ -14,10 +14,9 @@ spec:
 
   - _fw_name: GetFilesByQueryTask
     query:
-      metadata:
-        temperature:      {{ temperature }}
-        pressure:         {{ pressure }}
-        type:             initial_config
+      metadata->temperature:      {{ temperature }}
+      metadata->pressure:         {{ pressure }}
+      metadata->type:             initial_config
 
   metadata:
     step: "datafile retrieval"
