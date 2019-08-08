@@ -13,17 +13,15 @@ spec:
     sort_direction: 1 #ascending, i.e. oldest files first, newest written last
 
     query:
-      metadata:
-        mode: "PRODUCTION"
-        type: "interface"
-        step: "equilibration_dpd"
+      metadata->mode: "PRODUCTION"
+      metadata->type: "interface"
+      metadata->step: "equilibration_dpd"
 
-        sb_name:          {{ sb_name }}
-        solvent:          {{ solvent }}
-        surfactant:       {{ surfactant }}
-        sf_nmolecules:    {{ sf_nmolecules }}
-        sf_preassembly:   {{ sf_preassembly }}
-        #state:            "minimized, nvt-, npt-, and dpd thermostat-equilibrated with eam potential"
+      metadata->sb_name:          {{ sb_name }}
+      metadata->solvent:          {{ solvent }}
+      metadata->surfactant:       {{ surfactant }}
+      metadata->sf_nmolecules:    {{ sf_nmolecules }}
+      metadata->sf_preassembly:   {{ sf_preassembly }}
 
   metadata:
     state: interface datafile retrieval

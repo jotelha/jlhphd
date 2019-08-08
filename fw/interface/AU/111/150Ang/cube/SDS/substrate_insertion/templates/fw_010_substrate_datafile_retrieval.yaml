@@ -9,10 +9,9 @@ spec:
 
   - _fw_name: GetFilesByQueryTask
     query:
-      metadata:
-        sb_name:        {{ sb_name }}
-        type:           substrate
-        step:           equilibration_npt
+      metadata->sb_name:        {{ sb_name }}
+      metadata->type:           substrate
+      metadata->step:           equilibration_npt
 
   metadata:
     state: "substrate datafile retrieval"

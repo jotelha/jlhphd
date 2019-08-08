@@ -20,8 +20,8 @@ spec:
 
       metadata->counterion:       {{ counterion }}
       metadata->surfactant:       {{ surfactant }}
-      metadata->sf_preassembly:   {{ sf_preassembly }}
       metadata->sf_nmolecules:    {{ sf_nmolecules }}
+      metadata->sf_preassembly:   {{ sf_preassembly }}
       metadata->solvent:          {{ solvent }}
       metadata->substrate:        {{ substrate }}
       metadata->sb_crystal_plane: {{ sb_crystal_plane }}
