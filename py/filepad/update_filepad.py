@@ -73,6 +73,17 @@ fp.add_file(
         'language': 'LAMMPS',
         'usecase':  'production'})
 
+# LAMMPS, substrate preparation specific
+# lmp_fcc_AU_111.input
+fp.delete_file(identifier='lmp_fcc_AU_111.input')
+fp.add_file(
+    os.path.join(template_prefix,'lmp_input','prepare_substrate','lmp_fcc_AU_111.input'),
+    identifier='lmp_fcc_AU_111.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'create FCC AU 111 substrate'})
+
 # LAMMPS, substrate exchange specific
 # lmp_delete_subst.input
 # lmp_merge.input

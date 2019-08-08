@@ -18,7 +18,7 @@
 !ff
 !fw
 !gmx_input
-!ipynb
+#!ipynb
 !lmp_input
 !nco
 !packmol
@@ -35,7 +35,7 @@
 !ff/**/*
 !fw/**/*
 !gmx_input/**/*
-!ipynb/**/*
+#!ipynb/**/*
 !lmp_input/**/*
 !nco/**/*
 !packmol/**/*
