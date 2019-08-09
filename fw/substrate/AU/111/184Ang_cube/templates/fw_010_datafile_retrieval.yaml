@@ -9,10 +9,9 @@ spec:
 
   - _fw_name: GetFilesByQueryTask
     query:
-      metadata:
-        sb_name:        {{ sb_name }}
-        state:          "initial config"
-        
+      metadata->sb_name:        {{ sb_name }}
+      metadata->state:          "initial config"
+
   metadata:
     state: "substrate initial configuration datafile retrieval"
     {{ render_metadata()|indent(4)}}
