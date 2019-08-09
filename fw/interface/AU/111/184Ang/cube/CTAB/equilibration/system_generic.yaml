@@ -121,9 +121,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
   sb_measures:
-  - 149.836e-10
-  - 149.725e-10
-  - 147.828e-10
+  - 184e-10
+  - 184e-10
+  - 184e-10
   sb_measures_unit:                             m
   sb_multiples: # multiples of unit cell
   - 52
