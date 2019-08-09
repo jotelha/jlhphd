@@ -1,4 +1,4 @@
-name: "NEMO: LAMMPS minimization and equilibration of EAM substrate AU 250Ang cube"
+name: "NEMO: LAMMPS minimization and equilibration of EAM substrate AU 184Ang cube"
 metadata: {}
 
 std: # standard settings to be applied to all fireworks, if not ...
@@ -66,7 +66,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   pbc:                                          111 # periodic in all directions
   pressure:                                     1
   pressure_unit:                                atm
-  sb_name:                                      AU_111_250Ang_cube
+  sb_name:                                      AU_111_184Ang_cube
   sb_area:                                      3.39e-16
   sb_area_unit:                                 m^2
   sb_base_length:                               184
@@ -84,7 +84,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_shape:                                     cube
   sb_thickness:                                 184.0e-10
   sb_thickness_unit:                            m
-  #sb_volume:                                    1.5625e-23
+  sb_volume:                                    6.2295e-24
   sb_volume_unit:                               m^3
   substrate:                                    AU
   temperature:                                  298 # K
