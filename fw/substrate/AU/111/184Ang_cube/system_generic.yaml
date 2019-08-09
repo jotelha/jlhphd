@@ -65,7 +65,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_every:                                  1
   neigh_check:                                  1
 
-  {%- if mode is in ['EXPRESS TRIAL'] %}
+{%- if mode is in ['EXPRESS TRIAL'] %}
   netcdf_frequency:                             10
   thermo_frequency:                             10
   thermo_average_frequency:                     10
@@ -77,7 +77,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   nvt_equilibration_steps:                      100
   npt_equilibration_steps:                      100
-  {%- else %}
+{%- else %}
   netcdf_frequency:                             100
   thermo_frequency:                             100
   thermo_average_frequency:                     100
@@ -89,6 +89,8 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
+{%- endif %}
+
   use_barostat:                                 0
   use_berenden_bstat:                           0
   use_dpd_tstat:                                0
