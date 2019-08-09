@@ -109,9 +109,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   restrained_sb_layer_thickness:                14.0
   restrained_sb_layer_thickness_unit:           Ang
   sb_name:                                      AU_111_150Ang_cube
-  sb_area:                                      2.25e-16
+  sb_area:                                      3.39e-16
   sb_area_unit:                                 m^2
-  sb_base_length:                               150
+  sb_base_length:                               184
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
   sb_crystal_plane_multiples:
@@ -132,9 +132,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_natoms:                                    196560
   sb_normal:                                    2 # z
   sb_shape:                                     cube
-  sb_thickness:                                 150.0e-10
+  sb_thickness:                                 184.0e-10
   sb_thickness_unit:                            m
-  sb_volume:                                    3.375e-23
+  sb_volume:                                    6.2295e-24
   sb_volume_unit:                               m^3
   sf_concentration:                             0
   sf_concentration_unit:                        M # M = mol L^-3
@@ -142,7 +142,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   sf_preassembly:                               none
   solvent:                                      H2O
   substrate:                                    AU
-  surfactant:                                   SDS
+  surfactant:                                   CTAB
   sv_density:                                   997 # kg m^-3
   sv_density_unit:                              kg m^-3
   sv_preassembly:                               random
@@ -168,46 +168,55 @@ transient: # ...overridden by these transient settings, which do not affect chil
 persistent:
   fw_010_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
-  - sf_nmolecules:        75
-    sf_preassembly:       bilayer
-    sf_concentration:     0.000453
-  - sf_nmolecules:        75
+  - sf_nmolecules:        367
     sf_preassembly:       monolayer
-    sf_concentration:     0.000453
-  - sf_nmolecules:        129
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0006
-  - sf_nmolecules:        220
+    sf_concentration:     0.000007
+    #interface_identifier: 367_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        415
     sf_preassembly:       bilayer
-    sf_concentration:     0.00099
-  - sf_nmolecules:        220
-    sf_preassembly:       monolayer
-    sf_concentration:     0.00099
-  - sf_nmolecules:        377
-    sf_preassembly:       bilayer
-    sf_concentration:     0.0034
-  - sf_nmolecules:        377
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0034
-  - sf_nmolecules:        646
-    sf_preassembly:       bilayer
-    sf_concentration:     0.0068
-  - sf_nmolecules:        646
+    sf_concentration:     0.000010
+    #interface_identifier: 415_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        415
     sf_preassembly:       cylinders
-    sf_concentration:     0.0068
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-  - sf_nmolecules:        646
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0068
-  - sf_nmolecules:        1107
+    sf_concentration:     0.000010
+    #interface_identifier: 415_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
+  - sf_nmolecules:        515
     sf_preassembly:       bilayer
-    sf_concentration:     0.017
-  {%- else %}
-  - sf_nmolecules:        646
+    sf_concentration:     0.000030
+    #interface_identifier: 515_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        515
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000030
+    #interface_identifier: 515_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000100
+    #interface_identifier: 653_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000100
+    #interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
     sf_preassembly:       monolayer
-    sf_concentration:     0.0068
+    sf_concentration:     0.000100
+    #interface_identifier: 653_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        1010
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000500
+    #interface_identifier: 1010_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        1010
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000500
+    #interface_identifier: 1010_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        1298
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000920
+    #interface_identifier: 1298_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  {%- else %}
+  - sf_nmolecules:        653
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000500
+    #interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   {%- endif %}
   fw_030_minimization.yaml:
   - step: minimization

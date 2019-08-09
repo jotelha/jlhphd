@@ -7,7 +7,7 @@
 #                                   ^substrate crytal plane                 ^initial indenter substrate distance
 #                                       ^substrate unit cell multiples            ^steps to contac
 #}
-{%- set interface_identifier = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_counterion_10ns.lammps"|format(sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) -%}
+{#- set interface_identifier = "%d_%s_on_%s_%s_%dx%dx%d_%s_with_counterion_10ns.lammps"|format(sf_nmolecules,surfactant,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) -#}
 {%- set identifier = "interface/%s/%s/%s%s/%s/%s/%s/%s/%s/%s"|format(
   substrate,
   sb_crystal_plane,

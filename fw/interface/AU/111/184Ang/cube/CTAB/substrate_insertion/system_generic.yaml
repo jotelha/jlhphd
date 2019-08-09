@@ -82,28 +82,57 @@ persistent:
   fw_015_interface_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        367
-    sf_preassembly:       bilayer
+    sf_preassembly:       monolayer
     sf_concentration:     0.000007
+    interface_identifier: 367_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
   - sf_nmolecules:        415
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.000010
+    interface_identifier: 415_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        415
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000010
+    interface_identifier: 415_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   - sf_nmolecules:        515
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.000030
+    interface_identifier: 515_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        515
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000030
+    interface_identifier: 515_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   - sf_nmolecules:        653
     sf_preassembly:       bilayer
     sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        1010
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000500
+    interface_identifier: 1010_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
   - sf_nmolecules:        1010
     sf_preassembly:       monolayer
     sf_concentration:     0.000500
+    interface_identifier: 1010_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
   - sf_nmolecules:        1298
     sf_preassembly:       bilayer
     sf_concentration:     0.000920
+    interface_identifier: 1298_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
   {%- else %}
   - sf_nmolecules:        653
     sf_preassembly:       cylinders
     sf_concentration:     0.000500
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   {%- endif %}
+## 367_CTAB_on_AU_111_63x36x2_inverse_monolayer_with_counterion_10ns.lammps
+## 1010_CTAB_on_AU_111_63x36x2_inverse_monolayer_with_counterion_10ns.lammps
 
 dependencies:
   fw_005_input_file_retrieval.yaml:
