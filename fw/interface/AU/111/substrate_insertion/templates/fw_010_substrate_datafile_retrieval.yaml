@@ -12,6 +12,9 @@ spec:
       metadata->sb_name:        {{ sb_name }}
       metadata->type:           substrate
       metadata->step:           equilibration_npt
+    fizzle_degenerate_file_name: False
+    sort_key:                    metadata.workflow_creation_date
+    sort_direction:              1
 
   metadata:
     state: "substrate datafile retrieval"
