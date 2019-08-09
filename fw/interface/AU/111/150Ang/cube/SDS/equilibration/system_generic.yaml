@@ -11,7 +11,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   mode:                   {{ mode }}
   type:                   interface
 
-  # JUWELS
 {%- if machine is in ['JUWELS'] %}
   {%- set queue_worker = "juwels_queue" %}
   worker:                 juwels_noqueue

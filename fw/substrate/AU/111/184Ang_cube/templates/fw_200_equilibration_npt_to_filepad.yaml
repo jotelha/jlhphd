@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: "{{ machine|default("NEMO",true) }}, {{ title }}, transfer '{{identifier}}/{{step}}' to file pad"
+name: {{machine}}, {{ title }}, transfer '{{identifier}}' data to file pad
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
@@ -17,23 +17,23 @@ spec:
   # first delete if file existent
   - _fw_name: DeleteFilesTask
     identifiers:
-    - {{ identifier }}/{{ step }}/thermo_ave.out
-    - {{ identifier }}/{{ step }}/default.lammps
-    - {{ identifier }}/{{ step }}/log.lammps
-    - {{ identifier }}/{{ step }}/thermo.out
-    - {{ identifier }}/{{ step }}/box.txt
-    - {{ identifier }}/{{ step }}/rdf.txt
-    - {{ identifier }}/{{ step }}/fcc_rdf.txt
+    - {{ identifier }}/thermo_ave.out
+    - {{ identifier }}/default.lammps
+    - {{ identifier }}/log.lammps
+    - {{ identifier }}/thermo.out
+    - {{ identifier }}/box.txt
+    - {{ identifier }}/rdf.txt
+    - {{ identifier }}/fcc_rdf.txt
   # then add again:
   - _fw_name: AddFilesTask
     identifiers:
-    - {{ identifier }}/{{ step }}/thermo_ave.out
-    - {{ identifier }}/{{ step }}/default.lammps
-    - {{ identifier }}/{{ step }}/log.lammps
-    - {{ identifier }}/{{ step }}/thermo.out
-    - {{ identifier }}/{{ step }}/box.txt
-    - {{ identifier }}/{{ step }}/rdf.txt
-    - {{ identifier }}/{{ step }}/fcc_rdf.txt
+    - {{ identifier }}/thermo_ave.out
+    - {{ identifier }}/default.lammps
+    - {{ identifier }}/log.lammps
+    - {{ identifier }}/thermo.out
+    - {{ identifier }}/box.txt
+    - {{ identifier }}/rdf.txt
+    - {{ identifier }}/fcc_rdf.txt
     paths:
     - thermo_ave.out
     - default.lammps
@@ -44,10 +44,8 @@ spec:
     - fcc_rdf.txt
     metadata:
       state: minimized, nvt- and npt-equilibrated with eam potential
-      step:  {{ step }}
       {{ render_metadata()|indent(6)}}
   metadata:
     state: file transfer to filepad
-    step:  {{ step }}
     {{ render_metadata()|indent(4)}}
 {% endblock %}

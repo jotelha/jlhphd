@@ -10,33 +10,27 @@
 # regular expression to turn metadata into placholder lines:
 #   pattern:      ^([[:space:]]+)([^:[:space:]]+):([[:space:]]+)[^[:space:]]+.*$
 #   replacement:  \1\2:\3{{ \2 }}
-# {% set datafile_identifier = "interface/%s/%d/%s/%s/%dx%dx%d/%s/initial_config.lammps"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-# {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
 #}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier = "substrate/%s/%s/%s%s/%s"|format(
+{%- set identifier = "substrate/%s/%s/%s%s/%s/%s/%s"|format(
   substrate,
   sb_crystal_plane,
   sb_base_length,
   sb_base_length_unit,
-  sb_shape) -%}
-{%- set file_identifier = "substrate_%s_%s_%s%s_%s"|format(
-  substrate,
-  sb_crystal_plane,
-  sb_base_length,
-  sb_base_length_unit,
-  sb_shape) -%}
+  sb_shape,
+  step,
+  "now"|datetime('%Y%m%d%H%M') ) -%}
 {# descriptive natural language title for display purposes #}
 {%- set title = "substrate %s"|format(sb_name) -%}
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
 {%- macro render_queueadapter() -%}
-{%- if worker is in ['nemo_queue_offline','nemo_queue'] -%}
+{%- if machine is in ['NEMO'] -%}
 nodes:            {{ nodes|default(1,true)|int }}
 ppn:              {{ ppn|default(20,true)|int }}
 queue:            {{ queue|default('',true) }}
 walltime:         {{ walltime|default("12:00:00") }}
-{%- elif worker is in ['juwels_queue'] -%}
+{%- elif machine is in ['JUWELS'] -%}
 account:          {{ account|default("hfr13") }}
 cpus_per_task:    {{ cpus_per_task|default(1,true)|int }}
 ntasks_per_node:  {{ ntasks_per_node|default(96,true)|int }}
@@ -54,10 +48,10 @@ walltime:         {{ walltime|default("12:00:00") }}
 {%- set smb_port_local    = smb_port -%}
 {%- endif -%}
 
-{# JUWELS has to transfer results via ssh port forwarding to RZ storage #}
+{# JUWELS and bwCloud have to transfer results via ssh port forwarding to RZ storage #}
 {# for this purpose, a background task can establish the ssh connection #}
 {%- macro render_smb_forward() -%}
-{%- if worker is in ['juwels_noqueue'] -%}
+{%- if worker is in ['bwcloud_std','juwels_noqueue'] -%}
 _background_tasks:
 - _fw_name: BackgroundTask
   num_launches:  1
@@ -78,7 +72,7 @@ _background_tasks:
 
 {# a simple script waiting for the ssh connection port to be allocated #}
 {%- macro render_wait_for_port() -%}
-{%- if worker is in ['juwels_noqueue'] -%}
+{%- if worker is in ['bwcloud_std','juwels_noqueue'] -%}
 - _fw_name: ScriptTask
   script: >-
     counter=0;
@@ -100,11 +94,18 @@ _background_tasks:
 {%- endmacro -%}
 
 {%- macro render_metadata() -%}
-machine:         {{ machine }}
+# technical settings
+machine:          {{ machine }}
+mode:             {{ mode }}
+type:             {{ type }}
+step:             {{ step }}
 
-ewald_accuracy:  {{ ewald_accuracy }}
-coulomb_cutoff:  {{ coulomb_cutoff }}
-skin_distance:   {{ skin_distance }}
+ewald_accuracy:       {{ ewald_accuracy }}
+coulomb_cutoff:       {{ coulomb_cutoff }}
+coulomb_cutoff_unit:  {{ coulomb_cutoff_unit }}
+skin_distance:        {{ skin_distance }}
+skin_distance_unit:   {{ skin_distance_unit }}
+
 neigh_delay:     {{ neigh_delay }}
 neigh_every:     {{ neigh_every }}
 neigh_check:     {{ neigh_check }}
@@ -135,5 +136,7 @@ sb_volume_unit:                               {{ sb_volume_unit }}
 substrate:                                    {{ substrate }}
 temperature:                                  {{ temperature }}
 temperature_unit:                             {{ temperature_unit }}
-{% endmacro %}
-{% block body %}{% endblock %}
+
+workflow_creation_date:                       {{ "now"|datetime }}
+{%- endmacro -%}
+{%- block body -%}{%- endblock -%}

@@ -1,30 +1,49 @@
-name: "NEMO: LAMMPS minimization and equilibration of EAM substrate AU 184Ang cube"
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of EAM substrate AU 184Ang cube"
 metadata: {}
 
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
 
-  # JUWELS
-  # machine:                JUWELS
-  # walltime:               '24:00:00'
-  # queue:                  batch
-  # ntasks:                 192
-  # cpus_per_task:          1
-  # ntasks_per_node:        96
-  # account:                hfr13
-  #
-  # worker:                 juwels_noqueue
-  # postp_worker:           juwels_noqueue
-  # restart_worker:         juwels_queue
-  # max_restarts:           5
+  # two general options
+  # - machine: NEMO or JUWELS
+  # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
 
-  # NEMO
-  machine:                NEMO
+  machine:                {{ machine }}
+  mode:                   {{ mode }}
+  type:                   substrate
+
+{%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker = "juwels_queue" %}
+  queue_worker:           juwels_queue
+  worker:                 juwels_noqueue
+  postp_worker:           juwels_noqueue
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:15:00'
+  queue:                  devel
+  ntasks:                 96
+  {%- else %}
+  walltime:               '02:00:00'
+  queue:                  batch
+  ntasks:                 96
+  {%- endif %}
+  cpus_per_task:          1
+  ntasks_per_node:        96
+  account:                hfr13
+{%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker = "nemo_queue_offline" %}
+  queue_worker:           nemo_queue_offline
+  worker:                 nemo_noqueue
+  postp_worker:           nemo_noqueue
   nodes:                  2
   ppn:                    20
-  walltime:               00:15:00
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:15:00'
   queue:                  express
-  worker:                 nemo_noqueue
+  {%- else %}
+  walltime:               '01:00:00'
+  queue:                  ''
+  {%- endif %}
+{%- endif %}
 
   smb_gateway:            132.230.102.164
   smb_gateway_user:       sshclient
@@ -45,6 +64,20 @@ std: # standard settings to be applied to all fireworks, if not ...
   neigh_delay:                                  2
   neigh_every:                                  1
   neigh_check:                                  1
+
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  netcdf_frequency:                             10
+  thermo_frequency:                             10
+  thermo_average_frequency:                     10
+
+  minimization_ftol:                            0.1
+  minimization_ftol_unit:                       kcal
+  minimization_maxiter:                         500
+  minimization_maxeval:                         1000
+
+  nvt_equilibration_steps:                      100
+  npt_equilibration_steps:                      100
+  {%- else %}
   netcdf_frequency:                             100
   thermo_frequency:                             100
   thermo_average_frequency:                     100
@@ -53,6 +86,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
   minimization_maxeval:                         100000
+
   nvt_equilibration_steps:                      10000
   npt_equilibration_steps:                      10000
   use_barostat:                                 0
@@ -93,17 +127,15 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_020_minimization_fixed_box.yaml:
-  - worker:               nemo_queue_offline
+  - worker:               {{ queue_worker }}
     thermo_frequency:     10
   fw_030_minimization_relaxed_box.yaml:
-  - worker:               nemo_queue_offline
+  - worker:               {{ queue_worker }}
     thermo_frequency:     10
   fw_060_equilibration_nvt_bulk.yaml:
-  - worker:               nemo_queue_offline
+  - worker:               {{ queue_worker }}
   fw_070_equilibration_npt_bulk.yaml:
-  - worker:               nemo_queue_offline
-    queue:                ''
-    walltime:             '1:00:00'
+  - worker:               {{ queue_worker }}
 
 persistent:
   fw_020_minimization_fixed_box.yaml:
