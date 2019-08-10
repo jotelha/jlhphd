@@ -1,4 +1,4 @@
-name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of SDS on AU (111) 150 Ang cube substrate"
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of CTAB on AU (111) 184 Ang cube substrate"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -46,7 +46,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
   smb_port:               445
 
-  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
+  coeff_identifier:       CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
 
   # technical LAMMPS options
   ewald_accuracy:                               1.0e-4
@@ -98,7 +98,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
-  counterion:                                   NA
+  counterion:                                   BR
   force_field:
     solution_solution:                          "charmm36-jul2017"
     substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
@@ -108,16 +108,13 @@ std: # standard settings to be applied to all fireworks, if not ...
   pressure_unit:                                atm
   restrained_sb_layer_thickness:                14.0
   restrained_sb_layer_thickness_unit:           Ang
-  sb_name:                                      AU_111_150Ang_cube
+  sb_name:                                      AU_111_184Ang_cube
   sb_area:                                      3.39e-16
   sb_area_unit:                                 m^2
   sb_base_length:                               184
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
-  sb_crystal_plane_multiples:
-  - 52
-  - 90
-  - 63
+
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
   sb_measures:
@@ -125,11 +122,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   - 184e-10
   - 184e-10
   sb_measures_unit:                             m
-  sb_multiples: # multiples of unit cell
-  - 52
-  - 30
-  - 21
-  sb_natoms:                                    196560
+  sb_natoms:                                    369408
   sb_normal:                                    2 # z
   sb_shape:                                     cube
   sb_thickness:                                 184.0e-10
@@ -215,7 +208,7 @@ persistent:
   {%- else %}
   - sf_nmolecules:        653
     sf_preassembly:       cylinders
-    sf_concentration:     0.000500
+    sf_concentration:     0.000100
     #interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   {%- endif %}
   fw_030_minimization.yaml:

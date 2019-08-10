@@ -32,7 +32,7 @@ spec:
     - -v relax_box                {{ relax_box|default(0,false)|int }}
     - -v robust_minimization      0
     - -v store_forces             0
-    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v surfactant_name          {{ surfactant }}
     - -v thermo_frequency         {{ thermo_frequency|default(100,true)|int }}
     - -v use_eam                  {{ use_eam|default(1,false)|int }}
     - -v use_ewald                {{ use_ewald|default(1,false)|int }}
