@@ -1,4 +1,4 @@
-name: "bwCloud {{ mode }}: Substrate insertion into previously equilibrated systems [AU (111) 150 Ang cube]"
+name: "bwCloud {{ mode }}: Substrate insertion into previously equilibrated systems [AU (111) 184 Ang cube]"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -29,10 +29,10 @@ std: # standard settings to be applied to all fireworks, if not ...
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
-  sb_name:                                      AU_111_150Ang_cube
-  sb_area:                                      2.25e-16
+  sb_name:                                      AU_111_184Ang_cube
+  sb_area:                                      3.39e-16
   sb_area_unit:                                 m^2
-  sb_base_length:                               150
+  sb_base_length:                               184
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
   sb_crystal_plane_multiples:
@@ -42,9 +42,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
   sb_measures:
-  - 149.836e-10
-  - 149.725e-10
-  - 147.828e-10
+  - 184e-10
+  - 184e-10
+  - 184e-10
   sb_measures_unit:                             m
   sb_multiples: # multiples of unit cell
   - 52
@@ -53,9 +53,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_natoms:                                    196560
   sb_normal:                                    2 # z
   sb_shape:                                     cube
-  sb_thickness:                                 150.0e-10
+  sb_thickness:                                 184.0e-10
   sb_thickness_unit:                            m
-  sb_volume:                                    3.375e-23
+  sb_volume:                                    6.2295e-24
   sb_volume_unit:                               m^3
   sf_concentration:                             0
   sf_concentration_unit:                        M # M = mol L^-3
@@ -82,28 +82,57 @@ persistent:
   fw_015_interface_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        367
-    sf_preassembly:       bilayer
+    sf_preassembly:       monolayer
     sf_concentration:     0.000007
+    interface_identifier: 367_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
   - sf_nmolecules:        415
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.000010
+    interface_identifier: 415_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        415
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000010
+    interface_identifier: 415_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   - sf_nmolecules:        515
-    sf_preassembly:       monolayer
+    sf_preassembly:       bilayer
     sf_concentration:     0.000030
+    interface_identifier: 515_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        515
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000030
+    interface_identifier: 515_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   - sf_nmolecules:        653
     sf_preassembly:       bilayer
     sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       cylinders
+    sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
+  - sf_nmolecules:        653
+    sf_preassembly:       monolayer
+    sf_concentration:     0.000100
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
+  - sf_nmolecules:        1010
+    sf_preassembly:       bilayer
+    sf_concentration:     0.000500
+    interface_identifier: 1010_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
   - sf_nmolecules:        1010
     sf_preassembly:       monolayer
     sf_concentration:     0.000500
+    interface_identifier: 1010_CTAB_on_AU_111_63x36x2_monolayer_with_counterion_10ns.lammps
   - sf_nmolecules:        1298
     sf_preassembly:       bilayer
     sf_concentration:     0.000920
+    interface_identifier: 1298_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_10ns.lammps
   {%- else %}
   - sf_nmolecules:        653
     sf_preassembly:       cylinders
     sf_concentration:     0.000500
+    interface_identifier: 653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_10ns.lammps
   {%- endif %}
+## 367_CTAB_on_AU_111_63x36x2_inverse_monolayer_with_counterion_10ns.lammps
+## 1010_CTAB_on_AU_111_63x36x2_inverse_monolayer_with_counterion_10ns.lammps
 
 dependencies:
   fw_005_input_file_retrieval.yaml:

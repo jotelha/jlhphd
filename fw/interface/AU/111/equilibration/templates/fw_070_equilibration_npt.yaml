@@ -40,7 +40,7 @@ spec:
     - -v read_groups_from_file    0
     - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v restrained_indenter      1
-    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v surfactant_name          {{ surfactant }}
     - -v temperatureT             {{ temperature|default(298.0,true)|float }}
     - -v temper_solid_only        0
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
