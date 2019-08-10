@@ -9,9 +9,6 @@ spec:
   _tasks:
 
   - _fw_name: GetFilesByQueryTask
-    sort_key:       workflow_creation_date
-    sort_direction: 1 #ascending, i.e. oldest files first, newest written last
-
     query:
       metadata->type:             interface
       metadata->step:             initial_config
@@ -26,9 +23,9 @@ spec:
       metadata->sb_base_length:   {{ sb_base_length }}
       metadata->sb_shape:         {{ sb_shape }}
 
-    fizzle_degenerate_file_name: False
-    sort_key:                    metadata.workflow_creation_date
-    sort_direction:              1 # ascending
+    sort_key:       workflow_creation_date
+    sort_direction: 1 # ascending, i.e. oldest files first, newest written last
+    fizzle_degenerate_file_name: False # allow repeated overwriting of files with same name
 
   metadata:
     state: minimized, nvt- and npt-equilibrated with eam potential, then indenter inserted
