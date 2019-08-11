@@ -86,6 +86,23 @@ db.filepad.update(
   }
 )
 
+db.filepad.update(
+  { "metadata.counterion": "NA",
+    "metadata.sb_base_length": 184,
+    "metadata.sb_crystal_plane": 111,
+    "metadata.sb_shape": "cube",
+    "metadata.solvent": "H2O",
+    "metadata.step": "initial_config",
+    "metadata.substrate": "AU",
+    "metadata.surfactant": "CTAB",
+    "metadata.type": "interface"  }, {
+    $set: {
+      "metadata.counterion": "BR" }
+  }, {
+    multi: true // update all matches
+  }
+)
+
 // update field
 db.filepad.update(
   {
