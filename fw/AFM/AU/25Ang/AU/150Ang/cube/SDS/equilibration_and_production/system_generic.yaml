@@ -336,6 +336,7 @@ dependencies:
   - fw_110_extract_property.yaml
   - fw_210_equilibration_dpd_results_to_filepad.yaml
   - fw_260_equilibration_dpd_results_to_storage.yaml
+  - fw_350_production.yaml
 
   fw_080_extract_property.yaml:
   - fw_180_minimization_results_to_filepad.yaml
@@ -354,7 +355,7 @@ dependencies:
   - fw_260_equilibration_dpd_results_to_storage.yaml
 
   fw_320_production_file_retrieval.yaml:
-  - fw_050_production.yaml
+  - fw_350_production.yaml
 
   fw_350_production.yaml:
   - fw_360_recover_failed.yaml
