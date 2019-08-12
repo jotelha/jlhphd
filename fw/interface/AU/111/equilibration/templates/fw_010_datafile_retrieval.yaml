@@ -23,9 +23,9 @@ spec:
       metadata->sb_base_length:   {{ sb_base_length }}
       metadata->sb_shape:         {{ sb_shape }}
 
-    sort_key:       workflow_creation_date
-    sort_direction: 1 # ascending, i.e. oldest files first, newest written last
-    fizzle_degenerate_file_name: False # allow repeated overwriting of files with same name
+    fizzle_degenerate_file_name: False
+    sort_key:                    metadata.workflow_creation_date
+    sort_direction:              1 #ascending, i.e. oldest files first, newest written last
 
   metadata:
     state: minimized, nvt- and npt-equilibrated with eam potential, then indenter inserted

@@ -10,6 +10,10 @@ work properly with standard
 
 ## Tree
 
+Within subtrees, template directories are shared by several system setups and
+therefore usually lie higher in the tree hierarchy than the actual system
+descriptions.
+
 * AFM:        workflows for AFM tip model insertion, minimization,
               equilibration, and normal AFM tip approach.
 * interface:  workflows for merging substrate and solution systems,
