@@ -1,4 +1,4 @@
-name: "{{ machine }} {{ mode }}: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on SDS on AU (111) 150 Ang cube (EAM)"
+name: "{{ machine }} {{ mode }}: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on CTAB on AU (111) 184 Ang cube (EAM)"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -99,7 +99,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   npt_equilibration_steps:                      250000 #   0.5 ns
   dpd_equilibration_steps:                      250000 #   0.5 ns
   # at velocity 1 m/s = 1e-5 Ang/fs, requires 2.5 mio time steps at 2fs for 50 Ang
-  production_steps:                             2750000
+  #                                           3.0 mio time steps at 2fs for 60 Ang
+  production_steps:                             3250000
 
   max_restarts:                                 100
   {% endif %}
@@ -133,7 +134,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_base_length:                               184
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
-  sb_in_dist:                                   50.0
+  sb_in_dist:                                   60.0
   sb_in_dist_unit:                              Ang
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
@@ -270,7 +271,7 @@ persistent:
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
-    production_steps:           275000
+    production_steps:           325000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              0
     temper_substrate_only:      1
@@ -287,7 +288,7 @@ persistent:
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
-    production_steps:           275000
+    production_steps:           325000
     constant_indenter_velocity: -1.0e-4
     use_dpd_tstat:              1
     temper_substrate_only:      0
@@ -304,7 +305,7 @@ persistent:
     thermo_frequency:           500
     thermo_average_frequency:   500
     restart_frequency:          5000
-    production_steps:           2750000
+    production_steps:           3250000
     constant_indenter_velocity: -1.0e-5
     use_dpd_tstat:              1
     {%- if machine is in ['NEMO'] %}
@@ -342,7 +343,7 @@ persistent:
     thermo_frequency:           50
     thermo_average_frequency:   50
     restart_frequency:          500
-    production_steps:           275000
+    production_steps:           325000
     constant_indenter_velocity: -1.0e-4
     step:                       "approach"
 
@@ -350,7 +351,7 @@ persistent:
     thermo_frequency:           500
     thermo_average_frequency:   500
     restart_frequency:          5000
-    production_steps:           2750000
+    production_steps:           3250000
     constant_indenter_velocity: -1.0e-5
     step:                       "approach"
 
@@ -358,7 +359,7 @@ persistent:
     thermo_frequency:           5000
     thermo_average_frequency:   5000
     restart_frequency:          50000
-    production_steps:           27500000
+    production_steps:           32500000
     constant_indenter_velocity: -1.0e-6
     step:                       "approach"
   {%- endif %}

@@ -115,7 +115,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_base_length:                               184
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
-  sb_in_dist:                                   50.0
+  sb_in_dist:                                   60.0
   sb_in_dist_unit:                              Ang
   sb_lattice_constant:                          4.075
   sb_lattice_constant_unit:                     Ang
