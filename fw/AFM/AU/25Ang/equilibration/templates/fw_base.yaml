@@ -62,6 +62,11 @@
   sb_base_length_unit,
   sb_shape) -%}
 
+{# random filter draws from sequence, thus construct sequence from time #}
+{%- if random_seed is undefined -%}
+{%- set random_seed = range("now"|datetime('%Y%m%d%H%M%S')|int)|random -%}
+{%- endif -%}
+
 {# depending on machine, different queue settings are necessary #}
 {# JUWELS uses SLURM, NEMO MOAB #}
 {%- macro render_queueadapter() -%}

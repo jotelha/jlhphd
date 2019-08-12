@@ -1,4 +1,4 @@
-name: "{{ machine }} {{ mode }}: LAMMPS approach of r = 25 Ang AU AFM probe (111 facet facing negative z) on SDS on AU (111) 150 Ang cube substrate"
+name: "{{ machine }} {{ mode }}: LAMMPS minimization and equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) on SDS on AU (111) 150 Ang cube substrate"
 metadata: {}
 std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
@@ -9,8 +9,8 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   machine:                {{ machine }}
   mode:                   {{ mode }}
-  step:                   approach
   type:                   AFM
+  run_index:              0
 
   # JUWELS
 {%- if machine is in ['JUWELS'] %}
@@ -35,13 +35,13 @@ std: # standard settings to be applied to all fireworks, if not ...
   queue_worker:           nemo_queue_offline
   worker:                 nemo_noqueue
   postp_worker:           nemo_noqueue
-  nodes:                  16
+  nodes:                  8
   ppn:                    20
   {%- if mode is in ['EXPRESS TRIAL'] %}
   walltime:               '00:15:00'
   queue:                  express
   {%- else %}
-  walltime:               '96:00:00'
+  walltime:               '24:00:00'
   queue:                  ''
   {%- endif %}
 {%- endif %}
@@ -85,28 +85,27 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   max_restarts:                                 1
   {%- else %}
-  netcdf_frequency:                             5000
-  restart_frequency:                            5000
-  thermo_frequency:                             500
-  thermo_average_frequency:                     500
+  netcdf_frequency:                             1000
+  thermo_frequency:                             1000
+  thermo_average_frequency:                     1000
 
   minimization_ftol:                            1.0e-6
   minimization_ftol_unit:                       kcal
   minimization_maxiter:                         10000
-  minimization_maxeval:                         100000
+  minimization_maxeval:                         10000
 
   nvt_equilibration_steps:                      10000  #  20 ps
-  npt_equilibration_steps:                      500000 #   1 ns
-  dpd_equilibration_steps:                      100000 # 200 ps
+  npt_equilibration_steps:                      250000 #   0.5 ns
+  dpd_equilibration_steps:                      250000 #   0.5 ns
   production_steps:                             1750000
 
-  max_restarts:                                 10
+  max_restarts:                                 100
   {% endif %}
 
-  langevin_damping:                             1000.0 # in previous npt equilibration
-  barostat_damping:                             10000.0 # in previous npt equilibration
+  langevin_damping:                             1000.0
+  barostat_damping:                             10000.0
   use_barostat:                                 0
-  use_dpd_tstat:                                1
+  use_dpd_tstat:                                0
   use_eam:                                      1
   use_ewald:                                    1
 
@@ -119,23 +118,19 @@ std: # standard settings to be applied to all fireworks, if not ...
     solution_solution:                          "charmm36-jul2017"
     substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
     substrate_solution:                         "interface_ff_1_5"
-  #restrained_sb_layer_thickness:                14.0
-  #restrained_sb_layer_thickness_unit:           Ang
-  frozen_sb_layer_thickness:                    14.0
+  frozen_sb_layer_thickness:                    0.0
   frozen_sb_layer_thickness_unit:               Ang
   pbc:                                          111 # periodic in all directions
   pressure:                                     1 # atm
   pressure_unit:                                atm
+  restrained_sb_layer_thickness:                14.0
+  restrained_sb_layer_thickness_unit:           Ang
   sb_name:                                      AU_111_150Ang_cube
   sb_area:                                      2.25e-16
   sb_area_unit:                                 m^2
   sb_base_length:                               150
   sb_base_length_unit:                          Ang
   sb_crystal_plane:                             111
-  sb_crystal_plane_multiples:
-  - 52
-  - 90
-  - 63
   sb_in_dist:                                   30.0
   sb_in_dist_unit:                              Ang
   sb_lattice_constant:                          4.075
@@ -145,10 +140,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   - 149.725e-10
   - 147.828e-10
   sb_measures_unit:                             m
-  sb_multiples: # multiples of unit cell
-  - 52
-  - 30
-  - 21
   sb_natoms:                                    196560
   sb_normal:                                    2 # z
   sb_shape:                                     cube
@@ -200,182 +191,185 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
+  fw_030_minimization.yaml:
+  - worker:                   {{ queue_worker }}
+    thermo_frequency:         10
+    thermo_average_frequency: 100
+
+  fw_060_equilibration_nvt.yaml:
+  - worker:                   {{ queue_worker }}
+
+  fw_070_equilibration_npt.yaml:
+  - worker:                   {{ queue_worker }}
+
+  fw_075_equilibration_dpd.yaml:
+  - worker:                   {{ queue_worker }}
+
   fw_050_production.yaml:
   - worker:                   {{ queue_worker }}
+
   {%- if machine is in ['NEMO'] %}
   fw_080_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
   - worker:                   {{ queue_worker }}
-    nodes:                  1
-    ppn:                    20
+    nodes:                    1
+    ppn:                      20
 
     {%- if mode is in ['EXPRESS TRIAL'] %}
-    walltime:               '00:15:00'
-    queue:                  express
+    walltime:                 '00:15:00'
+    queue:                    express
     {%- else %}
-    walltime:               '02:00:00'
-    queue:                  ''
+    walltime:                 '02:00:00'
+    queue:                    ''
     {%- endif %}
   {%- endif %}
 
 persistent:
-  fw_030_datafile_retrieval.yaml:
-  {%- if mode is in ['PRODUCTION'] %}
-  #- sf_nmolecules:        75
-  #  sf_preassembly:       bilayer
-  #  sf_concentration:     0.000453
-  - sf_nmolecules:        75
-    sf_preassembly:       monolayer
-    sf_concentration:     0.000453
-  - sf_nmolecules:        129
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0006
-  #- sf_nmolecules:        220
-  #  sf_preassembly:       bilayer
-  #  sf_concentration:     0.00099
-  - sf_nmolecules:        220
-    sf_preassembly:       monolayer
-    sf_concentration:     0.00099
-  - sf_nmolecules:        377
-    sf_preassembly:       bilayer
-    sf_concentration:     0.0034
-  - sf_nmolecules:        377
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0034
-  - sf_nmolecules:        646
-    sf_preassembly:       bilayer
-    sf_concentration:     0.0068
-  - sf_nmolecules:        646
-    sf_preassembly:       cylinders
-    sf_concentration:     0.0068
+  fw_010_datafile_retrieval.yaml:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
-  - sf_nmolecules:        646
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0068
-  - sf_nmolecules:        1107
-    sf_preassembly:       bilayer
-    sf_concentration:     0.017
-  {%- else %}
-  - sf_nmolecules:        646
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0068
+
+  fw_030_minimization.yaml:
+  - step:                     minimization
+
+  fw_060_equilibration_nvt.yaml:
+  - step:                     equilibration_nvt
+    run_index:                1
+    random_seed:              638455
+  {%- if mode is in ['PRODUCTION'] %}
+  - step:                     equilibration_nvt
+    run_index:                2
+    random_seed:              800865
+  - step:                     equilibration_nvt
+    run_index:                3
+    random_seed:              28797
+  - step:                     equilibration_nvt
+    run_index:                4
+    random_seed:              557575
+  - step:                     equilibration_nvt
+    run_index:                5
+    random_seed:              517994
+  - step:                     equilibration_nvt
+    run_index:                6
+    random_seed:              189301
+  - step:                     equilibration_nvt
+    run_index:                7
+    random_seed:              1676
+  - step:                     equilibration_nvt
+    run_index:                8
+    random_seed:              157974
+  - step:                     equilibration_nvt
+    run_index:                9
+    random_seed:              312154
+  - step:                     equilibration_nvt
+    run_index:                0
+    random_seed:              538060
+    #use_dpd_tstat:            0 # default
+    #use_barostat:             0 # default
   {%- endif %}
 
+  fw_070_equilibration_npt.yaml:
+  - step:                     equilibration_npt
+    use_dpd_tstat:            0
+    use_barostat:             1
+
+  fw_075_equilibration_dpd.yaml:
+  - step:                     equilibration_dpd
+    use_dpd_tstat:            1
+    use_barostat:             0 # set to 1 for DPD equilbartion in NPT
+
+  # production, 1 m / s
   fw_050_production.yaml:
-  {%- if mode is in ['TRIAL'] %}
-  - netcdf_frequency:           500
-    thermo_frequency:           50
-    thermo_average_frequency:   50
-    restart_frequency:          500
-    production_steps:           175000
-    constant_indenter_velocity: -1.0e-4
-    use_dpd_tstat:              0
-    temper_substrate_only:      1
-    temper_solid_only:          0
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_wo_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_wo_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_wo_dpd_tstat"
-    {%- endif %}
-
-  - netcdf_frequency:           500
-    thermo_frequency:           50
-    thermo_average_frequency:   50
-    restart_frequency:          500
-    production_steps:           175000
-    constant_indenter_velocity: -1.0e-4
-    use_dpd_tstat:              1
-    temper_substrate_only:      0
-    temper_solid_only:          1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_with_dpd_tstat"
-    {%- endif %}
-
-  - netcdf_frequency:           5000
-    thermo_frequency:           500
-    thermo_average_frequency:   500
-    restart_frequency:          5000
-    production_steps:           1750000
-    constant_indenter_velocity: -1.0e-5
-    use_dpd_tstat:              1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_with_dpd_tstat"
-    {%- endif %}
-
-  {%- elif mode is in ['EXPRESS TRIAL'] %}
-  - use_dpd_tstat:              0
-    temper_substrate_only:      1
-    temper_solid_only:          0
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_express_trial_wo_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_express_trial_wo_dpd_tstat"
-    {%- else %}
-    step:                       "production_express_trial_wo_dpd_tstat"
-    {%- endif %}
-  - use_dpd_tstat:              1
-    temper_substrate_only:      0
-    temper_solid_only:          1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_express_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_express_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_express_trial_with_dpd_tstat"
-    {%- endif %}
-
-  {%- else %} # production, 10 m / s and 1 m / s
-  - netcdf_frequency:           500
-    thermo_frequency:           50
-    thermo_average_frequency:   50
-    restart_frequency:          500
-    production_steps:           175000
-    constant_indenter_velocity: -1.0e-4
-    step:                       "approach"
-
-  - netcdf_frequency:           5000
-    thermo_frequency:           500
-    thermo_average_frequency:   500
-    restart_frequency:          5000
-    production_steps:           1750000
-    constant_indenter_velocity: -1.0e-5
-    step:                       "approach"
-  {%- endif %}
+  - step:                     approach
+    use_dpd_tstat:                   1
+    use_barostat:                    0
+    netcdf_frequency:             5000
+    thermo_frequency:              500
+    thermo_average_frequency:      500
+    restart_frequency:            5000
+    production_steps:          1750000
+    constant_indenter_velocity:     -1.0e-5
+    frozen_sb_layer_thickness:      14.0
+    restrained_sb_layer_thickness:   0.0
 
 dependencies:
   # single dependency entries result in one instance only
-  fw_020_production_file_retrieval.yaml:
-  - fw_030_datafile_retrieval.yaml
-  - fw_050_production.yaml
+  fw_000_minimization_file_retrieval.yaml:
+  - fw_010_datafile_retrieval.yaml
+  - fw_030_minimization.yaml
 
-  fw_030_datafile_retrieval.yaml:
-  - fw_050_production.yaml
+  fw_010_datafile_retrieval.yaml:
+  - fw_030_minimization.yaml
+  - fw_055_equilibration_nvt_file_retrieval.yaml
+  - fw_065_equilibration_npt_file_retrieval.yaml
+  - fw_072_equilibration_dpd_file_retrieval.yaml
+  - fw_320_production_file_retrieval.yaml
 
-  fw_050_production.yaml:
-  - fw_060_recover_failed.yaml
+  fw_055_equilibration_nvt_file_retrieval.yaml:
+  - fw_060_equilibration_nvt.yaml
 
-  fw_060_recover_failed.yaml:
-  - fw_080_filter_netcdf.yaml
+  fw_065_equilibration_npt_file_retrieval.yaml:
+  - fw_070_equilibration_npt.yaml
+
+  fw_072_equilibration_dpd_file_retrieval.yaml:
+  - fw_075_equilibration_dpd.yaml
+
+  fw_030_minimization.yaml:
+  - fw_060_equilibration_nvt.yaml
+  - fw_080_extract_property.yaml
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
+
+  fw_060_equilibration_nvt.yaml:
+  - fw_070_equilibration_npt.yaml
+  - fw_090_extract_property.yaml
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
+
+  fw_070_equilibration_npt.yaml:
+  - fw_075_equilibration_dpd.yaml
   - fw_100_extract_property.yaml
-  - fw_200_results_to_filepad.yaml
-  - fw_250_results_to_storage.yaml
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
 
-  fw_080_filter_netcdf.yaml:
-  - fw_100_extract_property.yaml
-  - fw_200_results_to_filepad.yaml
-  - fw_250_results_to_storage.yaml
+  fw_075_equilibration_dpd.yaml:
+  - fw_110_extract_property.yaml
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml
+
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
+
+  fw_090_extract_property.yaml:
+  - fw_190_equilibration_nvt_results_to_filepad.yaml
+  - fw_240_equilibration_nvt_results_to_storage.yaml
 
   fw_100_extract_property.yaml:
-  - fw_200_results_to_filepad.yaml
-  - fw_250_results_to_storage.yaml
+  - fw_200_equilibration_npt_results_to_filepad.yaml
+  - fw_250_equilibration_npt_results_to_storage.yaml
+
+  fw_110_extract_property.yaml:
+  - fw_210_equilibration_dpd_results_to_filepad.yaml
+  - fw_260_equilibration_dpd_results_to_storage.yaml
+
+  fw_320_production_file_retrieval.yaml:
+  - fw_050_production.yaml
+
+  fw_350_production.yaml:
+  - fw_360_recover_failed.yaml
+
+  fw_360_recover_failed.yaml:
+  - fw_380_filter_netcdf.yaml
+  - fw_400_extract_property.yaml
+  - fw_500_results_to_filepad.yaml
+  - fw_550_results_to_storage.yaml
+
+  fw_380_filter_netcdf.yaml:
+  - fw_400_extract_property.yaml
+  - fw_500_results_to_filepad.yaml
+  - fw_550_results_to_storage.yaml
+
+  fw_400_extract_property.yaml:
+  - fw_500_results_to_filepad.yaml
+  - fw_550_results_to_storage.yaml

@@ -1,6 +1,6 @@
-{% extends "fw_base.yaml" %}
+{% extends "fw_base_equilibration.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS NVT equilibration
+name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS NPT equilibration
 spec:
   _category: {{ worker|default("nemo_queue_offline",true) }}
   _queueadapter:
@@ -8,7 +8,7 @@ spec:
   _files_in:
     data_file:                  datafile.lammps
     input_header:               lmp_header.input
-    input_equilibration_nvt:    lmp_equilibration_nvt.input
+    input_equilibration_npt:    lmp_equilibration_npt.input
     coeff_file:                 coeff.input
     ndx_file:                   groups.ndx
   _files_out:
@@ -21,26 +21,32 @@ spec:
   - _fw_name: CmdTask
     cmd: lmp
     opt:
-    - -in lmp_equilibration_nvt.input
+    - -in lmp_equilibration_npt.input
+    - -v barostat_damping         {{ barostat_damping|default(1000.0,true)|float }}
+    - -v box_shift_z              {{ box_shift_z|default(0.0)|float }}
     - -v coeffInfile              coeff.input
     - -v compute_group_properties {{ compute_group_properties|default(1,false)|int }}
     - -v dataFile                 datafile.lammps
-    - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
-    - -v has_indenter             0
+    - -v dilate_solution_only     1
+    - -v has_indenter             1
     - -v langevin_damping         {{ langevin_damping|default(100,false) }}
     - -v mpiio                    {{ mpiio|default(1,false)|int }}
     - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-    - -v productionSteps          {{ nvt_equilibration_steps|default(10000,true)|int }}
-    - -v initialT                 {{ initialT|default(298.0,false)|float }}
-    - -v temperatureT             {{ temperature|default(298.0,false)|float }}
-    - -v reinitialize_velocities  {{ reinitialize_velocities|default(1,false)|int}}
+    - -v productionSteps          {{ npt_equilibration_steps|default(10000,true)|int }}
+    - -v pressureP                {{ pressure|default(1.0,true)|float }}
+    - -v pressurize_z_only        1
+    - -v pressurize_solution_only 0
     - -v random_seed              {{ random_seed|default(29061988,true)|int }}
+    - -v reinitialize_velocities  0
     - -v read_groups_from_file    0
-    - -v surfactant_name          {{ surfactant }}
+    - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
+    - -v restrained_indenter      1
+    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v temperatureT             {{ temperature|default(298.0,true)|float }}
     - -v temper_solid_only        0
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
     - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
-    - -v use_barostat             0
+    - -v use_barostat             1
     - -v use_berendsen_bstat      0
     - -v use_dpd_tstat            0
     - -v use_eam                  {{ use_eam|default(1,false)|int }}
@@ -61,6 +67,6 @@ spec:
   - filename: log.lammps
     nlines: 25
   metadata:
-    state: equilibration nvt
+    state: equilibration npt
     {{ render_metadata()|indent(4) }}
 {% endblock %}

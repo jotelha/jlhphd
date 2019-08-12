@@ -1,4 +1,4 @@
-{% extends "fw_base.yaml" %}
+{% extends "fw_base_production.yaml" %}
 {% block body %}
 name: {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS run
 spec:

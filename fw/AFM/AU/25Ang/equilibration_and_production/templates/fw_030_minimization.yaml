@@ -1,4 +1,4 @@
-{% extends "fw_base.yaml" %}
+{% extends "fw_base_equilibration.yaml" %}
 {% block body %}
 name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS minimization
 spec:
@@ -24,7 +24,7 @@ spec:
     - -v dataFile                 datafile.lammps
     - -v freeze_substrate         1    # hold entire substrate fixed
     - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # only for group definition for subsequent steps
-    - -v has_indenter             0
+    - -v has_indenter             1
     - -v minimization_ftol        {{ minimization_ftol|default('1.0e-5',true) }}
     - -v minimization_maxiter     {{ minimization_maxiter|default(10000,true)|int }}
     - -v minimization_maxeval     {{ minimization_maxeval|default(100000,true)|int }}
