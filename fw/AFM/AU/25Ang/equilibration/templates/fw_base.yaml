@@ -64,7 +64,8 @@
 
 {# random filter draws from sequence, thus construct sequence from time #}
 {%- if random_seed is undefined -%}
-{%- set random_seed = range("now"|datetime('%Y%m%d%H%M%S')|int)|random -%}
+{# LAMMPS doc: The initial seed for this random number generator must be a positive integer less than or equal to 900 million #}
+{%- set random_seed = range(1,900000000)|random -%}
 {%- endif -%}
 
 {# depending on machine, different queue settings are necessary #}

@@ -49,13 +49,13 @@ spec:
     ignore_erros:                 false
     # a firework to be appended as restart if initial LAMMPS run fails
     restart_fw:
-      name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS restarted production run
+      name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS restarted DPD equilibration
       spec:
         _category: {{ queue_worker|default("juwels_queue",true) }}
         _queueadapter:
           {{ render_queueadapter()|safe|indent(10) }}
         _files_in:
-    data_file:                  datafile.lammps
+          restart_file:               default.mpiio.restart
           input_header:               lmp_header.input
           input_production:           lmp_production.input
           coeff_file:                 coeff.input
