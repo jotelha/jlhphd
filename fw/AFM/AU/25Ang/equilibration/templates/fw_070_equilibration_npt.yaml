@@ -25,6 +25,7 @@ spec:
     - -v barostat_damping         {{ barostat_damping|default(1000.0,true)|float }}
     - -v box_shift_z              {{ box_shift_z|default(0.0)|float }}
     - -v coeffInfile              coeff.input
+    - -v coeffOutfile             coeff.input.transient
     - -v compute_group_properties {{ compute_group_properties|default(1,false)|int }}
     - -v dataFile                 datafile.lammps
     - -v dilate_solution_only     1
@@ -41,7 +42,8 @@ spec:
     - -v read_groups_from_file    0
     - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
     - -v restrained_indenter      1
-    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v restart_frequency        {{ restart_frequency|default(100,true)|int }}
+    - -v surfactant_name          {{ surfactant }}
     - -v temperatureT             {{ temperature|default(298.0,true)|float }}
     - -v temper_solid_only        0
     - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
@@ -51,6 +53,9 @@ spec:
     - -v use_dpd_tstat            0
     - -v use_eam                  {{ use_eam|default(1,false)|int }}
     - -v use_ewald                {{ use_ewald|default(1,false)|int }}
+    - -v write_coeff              1
+    - -v write_coeff_to_datafile  0
+    - -v write_groups_to_file     1
     - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
     - -v ewald_accuracy           {{ ewald_accuracy|default('1.0e-4',true) }}
     - -v neigh_delay              {{ neigh_delay|default(2,false)|int }}

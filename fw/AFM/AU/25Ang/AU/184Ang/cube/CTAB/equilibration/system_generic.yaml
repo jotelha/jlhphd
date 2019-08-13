@@ -18,7 +18,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   {%- if mode is in ['EXPRESS TRIAL'] %}
   queue:                  devel
   ntasks:                 192
-  walltime:               '00:15:00'
+  walltime:               '00:03:00'
   {%- else %}
   queue:                  batch
   ntasks:                 768
@@ -33,7 +33,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   nodes:                  8
   ppn:                    20
   {%- if mode is in ['EXPRESS TRIAL'] %}
-  walltime:               '00:15:00'
+  walltime:               '00:03:00'
   queue:                  express
   {%- else %}
   walltime:               '24:00:00'
@@ -64,6 +64,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   mpiio:                                        1
   {%- if mode is in ['EXPRESS TRIAL'] %}
   netcdf_frequency:                             10
+  restart_frequency:                            10
   thermo_frequency:                             10
   thermo_average_frequency:                     10
 
@@ -75,8 +76,11 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      100
   npt_equilibration_steps:                      100
   dpd_equilibration_steps:                      100
+
+  max_restarts:                                 3
   {%- else %}
   netcdf_frequency:                             1000
+  restart_frequency:                            1000
   thermo_frequency:                             1000
   thermo_average_frequency:                     1000
 
@@ -88,6 +92,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   nvt_equilibration_steps:                      10000  #  20 ps
   npt_equilibration_steps:                      250000 #   0.5 ns
   dpd_equilibration_steps:                      250000 #   0.5 ns
+
+  max_restarts:                                 10
   {% endif %}
 
   langevin_damping:                             1000.0
@@ -292,34 +298,25 @@ dependencies:
   - fw_230_minimization_results_to_storage.yaml
 
   fw_060_equilibration_nvt.yaml:
+  - fw_062_equilibration_nvt_recover_failed.yaml
+
+  fw_062_equilibration_nvt_recover_failed.yaml:
   - fw_070_equilibration_npt.yaml
-  - fw_090_extract_property.yaml
   - fw_190_equilibration_nvt_results_to_filepad.yaml
   - fw_240_equilibration_nvt_results_to_storage.yaml
 
   fw_070_equilibration_npt.yaml:
+  - fw_071_equilibration_npt_recover_failed.yaml
+
+  fw_071_equilibration_npt_recover_failed.yaml:
   - fw_075_equilibration_dpd.yaml
-  - fw_100_extract_property.yaml
   - fw_200_equilibration_npt_results_to_filepad.yaml
   - fw_250_equilibration_npt_results_to_storage.yaml
 
   fw_075_equilibration_dpd.yaml:
+  - fw_077_equilibration_dpd_recover_failed.yaml
+
+  fw_077_equilibration_dpd_recover_failed.yaml:
   - fw_110_extract_property.yaml
-  - fw_210_equilibration_dpd_results_to_filepad.yaml
-  - fw_260_equilibration_dpd_results_to_storage.yaml
-
-  fw_080_extract_property.yaml:
-  - fw_180_minimization_results_to_filepad.yaml
-  - fw_230_minimization_results_to_storage.yaml
-
-  fw_090_extract_property.yaml:
-  - fw_190_equilibration_nvt_results_to_filepad.yaml
-  - fw_240_equilibration_nvt_results_to_storage.yaml
-
-  fw_100_extract_property.yaml:
-  - fw_200_equilibration_npt_results_to_filepad.yaml
-  - fw_250_equilibration_npt_results_to_storage.yaml
-
-  fw_110_extract_property.yaml:
   - fw_210_equilibration_dpd_results_to_filepad.yaml
   - fw_260_equilibration_dpd_results_to_storage.yaml

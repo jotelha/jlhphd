@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS run
+name: {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS DPD equilibration
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _allow_fizzled_parents: True
@@ -35,7 +35,7 @@ spec:
   _tasks:
   - _fw_name: RecoverLammpsTask
     recover:                      True # filter most recent restart file and forward
-    repeated_recover_fw_name:      {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS run, repeatedly
+    repeated_recover_fw_name:      {{ machine|default("NEMO",true) }}, {{ title }}, recover failed LAMMPS DPD equilibration, repeatedly
     restart_file_glob_patterns:   "*.restart[0-9]"
     # recover input files, trajectory, log and thermo_ave
     other_glob_patterns:
@@ -55,7 +55,7 @@ spec:
         _queueadapter:
           {{ render_queueadapter()|safe|indent(10) }}
         _files_in:
-          restart_file:               default.mpiio.restart
+    data_file:                  datafile.lammps
           input_header:               lmp_header.input
           input_production:           lmp_production.input
           coeff_file:                 coeff.input
@@ -71,40 +71,34 @@ spec:
           cmd: lmp
           opt:
           - -in lmp_production.input
+          - -v barostat_damping         {{ barostat_damping|default(1000.0,true)|float }}
           - -v coeffInfile              coeff.input
           - -v coeffOutfile             coeff.input.transient
-          - -v compute_group_properties {{ compute_group_properties|default(0,false)|int }}
-          - -v compute_interactions     0
+          - -v compute_group_properties {{ compute_group_properties|default(1,false)|int }}
           - -v dilate_solution_only     1
-          - -v freeze_substrate         0
-          - -v freeze_substrate_layer   {{ frozen_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
           - -v has_indenter             1
-          - -v rigid_indenter_core_radius {{ rigid_indenter_core_radius|default(12.0,true)|float }} # freeze core of 12.0 Angstrom radius within indenter
-          - -v constant_indenter_velocity {{ constant_indenter_velocity }}
           - -v mpiio                    {{ mpiio|default(1,false)|int }}
           - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
-          - -v productionSteps          {{ production_steps|default(10000,true)|int }}
-          - -v pressureP                {{ pressure|default(0.0,true)|float }}
+          - -v productionSteps          {{ dpd_equilibration_steps|default(100000,true)|int }}
+          - -v pressureP                {{ pressure|default(1.0,true)|float }}
           - -v pressurize_z_only        1
           - -v pressurize_solution_only 0
           - -v random_seed              {{ random_seed|default(29061988,true)|int }}
           - -v reinitialize_velocities  0
           - -v read_groups_from_file    0
-          - -v rigid_indenter           0
-          - -v restrained_indenter      0
+          - -v restrained_indenter      1
+          - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
           - -v restart_frequency        {{ restart_frequency|default(100,true)|int }}
-          - -v store_forces             1
-          - -v surfactant_name          {{ surfactant|default("SDS",true) }}
-          - -v temperatureT             {{ temperature|default(298.0,false)|float }}
-          - -v temper_solid_only        {{ temper_solid_only|default(1,false)|int }}
-          - -v temper_substrate_only    {{ temper_substrate_only|default(0,false)|int }}
+          - -v surfactant_name          {{ surfactant }}
+          - -v temperatureT             {{ temperature|default(298.0)|float }}
+          - -v temper_solid_only        1
           - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
           - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
           - -v use_barostat             {{ use_barostat|default(0,false)|int }}
           - -v use_berendsen_bstat      0
-          - -v use_dpd_tstat            {{ use_dpd_tstat|default(1,false)|int }}
-          - -v use_eam                  1
-          - -v use_ewald                1
+          - -v use_dpd_tstat            1
+          - -v use_eam                  {{ use_eam|default(1,false)|int }}
+          - -v use_ewald                {{ use_ewald|default(1,false)|int }}
           - -v write_coeff              1
           - -v write_coeff_to_datafile  0
           - -v write_groups_to_file     1
@@ -126,7 +120,7 @@ spec:
         - filename: log.lammps
           nlines: 25
         metadata:
-          state: restarted production
+          state: restarted dpd equilibration
           {{ render_metadata()|indent(10)}}
 
     detour_fw:
@@ -223,6 +217,6 @@ spec:
           {{ render_metadata()|indent(10)}}
 
   metadata:
-    state: recover failed run
+    state: recover failed dpd equilibration
     {{ render_metadata()|indent(4)}}
 {% endblock %}

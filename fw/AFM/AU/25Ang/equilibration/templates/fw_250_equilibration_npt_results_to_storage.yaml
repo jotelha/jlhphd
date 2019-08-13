@@ -4,12 +4,12 @@ name: {{machine}}, sync '{{identifier}}' results to RZ storage
 spec:
   _category: "{{ worker|default("nemo_noqueue",true) }}"
   _files_in:
-    ave_file:              thermo_ave.out
-    log_file:              log.lammps
-    data_file:             datafile.lammps
-    thermo_out:            thermo.out
-    traj_file:             default.nc
-    ndx_file:              groups.ndx
+    data_file:          default.lammps
+    log_file:           log.lammps
+    ndx_file:           groups.ndx
+    joint_traj_file:    default.nc
+    joint_thermo_file:  thermo.out
+    joint_ave_file:     thermo_ave.out
   {{ render_smb_forward()|indent(2) }}
   _tasks:
   {% autoescape false %}{{ render_wait_for_port()|indent(2) }}{% endautoescape %}
