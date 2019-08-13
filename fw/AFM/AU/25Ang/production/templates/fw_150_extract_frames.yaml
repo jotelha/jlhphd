@@ -1,0 +1,83 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+{# automatically determine indices of frames to extract #}
+{%- if first_frame_to_extract is undefined -%}
+{%- set first_frame_to_extract = 0 -%}
+{%- endif -%}
+{%- if last_frame_to_extract is undefined -%}
+{%- set last_frame_to_extract = production_steps|int -%}
+{%- endif -%}
+{%- if n_frames_to_extract is undefined -%}
+{%- set n_frames_to_extract = 5 -%}
+{%- endif -%}
+{%- if every_nth_frame_to_extract is undefined -%}
+{%- set every_nth_frame_to_extract = ( (last_frame_to_extract - first_frame_to_extract)/n_frames_to_extract )|round(1, 'floor')|int -%}
+{%- endif -%}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, frame extraction
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    data_file:        default.lammps
+    joint_traj_file:  default.nc
+  _files_out:
+    indenter_forces:       indenter_z_forces.txt
+    nonindenter_forces:    nonindenter_z_forces.txt
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: netcdf2data.py
+    opt:
+    - --verbose
+    - --frames {{ first_frame_to_extract|int }}-{{ last_frame_to_extract|int }}-{{ every_nth_frame_to_extract|int }}
+    - default.lammps
+    - default.nc
+    stderr_file:   std.err
+    stdout_file:   std.out
+    store_stdout:  true
+    store_stderr:  true
+    fizzle_bad_rc: true
+    use_shell:     true
+
+  # create list of all output files
+  - _fw_name: PyTask
+    func: glob.glob
+    args: ["frame*.lammps"]
+    #inputs:   ["frame*.lammps"]
+    outputs: [ frame_file_list ]
+
+  - _fw_name: ForeachTask
+    split: frame_file_list
+    task:
+      _fw_name: CommandLineTask
+      command_spec: {
+        command: [echo,-n,"Test for "]
+        frame_file_list: { source: frame_file_list }
+        test_echo: { source: { type: stdout }, target: test_echo_list
+      inputs: [ frame_file_list ]
+      outputs: [ test_echo_list ]
+
+  # - _fw_name: CommandLineTask
+  #   command_spec:
+  #     command: [ls,-m,'frame*.lammps']
+  #     frame_file_list: {
+  #       source: { type: stdout }
+  #       target: frame_file_list_str
+  #   outputs: [ frame_file_list_str ]
+
+  # - _fw_name: ForeachTask
+  #   split: frame_file_list
+  #   task:
+  #     _fw_name: CmdTask
+  #     cmd: merge.py
+  #     opt:
+  #     - frame_bla.lammps
+  #     - default.lammps
+  #     - restored.lammps
+  #     stderr_file: std.err
+  #     stdout_file: std.out
+  #     use_shell: true
+  #     fizzle_bad_rc: true
+
+  metadata:
+    state: extract indenter forces
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
