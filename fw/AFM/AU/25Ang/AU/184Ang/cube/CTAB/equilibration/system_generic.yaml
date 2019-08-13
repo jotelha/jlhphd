@@ -14,7 +14,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   # JUWELS
 {%- if machine is in ['JUWELS'] %}
   {%- set queue_worker = "juwels_queue" %}
+  queue_worker:           juwels_queue
   worker:                 juwels_noqueue
+  postp_worker:           juwels_noqueue
   {%- if mode is in ['EXPRESS TRIAL'] %}
   queue:                  devel
   ntasks:                 192
@@ -29,7 +31,9 @@ std: # standard settings to be applied to all fireworks, if not ...
   account:                hfr13
 {%- elif machine is in ['NEMO'] %}
   {%- set queue_worker = "nemo_queue_offline" %}
+  queue_worker:           nemo_queue_offline
   worker:                 nemo_noqueue
+  postp_worker:           nemo_noqueue
   nodes:                  8
   ppn:                    20
   {%- if mode is in ['EXPRESS TRIAL'] %}
@@ -297,6 +301,10 @@ dependencies:
   - fw_180_minimization_results_to_filepad.yaml
   - fw_230_minimization_results_to_storage.yaml
 
+  fw_080_extract_property.yaml:
+  - fw_180_minimization_results_to_filepad.yaml
+  - fw_230_minimization_results_to_storage.yaml
+
   fw_060_equilibration_nvt.yaml:
   - fw_062_equilibration_nvt_recover_failed.yaml
 
@@ -317,6 +325,5 @@ dependencies:
   - fw_077_equilibration_dpd_recover_failed.yaml
 
   fw_077_equilibration_dpd_recover_failed.yaml:
-  - fw_110_extract_property.yaml
   - fw_210_equilibration_dpd_results_to_filepad.yaml
   - fw_260_equilibration_dpd_results_to_storage.yaml

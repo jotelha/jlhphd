@@ -30,7 +30,7 @@ spec:
     # recovered from failed lammps run
     restart_file:      default.mpiio.restart
     input_header:      lmp_header.input
-    input_equilibration_npt:  input_equilibration_npt.input
+    input_equilibration_npt:  lmp_equilibration_npt.input
     coeff_file:        coeff.input
   _tasks:
   - _fw_name: RecoverLammpsTask
@@ -49,7 +49,7 @@ spec:
     ignore_erros:                 false
     # a firework to be appended as restart if initial LAMMPS run fails
     restart_fw:
-      name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS restarted production run
+      name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS restarted NPT equilibration
       spec:
         _category: {{ queue_worker|default("juwels_queue",true) }}
         _queueadapter:
