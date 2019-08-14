@@ -1,0 +1,40 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: "{{ machine|default("NEMO",true) }}, {{ title }}, AFM force-distance curve initial configuration data files retrieval"
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_out:
+    data_file: default.lammps
+    ndx_file:  groups.ndx
+
+  _tasks:
+
+  - _fw_name: GetFilesByQueryTask
+    sort_key:       workflow_creation_date
+    sort_direction: 1 #ascending, i.e. oldest files first, newest written last
+
+    query:
+      metadata->mode: "PRODUCTION"
+      metadata->type: "AFM"
+      metadata->step: "equilibration_dpd"
+
+      metadata->counterion:       {{ counterion }}
+      metadata->surfactant:       {{ surfactant }}
+      metadata->sf_nmolecules:    {{ sf_nmolecules }}
+      metadata->sf_preassembly:   {{ sf_preassembly }}
+      metadata->solvent:          {{ solvent }}
+      metadata->substrate:        {{ substrate }}
+      metadata->sb_crystal_plane: {{ sb_crystal_plane }}
+      metadata->sb_base_length:   {{ sb_base_length }}
+      metadata->sb_shape:         {{ sb_shape }}
+      metadata->sb_in_dist:       {{ sb_in_dist }}
+      metadata->sb_in_dist_unit:  {{ sb_in_dist_unit }}
+
+      metadata->indenter->substrate:           {{ indenter.substrate }}
+      metadata->indenter->initial_radius:      {{ indenter.initial_radius }}
+      metadata->indenter->initial_radius_unit: {{ indenter.initial_radius_unit }}
+
+  metadata:
+    state: "production initial configuration data files"
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

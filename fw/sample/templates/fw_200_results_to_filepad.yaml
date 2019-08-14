@@ -1,0 +1,24 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{title}}, results to file pad
+spec:
+  _category: "{{ worker|default("nemo_noqueue",true) }}"
+  _files_in:
+    data_file:          default.lammps
+    log_file:           log.lammps
+    thermo_file:        thermo.out
+  _tasks:
+
+  - _fw_name: AddFilesTask
+    paths:
+    - default.lammps
+    - log.lammps
+    - thermo.out
+    metadata:
+      type: final_config
+      {{ render_metadata()|indent(6)}}
+
+  metadata:
+    step: results to filepad
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

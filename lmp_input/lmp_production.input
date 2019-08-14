@@ -225,6 +225,8 @@ if "${store_forces} > 0" then &
 # or everything (except frozen atoms):
 if "${is_restart} == 0 && ${temper_solid_only} > 0" then &
   "group tempered_group subtract solid frozen" &
+elif "${is_restart} == 0 && ${temper_substrate_only} > 0" &
+  "group tempered_group subtract substrate frozen" &
 elif "${is_restart} == 0" &
   "group tempered_group subtract all frozen"
 
@@ -306,6 +308,19 @@ else &
 # As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
 # time integration. Fix press/berendsen does NOT, so it should be used with one
 # of the constant NVE fixes or with one of the NVT fixes.
+
+# In some cases (e.g. for solids) the pressure (volume) and/or temperature of
+# the system can oscillate undesirably when a Nose/Hoover barostat and
+# thermostat is applied. The optional drag keyword will damp these oscillations,
+# although it alters the Nose/Hoover equations. A value of 0.0 (no drag) leaves
+# the Nose/Hoover formalism unchanged. A non-zero value adds a drag term; the
+# larger the value specified, the greater the damping effect. Performing a short
+# run and monitoring the pressure and temperature is the best way to determine
+# if the drag term is working. Typically a value between 0.2 to 2.0 is
+# sufficient to damp oscillations after a few periods. Note that use of the drag
+# keyword will interfere with energy conservation and will also change the
+# distribution of positions and velocities so that they do not correspond to the
+# nominal NVT, NPT, or NPH ensembles.
 
 ################################################################################
 ### INDENTER AND SUBSTRATE RESTRAINT
@@ -419,6 +434,11 @@ if "${store_forces} > 0" then &
   "fix storeForcesAve all ave/atom 1 ${netcdf_frequency} &
     ${netcdf_frequency} fx fy fz"
 
+# average per atom stress
+if "${compute_group_properties} > 0" then &
+  "fix peratom_stress_ave all ave/atom &
+    1 ${netcdf_frequency} ${netcdf_frequency} c_peratom_stress[*]"
+
 
 dump            dumpPng nonsolvent image ${png_frequency} &
                 ${baseName}.*.png type type
@@ -430,8 +450,35 @@ dump            dumpPng nonsolvent image ${png_frequency} &
 #  fully_constrained[3] ante_shake[3] ante_stats[3] unconstrained[3]
 # col 18 - 26: interval-averaged forces
 #  fully_constrained[3] ante_shake[3] ante_stats[3] unconstrained[3]
+#
+# output cases
+#
+# index | mpiio     | f_forces  | c_group
+# 1     | yes       | yes       | yes
+# 2     | yes       | yes       | no
+# 3     | yes       | no        | yes
+# 4     | yes       | no        | no
+# 5     | no        | yes       | yes
+# 6     | no        | yes       | no
+# 7     | no        | no        | yes
+# 8     | no        | no        | no        covers case 4 as well
 
-if "${mpiio} > 0 && ${store_forces} > 0" then &
+if "${compute_group_properties} > 0 && ${mpiio} > 0 && ${store_forces} > 0" then &
+  "print 'netcdf/mpiio output, store constrained and unconstrained forces as well as per atom stresses'" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${baseName}.nc id mol type mass x y z vx vy vz fx fy fz &
+     f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+     f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+     f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+     f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+     f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+     f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+     f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+     f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
+elif "${mpiio} > 0 && ${store_forces} > 0" &
   "print 'netcdf/mpiio output, store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
     ${baseName}.nc id mol type mass x y z vx vy vz fx fy fz &
@@ -444,6 +491,30 @@ if "${mpiio} > 0 && ${store_forces} > 0" then &
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
      f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
+elif "${compute_group_properties} > 0 && ${mpiio} > 0" &
+  "print 'netcdf/mpiio output, store per atom stresses'" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${baseName}.nc id mol type mass x y z vx vy vz &
+    c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+elif "${mpiio} > 0" &
+  "print 'netcdf/mpiio output'" &
+  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${baseName}.nc id mol type mass x y z vx vy vz" &
+elif "${compute_group_properties} > 0 && ${store_forces} > 0" &
+  "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces as well as per atom stresses'" &
+  "dump dumpNetCDF all netcdf ${netcdf_frequency} &
+    ${baseName}.nc id mol type mass x y z vx vy vz fx fy fz &
+     f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+     f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+     f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+     f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+     f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+     f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+     f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+     f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+     f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+     c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
 elif "${store_forces} > 0" &
   "print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
@@ -457,17 +528,25 @@ elif "${store_forces} > 0" &
      f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
      f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
      f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]" &
-elif "${mpiio} > 0" &
-  "print 'netcdf/mpiio output'" &
-  "dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
-    ${baseName}.nc id mol type mass x y z vx vy vz" &
+elif "${compute_group_properties} > 0" &
+  "print 'netcdf output (no netcdf/mpiiio), store per atom stresses'" &
+  "dump dumpNetCDF all netcdf ${netcdf_frequency} &
+    ${baseName}.nc id mol type mass x y z vx vy vz &
+     c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3] &
+     f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]" &
 else &
   "print 'netcdf output (no netcdf/mpiiio)'" &
   "dump dumpNetCDF all netcdf ${netcdf_frequency} &
     ${baseName}.nc id mol type mass x y z vx vy vz"
 # interestingly, wildcard * operator does not work for dump netcdf
 
-dump_modify dumpNetCDF thermo yes flush yes
+# if variables in custom thermo style (i.e. v_total_press), then
+# dump_modify thermo yes caused NetCDF module to throw segmentation fault
+if "${thermo_to_netcdf} > 0" then &
+  "dump_modify dumpNetCDF thermo yes flush yes" &
+else &
+  "dump_modify dumpNetCDF flush yes"
+
 # The flush keyword determines whether a flush operation is invoked after a dump
 # snapshot is written to the dump file. A flush insures the output in that file
 # is current (no buffering by the OS), even if LAMMPS halts before the

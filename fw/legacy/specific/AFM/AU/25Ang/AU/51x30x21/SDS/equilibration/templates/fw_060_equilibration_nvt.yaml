@@ -1,0 +1,65 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, LAMMPS NVT equilibration
+spec:
+  _category: {{ worker|default("nemo_queue_offline",true) }}
+  _queueadapter:
+    {{ render_queueadapter()|safe|indent(4) }}
+  _files_in:
+    data_file:                  datafile.lammps
+    input_header:               lmp_header.input
+    input_equilibration_nvt:    lmp_equilibration_nvt.input
+    coeff_file:                 coeff.input
+    ndx_file:                   groups.ndx
+  _files_out:
+    ave_file:  thermo_ave.out
+    data_file: default.lammps
+    traj_file: default.nc
+    log_file:  log.lammps
+    ndx_file:  groups.ndx
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: lmp
+    opt:
+    - -in lmp_equilibration_nvt.input
+    - -v coeffInfile              coeff.input
+    - -v dataFile                 datafile.lammps
+    - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
+    - -v has_indenter             1
+    - -v langevin_damping         {{ langevin_damping|default(100,false) }}
+    - -v mpiio                    {{ mpiio|default(1,false)|int }}
+    - -v netcdf_frequency         {{ netcdf_frequency|default(1000,true)|int }}
+    - -v productionSteps          {{ nvt_equilibration_steps|default(100000,true)|int }}
+    - -v initialT                 {{ initialT|default(298.0,false)|float }}
+    - -v temperatureT             {{ temperature|default(298.0,false)|float }}
+    - -v reinitialize_velocities  {{ reinitialize_velocities|default(1,false)|int}}
+    - -v read_groups_from_file    0
+    - -v restrained_indenter      1
+    - -v surfactant_name          {{ surfactant|default("SDS") }}
+    - -v temper_solid_only        0
+    - -v thermo_frequency         {{ thermo_frequency|default(1000,true)|int }}
+    - -v thermo_average_frequency {{ thermo_average_frequency|default(1000,true)|int }}
+    - -v use_barostat             0
+    - -v use_berendsen_bstat      0
+    - -v use_dpd_tstat            0
+    - -v use_eam                  {{ use_eam|default(1,false)|int }}
+    - -v use_ewald                {{ use_ewald|default(1,false)|int }}
+    - -v coulomb_cutoff           {{ coulomb_cutoff|default(8.0,true)|float }}
+    - -v ewald_accuracy           {{ ewald_accuracy|default('1.0e-4',true) }}
+    - -v neigh_delay              {{ neigh_delay|default(2,false)|int }}
+    - -v neigh_every              {{ neigh_every|default(1,false)|int }}
+    - -v neigh_check              {{ neigh_check|default(1,false) }}
+    - -v skin_distance            {{ skin_distance|default(3.0,true)|float }}
+    stderr_file:    std.err
+    stdout_file:    std.out
+    store_stdout:   true
+    store_stderr:   true
+    use_shell:      true
+    fizzle_bad_rc:  true
+  _trackers:
+  - filename: log.lammps
+    nlines: 25
+  metadata:
+    state: equilibration nvt
+    {{ render_metadata()|indent(4) }}
+{% endblock %}

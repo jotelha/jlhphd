@@ -1,0 +1,21 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ title }}, postprocessing
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    log_file:     log.lammps
+  _files_out:
+    thermo_file:  thermo.out
+  _tasks:
+  - _fw_name: CmdTask
+    cmd: extract_thermo.sh # extracts thermo output from lammps log
+    opt:
+    - log.lammps # input file
+    - thermo.out # output file
+    fizzle_bad_rc: true
+    use_shell:     true
+  metadata:
+    step: postprocessing
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

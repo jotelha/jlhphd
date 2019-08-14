@@ -8,74 +8,82 @@
 
 # index varibles can be overridden by command line parameters "-v varName value"
 
-# suggested overrides for
+# suggested overrides
+#
+# * general
+# -v barostat_damping         10000.0
+# -v coeffInfile              coeff.input
+# -v compute_interactions     0
+# -v dataFile                 datafile.lammps
+# -v langevin_damping         1000.0
+# -v mpiio                    1
+# -v netcdf_frequency         1000
+# -v store_forces             0
+# -v surfactant_name          SDS
+# -v thermo_frequency         1000
+# -v thermo_average_frequency 1000
+# -v use_eam                  1
+# -v use_ewald                1
+# -v write_coeff_to_datafile  0
+# -v write_groups_to_file     1
+# -v coulomb_cutoff           8.0
+# -v ewald_accuracy           1.0e-4
+# -v neigh_delay              2
+# -v neigh_every              1
+# -v neigh_check              1
+# -v skin_distance            3.0
 #
 # * minimization
-# - -v freeze_substrate         1    # hold entire substrate fixed
-# - -v has_indenter             1
-# - -v minimization_ftol        1.0e-5
-# - -v minimization_maxiter     10000
-# - -v minimization_maxeval     100000
-# - -v relax_box                0
-# - -v robust_minimization      0
-# - -v surfactant_name          SDS
-# - -v thermo_frequency         100
-# - -v use_eam                  1
-# - -v use_ewald                1
+# -v freeze_substrate         1 # hold entire substrate fixed
+# -v has_indenter             1
+# -v minimization_ftol        1.0e-6
+# -v minimization_maxiter     10000
+# -v minimization_maxeval     100000
+# -v relax_box                0
+# -v robust_minimization      0
+# -v surfactant_name          SDS
+# -v thermo_frequency         100
 #
 # * NVT equilibration, Langevin
-# - -v restrain_substrate_layer 14.0
-# - -v has_indenter             1
-# - -v netcdf_frequency         1000
-# - -v productionSteps          100000
-# - -v temperatureT             298
-# - -v reinitialize_velocities  1
-# - -v restrained_indenter      1
-# - -v surfactant_name          SDS
-# - -v temper_solid_only        0  
-# - -v thermo_frequency         1000
-# - -v use_barostat             0
-# - -v use_berendsen_bstat      0
-# - -v use_dpd_tstat            0
-# - -v use_eam                  1
-# - -v use_ewald                1
+# -v has_indenter             1
+# -v productionSteps          10000
+# -v reinitialize_velocities  1
+# -v restrained_indenter      1
+# -v restrain_substrate_layer 14.0
+# -v temperatureT             298
+# -v temper_solid_only        0
+# -v use_barostat             0
+# -v use_berendsen_bstat      0
+# -v use_dpd_tstat            0
 
 # * NPT equilibration
-# - -v restrain_substrate_layer 14.0
-# - -v has_indenter             1
-# - -v netcdf_frequency         1000
-# - -v productionSteps          100000
-# - -v temperatureT             298
-# - -v pressureP                1
-# - -v pressurize_solution_only 0
-# - -v dilate_solution_only     1
-# - -v pressurize_z_only        1
-# - -v reinitialize_velocities  0
-# - -v restrained_indenter      1
-# - -v surfactant_name          SDS
-# - -v temper_solid_only        0  
-# - -v thermo_frequency         1000
-# - -v use_barostat             1
-# - -v use_berendsen_bstat      0
-# - -v use_dpd_tstat            0
-# - -v use_eam                  1
-# - -v use_ewald                1
+# -v dilate_solution_only     1
+# -v has_indenter             1
+# -v productionSteps          500000
+# -v pressureP                1
+# -v pressurize_solution_only 0
+# -v pressurize_z_only        1
+# -v reinitialize_velocities  0
+# -v restrained_indenter      1
+# -v restrain_substrate_layer 14.0
+# -v temperatureT             298
+# -v temper_solid_only        0
+# -v use_barostat             1
+# -v use_berendsen_bstat      0
+# -v use_dpd_tstat            0
 #
 # * DPD equilibration
-# - -v freeze_substrate_layer   14.0
-# - -v has_indenter             1
-# - -v netcdf_frequency         1000
-# - -v productionSteps          100000
-# - -v temperatureT             298
-# - -v reinitialize_velocities  0
-# - -v surfactant_name          SDS
-# - -v temper_solid_only        1
-# - -v thermo_frequency         1000
-# - -v use_barostat             0
-# - -v use_berendsen_bstat      0
-# - -v use_dpd_tstat            1
-# - -v use_eam                  1
-# - -v use_ewald                1
+# -v has_indenter             1
+# -v productionSteps          500000
+# -v reinitialize_velocities  0
+# -v restrained_indenter      1
+# -v restrain_substrate_layer 14.0
+# -v temperatureT             298
+# -v temper_solid_only        1
+# -v thermo_frequency         1000
+# -v use_barostat             0
+# -v use_berendsen_bstat      0
+# -v use_dpd_tstat            1
 
 # input settings
 variable baseName                index  "default"
@@ -90,6 +98,7 @@ variable read_groups_from_file   index  0 #
 # output settings
 variable coeffOutfile            index  coeff.input.transient # file to store ff parameters
 variable compute_interactions    index  0 # group-goup interactions to thermo_out
+variable compute_group_properties index 0 # compute and output distinct temperatures and pressures for components of the system
 variable mpiio                   index  1 # parallel io on or off
 variable netcdf_frequency        index  1000
 variable png_frequency           index  100000
@@ -97,6 +106,7 @@ variable restart_frequency       index  100000
 variable store_forces            index  1 # store constrained AND unconstrained forces in NetcDF
 variable thermo_frequency        index  1000 # outputs stats at single time step
 variable thermo_average_frequency index ${thermo_frequency} # outputs stats averaged over N timesteps. 0: disabled
+variable thermo_to_netcdf        index  0 # if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style
 variable write_coeff             index  1 # write force field parameters to independent file
 variable write_coeff_to_datafile index  0 # write force filed parameters to system datafile
 variable write_groups_to_file    index  1 #
@@ -125,71 +135,111 @@ variable exclude_frozen_interactions index 0 # do not compute interactions betwe
 # force field settings
 
 ## CHARMM-related:
-variable inner_cutoff            index  8.0 # CHARMM standard
-variable outer_cutoff            index  12.0 # CHARMM standard
-variable coulomb_cutoff          index  12.0 # Coulomb cutoff
-variable rigid_h_bonds           index  1.0 # apply SHAPE or RATTLE to H bonds and TIP3P water angle
+variable inner_cutoff            index  8.0     # CHARMM standard
+variable outer_cutoff            index  12.0    # CHARMM standard
+variable coulomb_cutoff          index  12.0    # Coulomb cutoff
+variable rigid_h_bonds           index  1.0     # apply SHAPE or RATTLE to H
+                                                # bonds and TIP3P water angle
 ## EAM-related:
-variable use_eam                 index  0 # use pairstyle eam for solid
+variable use_eam                 index  0       # use pairstyle eam for solid
 variable eam_alloy_file          index  Au-Grochola-JCP05-units-real.eam.alloy
 ## Ewald summation settings:
-variable use_ewald               index  1 # switch ewald summation (kspace solver)
+variable use_ewald               index  1 # switch ewald sum (kspace solver)
 variable ewald_accuracy          index  1e-4 # relative RMS
 
 # thermostat-related
-variable temper_solid_only       index  1 # if 0, everything (except frozen atoms) is tempered 
+variable temper_solid_only       index  1       # if 0, everything (except
+                                                # frozen atoms) is tempered
+variable temper_substrate_only   index  0       # if 1, only substrate is
+                                                # tempered (for Langevin only,
+                                                # DPD always tempers all solid)
 ## Langevin thermostat related:
-variable langevin_damping        index  100 # fs, damping parameter for Langevin thermostat
-# 100 fs seem harsh, but usually used for equilibration purposes
+variable langevin_damping        index  100     # fs, damping parameter for
+                                                # Langevin thermostat
+                                                # 100 fs seem harsh, but
+                                                # usually used for equilibration
+                                                # purposes only
 
 ## DPD thermostat related:
-variable dpd_cutoff              index  5.5 # Ang, matches EAM cutoff by Au-Grochola-JCP05
-variable dpd_damping_parameter   index  461.21 # kcal fs mol^-1 Ang^-2, converted from metal units 0.02 eV ps Ang^-2 (conversion factor 23.06*1000)
-variable use_dpd_tstat           index  0 # temperizes all solid atoms with dpd thermostat (instead of Langevin)
+variable dpd_cutoff              index  5.5     # Ang, matches EAM cutoff by
+                                                # Au-Grochola-JCP05
+variable dpd_damping_parameter   index  461.21  # kcal fs mol^-1 Ang^-2,
+                                                # converted from metal units
+                                                # 0.02 eV ps Ang^-2 (conversion
+                                                # factor 23.06*1000)
+variable use_dpd_tstat           index  0       # temperizes all solid atoms
+                                                # with dpd thermostat (instead
+                                                # of Langevin)
 
 # barostat-related
-variable dilate_solution_only    index  1 # if 1, only solution (i.e. non solid, non-frozen) atoms are rescaled with a change of volume
-variable pressurize_z_only       index  0 # if 1, barostats are applied in z direction only
-variable pressurize_solution_only index 0 # if 0, pressurizes all non-frozen atoms, otherwise only liquid
-variable use_barostat            index  1 # if 0, run NVT instead of NPT or NVE instead of NPH
-variable use_berendsen_bstat     index  0 # use Berenden instead of Parinell-Rahman barostat (i.e. for NPT equilibration)
-variable barostat_damping        index  1000 # fs, damping parameter for Parrinello-Rahman barostat
-
+variable dilate_solution_only    index  1       # if 1, only solution (i.e.
+                                                # non-solid, non-frozen) atoms
+                                                # are rescaled with a change of
+                                                # volume
+variable pressurize_z_only       index  0       # if 1, barostats are applied in
+                                                # z direction only
+variable pressurize_solution_only index 0       # if 0, pressurizes all
+                                                # non-frozen atoms, otherwise
+                                                # only liquid
+variable use_barostat            index  1       # if 0, run NVT instead of NPT
+                                                # or NVE instead of NPH
+variable use_berendsen_bstat     index  0       # use Berenden instead of
+                                                # Parrinelol-Rahman barostat
+                                                # (i.e. for NPT equilibration)
+variable barostat_damping        index  1000    # fs, damping parameter for
+                                                # Parrinello-Rahman barostat
 # other technical settings:
-variable add_vacuum              index  0 # if > 0, adds vacuum of specified thickness in z-direction
-variable box_shift_z             index  0.0 # shift box once in negative direction by this distance
-variable freeze_substrate_layer  index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
-variable restrain_substrate_layer index  0.0 # if > 0, a substrate layer of the specified thickness is frozen at the bottom box boundary
-variable is_restart              index  0 # marks current run as restart
-variable has_vacuum              index  0 # if > 0, z-direction not pressurized
-variable pbc2d                   index  0 # 0: 3d periodic, 1: 2d periodic
+variable add_vacuum              index  0       # if > 0, adds vacuum of
+                                                # specified thickness in
+                                                # z-direction
+variable box_shift_z             index  0.0     # shift box once in negative
+                                                # direction by this distance
+variable freeze_substrate_layer  index  0.0     # if > 0, a substrate layer of
+                                                # the specified thickness is
+                                                # frozen at the bottom box
+                                                # boundary
+variable restrain_substrate_layer index  0.0    # if > 0, a substrate layer of
+                                                # the specified thickness is
+                                                # frozen at the bottom box
+                                                # boundary
+variable is_restart              index  0       # marks current run as restart
+variable has_vacuum              index  0       # if > 0, z-direction not
+                                                # pressurized
+variable pbc2d                   index  0       # 0: 3d periodic, 1: 2d periodic
 variable random_seed             index  29061988 # global random seed
 variable reinitialize_velocities index  0
-variable remove_drift            index  0 # remove substrate COM movement
-variable shrink_wrap_once        index  0 # shrinks simulation box around system once after reading data
-variable substrate_recenter      index  0 # same as remove drift
-variable timestep                index  2 # fs
+variable remove_drift            index  0       # remove substrate COM movement
+variable shrink_wrap_once        index  0       # shrinks simulation box around
+                                                # system once after reading data
+variable substrate_recenter      index  0       # same as remove drift
+variable timestep                index  2       # fs
 variable use_colvars             index  0
 
 # system settings
-variable surfactant_name         index  SDS # SDS or CTAB
-variable temperatureT            index  298    # K
-variable initialT                index  ${temperatureT}  # for ramped temperature
-variable pressureP               index  1    # atm
+variable surfactant_name         index  SDS     # SDS or CTAB
+variable temperatureT            index  298     # K
+variable initialT                index  ${temperatureT}  # for ramped temp.
+variable pressureP               index  1       # atm
 
-variable nvtEqSteps              index  100000    # 200 ps
-variable nptEqSteps              index  100000    # 200 ps
-variable productionSteps         index  5000000    #  10 ns
+variable nvtEqSteps              index  100000  # 200 ps
+variable nptEqSteps              index  100000  # 200 ps
+variable productionSteps         index  5000000 #  10 ns
 
 # AFM-tip-related settings:
 variable has_indenter               index 0
 variable rigid_indenter             index 0     # treat whole indenter as rigid
-variable rigid_indenter_core_radius index 0.0   # treat indenter core around COM of this radius as rigid
-variable restrained_indenter        index 0     # do not treat indenter as rigid, but remove total linear and angular momentum
+variable rigid_indenter_core_radius index 0.0   # treat indenter core around COM
+                                                # of this radius as rigid
+variable restrained_indenter        index 0     # do not treat indenter as rigid
+                                                # but remove total linear and
+                                                # angular momentum
 variable constant_indenter_velocity index 0.0   # for approach towards substrate
-variable indenter_nve_noforce       index 0.0   # use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid
-variable manual_indenter_region     index 0     # if set to 1, use measures below
-variable indenter_substrate_dist    index 30.0  # Ang, default distance substrate surface - indenter apex
+variable indenter_nve_noforce       index 0     # use 'fix nve/noforce' instead
+                                                # of 'fix setforce' to treat
+                                                # indenter as rigid
+variable manual_indenter_region     index 0     # if set to 1 use measures below
+variable indenter_substrate_dist    index 30.0  # Ang, default distance
+                                                # subst. surf. - indenter apex
 variable substrate_thickness        index 14.0  # Ang
 variable indenter_height            index 45.0  # Ang
 variable region_tolerance           index 5.0   # Ang
@@ -228,8 +278,8 @@ if "${is_restart} == 0" then "units real"
     #energy = Kcal/mole
     #velocity = Angstroms/femtosecond
     #force = Kcal/mole-Angstrom, compared to gmx: kJ mol^-1 nm^-1,
-        # conversion F_lmp = F_gmx * 0.1 [nm/Ang] / 4.184 [kJ/kcal] ~ gmx / 41.81
-        # 1000 kJ / (mol*nm) ~ 25 kCal/(mol*Ang)
+      # conversion F_lmp = F_gmx * 0.1 [nm/Ang] / 4.184 [kJ/kcal] ~ gmx / 41.81
+      # 1000 kJ / (mol*nm) ~ 25 kCal/(mol*Ang)
     #torque = Kcal/mole
     #temperature = Kelvin
     #pressure = atmospheres, 1 atm = 1013 hPa ~ 100 kPa
@@ -549,7 +599,7 @@ if "${use_eam} > 0" then &
 # assignment will be overwritten.
 #
 # A subset of atom types is assigned to the many-body potential with a single
-# pair_coeff command, using “* *” to include all types and the NULL keywords
+# pair_coeff command, using "* *" to include all types and the NULL keywords
 # described above to exclude specific types not assigned to that potential. If
 # types 1,3,4 were assigned in that way (but not type 2), this means that all
 # many-body interactions between all atoms of types 1,3,4 will be computed by
@@ -789,10 +839,17 @@ if "${is_restart} == 0 && ${freeze_substrate_layer} > 0.0" then &
   "group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region" &
   "group frozen_substrate_layer intersect substrate atoms_in_frozen_substrate_layer_region" &
   "group frozen union frozen frozen_substrate_layer"
-# create substrate layer group to hold frozen at bottom if desired:
+# create substrate layer group to hold restrained at bottom if desired:
 if "${is_restart} == 0 && ${restrain_substrate_layer} > 0.0" then &
   "group atoms_in_restrained_substrate_layer_region region restrained_substrate_layer_region" &
   "group restrained_substrate_layer intersect substrate atoms_in_restrained_substrate_layer_region" &
+
+# create groups of substrate and indenter without frozen parts for computes
+if "${is_restart} == 0" then &
+    "group warm_substrate   subtract substrate      frozen" &
+    "group warm_indenter    subtract indenter       frozen" &
+    "group warm_nonindenter subtract nonindenter    frozen" &
+    "group warm_system      subtract all            frozen"
 
 # If the group ID already exists, the group command adds the specified atoms to the group.
 # for compatibility reasons:
@@ -833,6 +890,28 @@ elif "${write_groups_to_file} > 0" &
 ###############################################################################
 ### compute definitions
 
+# compute temperature based upon non-frozen components of system:
+compute system_temp warm_system temp
+# however, compute pressure for all atoms in whole volume based on this temp:
+compute system_press all pressure system_temp
+# compute the virial
+compute system_virial all pressure NULL virial
+# https://lammps.sandia.gov/doc/compute_pressure.html
+# The temperature and kinetic energy tensor is not calculated by this compute,
+# but rather by the temperature compute specified with the command. If the
+# kinetic energy is not included in the pressure, than the temperature compute
+# is not used and can be specified as NULL. Normally the temperature compute
+# used by compute pressure should calculate the temperature of all atoms for
+# consistency with the virial term, but any compute style that calculates
+# temperature can be used, e.g. one that excludes frozen atoms or other degrees
+# of freedom.
+
+# Note that if desired the specified temperature compute can be one that
+# subtracts off a bias to calculate a temperature using only the thermal
+# velocity of the atoms, e.g. by subtracting a background streaming velocity.
+# See the doc pages for individual compute commands to determine which ones
+# include a bias.
+
 # kspace no: AU atoms neutral
 if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
     "compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no" &
@@ -856,6 +935,122 @@ if "${compute_interactions} > 0" then &
 # surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction
 # surfactant_solvent_interaction surfactant_ion_interaction
 
+# in the follwoing, only "warm" (i.e. not frozen) parts are considered for
+# temperature and pressure computations. Two temperatures and pressures are
+# determined for the indenter, namely biased and unbiased, latter corrected
+# for some possibly prescribed indenter center of mass velocity:
+if "${compute_group_properties} > 0" then &
+    "compute indenter_temp_biased warm_indenter temp" &
+    "compute indenter_temp      warm_indenter   temp/com" &
+    "compute ion_temp           ion             temp" &
+    "compute solvent_temp       solvent         temp" &
+    "compute substrate_temp     warm_substrate  temp" &
+    "compute surfactant_temp    surfactant      temp" &
+    "compute peratom_stress     all stress/atom NULL" &
+    "compute peratom_indenter_stress warm_indenter &
+        stress/atom indenter_temp" &
+    "compute indenter_stress_biased warm_indenter reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute indenter_stress warm_indenter reduce &
+        sum c_peratom_indenter_stress[1] c_peratom_indenter_stress[2] &
+            c_peratom_indenter_stress[3]" &
+    "compute ion_stress ion reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute solvent_stress solvent reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute substrate_stress warm_substrate reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute surfactant_stress surfactant reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "compute total_stress all reduce &
+        sum c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]" &
+    "variable indenter_press_biased equal &
+        -(c_indenter_stress_biased[1]+c_indenter_stress_biased[2]+c_indenter_stress_biased[3])/(3*vol)" &
+    "variable indenter_press equal &
+        -(c_indenter_stress[1]+c_indenter_stress[2]+c_indenter_stress[3])/(3*vol)" &
+    "variable ion_press equal &
+        -(c_ion_stress[1]+c_ion_stress[2]+c_ion_stress[3])/(3*vol)" &
+    "variable solvent_press equal &
+        -(c_solvent_stress[1]+c_solvent_stress[2]+c_solvent_stress[3])/(3*vol)" &
+    "variable substrate_press equal &
+        -(c_substrate_stress[1]+c_substrate_stress[2]+c_substrate_stress[3])/(3*vol)" &
+    "variable surfactant_press equal &
+        -(c_surfactant_stress[1]+c_surfactant_stress[2]+c_surfactant_stress[3])/(3*vol)" &
+    "variable total_press equal &
+        -(c_total_stress[1]+c_total_stress[2]+c_total_stress[3])/(3*vol)"
+# ATTENTION: the "pressures" here are not normalized by group volume, but by
+#            total system volume!
+
+# https://lammps.sandia.gov/doc/compute_temp.html
+# A kinetic energy tensor, stored as a 6-element vector, is also calculated by
+# this compute for use in the computation of a pressure tensor. The formula for
+# the components of the tensor is the same as the above formula, except that v^2
+# is replaced by vx*vy for the xy component, etc. The 6 components of the vector
+# are ordered xx, yy, zz, xy, xz, yz.
+#
+# This compute subtracts out degrees-of-freedom due to fixes that constrain
+# molecular motion, such as fix shake and fix rigid. This means the temperature
+# of groups of atoms that include these constraints will be computed correctly.
+# If needed, the subtracted degrees-of-freedom can be altered using the extra
+# option of the compute_modify command.
+
+# https://lammps.sandia.gov/doc/compute_temp_com.html
+# Define a computation that calculates the temperature of a group of atoms,
+# after subtracting out the center-of-mass velocity of the group. This is useful
+# if the group is expected to have a non-zero net velocity for some reason. A
+# compute of this style can be used by any command that computes a temperature,
+# e.g. thermo_modify, fix temp/rescale, fix npt, etc.
+#
+# The removal of the center-of-mass velocity by this fix is essentially
+# computing the temperature after a "bias" has been removed from the velocity of
+# the atoms. If this compute is used with a fix command that performs
+# thermostatting then this bias will be subtracted from each atom,
+# thermostatting of the remaining thermal velocity will be performed, and the
+# bias will be added back in. Thermostatting fixes that work in this way include
+# fix nvt, fix temp/rescale, fix temp/berendsen, and fix langevin.
+
+# https://lammps.sandia.gov/doc/compute_stress_atom.html
+# The temp-ID argument can be used to affect the per-atom velocities used in the
+# kinetic energy contribution to the total stress. If the kinetic energy is not
+# included in the stress, than the temperature compute is not used and can be
+# specified as NULL. If the kinetic energy is included and you wish to use atom
+# velocities as-is, then temp-ID can also be specified as NULL. If desired, the
+# specified temperature compute can be one that subtracts off a bias to leave
+# each atom with only a thermal velocity to use in the formula above, e.g. by
+# subtracting a background streaming velocity. See the doc pages for individual
+# compute commands to determine which ones include a bias.
+#
+# Note that as defined in the formula, per-atom stress is the negative of the
+# per-atom pressure tensor. It is also really a stress*volume formulation,
+# meaning the computed quantity is in units of pressure*volume. It would need to
+# be divided by a per-atom volume to have units of stress (pressure), but an
+# individual atom's volume is not well defined or easy to compute in a deformed
+# solid or a liquid. See the compute voronoi/atom command for one possible way
+# to estimate a per-atom volume.
+#
+# Thus, if the diagonal components of the per-atom stress tensor are summed for
+# all atoms in the system and the sum is divided by dV, where d = dimension and
+# V is the volume of the system, the result should be -P, where P is the total
+# pressure of the system.
+#
+# The per-atom array values will be in pressure*volume units as discussed above.
+#
+# The per-atom stress does not include any Lennard-Jones tail corrections to the
+# pressure added by the pair_modify tail yes command, since those are
+# contributions to the global system pressure.
+
+# https://lammps.sandia.gov/doc/compute_reduce.html
+# Define a calculation that "reduces" one or more vector inputs into scalar
+# values, one per listed input.
+#
+# Each listed input is operated on independently. For per-atom inputs, the group
+# specified with this command means only atoms within the group contribute to
+# the result. For per-atom inputs, if the compute reduce/region command is used,
+# the atoms must also currently be within the region. Note that an input that
+# produces per-atom quantities may define its own group which affects the
+# quantities it returns. For example, if a compute is used as an input which
+# generates a per-atom vector, it will generate values of 0.0 for atoms that are
+# not in the group specified for that compute.
 # SDS - specific
 #       1      1.008  # HAL2
 #       2      1.008  # HAL3
@@ -892,7 +1087,7 @@ if "${compute_interactions} > 0" then &
 
 ###############################################################################
 ### group-based modifications, etc.
-
+#
 # exclude intra-frozen interactions for rigid indenter and substrate
 variable number_of_frozen_atoms equal count(frozen)
 if "${number_of_frozen_atoms} > 0 && ${exclude_frozen_interactions} > 0" then &
@@ -955,9 +1150,30 @@ if "${pbc2d} > 0" then &
 # long commands to be continued across two or more lines. See the discussion of
 # triple quotes in (6) for how to continue a command across multiple line
 # without using "&" characters.
-if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
+
+# output cases
+#
+# index | indenter  | c_inter   | c_group
+# 1     | yes       | yes       | yes
+# 2     | yes       | yes       | no
+# 3     | yes       | no        | yes
+# 4     | yes       | no        | no        same as no no no
+# 5     | no        | yes       | yes
+# 6     | no        | yes       | no
+# 7     | no        | no        | yes
+# 8     | no        | no        | no        covers case 4 as well
+
+if "${compute_group_properties} > 0 && ${compute_interactions} > 0 && ${has_indenter} > 0" then &
  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
+   pxx pyy pzz pxy pxz pyz &
+   c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
+   c_substrate_temp c_surfactant_temp &
+   v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
+   v_substrate_press v_surfactant_press v_total_press &
+   c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
+   c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
+   c_total_stress[*] &
    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -971,9 +1187,44 @@ if "${compute_interactions} > 0 && ${has_indenter} > 0" then &
    c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
    c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
    c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
-elif "${compute_interactions} > 0" &
-  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+elif "${compute_interactions} > 0 && ${has_indenter} > 0" &
+ "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
+   edihed eimp epair evdwl ecoul elong etail vol &
+   pxx pyy pzz pxy pxz pyz &
+   c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+   c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+   c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+   c_surfactant_surfactant_intermolecular_interaction &
+   c_surfactant_surfactant_intermolecular_interaction[*] &
+   c_surfactant_surfactant_intramolecular_interaction &
+   c_surfactant_surfactant_intramolecular_interaction[*] &
+   c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+   c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
+   c_indenter_substrate_interaction c_indenter_substrate_interaction[*] &
+   c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
+   c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
+   c_indenter_ion_interaction c_indenter_ion_interaction[*]" &
+elif "${compute_group_properties} > 0 && ${has_indenter} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_indenter_temp_biased c_indenter_temp c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_indenter_press_biased v_indenter_press v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press v_total_press &
+    c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
+    c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
+    c_total_stress[*]" &
+elif "${compute_group_properties} > 0 && ${compute_interactions} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press v_total_press &
+    c_ion_stress[*] c_solvent_stress[*] &
+    c_substrate_stress[*] c_surfactant_stress[*] c_total_stress[*] &
     c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
     c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
     c_substrate_ion_interaction c_substrate_ion_interaction[*] &
@@ -983,14 +1234,89 @@ elif "${compute_interactions} > 0" &
     c_surfactant_surfactant_intramolecular_interaction[*] &
     c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
+elif "${compute_interactions} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_substrate_solvent_interaction c_substrate_solvent_interaction[*] &
+    c_substrate_surfactant_interaction c_substrate_surfactant_interaction[*] &
+    c_substrate_ion_interaction c_substrate_ion_interaction[*] &
+    c_surfactant_surfactant_intermolecular_interaction &
+    c_surfactant_surfactant_intermolecular_interaction[*] &
+    c_surfactant_surfactant_intramolecular_interaction &
+    c_surfactant_surfactant_intramolecular_interaction[*] &
+    c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
+    c_surfactant_ion_interaction c_surfactant_ion_interaction[*]" &
+elif "${compute_group_properties} > 0" &
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz &
+    c_ion_temp c_solvent_temp &
+    c_substrate_temp c_surfactant_temp &
+    v_ion_press v_solvent_press &
+    v_substrate_press v_surfactant_press v_total_press &
+    c_ion_stress[*] c_solvent_stress[*] &
+    c_substrate_stress[*] c_surfactant_stress[*] c_total_stress[*]" &
 else &
-  "thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
-    edihed eimp epair evdwl ecoul elong etail vol"
+  "thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
+    edihed eimp epair evdwl ecoul elong etail vol &
+    pxx pyy pzz pxy pxz pyz"
 
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
-thermo_modify norm no flush yes
-# thermo_modify  norm no
+
+# https://lammps.sandia.gov/doc/thermo_style.html
+# Several of the thermodynamic quantities require a temperature to be computed:
+# "temp", "press", "ke", "etotal", "enthalpy", "pxx", etc. By default this is
+# done by using a temperature compute which is created when LAMMPS starts up, as
+# if this command had been issued:
+#
+#   compute thermo_temp all temp
+#
+# See the compute temp command for details. Note that the ID of this compute is
+# thermo_temp and the group is all. You can change the attributes of this
+# temperature (e.g. its degrees-of-freedom) via the compute_modify command.
+# Alternatively, you can directly assign a new compute (that calculates
+# temperature) which you have defined, to be used for calculating any
+# thermodynamic quantity that requires a temperature. This is done via the
+# thermo_modify command.
+#
+# Thus, we modify the the thermo output to only include "warm" components of
+# our system:
+#
+# https://lammps.sandia.gov/doc/thermo_modify.html
+# These options apply to the currently defined thermo style. When you specify a
+# thermo_style command, all thermodynamic settings are restored to their default
+# values, including those previously reset by a thermo_modify command. Thus if
+# your input script specifies a thermo_style command, you should use the
+# thermo_modify command after it.
+#
+# The temp keyword is used to determine how thermodynamic temperature is
+# calculated, which is used by all thermo quantities that require a temperature
+# ("temp", "press", "ke", "etotal", "enthalpy", "pxx", etc). The specified
+# compute ID must have been previously defined by the user via the compute
+# command and it must be a style of compute that calculates a temperature. As
+# described in the thermo_style command, thermo output uses a default compute
+# for temperature with ID = thermo_temp. This option allows the user to override
+# the default.
+#
+# The press keyword is used to determine how thermodynamic pressure is
+# calculated, which is used by all thermo quantities that require a pressure
+# ("press", "enthalpy", "pxx", etc). The specified compute ID must have been
+# previously defined by the user via the compute command and it must be a style
+# of compute that calculates a pressure. As described in the thermo_style
+# command, thermo output uses a default compute for pressure with ID =
+# thermo_press. This option allows the user to override the default.
+#
+# If both the temp and press keywords are used in a single thermo_modify command
+# (or in two separate commands), then the order in which the keywords are
+# specified is important. Note that a pressure compute defines its own
+# temperature compute as an argument when it is specified. The temp keyword will
+# override this (for the pressure compute being used by thermodynamics), but
+# only if the temp keyword comes after the press keyword. If the temp keyword
+# comes before the press keyword, then the new pressure compute specified by the
+# press keyword will be unaffected by the temp setting.
+thermo_modify temp system_temp press system_press norm no flush yes
 # Note that some computes calculate "intensive" global quantities like
 # temperature; others calculate "extensive" global quantities like kinetic
 # energy that are summed over all atoms in the compute group. Intensive

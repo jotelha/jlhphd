@@ -1,0 +1,25 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, EAM substrate only, thermo output extraction
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    log_file:  log.lammps
+  _files_out:
+    thermo_out: thermo.out
+  _tasks:
+
+  - _fw_name: CmdTask
+    cmd: extract_thermo.sh # extracts thermo output from lammps log
+    opt:
+    - log.lammps # input file
+    - thermo.out # output file
+    stderr_file:   extract_thermo.err
+    stdout_file:   extract_thermo.out
+    use_shell:     true
+    fizzle_bad_rc: true
+
+  metadata:
+    state: extract thermo
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

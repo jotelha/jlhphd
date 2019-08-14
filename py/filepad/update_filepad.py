@@ -18,7 +18,119 @@ template_prefix = "/mnt/dat/work/testuser/adsorption/N_surfactant_on_substrate_t
 
 print("Template prefix: {:s}".format(template_prefix))
 
-# LAMMPS:
+# LAMMPS force field parameters
+
+### SDS systems
+fp.delete_file(identifier='SDS/in/H2O/on/AU/masses.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_masses.input'),
+    identifier='SDS/in/H2O/on/AU/masses.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'atom masses for SDS in H2O on AU systems'})
+
+fp.delete_file(identifier='SDS/in/H2O/on/AU/coeff.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_coeff.input'),
+    identifier='SDS/in/H2O/on/AU/coeff.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for SDS in H2O on AU systems'})
+
+fp.delete_file(identifier='SDS/in/H2O/on/AU/coeff/nonbonded.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_coeff_nonbonded.input'),
+    identifier='SDS/in/H2O/on/AU/coeff/nonbonded.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for SDS in H2O on AU systems, nonbonded set'})
+
+fp.delete_file(identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh.input'),
+    identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for SDS in H2O on AU systems, hybrid style'})
+
+fp.delete_file(identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh/nonbonded.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh_nonbonded.input'),
+    identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh/nonbonded.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for SDS in H2O on AU systems, hybrid style, nonbonded set'})
+
+fp.delete_file(identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','SDS_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_long.input'),
+    identifier='SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for SDS in H2O on AU systems, hybrid style'})
+
+### CTAB systems
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/masses.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_masses.input'),
+    identifier='CTAB/in/H2O/on/AU/masses.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'atom masses for CTAB in H2O on AU systems'})
+
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/coeff.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_coeff.input'),
+    identifier='CTAB/in/H2O/on/AU/coeff.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for CTAB in H2O on AU systems'})
+
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/coeff/nonbonded.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_coeff_nonbonded.input'),
+    identifier='CTAB/in/H2O/on/AU/coeff/nonbonded.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for CTAB in H2O on AU systems, nonbonded set'})
+
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh.input'),
+    identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for CTAB in H2O on AU systems, hybrid style'})
+
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh/nonbonded.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh_nonbonded.input'),
+    identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/charmmfsh/nonbonded.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for CTAB in H2O on AU systems, hybrid style, nonbonded set'})
+
+fp.delete_file(identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input')
+fp.add_file(
+    os.path.join(template_prefix,'ff','CTAB_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_long.input'),
+    identifier='CTAB/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'force field parameters for CTAB in H2O on AU systems, hybrid style'})
+
+# LAMMPS input scripts:
 fp.delete_file(identifier='lmp_equilibration_npt.input')
 fp.add_file(
     os.path.join(template_prefix,'lmp_input','lmp_equilibration_npt.input'),
@@ -72,6 +184,17 @@ fp.add_file(
         'type':     'input',
         'language': 'LAMMPS',
         'usecase':  'production'})
+
+# LAMMPS, substrate preparation specific
+# lmp_fcc_AU_111.input
+fp.delete_file(identifier='lmp_fcc_AU_111.input')
+fp.add_file(
+    os.path.join(template_prefix,'lmp_input','prepare_substrate','lmp_fcc_AU_111.input'),
+    identifier='lmp_fcc_AU_111.input',
+    metadata={
+        'type':     'input',
+        'language': 'LAMMPS',
+        'usecase':  'create FCC AU 111 substrate'})
 
 # LAMMPS, substrate exchange specific
 # lmp_delete_subst.input
@@ -135,6 +258,12 @@ fp.add_file(
         'usecase':  'create png snapshot of data file for testing purposes'})
 
 
-
-
-
+# NCO:
+fp.delete_file(identifier='selectByAtomType.nco')
+fp.add_file(
+    os.path.join(template_prefix,'nco','selectByAtomType.nco'),
+    identifier='selectByAtomType.nco',
+    metadata={
+        'type':     'nco',
+        'language': 'NetCDF operators ncap2 arithemtic processor ',
+        'usecase':  'filter all frames of NetCDF by values of arbitrary variable in first frame'})
