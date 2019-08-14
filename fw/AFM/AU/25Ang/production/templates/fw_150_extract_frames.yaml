@@ -39,20 +39,19 @@ spec:
 
   # create list of all output files
   - _fw_name: PyTask
-    func: glob.glob
-    args: ["frame*.lammps"]
-    #inputs:   ["frame*.lammps"]
+    func:    glob.glob
+    args:    ["frame*.lammps"]
     outputs: [ frame_file_list ]
 
   - _fw_name: ForeachTask
     split: frame_file_list
     task:
       _fw_name: CommandLineTask
-      command_spec: {
-        command: [echo,-n,"Test for "]
+      command_spec:
+        command:         [ echo , -n , "Test for " ]
         frame_file_list: { source: frame_file_list }
-        test_echo: { source: { type: stdout }, target: test_echo_list
-      inputs: [ frame_file_list ]
+        test_echo_list:  { source: { type: stdout }, target: test_echo_list }
+      inputs:  [ frame_file_list ]
       outputs: [ test_echo_list ]
 
   # - _fw_name: CommandLineTask
