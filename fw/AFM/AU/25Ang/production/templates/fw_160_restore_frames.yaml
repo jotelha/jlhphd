@@ -39,7 +39,7 @@ spec:
           mod_spec={
             "_set":{
               "metadata->initial_sb_in_dist": sb_in_dist,
-              "metadata->sb_in_dist": round( float(sb_in_dist) - float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
+              "metadata->sb_in_dist": round( float(sb_in_dist) + float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
             }
           }
         )
@@ -78,18 +78,19 @@ spec:
           source : sorted_frame_file_dict_list
         reference_file_dict:
           source: { type: path, value: reference.lammps }
-        restored_frame_file_dict_list
+        restored_frame_file_dict_list:
           target: { type: path, value: restored.lammps }
 
         # put output both to file and in database
-        merge_stdout: { source: { type: stdout }, target: { type: data } }
-        merge_stderr: { source: { type: stderr }, target: { type: data } }
+        merge_stdout_file: { source: { type: stdout }, target: { type: path, value: merge.out } }
+        merge_stderr_file: { source: { type: stderr }, target: { type: path, value: merge.err } }
 
       inputs:  [ sorted_frame_file_dict_list, reference_file_dict ]
       outputs:
       - restored_frame_file_dict_list
-      - merge_stdout
-      - merge_stderr
+      - merge_stdout_file
+      - merge_stderr_file
+      # why do these outputs not work properly?
       env: python
 
     - _fw_name: PyTask
@@ -98,8 +99,7 @@ spec:
       - >-
         __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
           "restored.lammps",
-          identifier='/'.join((
-            "AFM",
+          identifier="AFM/{}/{}/{}{}/{}{}/{}/{}/{}{}/{}/{}/{}/{}/{}{}/{}{}/{}{}/{}/{}".format(
             indenter["substrate"],
             indenter["crystal_plane"],
             indenter["initial_radius"],
@@ -115,11 +115,13 @@ spec:
             sf_nmolecules,
             sf_preassembly,
             initial_sb_in_dist,
+            sb_in_dist_unit,
             constant_indenter_velocity,
             constant_indenter_velocity_unit,
-            step,
             sb_in_dist,
-            workflow_creation_date ))
+            sb_in_dist_unit,
+            workflow_creation_date,
+            step ),
           metadata=locals()
         )
       - {}
