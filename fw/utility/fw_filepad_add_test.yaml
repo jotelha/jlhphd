@@ -1,0 +1,19 @@
+# utilize PyTask instead of filepad task for dynamic metadata assignement
+name: filepad add file test
+spec:
+  _priority: 200
+  _category: nemo_noqueue
+  _tasks:
+  - _fw_name: CommandLineTask
+    command_spec:
+      command: [touch, empty_test_file.txt]
+
+  - _fw_name: PyTask
+    func: eval
+    args: [ '__import__("fireworks").utilities.filepad.FilePad.auto_load().add_file("empty_test_file.txt", identifier="empty_test_file.txt", metadata=locals())', {} ]
+    inputs: [ metadata]
+    outputs: [ object_id, file_identifier ]
+  
+  metadata:
+    type: filepad add file test
+    content: { type: txt }

@@ -5,7 +5,7 @@
 {%- set first_frame_to_extract = 0 -%}
 {%- endif -%}
 {%- if last_frame_to_extract is undefined -%}
-{%- set last_frame_to_extract = production_steps|int -%}
+{%- set last_frame_to_extract = (production_steps+1)|int -%}
 {%- endif -%}
 {%- if n_frames_to_extract is undefined -%}
 {%- set n_frames_to_extract = 5 -%}
@@ -16,10 +16,11 @@
 name: {{ machine|default("NEMO",true) }}, {{ title }}, frame extraction
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
+  _preserve_fworker: True
   _files_in:
     data_file:        default.lammps
     joint_traj_file:  default.nc
-    reference_file:   reference.lammps
+    #reference_file:   reference.lammps
 
   _files_out:
     reference_file:   default.lammps
@@ -34,9 +35,15 @@ spec:
   - _fw_name: CommandLineTask
     command_spec:
       command: [ netcdf2data.py, --verbose, --frames, {{ first_frame_to_extract|int }}-{{ last_frame_to_extract|int }}-{{ every_nth_frame_to_extract|int }}, default.lammps, default.nc ]
+
+      # put output both to file and in database
       netcdf2data_stdout: { source: { type: stdout }, target: { type: data } }
       netcdf2data_stderr: { source: { type: stderr }, target: { type: data } }
-    outputs: [ netcdf2data_stdout, netcdf2data_stderr ]
+
+    outputs:
+    - netcdf2data_stdout
+    - netcdf2data_stderr
+
     env: python
 
   # get current working directory
@@ -108,126 +115,6 @@ spec:
     args:    [ '[ { "type": "data", "value": k} for k in sorted(indexed_frame_file_dict.keys()) ]', {} ]
     inputs:  [ nested_indexed_frame_file_dict ]
     outputs: [ sorted_frame_index_dict_list ]
-
-  # split workflow tree into branches here
-  - _fw_name: ForeachTask
-    split: [ sorted_frame_index_dict_list, sorted_frame_file_dict_list ]
-    task:
-    # store frame index in metadata and push to specs in order to preserve
-    # processing order of frames for subsequent fireworks
-    - _fw_name: PyTask
-      func: eval
-      args:
-      - >-
-        __import__("fireworks").core.firework.FWAction(
-          mod_spec={
-            "_set":  {"metadata->frame_index": value },
-            "_push": {"processed_frame_index_list": value}
-          }
-        )
-      - {}
-      inputs: [ sorted_frame_index_dict_list ]
-
-      # compute position from metadata and update metadata
-    - _fw_name: PyTask
-      func: eval
-      args:
-      - >-
-        __import__("fireworks").core.firework.FWAction(
-          mod_spec={
-            "_set":{
-              "metadata->initial_sb_in_dist": sb_in_dist,
-              "metadata->sb_in_dist": round( float(sb_in_dist) - float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
-            }
-          }
-        )
-      - {}
-      inputs: [ metadata ]
-
-
-      # push metadata to subsequent fireworks
-      - _fw_name: PyTask
-        func: eval
-        args:
-        - >-
-          __import__("fireworks").core.firework.FWAction(
-            mod_spec={
-              "_push": {"processed_metadata_list": locals() }
-            }
-          )
-        - {}
-        inputs: [ metadata ]
-
-      # merge.py called with
-      # positional arguments:
-      # datafile.lammps       LAMMPS data file to process. (default: 377_SDS_on_AU_1
-      #                       11_51x30x2_monolayer_with_counterion_100Ang_stepped.la
-      #                       mmps)
-      # reffile.lammps        Reference data file containing complete system
-      #                       information. (default: 377_SDS_on_AU_111_51x30x2_monol
-      #                       ayer_with_counterion_psfgen.data)
-      # outfile.lammps        Merged output data file. (default: 377_SDS_on_AU_111_5
-      #                       1x30x2_monolayer_with_counterion_100Ang_stepped_parame
-      #                       trized.lammps)
-    - _fw_name: CommandLineTask
-      command_spec:
-        command:         [ merge.py ]
-        sorted_frame_file_dict_list:
-          source : sorted_frame_file_dict_list
-        reference_file_dict:
-          source: { type: path, value: reference.lammps }
-        restored_frame_file_dict_list:
-          target: { type: path, value: restored.lammps }
-
-        # put output both to file and in database
-        merge_stdout_file: { source: { type: stdout }, target: { type: path, value: merge.out } }
-        merge_stdout: { source: { type: stdout }, target: { type: data } }
-        merge_stderr_file: { source: { type: stderr }, target: { type: path, value: merge.err } }
-        merge_stderr: { source: { type: stderr }, target: { type: data } }
-
-      inputs:  [ sorted_frame_file_dict_list, reference_file_dict ]
-      outputs:
-      - restored_frame_file_dict_list
-      - merge_stdout_file
-      - merge_stderr_file
-      - merge_stdout
-      - merge_stderr
-
-    # - _fw_name: PyTask
-    func: eval
-    args:
-    - >-
-      __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
-        "restored.lammps",
-        identifier='/'.join((
-          "AFM",
-          indenter["substrate"],
-          indenter["crystal_plane"],
-          indenter["initial_radius"],
-          indenter["initial_radius_unit"],
-          indenter["quenching_time_span"],
-          indenter["quenching_time_span_unit"],
-          substrate,
-          sb_crystal_plane,
-          sb_base_length,
-          sb_base_length_unit,
-          sb_shape,
-          surfactant,
-          sf_nmolecules,
-          sf_preassembly,
-          initial_sb_in_dist,
-          constant_indenter_velocity,
-          constant_indenter_velocity_unit,
-          step,
-          sb_in_dist,
-          workflow_creation_date ))
-        metadata=locals()
-      )
-    - {}
-    inputs: [ metadata]
-    outputs: [ object_id, file_identifier ]
-
-    - _fw_name: PyTask
 
   metadata:
     state: extract frames

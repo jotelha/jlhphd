@@ -1,0 +1,83 @@
+name: Foreach command line task trial
+fws:
+- fw_id: -10
+  name: create files
+  spec:
+    _category: nemo_noqueue
+    _preserve_fworker: True
+
+    local_glob_pattern: 'frame_*.lammps'
+    _tasks:
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ touch, frame_01.lammps, frame_02.lammps, frame_03.lammps ]
+ 
+    # get current working directory
+    - _fw_name: PyTask
+      func:    os.getcwd
+      outputs: [ cwd ]
+   
+    # get os path seperator
+    - _fw_name: PyTask
+      func:    os.path.join
+      inputs:  [ cwd, local_glob_pattern ]
+      outputs: [ absolute_glob_pattern ]
+
+    # create list of all output files [ frame_0.lammps ... frame_n.lammps ]
+    - _fw_name: PyTask
+      func:    glob.glob
+      inputs:  [  absolute_glob_pattern ]
+      outputs: [ "frame_file_list" ]
+
+    # nest list of all output files  into {"frame_file_list": [ frame_0.lammps ... frame_n.lammps ] }   
+    - _fw_name: JoinDictTask
+      inputs: [ frame_file_list ]
+      output: nested_frame_file_list
+
+    # create list of nested dicts of all output files 
+    # [ { source: { type: data, value: frame_0.lammps } } ... { source: { type: data, value: frame_n.lammps } } ]
+    # ugly utilization of eval: eval(expression,globals,locals) has empty globals {} 
+    # and the content of "nested_frame_file_list", i.e. {"frame_file_list": [ frame_0.lammps ... frame_n.lammps ] }
+    # handed as 2nd and 3rd positional argument. Knowledge about the internal PyTask function call is necessary here.
+    - _fw_name: PyTask
+      func:    eval
+      args:    [ '[ { "source": {"type":"data","value":f} } for f in frame_file_list ]', {} ]
+      inputs:  [ nested_frame_file_list ]
+      outputs: [ frame_file_dict_list ]
+
+    - _fw_name: ForeachTask
+      split: frame_file_dict_list
+      task:
+        _fw_name: CommandLineTask
+        command_spec:
+          command:         [ ls, -lha ]
+          frame_file_dict_list: frame_file_dict_list
+          meta_file_list:  
+            source: { type: stdout }
+            target: { type: path, value: file_attributes.txt }
+        inputs:  [ frame_file_dict_list ]
+        outputs: [ meta_file_list ]
+
+- fw_id: -20
+  name: process files
+  spec:
+    _category: nemo_noqueue
+    _preserve_fworker: True
+    _tasks:
+    - _fw_name: ForeachTask
+      split: meta_file_list
+      task:
+        _fw_name: CommandLineTask
+        command_spec:
+          command:         [ cat ]
+          meta_file_list: meta_file_list
+          meta_file_content_list:  
+            source: { type: stdout }
+            target: { type: data }
+        inputs:  [ meta_file_list  ]
+        outputs: [ meta_file_content_list ]
+                    
+links:
+  '-10':
+  - -20
+metadata: {}

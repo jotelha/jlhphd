@@ -1,0 +1,33 @@
+# Use PyTask to directly specify FWAction updating subsequent FireWork's metadata
+name: FWAction test workflow
+metadata: {}
+fws:
+- fw_id: -10
+  name: FWAction mod spec pusher
+  spec:
+    _priority: 200
+    _category: nemo_noqueue
+    test_entry: { value: 2 }
+    _tasks:
+    - _fw_name: PyTask
+      func: eval
+      args: [ '__import__("fireworks").core.firework.FWAction(mod_spec={"_set":{"metadata->frame_index": value }} )', {} ]
+      inputs: [ test_entry ]
+
+
+
+- fw_id: -20
+  name: FWAction mod spec puller
+  spec:
+    _priority: 200
+    _category: nemo_noqueue
+    _tasks:
+    - _fw_name: PyTask
+      func: eval
+      args: [ 'frame_index', {} ]
+      inputs: [ metadata ]
+      outputs: [ extracted_frame_index ]
+
+links:
+  '-10':
+  - -20

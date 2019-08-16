@@ -1,0 +1,132 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, frame extraction
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    reference_file:   reference.lammps
+
+  _files_out:
+    frame_file:       restored.lammps
+
+  # netcdf2data.py writes file named frame_0.lammps ... frame_n.lammps
+  _tasks:
+  # split workflow tree into branches here
+  - _fw_name: ForeachTask
+    split: [ sorted_frame_index_dict_list, sorted_frame_file_dict_list ]
+    task:
+    # store frame index in metadata and push to specs in order to preserve
+    # processing order of frames for subsequent fireworks
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").core.firework.FWAction(
+          mod_spec={
+            "_set":  {"metadata->frame_index": value },
+            "_push": {"processed_frame_index_list": value}
+          }
+        )
+      - {}
+      inputs: [ sorted_frame_index_dict_list ]
+
+      # compute position from metadata and update metadata
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").core.firework.FWAction(
+          mod_spec={
+            "_set":{
+              "metadata->initial_sb_in_dist": sb_in_dist,
+              "metadata->sb_in_dist": round( float(sb_in_dist) - float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
+            }
+          }
+        )
+      - {}
+      inputs: [ metadata ]
+
+
+    # push metadata to subsequent fireworks
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").core.firework.FWAction(
+          mod_spec={
+            "_push": {"processed_metadata_list": locals() }
+          }
+        )
+      - {}
+      inputs: [ metadata ]
+
+      # merge.py called with
+      # positional arguments:
+      # datafile.lammps       LAMMPS data file to process. (default: 377_SDS_on_AU_1
+      #                       11_51x30x2_monolayer_with_counterion_100Ang_stepped.la
+      #                       mmps)
+      # reffile.lammps        Reference data file containing complete system
+      #                       information. (default: 377_SDS_on_AU_111_51x30x2_monol
+      #                       ayer_with_counterion_psfgen.data)
+      # outfile.lammps        Merged output data file. (default: 377_SDS_on_AU_111_5
+      #                       1x30x2_monolayer_with_counterion_100Ang_stepped_parame
+      #                       trized.lammps)
+    - _fw_name: CommandLineTask
+      command_spec:
+        command:         [ merge.py ]
+        sorted_frame_file_dict_list:
+          source : sorted_frame_file_dict_list
+        reference_file_dict:
+          source: { type: path, value: reference.lammps }
+        restored_frame_file_dict_list
+          target: { type: path, value: restored.lammps }
+
+        # put output both to file and in database
+        merge_stdout: { source: { type: stdout }, target: { type: data } }
+        merge_stderr: { source: { type: stderr }, target: { type: data } }
+
+      inputs:  [ sorted_frame_file_dict_list, reference_file_dict ]
+      outputs:
+      - restored_frame_file_dict_list
+      - merge_stdout
+      - merge_stderr
+      env: python
+
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
+          "restored.lammps",
+          identifier='/'.join((
+            "AFM",
+            indenter["substrate"],
+            indenter["crystal_plane"],
+            indenter["initial_radius"],
+            indenter["initial_radius_unit"],
+            indenter["quenching_time_span"],
+            indenter["quenching_time_span_unit"],
+            substrate,
+            sb_crystal_plane,
+            sb_base_length,
+            sb_base_length_unit,
+            sb_shape,
+            surfactant,
+            sf_nmolecules,
+            sf_preassembly,
+            initial_sb_in_dist,
+            constant_indenter_velocity,
+            constant_indenter_velocity_unit,
+            step,
+            sb_in_dist,
+            workflow_creation_date ))
+          metadata=locals()
+        )
+      - {}
+      inputs: [ metadata]
+      outputs: [ object_id, file_identifier ]
+
+  metadata:
+    state: extract frames
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
