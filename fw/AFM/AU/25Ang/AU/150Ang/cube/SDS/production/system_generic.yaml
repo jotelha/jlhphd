@@ -168,6 +168,8 @@ std: # standard settings to be applied to all fireworks, if not ...
   sv_preassembly:                               random
   temperature:                                  298 # K
   temperature_unit:                             K
+  time_step:                                    2
+  time_step_unit:                               fs
 
   indenter:
     equilibration_time_span:      50
