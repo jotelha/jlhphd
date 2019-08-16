@@ -221,6 +221,8 @@ sv_density_unit:                              {{ sv_density_unit }}
 sv_preassembly:                               {{ sv_preassembly }}
 temperature:                                  {{ temperature }}
 temperature_unit:                             {{ temperature_unit }}
+time_step:                                    {{ time_step }}
+time_step_unit:                               {{ time_step_unit }}
 
 indenter:
   equilibration_time_span:      {{ indenter.equilibration_time_span }}

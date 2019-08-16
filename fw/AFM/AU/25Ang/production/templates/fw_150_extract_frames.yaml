@@ -56,7 +56,7 @@ spec:
     inputs:  [  absolute_glob_pattern ]
     outputs: [ unsorted_frame_file_list ]
 
-  # nest list of all output files  into {"frame_file_list": [ frame_0.lammps ... frame_n.lammps ] }
+  # nest list of all output files into {"frame_file_list": [ frame_n.lammps ... frame_m.lammps ] }
   - _fw_name: JoinDictTask
     inputs: [ unsorted_frame_file_list ]
     output: nested_unsorted_frame_file_list
@@ -65,36 +65,99 @@ spec:
   # and the content of "nested_frame_file_list", i.e. {"frame_file_list": [ frame_0.lammps ... frame_n.lammps ] }
   # handed as 2nd and 3rd positional argument. Knowledge about the internal PyTask function call is necessary here.
 
-  # create list of unsorted frame indices, extracted from file names [ n ... m ]
+  # create list of unsorted frame indices, extracted from file names, [ n ... m ]
   - _fw_name: PyTask
     func:    eval
     args:    [ '[ int(f[ f.rfind("_")+1:f.rfind(".") ]) for f in unsorted_frame_file_list ]', {} ]
     inputs:  [ nested_unsorted_frame_file_list ]
     outputs: [ unsorted_frame_index_list ]
 
-  # nest list of frame indices into {"unsorted_frame_index_list": [ n ... m ] }
+  # sort list of  frame indices, [ 1 ... n ]
+  - _fw_name: PyTask
+    func:    sorted
+    inputs:  [ unsorted_frame_file_list ]
+    outputs: [ sorted_frame_index_list ]
+
+  # nest list of frame indices and list of file into
+  # { "unsorted_frame_index_list": [ n ... m ],
+  #   "unsorted_frame_file_list": [ frame_n.lammps ... frame_m.lammps ] }
   - _fw_name: JoinDictTask
     inputs: [ unsorted_frame_index_list, unsorted_frame_file_list ]
-    output: nested_unsorted_frame_file_list
+    output: joint_unsorted_frame_index_file_list
 
-  # { '1': { type: data, value: frame_1.lammps, frame: 1 } } ... { source: { type: data, value: frame_n.lammps, frame: n } } ]
+  # create nested indexed representation of
+  # { 'indexed_frame_file_dict' : { '1': { type: data, value: frame_1.lammps }, ..., 'n': { type: data, value: frame_n.lammps, frame: n } } }
   - _fw_name: PyTask
     func:    eval
-    args:    [ '{ "indexed_frame_file_dict" : { str(i): {"type": "data", "value": f, "frame": i } for i,f in zip(unsorted_frame_index_list,unsorted_frame_file_list) } }', {} ]
-    inputs:  [ nested_unsorted_frame_file_list ]
+    args:    [ '{ "indexed_frame_file_dict" : { str(i): {"type": "data", "value": f } for i,f in zip(unsorted_frame_index_list,unsorted_frame_file_list) } }', {} ]
+    inputs:  [ joint_unsorted_frame_index_file_list ]
     outputs: [ nested_indexed_frame_file_dict ]
 
-    # create list of nested dicts of all output files
-    # [ { type: data, value: frame_0.lammps } ... { type: data, value: frame_n.lammps } ]
-    - _fw_name: PyTask
-      func:    eval
-      args:    [ '[ v for k,v in sorted(indexed_frame_file_dict.items()) ]', {} ]
-      inputs:  [ nested_indexed_frame_file_dict ]
-    outputs: [ frame_file_dict_list ]
+  # create list of nested dicts of all output files
+  # [ { type: data, value: frame_0.lammps } ... { type: data, value: frame_n.lammps } ]
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '[ v for k,v in sorted(indexed_frame_file_dict.items()) ]', {} ]
+    inputs:  [ nested_indexed_frame_file_dict ]
+    outputs: [ sorted_frame_file_dict_list ]
 
+  # create sorted list of nested dicts of frame indices
+  # [ { type: data, value: 1 } } ... [ { type: data, value: frame_n.lammps, frame: n } } ]
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '[ { "type": "data", "value": k} for k in sorted(indexed_frame_file_dict.keys()) ]', {} ]
+    inputs:  [ nested_indexed_frame_file_dict ]
+    outputs: [ sorted_frame_index_dict_list ]
+
+  # split workflow tree into branches here
   - _fw_name: ForeachTask
-    split: frame_file_dict_list
+    split: [ sorted_frame_index_dict_list, sorted_frame_file_dict_list ]
     task:
+    # store frame index in metadata and push to specs in order to preserve
+    # processing order of frames for subsequent fireworks
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").core.firework.FWAction(
+          mod_spec={
+            "_set":  {"metadata->frame_index": value },
+            "_push": {"processed_frame_index_list": value}
+          }
+        )
+      - {}
+      inputs: [ sorted_frame_index_dict_list ]
+
+      # compute position from metadata and update metadata
+    - _fw_name: PyTask
+      func: eval
+      args:
+      - >-
+        __import__("fireworks").core.firework.FWAction(
+          mod_spec={
+            "_set":{
+              "metadata->initial_sb_in_dist": sb_in_dist,
+              "metadata->sb_in_dist": round( float(sb_in_dist) - float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
+            }
+          }
+        )
+      - {}
+      inputs: [ metadata ]
+
+
+      # push metadata to subsequent fireworks
+      - _fw_name: PyTask
+        func: eval
+        args:
+        - >-
+          __import__("fireworks").core.firework.FWAction(
+            mod_spec={
+              "_push": {"processed_metadata_list": locals() }
+            }
+          )
+        - {}
+        inputs: [ metadata ]
+
       # merge.py called with
       # positional arguments:
       # datafile.lammps       LAMMPS data file to process. (default: 377_SDS_on_AU_1
@@ -106,20 +169,65 @@ spec:
       # outfile.lammps        Merged output data file. (default: 377_SDS_on_AU_111_5
       #                       1x30x2_monolayer_with_counterion_100Ang_stepped_parame
       #                       trized.lammps)
-      _fw_name: CommandLineTask
+    - _fw_name: CommandLineTask
       command_spec:
         command:         [ merge.py ]
-        frame_file_dict_list:
-          source : frame_file_dict_list
+        sorted_frame_file_dict_list:
+          source : sorted_frame_file_dict_list
         reference_file_dict:
           source: { type: path, value: reference.lammps }
         restored_frame_file_dict_list:
           target: { type: path, value: restored.lammps }
 
+        # put output both to file and in database
+        merge_stdout_file: { source: { type: stdout }, target: { type: path, value: merge.out } }
         merge_stdout: { source: { type: stdout }, target: { type: data } }
+        merge_stderr_file: { source: { type: stderr }, target: { type: path, value: merge.err } }
         merge_stderr: { source: { type: stderr }, target: { type: data } }
-      inputs:  [ frame_file_dict_list, reference_file_dict ]
-      outputs: [ restored_frame_file_dict_list ]
+
+      inputs:  [ sorted_frame_file_dict_list, reference_file_dict ]
+      outputs:
+      - restored_frame_file_dict_list
+      - merge_stdout_file
+      - merge_stderr_file
+      - merge_stdout
+      - merge_stderr
+
+    # - _fw_name: PyTask
+    func: eval
+    args:
+    - >-
+      __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
+        "restored.lammps",
+        identifier='/'.join((
+          "AFM",
+          indenter["substrate"],
+          indenter["crystal_plane"],
+          indenter["initial_radius"],
+          indenter["initial_radius_unit"],
+          indenter["quenching_time_span"],
+          indenter["quenching_time_span_unit"],
+          substrate,
+          sb_crystal_plane,
+          sb_base_length,
+          sb_base_length_unit,
+          sb_shape,
+          surfactant,
+          sf_nmolecules,
+          sf_preassembly,
+          initial_sb_in_dist,
+          constant_indenter_velocity,
+          constant_indenter_velocity_unit,
+          step,
+          sb_in_dist,
+          workflow_creation_date ))
+        metadata=locals()
+      )
+    - {}
+    inputs: [ metadata]
+    outputs: [ object_id, file_identifier ]
+
+    - _fw_name: PyTask
 
   metadata:
     state: extract frames
