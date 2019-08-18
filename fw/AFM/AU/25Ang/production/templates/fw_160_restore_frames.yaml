@@ -1,6 +1,6 @@
 {% extends "fw_base.yaml" %}
 {% block body %}
-name: {{ machine|default("NEMO",true) }}, {{ title }}, frame extraction
+name: {{ machine|default("NEMO",true) }}, {{ title }}, frame restauration and storage
 spec:
   _category: {{ worker|default("nemo_noqueue",true) }}
   _files_in:
@@ -39,7 +39,9 @@ spec:
           mod_spec={
             "_set":{
               "metadata->initial_sb_in_dist": sb_in_dist,
-              "metadata->sb_in_dist": round( float(sb_in_dist) + float(frame_index) * float(time_step) * float(constant_indenter_velocity), 6 )
+              "metadata->sb_in_dist": round( float(sb_in_dist) + float(frame_index) * float(netcdf_frequency) * float(time_step) * float(constant_indenter_velocity), 6 ),
+              "metadata->ellapsed_time_steps": int(frame_index) * int(netcdf_frequency),
+              "metadata->ellapsed_time": round( float(frame_index) * float(netcdf_frequency) * float(time_step), 2 )
             }
           }
         )

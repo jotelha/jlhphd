@@ -5,7 +5,7 @@
 {%- set first_frame_to_extract = 0 -%}
 {%- endif -%}
 {%- if last_frame_to_extract is undefined -%}
-{%- set last_frame_to_extract = (production_steps+1)|int -%}
+{%- set last_frame_to_extract = (production_steps//netcdf_frequency+1)|int -%}
 {%- endif -%}
 {%- if n_frames_to_extract is undefined -%}
 {%- set n_frames_to_extract = 5 -%}
@@ -20,11 +20,9 @@ spec:
   _files_in:
     data_file:        default.lammps
     joint_traj_file:  default.nc
-    #reference_file:   reference.lammps
 
   _files_out:
     reference_file:   default.lammps
-    #restored_file:    restored.lammps
 
   # glob pattern to match output of netcdf2data.py
   local_glob_pattern: 'frame_*.lammps'
