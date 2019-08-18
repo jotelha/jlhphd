@@ -164,7 +164,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   temperature_unit:                             K
   time_step:                                    2
   time_step_unit:                               fs
-  
+
   indenter:
     equilibration_time_span:      50
     equilibration_time_span_unit: ps
@@ -197,10 +197,10 @@ std: # standard settings to be applied to all fireworks, if not ...
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
   fw_050_production.yaml:
-  - worker:                   {{ queue_worker }}
+  - worker:                 {{ queue_worker }}
   {%- if machine is in ['NEMO'] %}
   fw_080_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
-  - worker:                   {{ queue_worker }}
+  - worker:                 {{ queue_worker }}
     nodes:                  1
     ppn:                    20
 
@@ -268,78 +268,14 @@ persistent:
   {%- endif %}
 
   fw_050_production.yaml:
-  {%- if mode is in ['TRIAL'] %}
-  - netcdf_frequency:           500
-    thermo_frequency:           50
-    thermo_average_frequency:   50
-    restart_frequency:          500
-    production_steps:           325000
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  - netcdf_frequency:           10
+    thermo_frequency:           10
+    thermo_average_frequency:   10
+    restart_frequency:          10
+    production_steps:           100
     constant_indenter_velocity: -1.0e-4
-    use_dpd_tstat:              0
-    temper_substrate_only:      1
-    temper_solid_only:          0
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_wo_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_wo_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_wo_dpd_tstat"
-    {%- endif %}
-
-  - netcdf_frequency:           500
-    thermo_frequency:           50
-    thermo_average_frequency:   50
-    restart_frequency:          500
-    production_steps:           325000
-    constant_indenter_velocity: -1.0e-4
-    use_dpd_tstat:              1
-    temper_substrate_only:      0
-    temper_solid_only:          1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_with_dpd_tstat"
-    {%- endif %}
-
-  - netcdf_frequency:           5000
-    thermo_frequency:           500
-    thermo_average_frequency:   500
-    restart_frequency:          5000
-    production_steps:           3250000
-    constant_indenter_velocity: -1.0e-5
-    use_dpd_tstat:              1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_trial_with_dpd_tstat"
-    {%- endif %}
-
-  {%- elif mode is in ['EXPRESS TRIAL'] %}
-  - use_dpd_tstat:              0
-    temper_substrate_only:      1
-    temper_solid_only:          0
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_express_trial_wo_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_express_trial_wo_dpd_tstat"
-    {%- else %}
-    step:                       "production_express_trial_wo_dpd_tstat"
-    {%- endif %}
-  - use_dpd_tstat:              1
-    temper_substrate_only:      0
-    temper_solid_only:          1
-    {%- if machine is in ['NEMO'] %}
-    step:                       "production_nemo_express_trial_with_dpd_tstat"
-    {%- elif machine is in ['JUWELS'] %}
-    step:                       "production_juwels_express_trial_with_dpd_tstat"
-    {%- else %}
-    step:                       "production_express_trial_with_dpd_tstat"
-    {%- endif %}
-
+    step:                       "approach"
   {%- else %} # production, 10 m / s, 1 m / s and 0.1 m / s
   - netcdf_frequency:           500
     thermo_frequency:           50
@@ -348,7 +284,8 @@ persistent:
     production_steps:           325000
     constant_indenter_velocity: -1.0e-4
     step:                       "approach"
-
+  {%- endif %}
+  {%- if mode is in ['PRODUCTION'] %}
   - netcdf_frequency:           5000
     thermo_frequency:           500
     thermo_average_frequency:   500
@@ -366,6 +303,13 @@ persistent:
     step:                       "approach"
   {%- endif %}
 
+  fw_150_extract_frames.yaml:
+  - type: AFM
+    step: initial_config
+    # 325xxx steps mean 65 Ang distance for approach
+    # 13 frames to extract mean one frame every 5 Ang
+    n_frames_to_extract: 13
+
 dependencies:
   # single dependency entries result in one instance only
   fw_020_production_file_retrieval.yaml:
@@ -381,8 +325,12 @@ dependencies:
   fw_060_recover_failed.yaml:
   - fw_080_filter_netcdf.yaml
   - fw_100_extract_property.yaml
+  - fw_150_extract_frames.yaml
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml
+
+  fw_150_extract_frames.yaml:
+  - fw_160_restore_frames.yaml
 
   fw_080_filter_netcdf.yaml:
   - fw_100_extract_property.yaml

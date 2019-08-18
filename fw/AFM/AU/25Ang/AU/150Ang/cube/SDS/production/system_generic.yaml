@@ -345,7 +345,7 @@ persistent:
     production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     step:                       "approach"
-  
+
   - netcdf_frequency:           5000
     thermo_frequency:           500
     thermo_average_frequency:   500
@@ -358,6 +358,9 @@ persistent:
   fw_150_extract_frames.yaml:
   - type: AFM
     step: initial_config
+    # 175xxx steps mean 35 Ang distance for approach
+    # 7 frames to extract mean one frame every 5 Ang
+    n_frames_to_extract: 7
 
 dependencies:
   # single dependency entries result in one instance only
