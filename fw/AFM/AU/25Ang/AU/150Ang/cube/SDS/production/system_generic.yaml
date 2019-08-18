@@ -260,7 +260,7 @@ persistent:
     sf_concentration:     0.017
   {%- else %}
   - sf_nmolecules:        646
-    sf_preassembly:       monolayer
+    sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
   {%- endif %}
 
@@ -345,7 +345,7 @@ persistent:
     production_steps:           175000
     constant_indenter_velocity: -1.0e-4
     step:                       "approach"
-
+  
   - netcdf_frequency:           5000
     thermo_frequency:           500
     thermo_average_frequency:   500
@@ -354,6 +354,10 @@ persistent:
     constant_indenter_velocity: -1.0e-5
     step:                       "approach"
   {%- endif %}
+
+  fw_150_extract_frames.yaml:
+  - type: AFM
+    step: initial_config
 
 dependencies:
   # single dependency entries result in one instance only
@@ -370,8 +374,12 @@ dependencies:
   fw_060_recover_failed.yaml:
   - fw_080_filter_netcdf.yaml
   - fw_100_extract_property.yaml
+  - fw_150_extract_frames.yaml
   - fw_200_results_to_filepad.yaml
   - fw_250_results_to_storage.yaml
+
+  fw_150_extract_frames.yaml:
+  - fw_160_restore_frames.yaml
 
   fw_080_filter_netcdf.yaml:
   - fw_100_extract_property.yaml
