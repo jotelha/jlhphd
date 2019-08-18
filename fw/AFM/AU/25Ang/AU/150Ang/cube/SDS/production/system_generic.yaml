@@ -100,7 +100,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   dpd_equilibration_steps:                      100000 # 200 ps
   production_steps:                             1750000
 
-  max_restarts:                                 10
+  max_restarts:                                 100
   {% endif %}
 
   langevin_damping:                             1000.0 # in previous npt equilibration

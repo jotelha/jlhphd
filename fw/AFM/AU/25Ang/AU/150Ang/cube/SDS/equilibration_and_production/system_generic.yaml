@@ -207,14 +207,14 @@ transient: # ...overridden by these transient settings, which do not affect chil
   fw_075_equilibration_dpd.yaml:
   - worker:                   {{ queue_worker }}
 
-  fw_050_production.yaml:
+  fw_350_production.yaml:
   - worker:                   {{ queue_worker }}
     {%- if machine is in ['NEMO'] %}
     walltime:                 '96:00:00'
     {%- endif %}
 
   {%- if machine is in ['NEMO'] %}
-  fw_080_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
+  fw_380_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
   - worker:                   {{ queue_worker }}
     nodes:                    1
     ppn:                      20
@@ -284,7 +284,7 @@ persistent:
     use_barostat:             0 # set to 1 for DPD equilbartion in NPT
 
   # production, 1 m / s
-  fw_050_production.yaml:
+  fw_350_production.yaml:
   - step:                     approach
     use_dpd_tstat:                   1
     use_barostat:                    0

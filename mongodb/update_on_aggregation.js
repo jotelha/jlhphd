@@ -117,6 +117,19 @@ db.filepad.update(
   }
 )
 
+// update queue
+db.fireworks.update(
+  {
+    fw_id: {
+      $in: [ 17262, 17263, 17264, 17265, 17266, 17267, 17268, 17269, 17270, 17271 ]
+    },
+  }, {
+    $set: { "spec._category": "nemo_noqueue" }
+  }, {
+    multi: true // update all matches
+  }
+)
+
 // not yet tested: update by aggregation pipeline:
 db.runCommand(
   {
