@@ -32,7 +32,7 @@ spec:
   _tasks:
   - _fw_name: CommandLineTask
     command_spec:
-      command: [ netcdf2data.py, --verbose, --frames, {{ first_frame_to_extract|int }}-{{ last_frame_to_extract|int }}-{{ every_nth_frame_to_extract|int }}, default.lammps, default.nc ]
+      command: [ netcdf2data.py, --verbose, --frames, {{ first_frame_to_extract|int }}-{{ last_frame_to_extract|int }}-{{ every_nth_frame_to_extract|default(1,true)|int }}, default.lammps, default.nc ]
 
       # put output both to file and in database
       netcdf2data_stdout_file: { source: { type: stdout }, target: { type: path, value: netcdf2data.out } }
