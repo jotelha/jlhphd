@@ -234,6 +234,7 @@ variable restrained_indenter        index 0     # do not treat indenter as rigid
                                                 # but remove total linear and
                                                 # angular momentum
 variable constant_indenter_velocity index 0.0   # for approach towards substrate
+variable direction_of_linear_movement index 2   # 0,1,2 for x,y,z of ind. mov.
 variable indenter_nve_noforce       index 0     # use 'fix nve/noforce' instead
                                                 # of 'fix setforce' to treat
                                                 # indenter as rigid

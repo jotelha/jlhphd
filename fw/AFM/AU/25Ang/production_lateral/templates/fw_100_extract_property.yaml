@@ -1,0 +1,88 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, final postprocesing
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _files_in:
+    filtered_traj_file:     default.nc # from previous post-processing task
+  _files_out:
+    indenter_x_forces:       indenter_x_forces.txt
+    nonindenter_x_forces:    nonindenter_x_forces.txt
+    indenter_y_forces:       indenter_y_forces.txt
+    nonindenter_y_forces:    nonindenter_y_forces.txt
+    indenter_z_forces:       indenter_z_forces.txt
+    nonindenter_z_forces:    nonindenter_z_forces.txt
+  _tasks:
+  _tasks:
+  # change of methodolgy: netCDF is filtered before this step, plane separating
+  # indenter and substrate obsolete, set to some far away negative value
+  - _fw_name: CommandLineTask
+    command_spec:
+      command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
+        --element, Au, --dim, 0, --plane, -10,
+        --netcdf-output-interval, {{ netcdf_frequency }},
+        --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
+        f_storeAnteStatForces, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
+        f_storeAnteStatForcesAve, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForcesAve, --verbose,
+        default.nc, indenter_x_forces, nonindenter_x_forces ]
+      indenter_x_forces_stdout_file:
+        source: { type: stdout }
+        target: { type: path, value: indenter_x_forces.out }
+      indenter_x_forces_stderr_file:
+        source: { type: stderr }
+        target: { type: path, value: indenter_x_forces.err }
+    outputs:
+    - indenter_x_forces_stdout_file
+    - indenter_x_forces_stderr_file
+    env: python
+
+  - _fw_name: CommandLineTask
+    command_spec:
+      command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
+        --element, Au, --dim, 1, --plane, -10,
+        --netcdf-output-interval, {{{ netcdf_frequency }},
+        --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
+        f_storeAnteStatForces, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
+        f_storeAnteStatForcesAve, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForcesAve, --verbose,
+        default.nc, indenter_y_forces, nonindenter_y_forces ]
+      indenter_y_forces_stdout_file:
+        source: { type: stdout }
+        target: { type: path, value: indenter_y_forces.out }
+      indenter_y_forces_stderr_file:
+        source: { type: stderr }
+        target: { type: path, value: indenter_y_forces.err }
+    outputs:
+    - indenter_y_forces_stdout_file
+    - indenter_y_forces_stderr_file
+    env: python
+
+  - _fw_name: CommandLineTask
+    command_spec:
+      command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
+        --element, Au, --dim, 2, --plane, -10,
+        --netcdf-output-interval, {{ sb_in_dist / 2.0 }},
+        --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
+        f_storeAnteStatForces, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
+        f_storeAnteStatForcesAve, f_storeAnteFreezeForces,
+        f_storeUnconstrainedForcesAve, --verbose,
+        default.nc, indenter_z_forces, nonindenter_z_forces ]
+      indenter_z_forces_stdout_file:
+        source: { type: stdout }
+        target: { type: path, value: indenter_z_forces.out }
+      indenter_z_forces_stderr_file:
+        source: { type: stderr }
+        target: { type: path, value: indenter_z_forces.err }
+    outputs:
+    - indenter_z_forces_stdout_file
+    - indenter_z_forces_stderr_file
+    env: python
+
+  metadata:
+    state: extract indenter forces
+    {{ render_metadata()|indent(4)}}
+{% endblock %}

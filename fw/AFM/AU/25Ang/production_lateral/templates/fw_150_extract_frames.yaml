@@ -1,0 +1,120 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+{# automatically determine indices of frames to extract #}
+{%- if first_frame_to_extract is undefined -%}
+{%- set first_frame_to_extract = 0 -%}
+{%- endif -%}
+{%- if last_frame_to_extract is undefined -%}
+{%- set last_frame_to_extract = (production_steps//netcdf_frequency+1)|int -%}
+{%- endif -%}
+{%- if n_frames_to_extract is undefined -%}
+{%- set n_frames_to_extract = 5 -%}
+{%- endif -%}
+{%- if every_nth_frame_to_extract is undefined -%}
+{%- set every_nth_frame_to_extract = ( (last_frame_to_extract - first_frame_to_extract)/n_frames_to_extract )|round(1, 'floor')|int -%}
+{%- endif -%}
+name: {{ machine|default("NEMO",true) }}, {{ title }}, frame extraction
+spec:
+  _category: {{ worker|default("nemo_noqueue",true) }}
+  _preserve_fworker: True
+  _files_in:
+    data_file:        default.lammps
+    joint_traj_file:  default.nc
+
+  _files_out:
+    reference_file:   default.lammps
+
+  # glob pattern to match output of netcdf2data.py
+  local_glob_pattern: 'frame_*.lammps'
+  frame_index_regex:  '(?<=frame_)([0-9]+)(?=\.lammps)'
+
+  # netcdf2data.py writes file named frame_0.lammps ... frame_n.lammps
+  _tasks:
+  - _fw_name: CommandLineTask
+    command_spec:
+      command: [ netcdf2data.py, --verbose, --frames, {{ first_frame_to_extract|int }}-{{ last_frame_to_extract|int }}-{{ every_nth_frame_to_extract|default(1,true)|int }}, default.lammps, default.nc ]
+
+      # put output both to file and in database
+      netcdf2data_stdout_file: { source: { type: stdout }, target: { type: path, value: netcdf2data.out } }
+      netcdf2data_stderr_file: { source: { type: stderr }, target: { type: path, value: netcdf2data.err } }
+
+    outputs:
+    - netcdf2data_stdout_file
+    - netcdf2data_stderr_file
+
+    env: python
+
+  # get current working directory
+  - _fw_name: PyTask
+    func:    os.getcwd
+    outputs: [ cwd ]
+
+  # put together absolute glob pattern
+  - _fw_name: PyTask
+    func:    os.path.join
+    inputs:  [ cwd, local_glob_pattern ]
+    outputs: [ absolute_glob_pattern ]
+
+  # create list of all output files, probably unsorted [ frame_n.lammps ... frame_m.lammps ]
+  - _fw_name: PyTask
+    func:    glob.glob
+    inputs:  [  absolute_glob_pattern ]
+    outputs: [ unsorted_frame_file_list ]
+
+  # nest list of all output files into {"frame_file_list": [ frame_n.lammps ... frame_m.lammps ] }
+  - _fw_name: JoinDictTask
+    inputs: [ unsorted_frame_file_list ]
+    output: nested_unsorted_frame_file_list
+
+  # ugly utilization of eval: eval(expression,globals,locals) has empty globals {}
+  # and the content of "nested_frame_file_list", i.e. {"frame_file_list": [ frame_0.lammps ... frame_n.lammps ] }
+  # handed as 2nd and 3rd positional argument. Knowledge about the internal PyTask function call is necessary here.
+
+  # create list of unsorted frame indices, extracted from file names, [ n ... m ]
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '[ int(f[ f.rfind("_")+1:f.rfind(".") ]) for f in unsorted_frame_file_list ]', {} ]
+    inputs:  [ nested_unsorted_frame_file_list ]
+    outputs: [ unsorted_frame_index_list ]
+
+  # sort list of  frame indices, [ 1 ... n ]
+  - _fw_name: PyTask
+    func:    sorted
+    inputs:  [ unsorted_frame_file_list ]
+    outputs: [ sorted_frame_index_list ]
+
+  # nest list of frame indices and list of file into
+  # { "unsorted_frame_index_list": [ n ... m ],
+  #   "unsorted_frame_file_list": [ frame_n.lammps ... frame_m.lammps ] }
+  - _fw_name: JoinDictTask
+    inputs: [ unsorted_frame_index_list, unsorted_frame_file_list ]
+    output: joint_unsorted_frame_index_file_list
+
+  # create nested indexed representation of
+  # { 'indexed_frame_file_dict' : { '1': { type: data, value: frame_1.lammps }, ..., 'n': { type: data, value: frame_n.lammps, frame: n } } }
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '{ "indexed_frame_file_dict" : { str(i): {"type": "data", "value": f } for i,f in zip(unsorted_frame_index_list,unsorted_frame_file_list) } }', {} ]
+    inputs:  [ joint_unsorted_frame_index_file_list ]
+    outputs: [ nested_indexed_frame_file_dict ]
+
+  # create list of nested dicts of all output files
+  # [ { type: data, value: frame_0.lammps } ... { type: data, value: frame_n.lammps } ]
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '[ v for k,v in sorted(indexed_frame_file_dict.items()) ]', {} ]
+    inputs:  [ nested_indexed_frame_file_dict ]
+    outputs: [ sorted_frame_file_dict_list ]
+
+  # create sorted list of nested dicts of frame indices
+  # [ { type: data, value: 1 } } ... [ { type: data, value: frame_n.lammps, frame: n } } ]
+  - _fw_name: PyTask
+    func:    eval
+    args:    [ '[ { "type": "data", "value": k} for k in sorted(indexed_frame_file_dict.keys()) ]', {} ]
+    inputs:  [ nested_indexed_frame_file_dict ]
+    outputs: [ sorted_frame_index_dict_list ]
+
+  metadata:
+    state: extract frames
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
