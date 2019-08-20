@@ -74,7 +74,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_average_frequency:                     10
 
   dpd_equilibration_steps:                      100
-  production_steps:                             100
+  production_steps:                             200
   max_restarts:                                 1
 
   {%- else %}
@@ -234,6 +234,8 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
+  fw_012_equilibration_dpd.yaml:
+  - worker:                   {{ queue_worker }}
   fw_050_production.yaml:
   - worker:                   {{ queue_worker }}
   {%- if machine is in ['NEMO'] %}
@@ -251,7 +253,7 @@ transient: # ...overridden by these transient settings, which do not affect chil
     {%- endif %}
   {%- endif %}
 
-persistent: 20.0, 15.0, 10.0, 5.0
+persistent:
   fw_010_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        646
@@ -357,8 +359,9 @@ persistent: 20.0, 15.0, 10.0, 5.0
 dependencies:
   fw_005_equilibration_dpd_file_retrieval.yaml:
   - fw_010_datafile_retrieval.yaml
+  - fw_012_equilibration_dpd.yaml
 
-  fw_030_datafile_retrieval.yaml:
+  fw_010_datafile_retrieval.yaml:
   - fw_012_equilibration_dpd.yaml
   - fw_020_production_file_retrieval.yaml
 

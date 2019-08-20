@@ -13,7 +13,6 @@ spec:
     indenter_z_forces:       indenter_z_forces.txt
     nonindenter_z_forces:    nonindenter_z_forces.txt
   _tasks:
-  _tasks:
   # change of methodolgy: netCDF is filtered before this step, plane separating
   # indenter and substrate obsolete, set to some far away negative value
   - _fw_name: CommandLineTask
@@ -42,7 +41,7 @@ spec:
     command_spec:
       command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
         --element, Au, --dim, 1, --plane, -10,
-        --netcdf-output-interval, {{{ netcdf_frequency }},
+        --netcdf-output-interval, {{ netcdf_frequency }},
         --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
         f_storeAnteStatForces, f_storeAnteFreezeForces,
         f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
@@ -64,7 +63,7 @@ spec:
     command_spec:
       command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
         --element, Au, --dim, 2, --plane, -10,
-        --netcdf-output-interval, {{ sb_in_dist / 2.0 }},
+        --netcdf-output-interval, {{ netcdf_frequency }},
         --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
         f_storeAnteStatForces, f_storeAnteFreezeForces,
         f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,

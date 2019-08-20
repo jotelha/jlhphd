@@ -15,38 +15,38 @@
 #}
 {%- set workflow_creation_date = "now"|datetime -%}
 {# identifier for results, used as sub-path AND as filepad prefix #}
-{%- set identifier =
-  type + '/' +
+{%- set identifier = (
+  type|string + '/' +
   'probe/' +
-    indenter.substrate + '/' +
-    indenter.crystal_plane + '/' +
-    indenter.initial_radius +
-    indenter.initial_radius_unit + '/' +
-    indenter.quenching_time_span
-    indenter.quenching_time_span_unit + '/' +
+    indenter.substrate|string + '/' +
+    indenter.crystal_plane|string + '/' +
+    indenter.initial_radius|string +
+    indenter.initial_radius_unit|string + '/' +
+    indenter.quenching_time_span|string +
+    indenter.quenching_time_span_unit|string + '/' +
   'substrate/' +
-    substrate + '/' +
-    sb_crystal_plane + '/' +
-    sb_base_length +
-    sb_base_length_unit + '/' +
-    sb_shape + '/' +
+    substrate|string + '/' +
+    sb_crystal_plane|string + '/' +
+    sb_base_length|string +
+    sb_base_length_unit|string + '/' +
+    sb_shape|string + '/' +
   'surfactant/' +
-    surfactant + '/' +
-    sf_nmolecules + '/' +
-    sf_preassembly + '/' +
+    surfactant|string + '/' +
+    sf_nmolecules|string + '/' +
+    sf_preassembly|string + '/' +
   'approach/' +
-    approach.sb_in_dist +
-    sb_in_dist_unit + '/' +
-    approach.constant_indenter_velocity +
-    constant_indenter_velocity_unit + '/' +
+    approach.sb_in_dist|string +
+    sb_in_dist_unit|string + '/' +
+    approach.constant_indenter_velocity|string +
+    constant_indenter_velocity_unit|string + '/' +
   'shear/' +
-    sb_in_dist +
-    sb_in_dist_unit + '/' +
-    constant_indenter_velocity +
-    constant_indenter_velocity_unit + '/' +
-    direction_of_linear_movement + '/' +
-  step + '/' +
-  "now"|datetime('%Y%m%d%H%M') ) -%}
+    sb_in_dist|string +
+    sb_in_dist_unit|string + '/' +
+    constant_indenter_velocity|string +
+    constant_indenter_velocity_unit|string + '/' +
+    direction_of_linear_movement|string + '/' +
+  step|string + '/' +
+  workflow_creation_date ) -%}
 
 {# descriptive natural language title for display purposes #}
 {%- set title = identifier -%}
@@ -130,7 +130,7 @@ _background_tasks:
 {%- macro render_metadata() -%}
 {%- for key, value in context().items() -%}
 {%- if not callable(value) -%}
-{{ key }}:{{ value }}
+{{ {key: value}|to_nice_yaml }}
 {%- endif -%}
 {%- endfor -%}
 {%- endmacro -%}
