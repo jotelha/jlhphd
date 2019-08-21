@@ -25,7 +25,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   {%- else %}
   walltime:               '06:00:00'
   queue:                  batch
-  ntasks:                 384
+  ntasks:                 768
   {%- endif %}
   cpus_per_task:          1
   ntasks_per_node:        96
@@ -340,7 +340,7 @@ persistent:
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
-    sb_in_dist:           0.0
+    sb_in_dist:           10.0
   {%- endif %}
 
   fw_050_production.yaml:
