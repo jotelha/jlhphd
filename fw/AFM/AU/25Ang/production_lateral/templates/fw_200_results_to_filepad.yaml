@@ -35,7 +35,6 @@ spec:
     - {{ identifier }}/indenter_x_forces.txt
     - {{ identifier }}/indenter_y_forces.txt
     - {{ identifier }}/indenter_z_forces.txt
-    - {{ identifier }}/indenter_forces.txt
     - {{ identifier }}/log.lammps
     - {{ identifier }}/thermo.out
     paths:

@@ -81,7 +81,7 @@ spec:
           - -v random_seed              {{ random_seed|default(29061988,true)|int }}
           - -v reinitialize_velocities  0
           - -v read_groups_from_file    0
-          - -v region_tolerance         0 
+          - -v region_tolerance         0.0
           - -v restrained_indenter      1
           - -v restrain_substrate_layer {{ restrained_sb_layer_thickness|default(14.0,true)|float }} # freeze 14.0 Angstrom of AU at botton of box
           - -v restart_frequency        {{ restart_frequency|default(100,true)|int }}

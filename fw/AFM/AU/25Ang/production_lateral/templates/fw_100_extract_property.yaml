@@ -18,8 +18,8 @@ spec:
   - _fw_name: CommandLineTask
     command_spec:
       command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
-        --element, Au, --dim, 0, --plane, -10,
-        --netcdf-output-interval, {{ netcdf_frequency }},
+        --element, Au, --dim, '0', --plane, '-10',
+        --netcdf-output-interval, '{{ netcdf_frequency }}',
         --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
         f_storeAnteStatForces, f_storeAnteFreezeForces,
         f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
@@ -40,8 +40,8 @@ spec:
   - _fw_name: CommandLineTask
     command_spec:
       command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
-        --element, Au, --dim, 1, --plane, -10,
-        --netcdf-output-interval, {{ netcdf_frequency }},
+        --element, Au, --dim, '1', --plane, '-10',
+        --netcdf-output-interval, '{{ netcdf_frequency }}',
         --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
         f_storeAnteStatForces, f_storeAnteFreezeForces,
         f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,
@@ -62,8 +62,8 @@ spec:
   - _fw_name: CommandLineTask
     command_spec:
       command: [ extract_indenter_nonindenter_forces_from_netcdf.py,
-        --element, Au, --dim, 2, --plane, -10,
-        --netcdf-output-interval, {{ netcdf_frequency }},
+        --element, Au, --dim, '2', --plane, '-10',
+        --netcdf-output-interval, '{{ netcdf_frequency }}',
         --output-formats, txt, --force-keys, forces, f_storeAnteShakeForces,
         f_storeAnteStatForces, f_storeAnteFreezeForces,
         f_storeUnconstrainedForces, f_storeAnteShakeForcesAve,

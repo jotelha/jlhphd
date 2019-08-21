@@ -38,7 +38,7 @@ spec:
         __import__("fireworks").core.firework.FWAction(
           mod_spec={
             "_set":{
-              "metadata->in_lateral_displacement": float(frame_index) * float(netcdf_frequency) * float(time_step) * float(constant_indenter_velocity), 6 ),
+              "metadata->in_lateral_displacement": round( float(frame_index) * float(netcdf_frequency) * float(time_step) * float(constant_indenter_velocity), 6 ),
               "metadata->ellapsed_time_steps": int(frame_index) * int(netcdf_frequency),
               "metadata->ellapsed_time": round( float(frame_index) * float(netcdf_frequency) * float(time_step), 2 )
             }
@@ -100,41 +100,41 @@ spec:
       - >-
         __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
           "restored.lammps",
-          identifier =
-            type + '/' +
+          identifier = (
+            str(type) + '/' +
             'probe/' +
-              indenter["substrate"] + '/' +
-              indenter["crystal_plane"] + '/' +
-              indenter["initial_radius"] +
-              indenter["initial_radius_unit"] + '/' +
-              indenter["quenching_time_span"]
-              indenter["quenching_time_span_unit"] + '/' +
+              str(indenter["substrate"]) + '/' +
+              str(indenter["crystal_plane"]) + '/' +
+              str(indenter["initial_radius"]) +
+              str(indenter["initial_radius_unit"]) + '/' +
+              str(indenter["quenching_time_span"]) +
+              str(indenter["quenching_time_span_unit"]) + '/' +
             'substrate/' +
-              substrate + '/' +
-              sb_crystal_plane + '/' +
-              sb_base_length +
-              sb_base_length_unit + '/' +
-              sb_shape + '/' +
+              str(substrate) + '/' +
+              str(sb_crystal_plane) + '/' +
+              str(sb_base_length) +
+              str(sb_base_length_unit) + '/' +
+              str(sb_shape) + '/' +
             'surfactant/' +
-              surfactant + '/' +
-              sf_nmolecules + '/' +
-              sf_preassembly + '/' +
+              str(surfactant) + '/' +
+              str(sf_nmolecules) + '/' +
+              str(sf_preassembly) + '/' +
             'approach/' +
-              approach["sb_in_dist"] +
-              sb_in_dist_unit + '/' +
-              approach["constant_indenter_velocity"] +
-              constant_indenter_velocity_unit + '/' +
+              str(approach["sb_in_dist"]) +
+              str(sb_in_dist_unit) + '/' +
+              str(approach["constant_indenter_velocity"]) +
+              str(constant_indenter_velocity_unit) + '/' +
             'shear/' +
-              sb_in_dist +
-              sb_in_dist_unit + '/' +
-              constant_indenter_velocity +
-              constant_indenter_velocity_unit + '/' +
-              direction_of_linear_movement + '/' +
-              in_lateral_displacement +
-              std_spatial_unit
-            step + '/' +
-            workflow_creation_date +
-            '/default.lammps',
+              str(sb_in_dist) +
+              str(sb_in_dist_unit) + '/' +
+              str(constant_indenter_velocity) +
+              str(constant_indenter_velocity_unit) + '/' +
+              str(direction_of_linear_movement) + '/' +
+              str(in_lateral_displacement) +
+              str(std_spatial_unit) + '/' +
+            str(step) + '/' +
+            str(workflow_creation_date) + '/'+
+            'default.lammps' ),
           metadata=locals()
         )
       - {}

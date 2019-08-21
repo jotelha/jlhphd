@@ -11,7 +11,7 @@ spec:
   _files_out:
     filtered_traj_file:   filtered.nc
   _tasks:
-  {%- if machine is in ['JUWELS'] -%}
+  {%- if machine is in ['JUWELS'] %}
   # on JUWELS, use NCO (netCDF operators) on login node
   - _fw_name: GetFilesTask
     identifiers:
