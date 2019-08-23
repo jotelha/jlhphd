@@ -20,9 +20,9 @@
     sf_nmolecules|string + '/' +
     sf_preassembly|string + '/' +
   'approach/' +
-    approach.sb_in_dist|string +
+    initial_sb_in_dist|string +
     sb_in_dist_unit|string + '/' +
-    approach.constant_indenter_velocity|string +
+    constant_indenter_velocity|string +
     constant_indenter_velocity_unit|string + '/' +
   'shear/' +
     sb_in_dist|string +

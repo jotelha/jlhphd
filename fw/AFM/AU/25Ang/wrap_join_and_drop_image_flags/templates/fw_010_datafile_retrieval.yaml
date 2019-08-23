@@ -49,10 +49,10 @@ spec:
     - >-
       __import__("fireworks").core.firework.FWAction(
         mod_spec=[ {
-          "_set": {"metadata": initial_config_metadata["metadata"] }
+          "_set": {"metadata": initial_config_metadata }
         }, {
           "_set": {"metadata->workflow_creation_date": workflow_creation_date }
-        }, , {
+        }, {
           "_set": {"metadata->wrapped": True }
         } ]
       )

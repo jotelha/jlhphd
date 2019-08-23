@@ -454,7 +454,7 @@ persistent:
   - constant_indenter_velocity: -1e-05
     sb_in_dist: 15.0
     sf_nmolecules: 646
-    sf_preassembly: hemicylinder
+    sf_preassembly: hemicylinders
   {%- endif %}
 
 dependencies:
