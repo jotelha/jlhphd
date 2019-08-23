@@ -1,0 +1,54 @@
+{% extends "fw_base.yaml" %}
+{% block body %}
+name: {{machine}}, transfer '{{identifier}}/default.lammps' to file pad
+spec:
+  _category: "{{ worker|default("nemo_noqueue",true) }}"
+  _files_in:
+    data_file: default.lammps
+  _tasks:
+  - _fw_name: PyTask
+    func: eval
+    args:
+    - >-
+      __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
+        "default.lammps",
+        identifier = (
+          str(type) + '/' +
+          'probe/' +
+            str(indenter.substrate) + '/' +
+            str(indenter.crystal_plane) + '/' +
+            str(indenter.initial_radius) +
+            str(indenter.initial_radius_unit) + '/' +
+            str(indenter.quenching_time_span) +
+            str(indenter.quenching_time_span_unit) + '/' +
+          'substrate/' +
+            str(substrate) + '/' +
+            str(sb_crystal_plane) + '/' +
+            str(sb_base_length) +
+            str(sb_base_length_unit) + '/' +
+            str(sb_shape) + '/' +
+          'surfactant/' +
+            str(surfactant) + '/' +
+            str(sf_nmolecules) + '/' +
+            str(sf_preassembly) + '/' +
+          'approach/' +
+            str(initial_sb_in_dist) +
+            str(sb_in_dist_unit) + '/' +
+            str(constant_indenter_velocity) +
+            str(constant_indenter_velocity_unit) + '/' +
+          'shear/' +
+            str(sb_in_dist) +
+            str(sb_in_dist_unit) + '/' +
+          str(step) + '/' +
+          str(workflow_creation_date) '/' +
+          'initial_config.lammps' ),
+        metadata=locals()
+      )
+    - {}
+    inputs: [ metadata]
+    outputs: [ object_id, file_identifier ]
+
+  metadata:
+    state: file transfer to filepad
+    {{ render_metadata()|indent(4)}}
+{% endblock %}
