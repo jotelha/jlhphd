@@ -4,7 +4,7 @@ std: # standard settings to be applied to all fireworks, if not ...
   # machine-specific options
 
   # two general options
-  # - machine: NEMO or JUWELS
+  # - machine: BWCLOUD, NEMO or JUWELS
   # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
 
   machine:                {{ machine }}
@@ -44,6 +44,10 @@ std: # standard settings to be applied to all fireworks, if not ...
   walltime:               '02:00:00'
   queue:                  ''
   {%- endif %}
+{%- else %}
+  {%- set queue_worker = "bwcloud_std" %}
+  worker:                 bwcloud_std
+  queue_worker:           bwcloud_std
 {%- endif %}
 
   # system metadata

@@ -15,12 +15,12 @@ spec:
         identifier = (
           str(type) + '/' +
           'probe/' +
-            str(indenter.substrate) + '/' +
-            str(indenter.crystal_plane) + '/' +
-            str(indenter.initial_radius) +
-            str(indenter.initial_radius_unit) + '/' +
-            str(indenter.quenching_time_span) +
-            str(indenter.quenching_time_span_unit) + '/' +
+            str(indenter["substrate"]) + '/' +
+            str(indenter["crystal_plane"]) + '/' +
+            str(indenter["initial_radius"]) +
+            str(indenter["initial_radius_unit"]) + '/' +
+            str(indenter["quenching_time_span"]) +
+            str(indenter["quenching_time_span_unit"]) + '/' +
           'substrate/' +
             str(substrate) + '/' +
             str(sb_crystal_plane) + '/' +
@@ -40,7 +40,7 @@ spec:
             str(sb_in_dist) +
             str(sb_in_dist_unit) + '/' +
           str(step) + '/' +
-          str(workflow_creation_date) '/' +
+          str(workflow_creation_date) + '/' +
           'initial_config.lammps' ),
         metadata=locals()
       )

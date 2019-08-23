@@ -2,7 +2,7 @@
 {% block body %}
 name: "{{ machine|default("NEMO",true) }}, {{ title }}, AFM lateral shear initial configuration data files retrieval"
 spec:
-  _category: {{ worker|default("nemo_noqueue",true) }}
+  _category: {{ worker }}
   _files_out:
     data_file: restored.lammps # this is an irregularity in naming
 

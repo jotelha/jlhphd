@@ -1,4 +1,4 @@
-{%- set workflow_creation_date = "now"|datetime -%}
+{%- set workflow_creation_date = "now"|datetime('%Y-%m-%d-%H-%M-%S') -%}
 {# identifier for results, used as sub-path AND as filepad prefix #}
 {%- set identifier = (
   type|string + '/' +
