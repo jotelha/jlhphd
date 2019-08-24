@@ -462,6 +462,9 @@ persistent:
   {%- endif %}
 
 dependencies:
+  fw_000_dummy_root.yaml:
+  - fw_010_datafile_retrieval.yaml
+
   fw_010_datafile_retrieval.yaml:
   - fw_020_wrap_and_join.yaml
 
