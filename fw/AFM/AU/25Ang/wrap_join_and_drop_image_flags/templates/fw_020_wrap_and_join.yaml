@@ -61,19 +61,31 @@ spec:
     use_shell: true
     fizzle_bad_rc: true
 
-  - _fw_name: CommandLineTask
-    command_spec:
-      command: [ vmd, -eofexit, -e, in.tcl ]
-      vmd_stdout_file:
-        source: { type: stdout }
-        target: { type: path, value: vmd.out }
-      vmd_stderr_file:
-        source: { type: stderr }
-        target: { type: path, value: vmd.err }
-    outputs:
-    - vmd_stdout_file
-    - vmd_stderr_file
-    env: python
+  - _fw_name: CmdTask
+    cmd: vmd
+    opt:
+    - -eofexit
+    - -e
+    - in.tcl
+    stderr_file: vmd.err
+    stdout_file: vmd.out
+    use_shell: true
+    fizzle_bad_rc: true
+
+  # on JUWELS, module setup via Python/CommandLineTask does not work yet properly
+  # - _fw_name: CommandLineTask
+  #  command_spec:
+  #    command: [ vmd, -eofexit, -e, in.tcl ]
+  #    vmd_stdout_file:
+  #      source: { type: stdout }
+  #      target: { type: path, value: vmd.out }
+  #    vmd_stderr_file:
+  #      source: { type: stderr }
+  #      target: { type: path, value: vmd.err }
+  #  outputs:
+  #  - vmd_stdout_file
+  #  - vmd_stderr_file
+  #  env: python
 
   - _fw_name: CommandLineTask
     command_spec:
