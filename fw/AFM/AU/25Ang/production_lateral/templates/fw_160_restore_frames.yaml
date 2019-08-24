@@ -7,7 +7,7 @@ spec:
     reference_file:   reference.lammps
 
   _files_out:
-    frame_file:       restored.lammps
+    frame_file:       default.lammps
 
   # netcdf2data.py writes file named frame_0.lammps ... frame_n.lammps
   _tasks:
@@ -61,17 +61,13 @@ spec:
       - {}
       inputs: [ metadata ]
 
-      # merge.py called with
-      # positional arguments:
-      # datafile.lammps       LAMMPS data file to process. (default: 377_SDS_on_AU_1
-      #                       11_51x30x2_monolayer_with_counterion_100Ang_stepped.la
-      #                       mmps)
-      # reffile.lammps        Reference data file containing complete system
-      #                       information. (default: 377_SDS_on_AU_111_51x30x2_monol
-      #                       ayer_with_counterion_psfgen.data)
-      # outfile.lammps        Merged output data file. (default: 377_SDS_on_AU_111_5
-      #                       1x30x2_monolayer_with_counterion_100Ang_stepped_parame
-      #                       trized.lammps)
+    # restore missing data (i.e. topology info)
+
+    # merge.py called with
+    # positional arguments:
+    # datafile.lammps       LAMMPS data file to process.
+    # reffile.lammps        Reference data file containing complete system.
+    # outfile.lammps        Merged output data file.
     - _fw_name: CommandLineTask
       command_spec:
         command:         [ merge.py ]
@@ -82,24 +78,144 @@ spec:
         restored_frame_file_dict_list:
           target: { type: path, value: restored.lammps }
 
-        # put output both to file and in database
-        merge_stdout_file: { source: { type: stdout }, target: { type: path, value: merge.out } }
-        merge_stderr_file: { source: { type: stderr }, target: { type: path, value: merge.err } }
+        merge_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: merge.out }
+        merge_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: merge.err }
 
       inputs:  [ sorted_frame_file_dict_list, reference_file_dict ]
       outputs:
       - restored_frame_file_dict_list
       - merge_stdout_file
       - merge_stderr_file
-      # why do these outputs not work properly?
       env: python
 
+    # extract bounding box for vmd processing
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ extract_bb.py, restored.lammps, bb.yaml ]
+        extract_bb_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: extract_bb.out }
+        extract_bb_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: extract_bb.err }
+      outputs:
+      - extract_bb_stdout_file
+      - extract_bb_stderr_file
+      env: python
+
+    # prepare vmd input script
+    - _fw_name: ScriptTask
+      script: |
+        echo "package require jlhvmd"
+        echo "jlh set interfaceInfile restored.lammps"
+        echo "jlh use {{ surfactant }}"
+        echo "jlh read bb bb.yaml"
+        echo "jlh init"
+        echo "jlh set outputPrefix unwrapped"
+        echo "jlh render nonsolvent"
+        echo "jlh wrap atom"
+        echo "jlh set outputPrefix unjoint"
+        echo "jlh render nonsolvent"
+        echo "jlh join residue"
+        echo "jlh set outputPrefix wrapped"
+        echo "jlh write"
+        echo "jlh render nonsolvent"
+      stdout_file: in.tcl
+      stderr_file: in.tcl.err
+      use_shell: true
+      fizzle_bad_rc: true
+
+    # run vmd to wrap into one periodic image and subsequently connect resiudes
+    # also removes image flags (vmd topotools side effect)
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ vmd, -eofexit, -e, in.tcl ]
+        vmd_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: vmd.out }
+        vmd_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: vmd.err }
+      outputs:
+      - vmd_stdout_file
+      - vmd_stderr_file
+      env: python
+
+    # render a few images at different stages for "visual debugging"
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ convert, unwrapped.tga, unwrapped.png ]
+        convert_unwrapped_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: convert_unwrapped.out }
+        convert_unwrapped_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: convert_unwrapped.err }
+      outputs:
+      - convert_unwrapped_stdout_file
+      - convert_unwrapped_stderr_file
+      env: python
+
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ convert, unjoint.tga, unjoint.png ]
+        convert_unjoint_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: convert_unjoint.out }
+        convert_unjoint_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: convert_unjoint.err }
+      outputs:
+      - convert_unjoint_stdout_file
+      - convert_unjoint_stderr_file
+      env: python
+
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ convert, wrapped.tga, wrapped.png ]
+        convert_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: convert.out }
+        convert_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: convert.err }
+      outputs:
+      - convert_stdout_file
+      - convert_stderr_file
+      env: python
+
+    # restore lost information (i.e. velocities, mis-mapped types, etc. once again)
+
+    # merge.py called with
+    # positional arguments:
+    # datafile.lammps       LAMMPS data file to process.
+    # reffile.lammps        Reference data file containing complete system.
+    # outfile.lammps        Merged output data file.
+    - _fw_name: CommandLineTask
+      command_spec:
+        command: [ merge.py, wrapped.lammps, restored.lammps, default.lammps ]
+        merge_stdout_file:
+          source: { type: stdout }
+          target: { type: path, value: merge.out }
+        merge_stderr_file:
+          source: { type: stderr }
+          target: { type: path, value: merge.err }
+      outputs:
+      - merge_stdout_file
+      - merge_stderr_file
+      env: python
+
+    # store as a new initial configuration in database
     - _fw_name: PyTask
       func: eval
       args:
       - >-
         __import__("fireworks").utilities.filepad.FilePad.auto_load().add_file(
-          "restored.lammps",
+          "default.lammps",
           identifier = (
             str(type) + '/' +
             'probe/' +

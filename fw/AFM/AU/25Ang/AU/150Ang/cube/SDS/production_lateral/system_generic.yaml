@@ -230,7 +230,24 @@ std: # standard settings to be applied to all fireworks, if not ...
     #direction_of_linear_movement:               0
     #sb_in_dist:                                30.0
 
+  # frames to extract after run:
 
+  # 225xxx steps mean 450 Ang distance travelled, 3 periodic transitions
+  # 10 frames to extract mean one frame every 45 Ang, effectively resulting
+  # in series of
+  #   45, 90, 135, 30, 75, 120, 15, 60, 105, 150 or, sorted,
+  #   15, 30, 45, 60, 75, 90, 105, 120, 135, 150
+
+  # 150xxx steps mean 300 Ang distance travelled, 2 periodic transitions
+  # 20 frames to extract mean one frame every 15 Ang, effectively resulting
+  # in series of
+  #   15, 30, 45, 60, 75, 90, 105, 120, 135, 150, twice
+
+  # 075xxx steps mean 150 Ang distance travelled, 1 periodic transitions
+  # 10 frames to extract mean one frame every 15 Ang, effectively resulting
+  # in series of
+  #   15, 30, 45, 60, 75, 90, 105, 120, 135, 150
+  n_frames_to_extract: 10
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
@@ -260,10 +277,10 @@ persistent:
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
     sb_in_dist:           30.0
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           25.0
+  #- sf_nmolecules:        646
+  #  sf_preassembly:       hemicylinders
+  #  sf_concentration:     0.0068
+  #  sb_in_dist:           25.0
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
@@ -280,33 +297,10 @@ persistent:
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
     sb_in_dist:           5.0
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           0.0
-
-  # investigate anisotropic sliding for some configurations as well
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           20.0
-    direction_of_linear_movement: 1 # y direction
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           15.0
-    direction_of_linear_movement: 1 # y direction
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           10.0
-    direction_of_linear_movement: 1 # y direction
-  - sf_nmolecules:        646
-    sf_preassembly:       hemicylinders
-    sf_concentration:     0.0068
-    sb_in_dist:           5.0
-    direction_of_linear_movement: 1 # y direction
-
+  #- sf_nmolecules:        646
+  #  sf_preassembly:       hemicylinders
+  #  sf_concentration:     0.0068
+  #  sb_in_dist:           0.0
 
   #- sf_nmolecules:        646
   #  sf_preassembly:       monolayer
@@ -332,10 +326,10 @@ persistent:
     sf_preassembly:       monolayer
     sf_concentration:     0.0068
     sb_in_dist:           5.0
-  - sf_nmolecules:        646
-    sf_preassembly:       monolayer
-    sf_concentration:     0.0068
-    sb_in_dist:           0.0
+  #- sf_nmolecules:        646
+  #  sf_preassembly:       monolayer
+  #  sf_concentration:     0.0068
+  #  sb_in_dist:           0.0
   {%- else %}
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
@@ -343,18 +337,34 @@ persistent:
     sb_in_dist:           10.0
   {%- endif %}
 
-  fw_050_production.yaml:
+  fw_020_production_file_retrieval.yaml:
   - step:                       "shear"
+
+  {%- if mode is in ['PRODUCTION'] %}
+  fw_050_production.yaml:
+  # investigate anisotropic sliding for some configurations as well
+  - direction_of_linear_movement: 0 # x direction
+  - direction_of_linear_movement: 1 # y direction
+  # "slow" runs, 1 periodic transition
+  - constant_indenter_velocity:   1.0e-5
+    direction_of_linear_movement: 0 # x direction
+    netcdf_frequency:             50000
+    restart_frequency:            50000
+    thermo_frequency:             5000
+    thermo_average_frequency:     5000
+    production_steps:             7500000
+  - constant_indenter_velocity:   1.0e-5
+    direction_of_linear_movement: 1 # y direction
+    netcdf_frequency:             50000
+    restart_frequency:            50000
+    thermo_frequency:             5000
+    thermo_average_frequency:     5000
+    production_steps:             7500000
+  {%- endif %}
 
   fw_150_extract_frames.yaml:
   - type: AFM
     step: initial_config
-    # 225xxx steps mean 450 Ang distance travelled, 3 periodic transitions
-    # 10 frames to extract mean one frame every 45 Ang, effectively resulting
-    # in series of
-    #   45, 90, 135, 30, 75, 120, 15, 60, 105, 150 or, sorted,
-    #   15, 30, 45, 60, 75, 90, 105, 120, 135, 150
-    n_frames_to_extract: 10
 
 dependencies:
   fw_005_equilibration_dpd_file_retrieval.yaml:

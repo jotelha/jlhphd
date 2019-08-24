@@ -41,7 +41,7 @@ spec:
             str(sb_in_dist_unit) + '/' +
           str(step) + '/' +
           str(workflow_creation_date) + '/' +
-          'initial_config.lammps' ),
+          'default.lammps' ),
         metadata=locals()
       )
     - {}

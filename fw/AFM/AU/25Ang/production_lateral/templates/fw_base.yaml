@@ -1,19 +1,4 @@
-{#
-# sample identifier: AFM/SDS/646/AU/111/52x30x2/hemicylinders/50Ang/stepped/30Ang/1500000
-# identifier composition:
-#                        ^surfactant            ^initial config
-#                            ^surfactant molcules             ^indenter name (not real measures)
-#                                ^substrate material                ^indenter structure
-#                                   ^substrate crytal plane                 ^initial indenter substrate distance
-#                                       ^substrate unit cell multiples            ^steps to contact
-#
-# regular expression to turn metadata into placholder lines:
-#   pattern:      ^([[:space:]]+)([^:[:space:]]+):([[:space:]]+)[^[:space:]]+.*$
-#   replacement:  \1\2:\3{{ \2 }}
-# {% set datafile_identifier = "interface/%s/%d/%s/%s/%dx%dx%d/%s/initial_config.lammps"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-# {% set file_identifier = "interface_%s_%d_%s_%s_%dx%dx%d_%s"|format(surfactant,sf_nmolecules,substrate,sb_crystal_plane,sb_multiples[0],sb_multiples[1],sb_multiples[2],sf_preassembly) %}
-#}
-{%- set workflow_creation_date = "now"|datetime -%}
+{%- set workflow_creation_date = "now"|datetime('%Y-%m-%d-%H-%M-%S') -%}
 {# identifier for results, used as sub-path AND as filepad prefix #}
 {%- set identifier = (
   type|string + '/' +
