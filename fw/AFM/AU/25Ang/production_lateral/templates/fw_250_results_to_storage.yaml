@@ -2,7 +2,8 @@
 {% block body %}
 name: {{machine}}, sync '{{identifier}}' results to RZ storage
 spec:
-  _category: "{{ worker|default("nemo_noqueue",true) }}"
+  _priority: -1000
+  _category: "{{ worker }}"
   _files_in:
     data_file:          default.lammps
     filtered_traj_file: filtered.nc

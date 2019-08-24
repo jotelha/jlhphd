@@ -251,13 +251,23 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
+  fw_005_equilibration_dpd_file_retrieval.yaml:
+  - step:                   equilibration_dpd
   fw_012_equilibration_dpd.yaml:
-  - worker:                   {{ queue_worker }}
+  - worker:                 {{ queue_worker }}
+    step:                   equilibration_dpd
+  fw_014_equilibration_dpd_recover_failed.yaml:
+  - step:                   equilibration_dpd
+  fw_016_equilibration_dpd_results_to_filepad.yaml:
+  - step:                   equilibration_dpd
+  fw_018_equilibration_dpd_results_to_storage.yaml:
+  - step:                   equilibration_dpd
+
   fw_050_production.yaml:
-  - worker:                   {{ queue_worker }}
+  - worker:                 {{ queue_worker }}
   {%- if machine is in ['NEMO'] %}
   fw_080_filter_netcdf.yaml: # on NEMO, filer NetCDF on the queue:
-  - worker:                   {{ queue_worker }}
+  - worker:                 {{ queue_worker }}
     nodes:                  1
     ppn:                    20
 
@@ -337,9 +347,6 @@ persistent:
     sb_in_dist:           10.0
   {%- endif %}
 
-  fw_020_production_file_retrieval.yaml:
-  - step:                       "shear"
-
   {%- if mode is in ['PRODUCTION'] %}
   fw_050_production.yaml:
   # investigate anisotropic sliding for some configurations as well
@@ -382,6 +389,7 @@ dependencies:
   fw_014_equilibration_dpd_recover_failed.yaml:
   - fw_016_equilibration_dpd_results_to_filepad.yaml
   - fw_018_equilibration_dpd_results_to_storage.yaml
+  - fw_050_production.yaml
 
   fw_020_production_file_retrieval.yaml:
   - fw_050_production.yaml

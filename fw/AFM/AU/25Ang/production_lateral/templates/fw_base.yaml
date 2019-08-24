@@ -98,7 +98,7 @@ _background_tasks:
     while [ ! -f .port ]; do
       sleep 1;
       counter=$((counter + 1));
-      if [ $counter -ge 10 ]; then
+      if [ $counter -ge 30 ]; then
         echo "Timed out waiting for port!";
         exit 126;
       fi;
