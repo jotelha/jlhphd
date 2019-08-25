@@ -74,7 +74,6 @@ std: # standard settings to be applied to all fireworks, if not ...
   thermo_average_frequency:                     10
 
   dpd_equilibration_steps:                      100
-  production_steps:                             200
   max_restarts:                                 1
 
   {%- else %}
@@ -96,6 +95,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   # system metadata
   ci_preassembly:                               at polar heads
+  counterion:                                   NA
 
   force_field:
     solution_solution:                          "charmm36-jul2017"
@@ -132,10 +132,10 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_thickness_unit:                            m
   sb_volume:                                    3.375e-23
   sb_volume_unit:                               m^3
-  sf_concentration:                             0
+  sf_concentration:                             0 # fork with no of molecules
   sf_concentration_unit:                        M # M = mol L^-3
-  sf_nmolecules:                                0
-  sf_preassembly:                               none
+  sf_nmolecules:                                0 # fork
+  sf_preassembly:                               none # fork
   solvent:                                      H2O
   std_spatial_unit:                             Ang
   std_temporal_unit:                            fs
@@ -179,10 +179,10 @@ std: # standard settings to be applied to all fireworks, if not ...
     type:                         AFM tip
 
   minimization:
-    minimization_ftol:                            1.0e-6
-    minimization_ftol_unit:                       kcal
-    minimization_maxiter:                         10000
-    minimization_maxeval:                         100000
+    minimization_ftol:                          1.0e-6
+    minimization_ftol_unit:                     kcal
+    minimization_maxiter:                       10000
+    minimization_maxeval:                       100000
 
   approach:
     nvt_equilibration_steps:                    10000  #  20 ps

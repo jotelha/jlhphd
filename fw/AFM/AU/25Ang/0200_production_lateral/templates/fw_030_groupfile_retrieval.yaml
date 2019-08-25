@@ -34,6 +34,12 @@ spec:
     sort_key:                    metadata.workflow_creation_date
     sort_direction:              1 #ascending, i.e. oldest files first, newest written last
 
+
+# retrieve original metadata
+  - _fw_name: ImportDataTask
+    filename: groups.ndx.meta.yaml
+    mapstring: 'metadata/group_file_metadata'
+
   metadata:
     state: initial configuration group file retrieval
     {{ render_metadata()|indent(4)}}

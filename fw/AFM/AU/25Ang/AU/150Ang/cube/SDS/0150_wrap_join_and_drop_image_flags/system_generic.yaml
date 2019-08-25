@@ -9,7 +9,7 @@ std: # standard settings to be applied to all fireworks, if not ...
 
   machine:                {{ machine }}
   mode:                   {{ mode }}
-  step:                   intial_config
+  step:                   initial_config
   type:                   AFM
 
   # JUWELS
