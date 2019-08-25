@@ -1,0 +1,294 @@
+name: "{{ machine }} {{ mode }}: LAMMPS repeated DPD equilibration of r = 25 Ang AU AFM probe (111 facet facing negative z) above SDS on AU (111) 150 Ang cube substrate"
+metadata: {}
+std: # standard settings to be applied to all fireworks, if not ...
+  # machine-specific options
+
+  # two general options
+  # - machine: NEMO or JUWELS
+  # - mode:    PRODUCTION, TRIAL or EXPRESS TRIAL
+
+  machine:                {{ machine }}
+  mode:                   {{ mode }}
+  step:                   equilibration_dpd
+  type:                   AFM
+
+  # JUWELS
+{%- if machine is in ['JUWELS'] %}
+  {%- set queue_worker = "juwels_queue" %}
+  queue_worker:           juwels_queue
+  worker:                 juwels_noqueue
+  postp_worker:           juwels_noqueue
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:05:00'
+  queue:                  devel
+  ntasks:                 192
+  {%- else %}
+  walltime:               '06:00:00'
+  queue:                  batch
+  ntasks:                 768
+  {%- endif %}
+  cpus_per_task:          1
+  ntasks_per_node:        96
+  account:                hfr13
+{%- elif machine is in ['NEMO'] %}
+  {%- set queue_worker = "nemo_queue_offline" %}
+  queue_worker:           nemo_queue_offline
+  worker:                 nemo_noqueue
+  postp_worker:           nemo_noqueue
+  nodes:                  16
+  ppn:                    20
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  walltime:               '00:15:00'
+  queue:                  express
+  {%- else %}
+  walltime:               '96:00:00'
+  queue:                  ''
+  {%- endif %}
+{%- endif %}
+
+  smb_gateway:            132.230.102.164
+  smb_gateway_user:       sshclient
+  smb_gateway_ssh_id:     '~/.ssh/sshclient-frrzvm'
+  smb_host:               ufr2.isi1.public.ads.uni-freiburg.de
+  smb_port:               445
+
+  coeff_identifier:       SDS/in/H2O/on/AU/coeff/hybrid/lj/charmmfsw/coul/long.input
+
+  # technical LAMMPS options
+  ewald_accuracy:                               1.0e-4
+  coulomb_cutoff:                               8.0
+  coulomb_cutoff_unit:                          Ang
+  skin_distance:                                3.0
+  skin_distance_unit:                           Ang
+
+  neigh_delay:                                  2
+  neigh_every:                                  1
+  neigh_check:                                  1
+
+  compute_group_properties:                     1
+  mpiio:                                        1
+  {%- if mode is in ['EXPRESS TRIAL'] %}
+  netcdf_frequency:                             10
+  restart_frequency:                            10
+  thermo_frequency:                             10
+  thermo_average_frequency:                     10
+
+  dpd_equilibration_steps:                      100
+  production_steps:                             200
+  max_restarts:                                 1
+
+  {%- else %}
+  netcdf_frequency:                             5000
+  restart_frequency:                            5000
+  thermo_frequency:                             500
+  thermo_average_frequency:                     500
+
+  dpd_equilibration_steps:                      100000 # 200 ps
+  max_restarts:                                 100
+  {% endif %}
+
+  langevin_damping:                             1000.0 # in previous npt equilibration
+  barostat_damping:                             10000.0 # in previous npt equilibration
+  use_barostat:                                 0
+  use_dpd_tstat:                                1
+  use_eam:                                      1
+  use_ewald:                                    1
+
+  # system metadata
+  ci_preassembly:                               at polar heads
+
+  force_field:
+    solution_solution:                          "charmm36-jul2017"
+    substrate_substrate:                        "Au-Grochola-JCP05-units-real.eam.alloy"
+    substrate_solution:                         "interface_ff_1_5"
+
+  frozen_sb_layer_thickness:                    14.0
+  frozen_sb_layer_thickness_unit:               Ang
+
+  pbc:                                          111 # periodic in all directions
+  pressure:                                     1 # atm
+  pressure_unit:                                atm
+  sb_name:                                      AU_111_150Ang_cube
+  sb_area:                                      2.25e-16
+  sb_area_unit:                                 m^2
+  sb_base_length:                               150
+  sb_base_length_unit:                          Ang
+  sb_crystal_plane:                             111
+
+  sb_in_dist_unit:                              Ang
+  sb_lattice_constant:                          4.075
+  sb_lattice_constant_unit:                     Ang
+
+  sb_measures:
+  - 149.836e-10
+  - 149.725e-10
+  - 147.828e-10
+  sb_measures_unit:                             m
+
+  sb_natoms:                                    196560
+  sb_normal:                                    2 # z
+  sb_shape:                                     cube
+  sb_thickness:                                 150.0e-10
+  sb_thickness_unit:                            m
+  sb_volume:                                    3.375e-23
+  sb_volume_unit:                               m^3
+  sf_concentration:                             0
+  sf_concentration_unit:                        M # M = mol L^-3
+  sf_nmolecules:                                0
+  sf_preassembly:                               none
+  solvent:                                      H2O
+  std_spatial_unit:                             Ang
+  std_temporal_unit:                            fs
+  substrate:                                    AU
+  surfactant:                                   SDS
+  sv_density:                                   997 # kg m^-3
+  sv_density_unit:                              kg m^-3
+  sv_preassembly:                               random
+  temperature:                                  298 # K
+  temperature_unit:                             K
+  time_step:                                    2
+  time_step_unit:                               fs
+
+  indenter:
+    equilibration_time_span:      50
+    equilibration_time_span_unit: ps
+    initial_radius:               25
+    initial_radius_unit:          Ang
+    initial_shape:                sphere
+    lammps_units:                 real
+    melting_final_temperature:    1800
+    melting_time_span:            10
+    melting_time_span_unit:       ns
+    melting_time_step:            5
+    melting_time_step_unit:       fs
+    minimization_ftol:            1e-5
+    minimization_ftol_unit:       kcal
+    natoms:                       3873
+    crystal_plane:                111
+    orientation:                  111 facet facing negative z
+    potential:                    Au-Grochola-JCP05-units-real.eam.alloy
+    quenching_time_span:          100
+    quenching_time_span_unit:     ns
+    quenching_time_step:          5
+    quenching_time_step_unit:     fs
+    substrate:                    AU
+    temperature:                  298
+    temperature_unit:             K
+    time_step:                    2
+    time_step_unit:               fs
+    type:                         AFM tip
+
+  minimization:
+    minimization_ftol:                            1.0e-6
+    minimization_ftol_unit:                       kcal
+    minimization_maxiter:                         10000
+    minimization_maxeval:                         100000
+
+  approach:
+    nvt_equilibration_steps:                    10000  #  20 ps
+    npt_equilibration_steps:                    500000 #   1 ns
+    dpd_equilibration_steps:                    100000 # 200 ps
+    production_steps:                           1750000
+
+    constant_indenter_velocity:                 -1.0e-5
+    frozen_sb_layer_thickness:                  14.0
+    frozen_sb_layer_thickness_unit:             Ang
+    sb_in_dist:                                 30.0
+
+    netcdf_frequency:                           5000
+    restart_frequency:                          5000
+    thermo_frequency:                           500
+    thermo_average_frequency:                   500
+
+# if more than one set of contexts given, dependency tree will fork
+transient: # ...overridden by these transient settings, which do not affect children
+  fw_012_equilibration_dpd.yaml:
+  - worker:                 {{ queue_worker }}
+
+persistent:
+  fw_010_datafile_retrieval.yaml:
+  {%- if mode is in ['PRODUCTION'] %}
+  # hemicylinder sets
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           30.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           25.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           20.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           15.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           10.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           5.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           0.0
+
+  # monolayer sets
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           30.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           25.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           20.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           15.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           10.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           5.0
+  - sf_nmolecules:        646
+    sf_preassembly:       monolayer
+    sf_concentration:     0.0068
+    sb_in_dist:           0.0
+  {%- else %}
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           10.0
+  {%- endif %}
+
+dependencies:
+  fw_005_equilibration_dpd_file_retrieval.yaml:
+  - fw_010_datafile_retrieval.yaml
+  - fw_012_equilibration_dpd.yaml
+
+  fw_010_datafile_retrieval.yaml:
+  - fw_011_groupfile_retrieval.yaml
+  - fw_012_equilibration_dpd.yaml
+
+  fw_011_groupfile_retrieval.yaml:
+  - fw_012_equilibration_dpd.yaml
+
+  fw_012_equilibration_dpd.yaml:
+  - fw_014_equilibration_dpd_recover_failed.yaml
+
+  fw_014_equilibration_dpd_recover_failed.yaml:
+  - fw_016_equilibration_dpd_results_to_filepad.yaml
+  - fw_018_equilibration_dpd_results_to_storage.yaml

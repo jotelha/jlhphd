@@ -100,13 +100,13 @@ std: # standard settings to be applied to all fireworks, if not ...
   # system metadata
   ci_preassembly:                               at polar heads
 
-  constant_indenter_velocity:                   1.0e-4
+  constant_indenter_velocity:                   0 # fork
   constant_indenter_velocity_unit:              Ang_per_fs
   counterion:                                   NA
 
   # direction of movement x:0, y:1, z:2
-  direction_of_linear_movement:                 0
-  #sb_in_dist:                                  30.0
+  direction_of_linear_movement:                 1 # y direction, in case of hemicylinders orthogonal to cylinder axis
+  # y-dir is default, a few x-dir forked later
 
   force_field:
     solution_solution:                          "charmm36-jul2017"
@@ -143,10 +143,10 @@ std: # standard settings to be applied to all fireworks, if not ...
   sb_thickness_unit:                            m
   sb_volume:                                    3.375e-23
   sb_volume_unit:                               m^3
-  sf_concentration:                             0
+  sf_concentration:                             0 # fork with no of molecules
   sf_concentration_unit:                        M # M = mol L^-3
-  sf_nmolecules:                                0
-  sf_preassembly:                               none
+  sf_nmolecules:                                0 # fork
+  sf_preassembly:                               none # fork
   solvent:                                      H2O
   std_spatial_unit:                             Ang
   std_temporal_unit:                            fs
@@ -190,10 +190,10 @@ std: # standard settings to be applied to all fireworks, if not ...
     type:                         AFM tip
 
   minimization:
-    minimization_ftol:                            1.0e-6
-    minimization_ftol_unit:                       kcal
-    minimization_maxiter:                         10000
-    minimization_maxeval:                         100000
+    minimization_ftol:                          1.0e-6
+    minimization_ftol_unit:                     kcal
+    minimization_maxiter:                       10000
+    minimization_maxeval:                       100000
 
   approach:
     nvt_equilibration_steps:                    10000  #  20 ps
@@ -251,18 +251,6 @@ std: # standard settings to be applied to all fireworks, if not ...
 
 # if more than one set of contexts given, dependency tree will fork
 transient: # ...overridden by these transient settings, which do not affect children
-  fw_005_equilibration_dpd_file_retrieval.yaml:
-  - step:                   equilibration_dpd
-  fw_012_equilibration_dpd.yaml:
-  - worker:                 {{ queue_worker }}
-    step:                   equilibration_dpd
-  fw_014_equilibration_dpd_recover_failed.yaml:
-  - step:                   equilibration_dpd
-  fw_016_equilibration_dpd_results_to_filepad.yaml:
-  - step:                   equilibration_dpd
-  fw_018_equilibration_dpd_results_to_storage.yaml:
-  - step:                   equilibration_dpd
-
   fw_050_production.yaml:
   - worker:                 {{ queue_worker }}
   {%- if machine is in ['NEMO'] %}
@@ -281,16 +269,16 @@ transient: # ...overridden by these transient settings, which do not affect chil
   {%- endif %}
 
 persistent:
-  fw_010_datafile_retrieval.yaml:
+  fw_020_datafile_retrieval.yaml:
   {%- if mode is in ['PRODUCTION'] %}
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
     sb_in_dist:           30.0
-  #- sf_nmolecules:        646
-  #  sf_preassembly:       hemicylinders
-  #  sf_concentration:     0.0068
-  #  sb_in_dist:           25.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           25.0
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
@@ -307,10 +295,10 @@ persistent:
     sf_preassembly:       hemicylinders
     sf_concentration:     0.0068
     sb_in_dist:           5.0
-  #- sf_nmolecules:        646
-  #  sf_preassembly:       hemicylinders
-  #  sf_concentration:     0.0068
-  #  sb_in_dist:           0.0
+  - sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           0.0
 
   #- sf_nmolecules:        646
   #  sf_preassembly:       monolayer
@@ -340,6 +328,29 @@ persistent:
   #  sf_preassembly:       monolayer
   #  sf_concentration:     0.0068
   #  sb_in_dist:           0.0
+
+  # investigate anisotropic sliding for some configurations as well
+  - direction_of_linear_movement: 0 # x direction
+    sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           20.0
+  - direction_of_linear_movement: 0 # x direction
+    sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           15.0
+  - direction_of_linear_movement: 0 # x direction
+    sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           10.0
+  - direction_of_linear_movement: 0 # x direction
+    sf_nmolecules:        646
+    sf_preassembly:       hemicylinders
+    sf_concentration:     0.0068
+    sb_in_dist:           5.0
+
   {%- else %}
   - sf_nmolecules:        646
     sf_preassembly:       hemicylinders
@@ -349,19 +360,15 @@ persistent:
 
   {%- if mode is in ['PRODUCTION'] %}
   fw_050_production.yaml:
-  # investigate anisotropic sliding for some configurations as well
-  - direction_of_linear_movement: 0 # x direction
-  - direction_of_linear_movement: 1 # y direction
+  # "fast" runs, 3 periodic transiotions
+  - constant_indenter_velocity:   1.0e-4
+    netcdf_frequency:             5000
+    restart_frequency:            5000
+    thermo_frequency:             500
+    thermo_average_frequency:     500
+    production_steps:             2250000
   # "slow" runs, 1 periodic transition
   - constant_indenter_velocity:   1.0e-5
-    direction_of_linear_movement: 0 # x direction
-    netcdf_frequency:             50000
-    restart_frequency:            50000
-    thermo_frequency:             5000
-    thermo_average_frequency:     5000
-    production_steps:             7500000
-  - constant_indenter_velocity:   1.0e-5
-    direction_of_linear_movement: 1 # y direction
     netcdf_frequency:             50000
     restart_frequency:            50000
     thermo_frequency:             5000
@@ -374,24 +381,15 @@ persistent:
     step: initial_config
 
 dependencies:
-  fw_005_equilibration_dpd_file_retrieval.yaml:
-  - fw_010_datafile_retrieval.yaml
-  - fw_012_equilibration_dpd.yaml
-
-  fw_010_datafile_retrieval.yaml:
-  - fw_012_equilibration_dpd.yaml
-  - fw_020_production_file_retrieval.yaml
-
-  fw_012_equilibration_dpd.yaml:
-  - fw_014_equilibration_dpd_recover_failed.yaml
+  fw_010_production_file_retrieval.yaml:
+  - fw_020_datafile_retrieval.yaml
   - fw_050_production.yaml
 
-  fw_014_equilibration_dpd_recover_failed.yaml:
-  - fw_016_equilibration_dpd_results_to_filepad.yaml
-  - fw_018_equilibration_dpd_results_to_storage.yaml
+  fw_020_datafile_retrieval.yaml:
+  - fw_030_groupfile_retrieval.yaml
   - fw_050_production.yaml
 
-  fw_020_production_file_retrieval.yaml:
+  fw_030_groupfile_retrieval.yaml:
   - fw_050_production.yaml
 
   fw_050_production.yaml:
