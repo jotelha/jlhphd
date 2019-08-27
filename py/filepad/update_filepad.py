@@ -4,12 +4,7 @@ from fireworks.utilities.filepad import FilePad
 import pandas as pd
 import os
 
-fp = FilePad(
-    host='localhost',
-    port=27018,
-    database='fireworks-jhoermann',
-    username='fireworks',
-    password='fireworks')
+fp = FilePad.auto_load()
 
 prefix = os.getcwd()
 
