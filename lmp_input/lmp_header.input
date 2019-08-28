@@ -7,83 +7,181 @@
 ### global parameters
 
 # index varibles can be overridden by command line parameters "-v varName value"
-
-# suggested overrides
 #
-# * general
-# -v barostat_damping         10000.0
-# -v coeffInfile              coeff.input
-# -v compute_interactions     0
-# -v dataFile                 datafile.lammps
-# -v langevin_damping         1000.0
-# -v mpiio                    1
-# -v netcdf_frequency         1000
-# -v store_forces             0
-# -v surfactant_name          SDS
-# -v thermo_frequency         1000
-# -v thermo_average_frequency 1000
-# -v use_eam                  1
-# -v use_ewald                1
-# -v write_coeff_to_datafile  0
-# -v write_groups_to_file     1
-# -v coulomb_cutoff           8.0
-# -v ewald_accuracy           1.0e-4
-# -v neigh_delay              2
-# -v neigh_every              1
-# -v neigh_check              1
-# -v skin_distance            3.0
+# RECOMMENDED PARAMETER OVERRIDES AT COMMAND LINE
 #
-# * minimization
-# -v freeze_substrate         1 # hold entire substrate fixed
-# -v has_indenter             1
-# -v minimization_ftol        1.0e-6
-# -v minimization_maxiter     10000
-# -v minimization_maxeval     100000
-# -v relax_box                0
-# -v robust_minimization      0
-# -v surfactant_name          SDS
-# -v thermo_frequency         100
+# # Interface minimization:
+#   based on lmp_minimization.input
 #
-# * NVT equilibration, Langevin
-# -v has_indenter             1
-# -v productionSteps          10000
-# -v reinitialize_velocities  1
-# -v restrained_indenter      1
-# -v restrain_substrate_layer 14.0
-# -v temperatureT             298
-# -v temper_solid_only        0
-# -v use_barostat             0
-# -v use_berendsen_bstat      0
-# -v use_dpd_tstat            0
-
-# * NPT equilibration
-# -v dilate_solution_only     1
-# -v has_indenter             1
-# -v productionSteps          500000
-# -v pressureP                1
-# -v pressurize_solution_only 0
-# -v pressurize_z_only        1
-# -v reinitialize_velocities  0
-# -v restrained_indenter      1
-# -v restrain_substrate_layer 14.0
-# -v temperatureT             298
-# -v temper_solid_only        0
-# -v use_barostat             1
-# -v use_berendsen_bstat      0
-# -v use_dpd_tstat            0
+#   lmp -in lmp_minimization.input
+#     -v coeffInfile              coeff.input
+#     -v compute_interactions     0
+#     -v dataFile                 datafile.lammps
+#     -v freeze_substrate         1    # hold entire substrate fixed
+#     -v freeze_substrate_layer   14.0 # only for group definition for subsequent steps
+#     -v has_indenter             0
+#     -v minimization_ftol        1e-06
+#     -v minimization_maxiter     10000
+#     -v minimization_maxeval     10000
+#     -v mpiio                    1
+#     -v relax_box                0
+#     -v random_seed              518760906
+#     -v robust_minimization      0
+#     -v store_forces             0
+#     -v surfactant_name          SDS
+#     -v thermo_frequency         10
+#     -v use_eam                  1
+#     -v use_ewald                1
+#     -v write_coeff_to_datafile  0
+#     -v write_groups_to_file     1
+#     -v coulomb_cutoff           8.0
+#     -v ewald_accuracy           0.0001
+#     -v neigh_delay              2
+#     -v neigh_every              1
+#     -v neigh_check              1
+#     -v skin_distance            3.0
 #
-# * DPD equilibration
-# -v has_indenter             1
-# -v productionSteps          500000
-# -v reinitialize_velocities  0
-# -v restrained_indenter      1
-# -v restrain_substrate_layer 14.0
-# -v temperatureT             298
-# -v temper_solid_only        1
-# -v thermo_frequency         1000
-# -v use_barostat             0
-# -v use_berendsen_bstat      0
-# -v use_dpd_tstat            1
+#   All subsequent equilibration steps use the same lmp_production.input as
+#   input, just with differing options:
+#
+# # Interface NVT equilibration:
+#   utilizes
+#     * Langevin thermostat on whole system
+#
+#   lmp -in lmp_production.input
+#     -v coeffInfile              coeff.input
+#     -v compute_group_properties 1
+#     -v dataFile                 datafile.lammps
+#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box restrained
+#     -v has_indenter             0
+#     -v langevin_damping         1000.0
+#     -v mpiio                    1
+#     -v netcdf_frequency         1000
+#     -v productionSteps          10000
+#     -v initialT                 298.0
+#     -v temperatureT             298.0
+#     -v reinitialize_velocities  1
+#     -v random_seed              567608762
+#     -v read_groups_from_file    0
+#     -v surfactant_name          SDS
+#     -v temper_solid_only        0
+#     -v thermo_frequency         1000
+#     -v thermo_average_frequency 1000
+#     -v use_barostat             0
+#     -v use_berendsen_bstat      0
+#     -v use_dpd_tstat            0
+#     -v use_eam                  1
+#     -v use_ewald                1
+#     -v coulomb_cutoff           8.0
+#     -v ewald_accuracy           0.0001
+#     -v neigh_delay              2
+#     -v neigh_every              1
+#     -v neigh_check              1
+#     -v skin_distance            3.0
+#
+# # NPT equilibration
+#   utilizes
+#     * Langevin thermostat on whole system
+#     * Parrinello-Rahman barostat in z direction, dilating solution only
+#
+#
+#   lmp -in lmp_production.input
+#     -v barostat_damping         10000.0
+#     -v box_shift_z              10.0
+#     -v coeffInfile              coeff.input
+#     -v compute_group_properties 1
+#     -v dataFile                 datafile.lammps
+#     -v dilate_solution_only     1
+#     -v has_indenter             0
+#     -v langevin_damping         1000.0
+#     -v mpiio                    1
+#     -v netcdf_frequency         1000
+#     -v productionSteps          100000
+#     -v pressureP                1.0
+#     -v pressurize_z_only        1
+#     -v pressurize_solution_only 0
+#     -v random_seed              788457852
+#     -v reinitialize_velocities  0
+#     -v read_groups_from_file    0
+#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box restrained
+#     -v restrained_indenter      1
+#     -v surfactant_name          SDS
+#     -v temperatureT             298.0
+#     -v temper_solid_only        0
+#     -v thermo_frequency         1000
+#     -v thermo_average_frequency 1000
+#     -v use_barostat             1
+#     -v use_berendsen_bstat      0
+#     -v use_dpd_tstat            0
+#     -v use_eam                  1
+#     -v use_ewald                1
+#     -v coulomb_cutoff           8.0
+#     -v ewald_accuracy           0.0001
+#     -v neigh_delay              2
+#     -v neigh_every              1
+#     -v neigh_check              1
+#     -v skin_distance            3.0
+#
+# DPD equilibration
+#   utilizes
+#     * DPD thermostat on substrate only
+#     * no barostat
+#   lmp -in lmp_production.input
+#     -v barostat_damping         10000.0
+#     -v coeffInfile              coeff.input
+#     -v compute_group_properties 1
+#     -v dataFile                 datafile.lammps
+#     -v dilate_solution_only     1
+#     -v has_indenter             0
+#     -v mpiio                    1
+#     -v netcdf_frequency         1000
+#     -v productionSteps          100000
+#     -v pressureP                1.0
+#     -v pressurize_z_only        1
+#     -v pressurize_solution_only 0
+#     -v random_seed              194200264
+#     -v reinitialize_velocities  0
+#     -v read_groups_from_file    0
+#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box
+#     -v surfactant_name          SDS
+#     -v temperatureT             298.0
+#     -v temper_solid_only        1
+#     -v thermo_frequency         1000
+#     -v thermo_average_frequency 1000
+#     -v use_barostat             0
+#     -v use_berendsen_bstat      0
+#     -v use_dpd_tstat            1
+#     -v use_eam                  1
+#     -v use_ewald                1
+#     -v coulomb_cutoff           8.0
+#     -v ewald_accuracy           0.0001
+#     -v neigh_delay              2
+#     -v neigh_every              1
+#     -v neigh_check              1
+#     -v skin_distance            3.0
+#
+# # general recommended overrides, independent of actual purpose
+#
+#     -v barostat_damping         10000.0
+#     -v coeffInfile              coeff.input
+#     -v compute_interactions     0
+#     -v dataFile                 datafile.lammps
+#     -v langevin_damping         1000.0
+#     -v mpiio                    1
+#     -v netcdf_frequency         1000
+#     -v store_forces             0
+#     -v thermo_frequency         1000
+#     -v thermo_average_frequency 1000
+#     -v use_eam                  1
+#     -v use_ewald                1
+#     -v write_coeff_to_datafile  0
+#     -v write_groups_to_file     1
+#     -v coulomb_cutoff           8.0
+#     -v ewald_accuracy           1.0e-4
+#     -v neigh_delay              2
+#     -v neigh_every              1
+#     -v neigh_check              1
+#     -v skin_distance            3.0
 
 # input settings
 variable baseName                index  "default"
