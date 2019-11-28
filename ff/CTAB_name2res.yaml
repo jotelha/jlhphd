@@ -1,0 +1,23 @@
+# CTAB - specific
+#        1      1.008  # HL
+#        2      1.008  # HAL2
+#        3      1.008  # HAL3
+#        4     12.011  # CTL2
+#        5     12.011  # CTL3
+#        6     12.011  # CTL5
+#        7     14.007  # NTL
+#        8      1.008  # HT
+#        9    15.9994  # OT
+#       10     79.904  # BR
+#       11   196.9665  # AU
+HL:    CTAB
+HAL2:  CTAB
+HAL3:  CTAB
+CTL2:  CTAB
+CTL3:  CTAB
+CTL5:  CTAB
+NTL:   CTAB
+HT:    SOL
+OT:    SOL
+BR:    BR
+AU:    AUM

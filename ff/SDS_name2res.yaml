@@ -1,0 +1,23 @@
+# SDS - specific
+#       1      1.008  # HAL2
+#       2      1.008  # HAL3
+#       3     12.011  # CTL2
+#       4     12.011  # CTL3
+#       5    15.9994  # OSL
+#       6    15.9994  # O2L
+#       7      32.06  # SL
+#       8      1.008  # HT
+#       9    15.9994  # OT
+#      10   22.98977  # SOD
+#      11   196.9665  # AU
+HAL2:  SDS
+HAL3:  SDS
+CTL2:  SDS
+CTL3:  SDS
+OSL:   SDS
+O2L:   SDS
+SL:    SDS
+HT:    SOL
+OT:    SOL
+SOD:   NA
+AU:    AUM
