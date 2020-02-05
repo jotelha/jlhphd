@@ -1,7 +1,7 @@
 [\s\S]*
 Loop time of (?P<looptime>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) on (?P<nprocs>[-+]?\d+) procs for (?P<nsteps>[-+]?\d+) steps with (?P<natoms>[-+]?\d+) atoms
 [\s\S]*
-Performance: (?P<time_unit_per_day>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) (?P<time_unit>[\S]+)\/day, (?P<timesteps_per_second>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) timesteps\/s
+Performance: (?P<time_unit_per_day>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) (?P<time_unit>[\S]+)\/day, ((?P<hours_per_time_unit>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) hours\/(?P=time_unit), )?(?P<timesteps_per_second>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) timesteps\/s
 (?P<cpu_use>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)% CPU use with (?P<mpi_tasks>[-+]?\d+) MPI tasks x (?P<omp_threads>[-+]?\d+) OpenMP threads
 [\s\S]*
 MPI task timing breakdown:
