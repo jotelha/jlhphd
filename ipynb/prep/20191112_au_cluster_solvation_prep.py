@@ -9,7 +9,7 @@
 
 # ### IPython magic
 
-# In[ ]:
+# In[89]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -18,7 +18,7 @@ get_ipython().run_line_magic('autoreload', '3')
 
 # ### Imports
 
-# In[ ]:
+# In[90]:
 
 
 import ase.io # here used for reading pdb files
@@ -34,7 +34,7 @@ from fireworks import FileTransferTask, PyTask, ScriptTask
 from fireworks import Firework, LaunchPad, ScriptTask, Workflow
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask, GetFilesTask, GetFilesByQueryTask
-from jlhfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from fireworks.utilities.filepad import FilePad # direct FilePad access, similar to the familiar LaunchPad
 
 import glob
@@ -46,7 +46,6 @@ import itertools # for products of iterables
 import json # generic serialization of lists and dicts
 import jinja2 # here used for filling packmol input script template
 import jinja2.meta # for gathering variables in a jinja2 template
-from jlhfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask # custom Fireworks additions
 import logging 
 import matplotlib.pyplot as plt
 import MDAnalysis as mda # here used for reading and analyzing gromacs trajectories
@@ -96,7 +95,7 @@ import yaml
 
 # ### Logging
 
-# In[ ]:
+# In[91]:
 
 
 logging.basicConfig(level=logging.INFO)
@@ -107,9 +106,9 @@ logger.setLevel(logging.INFO)
 # ParmEd needs to know the GROMACS topology folder, usually get this from 
 # envionment variable `GMXLIB`:
 
-# ### Function decfinitions
+# ### Function definitions
 
-# In[ ]:
+# In[92]:
 
 
 def find_undeclared_variables(infile):
@@ -122,7 +121,7 @@ def find_undeclared_variables(infile):
     return undefined
 
 
-# In[ ]:
+# In[93]:
 
 
 def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None):
@@ -224,7 +223,7 @@ def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None
     return fig, ax
 
 
-# In[ ]:
+# In[94]:
 
 
 def pack_sphere(C,
@@ -293,7 +292,7 @@ def pack_sphere(C,
     return context
 
 
-# In[ ]:
+# In[95]:
 
 
 def memuse():
@@ -308,25 +307,25 @@ def memuse():
 
 # ### Global settings
 
-# In[ ]:
+# In[96]:
 
 
 os.environ['GMXLIB']
 
 
-# In[ ]:
+# In[97]:
 
 
 pmd.gromacs.GROMACS_TOPDIR = os.environ['GMXLIB']
 
 
-# In[ ]:
+# In[98]:
 
 
 prefix = '/mnt/dat/work/testuser/indenter/sandbox/20191110_packmol'
 
 
-# In[ ]:
+# In[99]:
 
 
 os.chdir(prefix)
@@ -334,7 +333,7 @@ os.chdir(prefix)
 
 # ### HPC-related settings
 
-# In[ ]:
+# In[100]:
 
 
 hpc_max_specs = {
@@ -368,7 +367,7 @@ hpc_max_specs = {
 }
 
 
-# In[ ]:
+# In[101]:
 
 
 std_exports = {
@@ -387,18 +386,877 @@ std_exports = {
 
 # ### FireWorks LaunchPad and FilePad
 
-# In[ ]:
+# In[102]:
 
 
 # the FireWorks LaunchPad
 lp = LaunchPad.auto_load() #Define the server and database
 
 
-# In[ ]:
+# In[103]:
 
 
 # FilePad behaves analogous to LaunchPad
 fp = FilePad.auto_load()
+
+
+# #### Sub-WF: PACKMOL
+
+# In[27]:
+
+
+def sub_wf_pack(d, fws_root):    
+    global project_id,         C, R_inner_constraint, R_outer_constraint,         tail_atom_number, head_atom_number, surfactant, counterion, tolerance,         fw_name_template, hpc_max_specs, machine
+    # TODO: instead of global variables, use class
+    
+    fw_list = []
+### Template
+    
+    files_in = {'input_file': 'input.template' }
+    files_out = { 'input_file': 'input.inp' }
+    
+    # exports = std_exports[machine].copy()
+        
+    # Jinja2 context:
+    packmol_script_context = {
+        'header':        '{:s} packing SDS around AFM probe model'.format(project_id),
+        'system_name':   '{:d}_SDS_on_50_Ang_AFM_tip_model'.format(d["nmolecules"]),
+        'tolerance':     tolerance,
+        'write_restart': True,
+
+        'static_components': [
+            {
+                'name': 'indenter'
+            }
+        ]
+    }
+
+    # use pack_sphere function at the notebook's head to generate template context
+    packmol_script_context.update(
+        pack_sphere(
+            C,R_inner_constraint,R_outer_constraint, d["nmolecules"], 
+            tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
+    
+    ft_template = TemplateWriterTask( {
+        'context': packmol_script_context,
+        'template_file': 'input.template',
+        'template_dir': '.',
+        'output_file': 'input.inp'} )
+    
+    
+    fw_template = Firework([ft_template],
+        name = ', '.join(('template', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in,
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fill_template',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_template)
+
+### PACKMOL
+
+    files_in = {
+        'input_file': 'input.inp',
+        'indenter_file': 'indenter.pdb',
+        'surfatcant_file': '1_SDS.pdb',
+        'counterion_file': '1_NA.pdb' }
+    files_out = {
+        'data_file': '*_packmol.pdb'}
+    
+    ft_pack = CmdTask(
+        cmd='packmol',
+        opt=['< input.inp'],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True)
+  
+    fw_pack = Firework([ft_pack],
+        name = ', '.join(('packmol', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_queue_category'],
+            '_queueadapter': {
+                'queue':           hpc_max_specs[machine]['queue'],
+                'walltime' :       hpc_max_specs[machine]['walltime'],
+                'ntasks':          1,
+            },
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'packmol',
+                 **d
+            }
+        },
+        parents = [ *fws_root, fw_template] )
+    
+    fw_list.append(fw_pack)
+
+    return fw_list, fw_pack
+
+def sub_wf_pack_push(d, fws_root):
+    global project_id, hpc_max_specs, machine
+
+    fw_list = []   
+
+    files_in = {'data_file': 'packed.pdb' }
+    
+    fts_push = [ AddFilesTask( {
+        'compress': True ,
+        'paths': "packed.pdb",
+        'metadata': {
+            'project': project_id,
+            'datetime': str(datetime.datetime.now()),
+            'type':    'initial_config',
+             **d } 
+        } ) ]
+    
+    fw_push = Firework(fts_push,
+        name = ', '.join(('transfer', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'transfer',
+                 **d
+            }
+        },
+        parents = fws_root )
+        
+    fw_list.append(fw_push)
+    
+    return fw_list, fw_push
+
+
+# #### Sub-WF: GMX prep
+
+# In[28]:
+
+
+def sub_wf_gmx_prep_pull(d, fws_root):
+    global project_id, hpc_max_specs, machine
+    
+    fw_list = []   
+    
+    files_in = {}
+    files_out = { 'data_file': 'in.pdb' }
+            
+    fts_pull = [ GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['in.pdb'] ) ]
+    
+    fw_pull = Firework(fts_pull,
+        name = ', '.join(('fetch', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fetch',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_pull)
+    
+    return fw_list, fw_pull
+
+def sub_wf_gmx_prep(d, fws_root):    
+    global project_id, hpc_max_specs, machine
+    # TODO: instead of global variables, use class
+    
+    fw_list = []   
+    
+### PDB chain
+
+    files_in =  {'data_file': 'in.pdb' }
+    files_out = {'data_file': 'out.pdb'}
+    
+    fts_pdb_chain = CmdTask(
+        cmd='pdb_chain',
+        opt=['< in.pdb > out.pdb'],
+        store_stdout = False,
+        store_stderr = False,
+        use_shell    = True,
+        fizzle_bad_rc= True)
+  
+    fw_pdb_chain = Firework(fts_pdb_chain,
+        name = ', '.join(('pdb_chain', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'pdb_chain',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_pdb_chain)
+    
+### PDB tidy
+    files_in =  {'data_file': 'in.pdb' }
+    files_out = {'data_file': 'out.pdb'}
+    
+    fts_pdb_tidy = CmdTask(
+        cmd='pdb_tidy',
+        opt=['< in.pdb > out.pdb'],
+        store_stdout = False,
+        store_stderr = False,
+        use_shell    = True,
+        fizzle_bad_rc= True)
+  
+    fw_pdb_tidy = Firework(fts_pdb_tidy,
+        name = ', '.join(('pdb_tidy', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'pdb_tidy',
+                 **d
+            }
+        },
+        parents = [ fw_pdb_chain ] )
+    
+    fw_list.append(fw_pdb_tidy)
+    
+### GMX pdb2gro
+    
+    files_in =  {'data_file': 'in.pdb' }
+    files_out = {
+        'data_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
+    
+    fts_gmx_pdb2gro = [ CmdTask(
+        cmd='gmx',
+        opt=['pdb2gmx',
+             '-f', 'in.pdb',
+             '-o', 'default.gro',
+             '-p', 'default.top',
+             '-i', 'default.posre.itp', 
+             '-ff', 'charmm36',
+             '-water' , 'tip3p'],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+    fw_gmx_pdb2gro = Firework(fts_gmx_pdb2gro,
+        name = ', '.join(('gmx_pdb2gro', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_pdb2gro',
+                 **d
+            }
+        },
+        parents = [ fw_pdb_tidy ] )
+    
+    fw_list.append(fw_gmx_pdb2gro)
+    
+    
+### GMX editconf
+    files_in = {
+        'data_file': 'in.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
+    files_out = {
+        'data_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
+    
+    fts_gmx_editconf = [ CmdTask(
+        cmd='gmx',
+        opt=['editconf',
+             '-f', 'in.gro',
+             '-o', 'default.gro',
+             '-d', 2.0, # distance between content and box boundary in nm
+             '-bt', 'cubic', # box type
+          ],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+    fw_gmx_editconf = Firework(fts_gmx_editconf,
+        name = ', '.join(('gmx_editconf', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_editconf',
+                 **d
+            }
+        },
+        parents = [ fw_gmx_pdb2gro ] )
+    
+    fw_list.append(fw_gmx_editconf)
+    
+    return fw_list, fw_gmx_editconf
+
+def sub_wf_gmx_prep_push(d, fws_root):
+    global project_id, hpc_max_specs, machine
+    fw_list = []
+    files_in = {
+        'data_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp' }
+    
+    fts_push = [ 
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "default.gro",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'initial_config_gro',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "default.top",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'initial_config_top',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "default.posre.itp",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'initial_config_posre_itp',
+                 **d } 
+        } ) ]
+        
+               
+    
+    fw_push = Firework(fts_push,
+        name = ', '.join(('push', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'push',
+                 **d
+            }
+        },
+        parents = fws_root )
+        
+    fw_list.append(fw_push)
+    
+    return fw_list, fw_push
+
+
+# #### Sub-WF: GMX EM
+
+# In[29]:
+
+
+def sub_wf_gmx_em_pull(d, fws_root):
+    global project_id, source_project_id, hpc_max_specs, machine
+    
+    fw_list = []   
+
+    files_in = {}
+    files_out = {
+        'data_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp',
+    }
+            
+    fts_fetch = [ 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_gro',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.gro'] ),
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_top',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.top'] ), 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_posre_itp',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.posre.itp'] ) ]
+    
+    fw_fetch = Firework(fts_fetch,
+        name = ', '.join(('fetch', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fetch',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_fetch)
+    
+    return fw_list, fw_fetch
+
+def sub_wf_gmx_em(d, fws_root):
+    global project_id, hpc_max_specs, machine
+    
+    fw_list = []
+### GMX grompp
+    files_in = {
+        'input_file':      'default.mdp',
+        'data_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
+    files_out = {
+        'input_file': 'default.tpr',
+        'parameter_file': 'mdout.mdp' }
+    
+    fts_gmx_grompp = [ CmdTask(
+        cmd='gmx',
+        opt=[' grompp',
+             '-f', 'default.mdp',
+             '-c', 'default.gro',
+             '-r', 'default.gro',
+             '-o', 'default.tpr',
+             '-p', 'default.top',
+          ],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+    fw_gmx_grompp = Firework(fts_gmx_grompp,
+        name = ', '.join(('gmx_grompp_em', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_grompp_em',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_gmx_grompp)
+    
+### GMX mdrun
+
+    files_in = {'input_file':   'em.tpr'}
+    files_out = {
+        'log_file':        'em.log',
+        'energy_file':     'em.edr',
+        'trajectory_file': 'em.trr',
+        'data_file':    'em.gro' }
+    
+    fts_gmx_mdrun = [ CmdTask(
+        cmd='gmx',
+        opt=[' mdrun',
+             '-deffnm', 'em', '-v' ],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+    
+    fw_gmx_mdrun = Firework(fts_gmx_mdrun,
+        name = ', '.join(('gmx_mdrun_em', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_queue_category'],
+            '_queueadapter': {
+                'queue':           hpc_max_specs[machine]['queue'],
+                'walltime' :       hpc_max_specs[machine]['walltime'],
+                'ntasks':          96,
+            },
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_mdrun_em',
+                 **d
+            }
+        },
+        parents = [ fw_gmx_grompp ] )
+    
+    fw_list.append(fw_gmx_mdrun)
+    
+    return fw_list, fw_gmx_mdrun
+
+def sub_wf_gmx_em_push(d, fws_root):
+    global project_id, hpc_max_specs, machine
+
+    fw_list = []
+    files_in = {
+        'log_file':        'em.log',
+        'energy_file':     'em.edr',
+        'trajectory_file': 'em.trr',
+        'data_file':    'em.gro' }
+    files_out = {}
+    
+    fts_push = [ 
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.log",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_log',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.edr",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_edr',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.trr",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_trr',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.gro",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_gro',
+                 **d } 
+        } ) ]
+    
+    fw_push = Firework(fts_push,
+        name = ', '.join(('push', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'push',
+                 **d
+            }
+        },
+        parents = fws_root )
+        
+    fw_list.append(fw_push)
+
+    return fw_list, fw_push
+
+
+# #### Sub-WF: Pulling
+
+# In[ ]:
+
+
+def sub_wf_pull_pull(d, fws_root):
+    global project_id, source_project_id, hpc_max_specs, machine
+    
+    fw_list = []   
+
+    files_in = {}
+    files_out = {
+        'data_file': 'default.gro',
+    }
+            
+    fts_pull = [ 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_gro',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.gro'] ) ]
+    
+    fw_pull = Firework(fts_pull,
+        name = ', '.join(('fetch', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fetch',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_pull)
+    
+    return fw_list, fw_pull
+
+def sub_wf_pull(d, fws_root):    
+    global project_id,         surfactant, counterion, substrate, nsubstrate,         tail_atom_name,         fw_name_template, hpc_max_specs, machine
+    
+    fw_list = []
+
+### System topolog template
+    files_in = { 'template_file': 'sys.top.template' }
+    files_out = { 'topology_file': 'sys.top' }
+        
+    # Jinja2 context:
+    template_context = {
+        'system_name':   '{nsurfactant:d}_{surfactant:s}_{ncounterion:d}_{counterion:s}_{nsubstrate:d}_{substrate:s}'.format(
+            project_id=project_id, 
+            nsurfactant=d["nmolecules"], surfactant=surfactant, 
+            ncounterion=d["nmolecules"], counterion=counterion,
+            nsubstrate=nsubstrate, substrate=substrate),
+        'header':        '{project_id:s}: {nsurfactant:d} {surfactant:s} and {ncounterion:d} {counterion:s} around {nsubstrate:d}_{substrate:s} AFM probe model'.format(
+            project_id=project_id, 
+            nsurfactant=d["nmolecules"], surfactant=surfactant, 
+            ncounterion=d["nmolecules"], counterion=counterion,
+            nsubstrate=nsubstrate, substrate=substrate),
+        'nsurfactant': d["nmolecules"],
+        'surfactant':  surfactant,
+        'ncounterion': d["nmolecules"],
+        'counterion':  counterion,
+        'nsubstrate':  nsubstrate,
+        'substrate':   substrate,
+    }
+    
+    fts_template = [ TemplateWriterTask( {
+        'context': template_context,
+        'template_file': 'sys.top.template',
+        'template_dir': '.',
+        'output_file': 'sys.top'} ) ]
+    
+    
+    fw_template = Firework(fts_template,
+        name = ', '.join(('template', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in,
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fill_template',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_template)
+
+### Index file
+
+    files_in = {'data_file': 'default.gro'}
+    files_out = {'index_file': 'default.ndx'}
+    
+    fts_gmx_make_ndx = [ 
+        CmdTask(
+            cmd='echo',
+            opt=[' q','> std.in'],
+            use_shell    = True,
+            fizzle_bad_rc= True),
+        CmdTask(
+            cmd='gmx',
+            opt=[' make_ndx',
+                 '-f', 'default.gro',
+                 '-o', 'default.ndx', '< std.in',
+              ],
+            stderr_file  = 'std.err',
+            stdout_file  = 'std.out',
+            store_stdout = True,
+            store_stderr = True,
+            use_shell    = True,
+            fizzle_bad_rc= True) ]
+    
+    fw_gmx_make_ndx = Firework(fts_gmx_make_ndx,
+        name = ', '.join(('gmx_make_ndx', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_make_ndx',
+                 **d
+            }
+        },
+        parents = fws_root )
+    
+    fw_list.append(fw_gmx_make_ndx)
+    
+### pulling groups
+
+    files_in = {
+        'data_file':     'default.gro',
+        'topology_file': 'default.top',
+        'index_file':    'in.ndx',
+        #'substrate_itp':  '{}.itp'.format(substrate),
+        #'surfactant_itp': '{}.itp'.format(substrate),
+    }
+    files_out = {
+        'index_file':    'out.ndx',
+        'topology_file': 'default.top', # pass unmodified
+    }
+    
+    
+    fts_extend_ndx = [ CmdTask(
+        cmd='extend_ndx_by_per_atom_groups',
+        opt=[
+            '--verbose', '--log', 'default.log',
+            '--topology-file', 'default.top',
+            '--coordinates-file', 'default.gro',
+            '--residue-name', surfactant,
+            '--atom-name', tail_atom_name,
+            'in.ndx', 'out.ndx'],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        fizzle_bad_rc= True) ]
+  
+    fw_extend_ndx = Firework(fts_extend_ndx,
+        name = ', '.join(('extend_ndx_by_per_atom_groups', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'extend_ndx_by_per_atom_groups',
+                 **d
+            }
+        },
+        parents = [ *fws_root, fw_template, fw_gmx_make_ndx] )
+    
+    fw_list.append(fw_extend_ndx)
+
+    return fw_list, fw_extend_ndx
+
+def sub_wf_pull_push(d, fws_root):
+    global project_id, hpc_max_specs, machine
+
+    fw_list = []   
+
+    files_in = {
+        'topology_file': 'default.top',
+        'index_file':    'default.ndx',
+    }
+    
+    fts_push = [ 
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "default.top",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'top_pull',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "default.ndx",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'ndx_pull',
+                 **d } 
+        } ),
+    ]
+    
+    fw_push = Firework(fts_push,
+        name = ', '.join(('push', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'push',
+                 **d
+            }
+        },
+        parents = fws_root )
+        
+    fw_list.append(fw_push)
+    
+    return fw_list, fw_push
 
 
 # ## Conversion from LAMMPS data format to PDB
@@ -430,19 +1288,19 @@ fp = FilePad.auto_load()
 
 # ### Read pdb
 
-# In[35]:
+# In[31]:
 
 
 infile = os.path.join(prefix,'indenter_reres.pdb')
 
 
-# In[36]:
+# In[32]:
 
 
 atoms = ase.io.read(infile,format='proteindatabank')
 
 
-# In[37]:
+# In[33]:
 
 
 atoms
@@ -450,7 +1308,7 @@ atoms
 
 # ### Display with ASE view
 
-# In[19]:
+# In[34]:
 
 
 v = view(atoms,viewer='ngl')
@@ -462,50 +1320,50 @@ v
 
 # ### Get the bounding sphere around point set
 
-# In[38]:
+# In[35]:
 
 
 S = atoms.get_positions()
 
 
-# In[39]:
+# In[36]:
 
 
 C, R_sq = miniball.get_bounding_ball(S)
 
 
-# In[40]:
+# In[37]:
 
 
 C # sphere center
 
 
-# In[41]:
+# In[38]:
 
 
 R = np.sqrt(R_sq)
 
 
-# In[42]:
+# In[39]:
 
 
 R # sphere radius
 
 
-# In[43]:
+# In[40]:
 
 
 xmin = atoms.get_positions().min(axis=0)
 xmax = atoms.get_positions().max(axis=0)
 
 
-# In[44]:
+# In[41]:
 
 
 xmin
 
 
-# In[45]:
+# In[42]:
 
 
 del S
@@ -513,7 +1371,7 @@ del S
 
 # ### Plot 2d projections of point set and bounding sphere
 
-# In[46]:
+# In[43]:
 
 
 # plot side views with sphere projections
@@ -522,7 +1380,7 @@ plot_side_views_with_spheres(atoms,C,R)
 
 # ### Plot 3d point set and bounding sphere
 
-# In[39]:
+# In[44]:
 
 
 # bounding sphere surface
@@ -535,7 +1393,7 @@ us = np.array([
 bs = C + R*us.T
 
 
-# In[40]:
+# In[45]:
 
 
 fig = plt.figure(figsize=(10,10))
@@ -551,7 +1409,7 @@ plt.show()
 
 # ## Measure surfactant molecule
 
-# In[41]:
+# In[46]:
 
 
 tol = 2 # Ang
@@ -561,19 +1419,19 @@ tol = 2 # Ang
 
 # Utilize parmed to read pbd files ASE has difficulties to decipher.
 
-# In[42]:
+# In[168]:
 
 
 infile = os.path.join(prefix,'1_SDS.pdb')
 
 
-# In[43]:
+# In[169]:
 
 
 surfactant_pmd = pmd.load_file(infile)
 
 
-# In[44]:
+# In[170]:
 
 
 surfactant_pmd.atoms[-1].atomic_number
@@ -581,7 +1439,7 @@ surfactant_pmd.atoms[-1].atomic_number
 
 # ### Convert ParmEd structure to ASE atoms
 
-# In[45]:
+# In[171]:
 
 
 surfactant_ase = ase.Atoms(
@@ -591,37 +1449,37 @@ surfactant_ase = ase.Atoms(
 
 # ### Get bounding sphere of single surfactant molecule
 
-# In[46]:
+# In[172]:
 
 
 C_surfactant, R_sq_surfactant = miniball.get_bounding_ball(surfactant_ase.get_positions())
 
 
-# In[47]:
+# In[173]:
 
 
 C_surfactant
 
 
-# In[48]:
+# In[174]:
 
 
 R_surfactant = np.sqrt(R_sq_surfactant)
 
 
-# In[49]:
+# In[175]:
 
 
 R_surfactant
 
 
-# In[50]:
+# In[176]:
 
 
 C_surfactant
 
 
-# In[51]:
+# In[177]:
 
 
 surfactant_ase[:5][1]
@@ -629,55 +1487,55 @@ surfactant_ase[:5][1]
 
 # ### Estimate constraint sphere radii
 
-# In[52]:
+# In[178]:
 
 
 R_OSL = np.linalg.norm(C_surfactant - surfactant_ase[1].position)
 
 
-# In[53]:
+# In[179]:
 
 
 R_OSL
 
 
-# In[54]:
+# In[180]:
 
 
 d_head = R_surfactant - R_OSL # roughly: diameter of head group
 
 
-# In[55]:
+# In[181]:
 
 
 R_inner = R + tol # place surfactant molecules outside of this sphere
 
 
-# In[56]:
+# In[182]:
 
 
 R_inner_constraint = R + tol + d_head # place surfactant tail hydrocarbon within this sphere
 
 
-# In[57]:
+# In[183]:
 
 
 R_outer_constraint = R + 2*R_surfactant + tol # place head group sulfur outside this sphere
 
 
-# In[58]:
+# In[184]:
 
 
 R_outer = R + 2*R_surfactant + 2*tol # place suractant molecules within this sphere
 
 
-# In[59]:
+# In[185]:
 
 
 rr = [R,R_inner,R_inner_constraint,R_outer_constraint,R_outer]
 
 
-# In[60]:
+# In[186]:
 
 
 cc = [C]*5
@@ -685,7 +1543,7 @@ cc = [C]*5
 
 # ### Show 2d projections of geometrical constraints around AFM tip model
 
-# In[61]:
+# In[187]:
 
 
 plot_side_views_with_spheres(atoms,cc,rr,figsize=(20,8))
@@ -694,31 +1552,37 @@ plt.show()
 
 # ## Packing the surfactant film
 
+# In[188]:
+
+
+infile_prefix = os.path.join(prefix,'packmol_infiles')
+
+
 # ### Identify placeholders in jinja2 template
 
 # The template looks like this:
 
-# In[424]:
+# In[189]:
 
 
 with open(os.path.join(infile_prefix,'surfactants_on_sphere.inp'),'r') as f:
     print(f.read())
 
 
-# In[425]:
+# In[190]:
 
 
 # get all placholders in template
 template_file = os.path.join(infile_prefix,'surfactants_on_sphere.inp')
 
 
-# In[426]:
+# In[191]:
 
 
 v = find_undeclared_variables(template_file)
 
 
-# In[427]:
+# In[192]:
 
 
 v # we want to fill in these placeholder variables
@@ -726,7 +1590,7 @@ v # we want to fill in these placeholder variables
 
 # ### System and constraint parameters
 
-# In[428]:
+# In[193]:
 
 
 surfactant = 'SDS'
@@ -735,39 +1599,39 @@ tolerance = 2 # Ang
 sfN = 200
 
 
-# In[429]:
+# In[194]:
 
 
 l_surfactant = 2*R_surfactant
 
 
-# In[430]:
+# In[195]:
 
 
 # head atom to be geometrically constrained
 surfactant_head_bool_ndx = np.array([ a.name == 'S' for a in surfactant_pmd.atoms ],dtype=bool)
 
 
-# In[431]:
+# In[196]:
 
 
 # tail atom to be geometrically constrained
 surfactant_tail_bool_ndx = np.array([ a.name == 'C12' for a in surfactant_pmd.atoms ],dtype=bool)
 
 
-# In[432]:
+# In[197]:
 
 
 head_atom_number = surfactant_head_ndx = np.argwhere(surfactant_head_bool_ndx)[0,0]
 
 
-# In[433]:
+# In[198]:
 
 
 tail_atom_number = surfactant_tail_ndx = np.argwhere(surfactant_tail_bool_ndx)[0,0]
 
 
-# In[434]:
+# In[199]:
 
 
 # settings can be overridden
@@ -791,7 +1655,7 @@ packmol_script_context.update(
         tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
 
 
-# In[435]:
+# In[200]:
 
 
 packmol_script_context # context generated from system and constraint settings
@@ -799,31 +1663,31 @@ packmol_script_context # context generated from system and constraint settings
 
 # ### Fill a packmol input script template with jinja2
 
-# In[436]:
+# In[201]:
 
 
 env = jinja2.Environment()
 
 
-# In[437]:
+# In[202]:
 
 
 template = jinja2.Template(open(template_file).read())
 
 
-# In[438]:
+# In[203]:
 
 
 rendered = template.render(**packmol_script_context)
 
 
-# In[439]:
+# In[204]:
 
 
 rendered_file = os.path.join(prefix,'rendered.inp')
 
 
-# In[440]:
+# In[205]:
 
 
 with open(rendered_file,'w') as f:
@@ -832,7 +1696,7 @@ with open(rendered_file,'w') as f:
 
 # That's the rendered packmol input file:
 
-# In[441]:
+# In[206]:
 
 
 print(rendered)
@@ -840,7 +1704,7 @@ print(rendered)
 
 # ### Fail running packmol once
 
-# In[67]:
+# In[207]:
 
 
 packmol = subprocess.Popen(['packmol'],
@@ -848,13 +1712,13 @@ packmol = subprocess.Popen(['packmol'],
         cwd=prefix, encoding='utf-8')
 
 
-# In[68]:
+# In[208]:
 
 
 outs, errs = packmol.communicate(input=rendered)
 
 
-# In[69]:
+# In[209]:
 
 
 print(errs) # error with input from PIPE
@@ -862,7 +1726,7 @@ print(errs) # error with input from PIPE
 
 # ### Read packmol input from file to avoid obscure Fortran error
 
-# In[445]:
+# In[210]:
 
 
 packmol = subprocess.Popen(['packmol'],
@@ -870,19 +1734,19 @@ packmol = subprocess.Popen(['packmol'],
         cwd=prefix, encoding='utf-8')
 
 
-# In[446]:
+# In[211]:
 
 
 outs, errs = packmol.communicate(input=rendered)
 
 
-# In[447]:
+# In[212]:
 
 
 print(outs)
 
 
-# In[448]:
+# In[213]:
 
 
 with open('packmol.log','w') as f:
@@ -891,25 +1755,25 @@ with open('packmol.log','w') as f:
 
 # ### Inspect packed systems
 
-# In[450]:
+# In[214]:
 
 
 packmol_pdb = '200_SDS_on_50_Ang_AFM_tip_model_packmol.pdb'
 
 
-# In[451]:
+# In[215]:
 
 
 infile = os.path.join(prefix, packmol_pdb)
 
 
-# In[452]:
+# In[216]:
 
 
 surfactant_shell_pmd = pmd.load_file(infile)
 
 
-# In[453]:
+# In[217]:
 
 
 # with ParmEd and nglview we get automatic bond guessing
@@ -920,7 +1784,7 @@ pmd_view.add_representation('ball+stick')
 pmd_view
 
 
-# In[454]:
+# In[218]:
 
 
 surfactant_shell_ase = ase.Atoms(
@@ -928,7 +1792,7 @@ surfactant_shell_ase = ase.Atoms(
     positions=surfactant_shell_pmd.get_coordinates(0))
 
 
-# In[455]:
+# In[219]:
 
 
 # with ASE, we get no bonds at all
@@ -941,37 +1805,37 @@ ase_view
 
 # Get bounding sphere again and display AFM tip bounding spphere as well as surfactant layer bounding sphere
 
-# In[399]:
+# In[220]:
 
 
 C_shell, R_sq_shell = miniball.get_bounding_ball(surfactant_shell_ase.get_positions())
 
 
-# In[400]:
+# In[221]:
 
 
 C_shell
 
 
-# In[401]:
+# In[222]:
 
 
 R_shell = np.sqrt(R_sq_shell)
 
 
-# In[402]:
+# In[223]:
 
 
 R_shell
 
 
-# In[403]:
+# In[224]:
 
 
 plot_side_views_with_spheres(surfactant_shell_ase,[C,C_shell],[R,R_shell])
 
 
-# In[404]:
+# In[342]:
 
 
 surfactant_shell_pmd
@@ -982,43 +1846,43 @@ surfactant_shell_pmd
 # 
 # #### Generate parameter sets
 
-# In[47]:
+# In[54]:
 
 
 R # Angstrom
 
 
-# In[48]:
+# In[55]:
 
 
 A_Ang = 4*np.pi*R**2 # area in Ansgtrom
 
 
-# In[49]:
+# In[56]:
 
 
 A_nm = A_Ang / 10**2
 
 
-# In[50]:
+# In[57]:
 
 
 A_nm
 
 
-# In[51]:
+# In[58]:
 
 
-n_per_nm_sq = np.array([0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0]) # molecules per square nm
+n_per_nm_sq = np.array([0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0]) # molecules per square nm
 
 
-# In[52]:
+# In[59]:
 
 
 N = np.round(A_nm*n_per_nm_sq).astype(int)
 
 
-# In[53]:
+# In[60]:
 
 
 N # molecule numbers corresponding to surface concentrations
@@ -1046,12 +1910,6 @@ query = {
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
-
-
-# In[159]:
-
-
-infile_prefix = os.path.join(prefix,'packmol_infiles')
 
 
 # In[160]:
@@ -1100,31 +1958,6 @@ print(identifier)
 
 # on a lower level, each object has a unique "GridFS id":
 pprint(fp_files) # underlying GridFS id and readable identifiers
-
-
-# In[144]:
-
-
-# settings can be overridden
-for n in N:
-    packmol_script_context = {
-        'header':        '{:s} packing SDS around AFM probe model'.format(project_id),
-        'system_name':   '{:d}_SDS_on_50_Ang_AFM_tip_model'.format(n),
-        'tolerance':     tolerance,
-        'write_restart': True,
-
-        'static_components': [
-            {
-                'name': 'indenter_reres'
-            }
-        ]
-    }
-
-    # use pack_sphere function at the notebook's head to generate template context
-    packmol_script_context.update(
-        pack_sphere(
-            C,R_inner_constraint,R_outer_constraint, n, 
-            tail_atom_number, head_atom_number, surfactant, counterion, tolerance))
 
 
 # #### Provide data files
@@ -1515,19 +2348,19 @@ del axes
 
 # ## Prepare a Gromacs-processible system
 
-# In[81]:
+# In[740]:
 
 
 gromacs.config.logfilename
 
 
-# In[82]:
+# In[741]:
 
 
 gromacs.environment.flags
 
 
-# In[83]:
+# In[742]:
 
 
 # if true, then stdout and stderr are returned as strings by gromacs wrapper commands
@@ -1546,7 +2379,7 @@ print(gromacs.release())
 prefix
 
 
-# In[95]:
+# In[539]:
 
 
 system = '200_SDS_on_50_Ang_AFM_tip_model'
@@ -1558,7 +2391,7 @@ posre = system + '.posre.itp'
 
 # ### Tidy up packmol's non-standard pdb
 
-# In[55]:
+# In[540]:
 
 
 # Remove any chain ID from pdb and tidy up
@@ -1572,7 +2405,7 @@ pdb_tidy = subprocess.Popen(['pdb_tidy',],
 
 # ### Generate Gromacs .gro and .top
 
-# In[418]:
+# In[541]:
 
 
 rc,out,err=gromacs.pdb2gmx(
@@ -1580,7 +2413,7 @@ rc,out,err=gromacs.pdb2gmx(
     stdout=False,stderr=False)
 
 
-# In[419]:
+# In[542]:
 
 
 print(out)
@@ -1588,13 +2421,13 @@ print(out)
 
 # ### Set simulation box size around system
 
-# In[422]:
+# In[543]:
 
 
 gro_boxed = system + '_boxed.gro'
 
 
-# In[423]:
+# In[544]:
 
 
 rc,out,err=gromacs.editconf(
@@ -1602,7 +2435,7 @@ rc,out,err=gromacs.editconf(
     stdout=False,stderr=False)
 
 
-# In[599]:
+# In[545]:
 
 
 print(out)
@@ -1610,26 +2443,28 @@ print(out)
 
 # ### Batch processing
 
-# In[58]:
+# #### Buld workflow
+
+# In[260]:
 
 
 machine = 'juwels_devel'
 
 
-# In[59]:
+# In[261]:
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[103]:
+# In[262]:
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[61]:
+# In[263]:
 
 
 # for testing
@@ -1637,7 +2472,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[0]] } ]
 
 
-# In[105]:
+# In[264]:
 
 
 parameter_sets = list( 
@@ -1648,14 +2483,14 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[106]:
+# In[265]:
 
 
 source_project_id = 'juwels-packmol-2020-03-09'
 project_id = 'juwels-gromacs-prep-2020-03-11'
 
 
-# In[107]:
+# In[266]:
 
 
 wf_name = 'GROMACS preparations {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -1793,17 +2628,17 @@ for d in parameter_dict_sets:
     
     files_in =  {'data_file': 'in.pdb' }
     files_out = {
-        'coordinate_file': 'out.gro',
-        'topology_file':   'out.top',
-        'restraint_file':  'out.posre.itp'}
+        'coordinate_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
     
     fts_gmx_pdb2gro = [ CmdTask(
         cmd='gmx',
         opt=['pdb2gmx',
              '-f', 'in.pdb',
-             '-o', 'out.gro',
-             '-p', 'out.top',
-             '-i', 'out.posre.itp', 
+             '-o', 'default.gro',
+             '-p', 'default.top',
+             '-i', 'default.posre.itp', 
              '-ff', 'charmm36',
              '-water' , 'tip3p'],
         stderr_file  = 'std.err',
@@ -1834,18 +2669,18 @@ for d in parameter_dict_sets:
 ### GMX editconf
     files_in = {
         'coordinate_file': 'in.gro',
-        'topology_file':   'in.top',
-        'restraint_file':  'in.posre.itp'}
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
     files_out = {
-        'coordinate_file': 'out.gro',
-        'topology_file':   'in.top',
-        'restraint_file':  'in.posre.itp'}
+        'coordinate_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
     
     fts_gmx_editconf = [ CmdTask(
         cmd='gmx',
         opt=['editconf',
              '-f', 'in.gro',
-             '-o', 'out.gro',
+             '-o', 'default.gro',
              '-d', 2.0, # distance between content and box boundary in nm
              '-bt', 'cubic', # box type
           ],
@@ -1937,25 +2772,25 @@ wf = Workflow(fw_list,
     })
 
 
-# In[108]:
+# In[267]:
 
 
 wf.as_dict()
 
 
-# In[109]:
+# In[268]:
 
 
 lp.add_wf(wf)
 
 
-# In[111]:
+# In[269]:
 
 
 wf.to_file('wf-{:s}.yaml'.format(project_id))
 
 
-# ### Inspect results
+# #### Inspect sweep results
 
 # In[93]:
 
@@ -2033,52 +2868,19 @@ pmd_view.add_representation('ball+stick')
 pmd_view
 
 
-# In[98]:
-
-
-system_selection = gro_list
-nx = 3
-ny = len(system_selection)
-view_labels = ['xy','xz','yz']
-
-molecule_counter = lambda s: np.count_nonzero([r.name == 'SDS' for r in s.residues])
-
-label_generator = lambda i,j: '{:d} SDS, {:s} projection'.format(
-    molecule_counter(system_selection[i]),view_labels[j])
-
-figsize = (4*nx,4*ny)
-fig, axes = plt.subplots(ny,3,figsize=figsize)
-
-for i,system in enumerate(system_selection):
-    system_ase = ase.Atoms(
-        numbers=[1 if a.atomic_number == 0 else a.atomic_number for a in system.atoms],
-        positions=system.get_coordinates(0))
-    
-    C_shell, R_sq_shell = miniball.get_bounding_ball(system_ase.get_positions())
-    R_shell = np.sqrt(R_sq_shell)
-    plot_side_views_with_spheres(
-        system_ase,[C,C_shell],[R,R_shell],fig=fig,ax=axes[i,:])
-    
-    for j, ax in enumerate(axes[i,:]):
-        ax.set_title(label_generator(i,j))
-        
-    del system_ase
-    gc.collect()
-
-
 # ## Energy minimization with restraints
 
 # Just to be safe, relax the system a little with positional constraints applied to all ions.
 
 # ### Compile system
 
-# In[308]:
+# In[546]:
 
 
 os.getcwd()
 
 
-# In[310]:
+# In[547]:
 
 
 em_mdp = gromacs.fileformats.MDP('em.mdp.template')
@@ -2086,7 +2888,7 @@ em_mdp = gromacs.fileformats.MDP('em.mdp.template')
 em_mdp.write('em.mdp')
 
 
-# In[311]:
+# In[548]:
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -2097,13 +2899,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[312]:
+# In[549]:
 
 
 print(err)
 
 
-# In[313]:
+# In[551]:
 
 
 print(out)
@@ -2111,7 +2913,7 @@ print(out)
 
 # ### Run energy minimization
 
-# In[314]:
+# In[552]:
 
 
 gmx_mdrun = gromacs.mdrun.Popen(
@@ -2119,27 +2921,27 @@ gmx_mdrun = gromacs.mdrun.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[316]:
+# In[553]:
 
 
 for line in gmx_mdrun.stdout: 
     print(line.decode(), end='')
 
 
-# In[317]:
+# In[ ]:
 
 
 out = gmx_mdrun.stdout.read()
 err = gmx_mdrun.stderr.read()
 
 
-# In[318]:
+# In[ ]:
 
 
 print(err)
 
 
-# In[305]:
+# In[ ]:
 
 
 print(out)
@@ -2159,7 +2961,7 @@ em_file = 'em.edr'
 em_df = panedr.edr_to_df(em_file)
 
 
-# In[321]:
+# In[554]:
 
 
 em_df.columns
@@ -2178,7 +2980,7 @@ em_df.plot('Time','Coulomb (SR)',ax=ax[2,0])
 em_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 
-# In[324]:
+# In[233]:
 
 
 mda_trr = mda.Universe(gro,'em.trr')
@@ -2191,13 +2993,1120 @@ mda_view.add_representation('ball+stick')
 mda_view
 
 
+# ### Batch processing
+
+# #### Build workflow: em
+
+# In[51]:
+
+
+machine = 'juwels_devel'
+
+
+# In[52]:
+
+
+parametric_dimension_labels = ['nmolecules']
+
+
+# In[53]:
+
+
+parametric_dimensions = [ {
+    'nmolecules': N } ]
+
+
+# In[273]:
+
+
+# for testing
+parametric_dimensions = [ {
+    'nmolecules': [N[0]] } ]
+
+
+# In[274]:
+
+
+parameter_sets = list( 
+    itertools.chain(*[ 
+            itertools.product(*list(
+                    p.values())) for p in parametric_dimensions ]) )
+
+parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
+
+
+# In[275]:
+
+
+source_project_id = 'juwels-gromacs-prep-2020-03-11'
+project_id = 'juwels-gromacs-em-2020-03-12'
+infile_prefix = 'gmx_em_infiles'
+
+
+# In[276]:
+
+
+# queries to the data base are simple dictionaries
+query = {
+    'metadata.project': project_id,
+}
+
+
+# In[277]:
+
+
+# use underlying MongoDB functionality to check total number of documents matching query
+fp.filepad.count_documents(query)
+
+
+# In[278]:
+
+
+infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
+
+files = { os.path.basename(f): f for f in infiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'input'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# In[291]:
+
+
+wf_name = 'GROMACS energy minimization {machine:}, {id:}'.format(machine=machine,id=project_id)
+
+fw_name_template = 'nmolecules: {nmolecules:d}'
+
+fw_list = []
+
+files_out = { 'input_file': 'default.mdp' }
+
+fts_root = [ 
+    GetFilesByQueryTask(
+        query = {
+            'metadata->project': project_id,
+            'metadata->name':    'em.mdp'
+        },
+        limit = 1,
+        new_file_names = ['default.mdp'] ) ]
+
+fw_root = Firework(fts_root,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'step':    'input_file_query'
+        }
+    }
+)
+
+fw_list.append(fw_root)
+
+## Parametric sweep
+
+for d in parameter_dict_sets:        
+    
+### File retrieval
+    
+    #files_in = {'input_file': 'input.template' }
+    files_in = {}
+    files_out = {
+        'coordinate_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp',
+    }
+            
+    fts_fetch = [ 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_gro',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.gro'] ),
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_top',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.top'] ), 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project':    source_project_id,
+                'metadata->type':       'initial_config_posre_itp',
+                'metadata->nmolecules': d["nmolecules"]
+            },
+            sort_key = 'metadata.datetime',
+            sort_direction = pymongo.DESCENDING,
+            limit = 1,
+            new_file_names = ['default.posre.itp'] ) ]
+    
+    fw_fetch = Firework(fts_fetch,
+        name = ', '.join(('fetch', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            '_files_out': files_out, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'fetch',
+                 **d
+            }
+        },
+        parents = [ fw_root ] )
+    
+    fw_list.append(fw_fetch)
+    
+### GMX grompp
+    files_in = {
+        'input_file':      'default.mdp',
+        'coordinate_file': 'default.gro',
+        'topology_file':   'default.top',
+        'restraint_file':  'default.posre.itp'}
+    files_out = {
+        'input_file': 'default.tpr',
+        'parameter_file': 'mdout.mdp' }
+    
+    fts_gmx_grompp = [ CmdTask(
+        cmd='gmx',
+        opt=[' grompp',
+             '-f', 'default.mdp',
+             '-c', 'default.gro',
+             '-r', 'default.gro',
+             '-o', 'default.tpr',
+             '-p', 'default.top',
+          ],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+    fw_gmx_grompp = Firework(fts_gmx_grompp,
+        name = ', '.join(('gmx_grompp_em', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_grompp_em',
+                 **d
+            }
+        },
+        parents = [ fw_fetch, fw_root ] )
+    
+    fw_list.append(fw_gmx_grompp)
+    
+### GMX mdrun
+
+    files_in = {'input_file':   'em.tpr'}
+    files_out = {
+        'energy_file':     'em.edr',
+        'trajectory_file': 'em.trr',
+        'final_config':    'em.gro' }
+    
+    fts_gmx_mdrun = [ CmdTask(
+        cmd='gmx',
+        opt=[' mdrun',
+             '-deffnm', 'em', '-v' ],
+        stderr_file  = 'std.err',
+        stdout_file  = 'std.out',
+        store_stdout = True,
+        store_stderr = True,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+    
+    fw_gmx_mdrun = Firework(fts_gmx_mdrun,
+        name = ', '.join(('gmx_mdrun_em', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_queue_category'],
+            '_queueadapter': {
+                'queue':           hpc_max_specs[machine]['queue'],
+                'walltime' :       hpc_max_specs[machine]['walltime'],
+                'ntasks':          96,
+            },
+            '_files_in':  files_in,
+            '_files_out': files_out,
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'gmx_mdrun_em',
+                 **d
+            }
+        },
+        parents = [ fw_gmx_grompp ] )
+    
+    fw_list.append(fw_gmx_mdrun)
+    
+# Store results
+    files_in = {
+        'energy_file':     'em.edr',
+        'trajectory_file': 'em.trr',
+        'final_config':    'em.gro' }
+    files_out = {}
+    
+    fts_push = [ 
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.edr",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_edr',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.trr",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_trr',
+                 **d } 
+        } ),
+        AddFilesTask( {
+            'compress': True ,
+            'paths': "em.gro",
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'em_gro',
+                 **d } 
+        } ) ]
+    
+    fw_push = Firework(fts_push,
+        name = ', '.join(('push', fw_name_template.format(**d))),
+        spec = {
+            '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+            '_files_in': files_in, 
+            'metadata': {
+                'project': project_id,
+                'datetime': str(datetime.datetime.now()),
+                'step':    'push',
+                 **d
+            }
+        },
+        parents = [ fw_gmx_mdrun ] )
+        
+    fw_list.append(fw_push)
+
+wf = Workflow(fw_list,
+    name = wf_name,
+    metadata = {
+        'project': project_id,
+        'datetime': str(datetime.datetime.now()),
+        'type':    'gmx_prep'
+    })
+
+
+# In[292]:
+
+
+wf.to_file('wf-{:s}.yaml'.format(project_id))
+
+
+# In[294]:
+
+
+lp.add_wf(wf)
+
+
+# #### Build workflow: prep & em
+
+# In[450]:
+
+
+machine = 'juwels_devel'
+
+
+# In[451]:
+
+
+parametric_dimension_labels = ['nmolecules']
+
+
+# In[452]:
+
+
+parametric_dimensions = [ {
+    'nmolecules': N } ]
+
+
+# In[453]:
+
+
+# for testing
+parametric_dimensions = [ {
+    'nmolecules': [N[0]] } ]
+
+
+# In[454]:
+
+
+parameter_sets = list( 
+    itertools.chain(*[ 
+            itertools.product(*list(
+                    p.values())) for p in parametric_dimensions ]) )
+
+parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
+
+
+# In[411]:
+
+
+source_project_id = 'juwels-packmol-2020-03-09'
+project_id = 'juwels-gromacs-em-2020-03-12'
+infile_prefix = 'gmx_em_infiles'
+
+
+# In[412]:
+
+
+# queries to the data base are simple dictionaries
+query = {
+    'metadata.project': project_id,
+}
+
+
+# In[413]:
+
+
+# use underlying MongoDB functionality to check total number of documents matching query
+fp.filepad.count_documents(query)
+
+
+# In[414]:
+
+
+infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
+
+files = { os.path.basename(f): f for f in infiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'input'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# In[415]:
+
+
+wf_name = 'GROMACS preparations & energy minimization, {machine:}, {id:}'.format(machine=machine,id=project_id)
+
+fw_name_template = 'nmolecules: {nmolecules:d}'
+
+fw_list = []
+
+fts_root_dummy = [
+    CmdTask(
+        cmd='echo',
+        opt=['"Dummy root"'],
+        store_stdout = False,
+        store_stderr = False,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+files_out = {}
+    
+fw_root_dummy = Firework(fts_root_dummy,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'step':    'dummy_root'
+        }
+    }
+)
+
+fw_list.append(fw_root_dummy)
+
+files_out = { 'input_file': 'default.mdp' }
+
+fts_root_pull = [ 
+    GetFilesByQueryTask(
+        query = {
+            'metadata->project': project_id,
+            'metadata->name':    'em.mdp'
+        },
+        limit = 1,
+        new_file_names = ['default.mdp'] ) ]
+
+fw_root_pull = Firework(fts_root_pull,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'step':    'input_file_query'
+        }
+    }
+)
+
+fw_list.append(fw_root_pull)
+
+## Parametric sweep
+
+for d in parameter_dict_sets:        
+    fw_list_tmp, fw_gmx_prep_pull_leaf = sub_wf_gmx_prep_pull(d, [fw_root_dummy])
+    fw_list.extend(fw_list_tmp)
+    
+    fw_list_tmp, fw_gmx_prep_leaf = sub_wf_gmx_prep(d, [fw_gmx_prep_pull_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+    fw_list_tmp, _ = sub_wf_gmx_prep_push(d, [fw_gmx_prep_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+    fw_list_tmp, fw_gmx_mdrun = sub_wf_gmx_em(d, [fw_root_pull,fw_gmx_prep_leaf])
+    fw_list.extend(fw_list_tmp)
+
+    fw_list_tmp, fw_gmx_mdrun_push = sub_wf_gmx_em_psuh(d, [fw_gmx_mdrun])
+    fw_list.extend(fw_list_tmp)
+
+
+wf = Workflow(fw_list,
+    name = wf_name,
+    metadata = {
+        'project': project_id,
+        'datetime': str(datetime.datetime.now()),
+        'type':    'gmx_prep'
+    })
+
+
+# In[440]:
+
+
+fw_list_tmp, fw_gmx_mdrun_push = sub_wf_gmx_em_push(d, None)
+#fw_list.extend(fw_list_tmp)
+
+
+# In[441]:
+
+
+len(fw_list_tmp)
+
+
+# In[442]:
+
+
+sub_wf = Workflow(fw_list_tmp)
+
+
+# In[449]:
+
+
+lp.append_wf(sub_wf,[24198])
+
+
+# In[447]:
+
+
+wf.as_dict()
+
+
+# In[417]:
+
+
+wf.to_file('wf-{:s}.yaml'.format(project_id))
+
+
+# In[418]:
+
+
+lp.add_wf(wf)
+
+
+# #### Inspect sweep results
+
+# In[461]:
+
+
+query = { 
+    "metadata.project": project_id,
+    "metadata.type":    'em_edr',
+}
+fp.filepad.count_documents(query)
+
+
+# In[462]:
+
+
+parameter_names = ['nmolecules']
+
+
+# In[532]:
+
+
+em_list = []
+
+match_aggregation = {
+        "$match": query
+    }
+sort_aggregation = {
+        "$sort": { 
+            "metadata.datetime": pymongo.DESCENDING,
+        }
+    }
+group_aggregation = { 
+    "$group": { 
+        "_id": { p: '$metadata.{}'.format(p) for p in parameter_names },
+        "degeneracy": {"$sum": 1}, # number matching data sets
+        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
+    }
+}
+aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
+cursor = fp.filepad.aggregate(aggregation_pipeline)
+
+for i, c in enumerate(cursor): 
+    content, metadata = fp.get_file_by_id(c["latest"])
+    with tempfile.NamedTemporaryFile(suffix='.edr') as tmp:
+        tmp.write(content)
+        em_df = panedr.edr_to_df(tmp.name)
+        
+        mi = pd.MultiIndex.from_product(
+            [[int(metadata["metadata"]["nmolecules"])],em_df.index],
+            names=['nmolecules','step'])
+        em_mi_df = em_df.set_index(mi)
+        em_list.append(em_mi_df)
+    print('.',end='')
+print('')
+em_df = pd.concat(em_list)
+
+
+# In[537]:
+
+
+fig, ax = plt.subplots(3,2,figsize=(10,12))
+em_df.plot('Time','Potential',ax=ax[0,0])
+em_df.plot('Time','Pressure',ax=ax[0,1])
+em_df.plot('Time','Bond',ax=ax[1,0])
+#em_df.plot('Time','Position Rest.',ax=ax[1,1])
+#em_df.plot('Time','COM Pull En.',ax=ax[1,1])
+em_df.plot('Time','Coulomb (SR)',ax=ax[2,0])
+em_df.plot('Time','Coul. recip.',ax=ax[2,1])
+
+
+# In[559]:
+
+
+query = { 
+    "metadata.project": project_id,
+    "metadata.type":    { '$in': ['em_trr','em_gro'] },
+}
+fp.filepad.count_documents(query)
+
+
+# In[731]:
+
+
+# Building a rather sophisticated aggregation pipeline
+
+parameter_names = ['nmolecules', 'type']
+
+query = { 
+    "metadata.project": project_id,
+    "metadata.type":    { '$in': ['em_trr','em_gro'] },
+}
+
+aggregation_pipeline = []
+
+aggregation_pipeline.append({ 
+    "$match": query
+})
+
+
+aggregation_pipeline.append({ 
+    "$sort": { 
+        "metadata.nmolecules": pymongo.ASCENDING,
+        "metadata.datetime": pymongo.DESCENDING,
+    }
+})
+
+aggregation_pipeline.append({ 
+    "$group": { 
+        "_id": { p: '$metadata.{}'.format(p) for p in parameter_names },
+        "degeneracy": {"$sum": 1}, # number matching data sets
+        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
+    }
+})
+
+parameter_names = ['nmolecules']
+
+aggregation_pipeline.append({ 
+    "$group": { 
+        "_id": { p: '$_id.{}'.format(p) for p in parameter_names },
+        "type":     {"$addToSet": "$_id.type"},
+        "gfs_id":   {"$addToSet": "$latest"} 
+        #"$_id.type": "$latest"
+    }
+})
+
+aggregation_pipeline.append({
+    '$project': {
+         '_id': False,
+        **{ p: '$_id.{}'.format(p) for p in parameter_names},
+        'objects': { 
+            '$zip': {
+                'inputs': [ '$type', '$gfs_id' ],
+                'useLongestLength': True,
+                'defaults':  [None,None]
+            }
+        }
+    }
+})
+
+aggregation_pipeline.append({ 
+    '$project': {
+        **{ p: True for p in parameter_names},
+        'objects': {'$arrayToObject': '$objects'}
+        #'objects': False 
+    }
+})
+
+aggregation_pipeline.append({ 
+    '$addFields': {
+        'objects': { **{ p: '${}'.format(p) for p in parameter_names} }
+    }
+})
+
+aggregation_pipeline.append({ 
+    '$replaceRoot': { 'newRoot': '$objects' }
+})
+
+# display results with
+# for i, c in enumerate(cursor): 
+#    print(c)
+# yields documents in the form
+# {'em_gro': '5e6a4e3d6c26f976ceae5e38', 'em_trr': '5e6a4e3a6c26f976ceae5e14', 'nmolecules': '44'}
+# i.e. most recent topology file and trajectory file per concentration
+
+cursor = fp.filepad.aggregate(aggregation_pipeline)
+
+
+# In[732]:
+
+
+mda_trr_list = []
+for i, c in enumerate(cursor): 
+    em_gro_content, _ = fp.get_file_by_id(c["em_gro"])
+    em_trr_content, _ = fp.get_file_by_id(c["em_trr"])
+    # STream approach won't work
+    # with io.TextIOWrapper( io.BytesIO(em_gro_content) ) as gro, \
+    #    io.BytesIO(em_trr_content) as trr:   
+        #mda_trr_list.append( 
+        #    mda.Universe( 
+        #        gro,trr, topology_format = 'GRO', format='TRR') )
+    with tempfile.NamedTemporaryFile(suffix='.gro') as gro,         tempfile.NamedTemporaryFile(suffix='.trr') as trr:
+        gro.write(em_gro_content)
+        trr.write(em_trr_content)
+        mda_trr_list.append( mda.Universe(gro.name,trr.name) )
+    print('.',end='')
+print('')
+
+
+# In[733]:
+
+
+mda_trr = mda_trr_list[0]
+
+mda_view = nglview.show_mdanalysis(mda_trr)
+
+mda_view.clear_representations()
+mda_view.background = 'white'
+mda_view.add_representation('ball+stick')
+mda_view
+
+
+# ### Batch processing: packing, prep & em
+
+# In[785]:
+
+
+machine = 'juwels_devel'
+
+
+# In[786]:
+
+
+parametric_dimension_labels = ['nmolecules']
+
+
+# In[787]:
+
+
+N
+
+
+# In[788]:
+
+
+parametric_dimensions = [ {
+    'nmolecules': N } ]
+
+
+# In[789]:
+
+
+# for testing
+parametric_dimensions = [ {
+    'nmolecules': [N[-1]] } ]
+
+
+# In[790]:
+
+
+parameter_sets = list( 
+    itertools.chain(*[ 
+            itertools.product(*list(
+                    p.values())) for p in parametric_dimensions ]) )
+
+parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
+
+
+# In[791]:
+
+
+# source_project_id = 'juwels-packmol-2020-03-09'
+project_id = 'juwels-afm-probe-solvation-trial-a-2020-03-13'
+# infile_prefix = 'gmx_em_infiles'
+
+
+# In[792]:
+
+
+# queries to the data base are simple dictionaries
+query = {
+    'metadata.project': project_id,
+}
+
+
+# In[793]:
+
+
+# use underlying MongoDB functionality to check total number of documents matching query
+fp.filepad.count_documents(query)
+
+
+# #### Provide PACKMOL template 
+
+# In[794]:
+
+
+infile_prefix = os.path.join(prefix,'packmol_infiles')
+
+infiles = sorted(glob.glob(os.path.join(infile_prefix,'*.inp')))
+
+files = { os.path.basename(f): f for f in infiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'template'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# In[795]:
+
+
+# queries to the data base are simple dictionaries
+query = {
+    'metadata.project': project_id,
+    'metadata.type': 'template'
+}
+
+# use underlying MongoDB functionality to check total number of documents matching query
+fp.filepad.count_documents(query)
+
+
+# In[796]:
+
+
+print(identifier)
+
+
+# In[797]:
+
+
+# on a lower level, each object has a unique "GridFS id":
+pprint(fp_files) # underlying GridFS id and readable identifiers
+
+
+# #### Provide data files
+
+# In[798]:
+
+
+data_prefix = os.path.join(prefix,'packmol_datafiles')
+
+
+# In[799]:
+
+
+datafiles = sorted(glob.glob(os.path.join(data_prefix,'*')))
+
+files = { os.path.basename(f): f for f in datafiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'data'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# #### Provide energy minimization input files
+
+# In[800]:
+
+
+infile_prefix = 'gmx_em_infiles'
+
+infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
+
+files = { os.path.basename(f): f for f in infiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'input'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# #### Build workflow
+
+# In[809]:
+
+
+wf_name = 'pack, preparations & energy minimization, {machine:}, {id:}'.format(machine=machine,id=project_id)
+
+fw_name_template = 'nmolecules: {nmolecules:d}'
+
+fw_list = []
+
+# sub-wf pack root
+fts_root_pack = [ 
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project': project_id,
+                'metadata->name':    'surfactants_on_sphere.inp'
+            },
+            limit = 1,
+            new_file_names = ['input.template'] ),
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project': project_id,
+                'metadata->name':    'indenter_reres.pdb'
+            },
+            limit = 1,
+            new_file_names = ['indenter.pdb'] ),
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project': project_id,
+                'metadata->name':    '1_SDS.pdb'
+            },
+            limit = 1,
+            new_file_names = ['1_SDS.pdb'] ),
+        GetFilesByQueryTask(
+            query = {
+                'metadata->project': project_id,
+                'metadata->name':    '1_NA.pdb'
+            },
+            limit = 1,
+            new_file_names = ['1_NA.pdb'] )
+        ]
+
+files_out = {
+    'input_file': 'input.template',
+    'indenter_file': 'indenter.pdb',
+    'surfatcant_file': '1_SDS.pdb',
+    'counterion_file': '1_NA.pdb'}
+
+fw_root_pack = Firework(fts_root_pack,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'subwf':   'pack',
+          'step':    'input_file_query'
+        }
+    }
+)
+
+fw_list.append(fw_root_pack)
+
+# sub-wf gmx prep root
+
+fts_root_prep = [
+    CmdTask(
+        cmd='echo',
+        opt=['"Dummy root"'],
+        store_stdout = False,
+        store_stderr = False,
+        use_shell    = True,
+        fizzle_bad_rc= True) ]
+  
+files_out = {}
+
+fw_root_prep = Firework(fts_root_prep,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'subwf':   'prep',
+          'step':    'dummy_root'
+        }
+    }
+)
+
+fw_list.append(fw_root_prep)
+
+# sub-wf gmx em root
+files_out = { 'input_file': 'default.mdp' }
+
+fts_root_em = [ 
+    GetFilesByQueryTask(
+        query = {
+            'metadata->project': project_id,
+            'metadata->name':    'em.mdp'
+        },
+        limit = 1,
+        new_file_names = ['default.mdp'] ) ]
+
+fw_root_em = Firework(fts_root_em,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'subwf':   'em',
+          'step':    'input_file_query'
+        }
+    }
+)
+
+fw_list.append(fw_root_em)
+
+## Parametric sweep
+
+for d in parameter_dict_sets:        
+    # pack
+    fw_list_tmp, fw_pack_leaf = sub_wf_pack(d, [fw_root_pack])
+    fw_list.extend(fw_list_tmp)
+    
+    fw_list_tmp, _ = sub_wf_pack_push(d, [fw_pack_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+    # prep
+    fw_list_tmp, fw_prep_leaf = sub_wf_gmx_prep(d, [fw_pack_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+    fw_list_tmp, _ = sub_wf_gmx_prep_push(d, [fw_prep_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+    # em
+    fw_list_tmp, fw_gmx_mdrun = sub_wf_gmx_em(d, [fw_root_em,fw_prep_leaf])
+    fw_list.extend(fw_list_tmp)
+
+    fw_list_tmp, fw_gmx_mdrun_push = sub_wf_gmx_em_push(d, [fw_gmx_mdrun])
+    fw_list.extend(fw_list_tmp)
+    
+wf = Workflow(fw_list,
+    name = wf_name,
+    metadata = {
+        'project': project_id,
+        'datetime': str(datetime.datetime.now()),
+        'type':    'pack, prep, em'
+    })
+
+
+# In[812]:
+
+
+wf.to_file('wf-{:s}.json'.format(project_id))
+
+
+# In[813]:
+
+
+lp.add_wf(wf)
+
+
 # ## Pulling
 
 # Utilize harmonic pulling to attach surfactants to substrate closely.
 
 # ### Create index groups for pulling
 
-# In[325]:
+# In[816]:
 
 
 #pdb = '200_SDS_on_50_Ang_AFM_tip_model.pdb'
@@ -2206,9 +4115,10 @@ top = 'sys.top'
 ndx = 'standard.ndx'
 
 
-# In[326]:
+# In[743]:
 
 
+import parmed as pmd
 pmd_top_gro = pmd.gromacs.GromacsTopologyFile(top)
 #pmd_top_pdb = pmd.gromacs.GromacsTopologyFile(top)
 
@@ -2229,7 +4139,7 @@ tail_atom_ndx = np.array([
 # gromacs ndx starts at 1
 
 
-# In[328]:
+# In[814]:
 
 
 tail_atom_ndx
@@ -2237,7 +4147,7 @@ tail_atom_ndx
 
 # ### Generate standard index file for system
 
-# In[329]:
+# In[823]:
 
 
 gmx_make_ndx = gromacs.make_ndx.Popen(
@@ -2246,19 +4156,19 @@ gmx_make_ndx = gromacs.make_ndx.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[330]:
+# In[824]:
 
 
 out_str, err_str = gmx_make_ndx.communicate()
 
 
-# In[331]:
+# In[825]:
 
 
 print(out_str)
 
 
-# In[332]:
+# In[826]:
 
 
 print(err_str)
@@ -2380,6 +4290,178 @@ print(err)
 
 
 print(out)
+
+
+# ### Batch processing
+
+# In[72]:
+
+
+# cast into parameters
+surfactant = 'SDS'
+tail_atom_name = 'C12'
+substrate = 'AUM'
+counterion = 'NA'
+nsubstrate = 3873
+
+
+# #### Build workflow: pull
+
+# In[62]:
+
+
+machine = 'juwels_devel'
+
+
+# In[63]:
+
+
+parametric_dimension_labels = ['nmolecules']
+
+
+# In[64]:
+
+
+parametric_dimensions = [ {
+    'nmolecules': N } ]
+
+
+# In[65]:
+
+
+# for testing
+parametric_dimensions = [ {
+    'nmolecules': [N[-1]] } ]
+
+
+# In[66]:
+
+
+parameter_sets = list( 
+    itertools.chain(*[ 
+            itertools.product(*list(
+                    p.values())) for p in parametric_dimensions ]) )
+
+parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
+
+
+# In[67]:
+
+
+source_project_id = 'juwels-gromacs-prep-2020-03-11'
+project_id = 'juwels-pull-2020-03-17'
+infile_prefix = 'gmx_infiles'
+
+
+# In[68]:
+
+
+# queries to the data base are simple dictionaries
+query = {
+    'metadata.project': project_id,
+}
+
+
+# In[69]:
+
+
+# use underlying MongoDB functionality to check total number of documents matching query
+fp.filepad.count_documents(query)
+
+
+# In[70]:
+
+
+infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
+
+files = { os.path.basename(f): f for f in infiles }
+
+# metadata common to all these files 
+metadata = {
+    'project': project_id,
+    'type': 'input'
+}
+
+fp_files = []
+
+# insert these input files into data base
+for name, file_path in files.items():
+    identifier = '/'.join((project_id,name)) # identifier is like a path on a file system
+    metadata["name"] = name
+    fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
+
+
+# In[73]:
+
+
+wf_name = 'GROMACS surfactant pulling {machine:}, {id:}'.format(machine=machine,id=project_id)
+
+fw_name_template = 'nmolecules: {nmolecules:d}'
+
+fw_list = []
+
+files_out = { 'template_file': 'sys.top.template' }
+
+fts_root_pull = [ 
+    GetFilesByQueryTask(
+        query = {
+            'metadata->project': project_id,
+            'metadata->name':    'sys.top.template'
+        },
+        limit = 1,
+        new_file_names = ['sys.top.template'] ) ]
+
+fw_root_pull = Firework(fts_root_pull,
+    name = wf_name,
+    spec = {
+        '_category': hpc_max_specs[machine]['fw_noqueue_category'],
+        '_files_out': files_out, 
+        'metadata': {
+          'project': project_id,
+          'datetime': str(datetime.datetime.now()),
+          'step':    'input_file_query'
+        }
+    }
+)
+
+fw_list.append(fw_root_pull)
+
+## Parametric sweep
+
+for d in parameter_dict_sets:        
+    # pull data files
+    fw_list_tmp, fw_pull_pull_leaf = sub_wf_pull_pull(d, [])
+    fw_list.extend(fw_list_tmp)
+    
+    # pull 
+    fw_list_tmp, fw_pull_leaf = sub_wf_pull(d, [fw_root_pull,fw_pull_pull_leaf])
+    fw_list.extend(fw_list_tmp)
+
+    # push data files
+    fw_list_tmp, _ = sub_wf_pull_push(d, [fw_pull_pull_leaf])
+    fw_list.extend(fw_list_tmp)
+    
+
+
+wf = Workflow(fw_list,
+    name = wf_name,
+    metadata = {
+        'project': project_id,
+        'datetime': str(datetime.datetime.now()),
+        'type':    'pull'
+    })
+
+
+# In[932]:
+
+
+wf.to_file('wf-{:s}.yaml'.format(project_id))
+
+
+# In[933]:
+
+
+lp.add_wf(wf)
 
 
 # ## Pulling analysis
