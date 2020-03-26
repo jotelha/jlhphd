@@ -1,0 +1,7 @@
+
+GROMACS-related
+
+- gmx_pdp2gro_solvate_em.sh: protocol on how to remove chain id from pdb,
+    convert to gro, solvate system and minimize (after packmol)
+- gmx_genrestr.sh: example on how to generate GROMACS bonds and bontypes
+    restraints from position restraints.

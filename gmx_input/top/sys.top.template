@@ -1,0 +1,34 @@
+; {{ system_name }}
+; {{ header }}
+; Include forcefield parameters
+#include "{{ force_field|default('charmm36', true) }}.ff/forcefield.itp"
+#include "{{ force_field|default('charmm36', true) }}.ff/{{ substrate|default('AUM',true) }}.itp"
+#include "{{ force_field|default('charmm36', true) }}.ff/{{ surfactant|default('SDS',true) }}.itp"
+; Include topology for ions
+; #include "{{ force_field|default('charmm36', true) }}.ff/ions.itp"
+# include "{{ force_field|default('charmm36', true) }}.ff/{{ counterion|default('NA',true) }}.itp"
+
+; Include water topology
+#include "{{ force_field|default('charmm36', true) }}.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+[ system ]
+; Name
+{{ system_name }}
+
+[ molecules ]
+; Compound        #mols
+Substrate     {{ nsubstrate|int }}
+Surfactant    {{ nsurfactant|int }}
+{% if ncounterion %}
+{{ counterion|default('NA',true) }} {{ ncounterion|int }}
+{% endif %}
+{% if nsolvent %}
+SOL           {{ nsolvent|int }}
+{% endif %}

@@ -1,0 +1,18 @@
+#!/bin/bash
+# AU_111_r_25.pdb creation from LAMMPS data file.
+# Names are assigned to types and residues to names
+# by simple .yaml dictionaries.
+# requires vmd, jlhvmd, pdb_tools, 
+vmd -eofexit << 'EOF'
+package require jlhvmd
+topo readlammpsdata indenter.lammps
+jlh type2name SDS_type2name.yaml
+jlh name2res  SDS_name2res.yaml
+set sel [atomselect top all]
+$sel writepdb indenter.pdb
+EOF
+
+# remove chain id, "sync" atom and residue numbers, stick to maximum
+# resiude number 9999 in std pdb format.
+pdb_chain.py indenter.pdb > indenter_wo_chainid.pdb
+pdb_reres_by_atom_9999.py indenter_wo_chainid.pdb > indenter_reres.pdb

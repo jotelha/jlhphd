@@ -1,0 +1,77 @@
+# PACKMOL input Jinja2 template for packing surfactant aggregates on top
+# of flat substrate
+
+# {{ system_name }}
+# {{ header }}
+
+# Change the maximum number of optimization loops, default 20
+nloop {{ nloop|default(20,true)|int }}
+# Change the maximum number of Gencan iterations per loop. default 50
+maxit {{ maxit|default(50,true)|int }}
+
+tolerance {{ "%.3f"|format(tolerance) }}
+
+{% if movebadrandom %}
+# One of the convergence heuristics of Packmol consists in moving molecules
+# that are badly placed. If this option is set, the molecules will be placed
+# in new random position in the box. If not (default), the molecules are
+# moved to positions nearby molecules that are well packed. Using this
+# option can help when the restraints are complex, but will probably be bad
+# if there are large structures, because the new random position might overlap
+# with those.
+movebadrandom
+{% endif %}
+
+# Coordinate file types will be in pdb format (keyword not required for
+# pdb file format, but required for tinker, xyz or moldy).
+
+filetype pdb
+
+output {{ system_name }}_packmol.pdb
+
+{% if write_restart %}
+restart_to {{ system_name }}_restart.pack
+{% endif %}
+
+
+{% if static_components %}
+{% for static_component in static_components %} 
+structure {{ static_component.name }}.pdb
+  number 1
+  resnumbers 2
+  fixed {{ "%.3f"|format(static_component.offset|default([0, 0, 0])|first) }} {{ "%.3f"|format((static_component.offset|default([0, 0, 0]))[1]) }} {{ "%.3f"|format(static_component.offset|default([0 ,0, 0])|last) }} 0. 0. 0. 
+end structure 
+{% endfor %} 
+{% endif %}
+
+{% for sphere in spheres %} 
+structure 1_{{ sphere.surfactant }}.pdb 
+  resnumbers 2
+  number {{ sphere.N|int }}
+  inside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_outer) }}
+  outside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_inner) }}
+  atoms {{ sphere.inner_atom_number|int }}
+    inside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_inner_constraint) }}
+  end atoms
+  atoms {{ sphere.outer_atom_number|int }}
+    outside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_outer_constraint) }}
+  end atoms
+  {% if write_restart %}
+    restart_to {{ system_name }}_sphere_{{ "%03d"|format(loop.index0) }}_restart.pack
+  {% endif %}
+end structure
+{% endfor %}
+
+# ions outside sphere
+{% for sphere in ionspheres %}
+structure 1_{{ sphere.ion }}.pdb
+  resnumbers 2
+  number {{ sphere.N|int }}
+  # along x axis
+  inside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_outer) }}
+  outside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_inner) }}
+  {% if write_restart %}
+    restart_to {{ system_name }}_sphere_{{ "%03d"|format(loop.index0) }}_restart.pack
+  {% endif %}
+end structure
+{% endfor %}

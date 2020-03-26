@@ -1,0 +1,13 @@
+[ moleculetype ]
+; Name            nrexcl
+Substrate          3
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+     1         AU      1    AUM     AU      1          0  196.96650   ; qtot 0
+
+#ifdef POSRE_AUM
+[ position_restraints ]
+; atom  type      fx      fy      fz
+     1     1  1000  1000  1000
+#endif

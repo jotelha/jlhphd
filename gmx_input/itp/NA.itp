@@ -1,0 +1,13 @@
+[ moleculetype ]
+; molname       nrexcl
+NA              1
+
+[ atoms ]
+;   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB
+     1        SOD      1      NA    NA      1          1  
+
+#ifdef POSRES_ION
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
