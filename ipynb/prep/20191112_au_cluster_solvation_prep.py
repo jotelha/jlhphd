@@ -9,7 +9,7 @@
 
 # ### IPython magic
 
-# In[764]:
+# In[1]:
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -18,7 +18,7 @@ get_ipython().run_line_magic('autoreload', '3')
 
 # ### Imports
 
-# In[765]:
+# In[2]:
 
 
 import ase.io # here used for reading pdb files
@@ -95,7 +95,7 @@ import yaml
 
 # ### Logging
 
-# In[766]:
+# In[3]:
 
 
 logging.basicConfig(level=logging.INFO)
@@ -108,7 +108,7 @@ logger.setLevel(logging.INFO)
 
 # ### Function definitions
 
-# In[767]:
+# In[4]:
 
 
 def find_undeclared_variables(infile):
@@ -121,7 +121,7 @@ def find_undeclared_variables(infile):
     return undefined
 
 
-# In[768]:
+# In[5]:
 
 
 def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None):
@@ -223,7 +223,7 @@ def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None
     return fig, ax
 
 
-# In[769]:
+# In[6]:
 
 
 def pack_sphere(C,
@@ -292,7 +292,7 @@ def pack_sphere(C,
     return context
 
 
-# In[770]:
+# In[7]:
 
 
 def memuse():
@@ -307,33 +307,40 @@ def memuse():
 
 # ### Global settings
 
-# In[771]:
+# In[8]:
 
 
 os.environ['GMXLIB']
 
 
-# In[772]:
+# In[ ]:
 
 
 pmd.gromacs.GROMACS_TOPDIR = os.environ['GMXLIB']
 
 
-# In[773]:
+# In[10]:
 
 
-prefix = '/mnt/dat/work/testuser/indenter/sandbox/20191110_packmol'
+# prefix = '/mnt/dat/work/testuser/indenter/sandbox/20191110_packmol'
+prefix = '/home/jotelha/git/N_surfactant_on_substrate_template'
 
 
-# In[774]:
+# In[11]:
 
 
-os.chdir(prefix)
+work_prefix = '/home/jotelha/tmp/20200329_fw/'
+
+
+# In[12]:
+
+
+os.chdir(work_prefix)
 
 
 # ### HPC-related settings
 
-# In[775]:
+# In[ ]:
 
 
 hpc_max_specs = {
@@ -367,7 +374,7 @@ hpc_max_specs = {
 }
 
 
-# In[776]:
+# In[ ]:
 
 
 std_exports = {
@@ -386,14 +393,14 @@ std_exports = {
 
 # ### FireWorks LaunchPad and FilePad
 
-# In[777]:
+# In[ ]:
 
 
 # the FireWorks LaunchPad
 lp = LaunchPad.auto_load() #Define the server and database
 
 
-# In[778]:
+# In[ ]:
 
 
 # FilePad behaves analogous to LaunchPad
@@ -1582,10 +1589,16 @@ def sub_wf_gmx_pull_push(d, fws_root):
 
 # ### Read pdb
 
+# In[17]:
+
+
+ls $prefix
+
+
 # In[18]:
 
 
-infile = os.path.join(prefix,'indenter_reres.pdb')
+infile = os.path.join(prefix,'dat','indenter','AU_111_r_25.pdb')
 
 
 # In[19]:
@@ -1614,7 +1627,7 @@ v
 
 # ### Get the bounding sphere around point set
 
-# In[52]:
+# In[25]:
 
 
 S = atoms.get_positions()
@@ -1626,19 +1639,19 @@ xmin = atoms.get_positions().min(axis=0)
 xmax = atoms.get_positions().max(axis=0)
 
 
-# In[53]:
+# In[26]:
 
 
 C # sphere center
 
 
-# In[54]:
+# In[27]:
 
 
 R # sphere radius
 
 
-# In[55]:
+# In[28]:
 
 
 xmin
@@ -1647,7 +1660,7 @@ xmin
 # 
 # ### Derive surfactant numbers from sphere dimensions
 
-# In[56]:
+# In[29]:
 
 
 A_Ang = 4*np.pi*R**2 # area in Ansgtrom
@@ -1656,13 +1669,13 @@ n_per_nm_sq = np.array([0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0]) # mo
 N = np.round(A_nm*n_per_nm_sq).astype(int)
 
 
-# In[57]:
+# In[30]:
 
 
 A_nm
 
 
-# In[58]:
+# In[31]:
 
 
 N # molecule numbers corresponding to surface concentrations
@@ -1670,7 +1683,7 @@ N # molecule numbers corresponding to surface concentrations
 
 # ### Plot 2d projections of point set and bounding sphere
 
-# In[36]:
+# In[32]:
 
 
 # plot side views with sphere projections
