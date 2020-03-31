@@ -5,15 +5,24 @@ Created on Sat Mar 28 23:53:39 2020
 
 @author: jotelha
 """
-import dill
 
-from imteksimfw.firetasks.user_objects.firetasks.cmd_tasks import PyEnvTask
-from jlhpy.utilities.wf.workdlow_generator import HPC_SPECS
+import datetime
+# import dill
+import pymongo
+
+from fireworks import Firework, Workflow
+from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PyEnvTask
+
+from jlhpy.utilities.geometry.bounding_sphere import get_bounding_sphere_from_file
+
+from jlhpy.utilities.wf.serialize import serialize_module_obj
+from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator, HPC_SPECS
 
 class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
-    def pull(d, fws_root):
-        global project_id, source_project_id, HPC_SPECS, machine
+    def pull(self, fws_root=[]):
+        # global project_id, source_project_id, HPC_SPECS, machine
 
         fw_list = []
 
@@ -27,7 +36,7 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
                 query = {
                     'metadata->project':    self.project_id, # earlier
                     'metadata->type':       'initial_file_pdb',
-                    'metadata->nmolecules': d["nmolecules"]
+                    'metadata->nmolecules': self.kwargs["nmolecules"]
                 },
                 sort_key = 'metadata.datetime',
                 sort_direction = pymongo.DESCENDING,
@@ -43,11 +52,7 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
         }
         files_out = {}
 
-        from jlhphp.py.utilities.geometry.bounding_sphere import BoundingSphere
-
-        bounding_sphere = BoundingSphere()
-
-        func_str = dill.dumps(bounding_sphere)
+        func_str = serialize_module_obj(get_bounding_sphere_from_file)
 
         fts = [ PyEnvTask(
             func = func_str,
@@ -55,7 +60,7 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             outputs = [
                 'metadata->system->indenter->bounding_sphere->center',
                 'metadata->system->indenter->bounding_sphere->radius',
-            ]
+            ],
             stderr_file  = 'std.err',
             stdout_file  = 'std.out',
             store_stdout = True,
@@ -64,7 +69,7 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
         fw = Firework(fts,
             name = ', '.join((
-                step, fw_name_template.format(**self.kwargs))),
+                step, self.fw_name_template.format(**self.kwargs))),
             spec = {
                 '_category': self.hpc_specs[self.machine]['fw_noqueue_category'],
                 '_files_in':  files_in,

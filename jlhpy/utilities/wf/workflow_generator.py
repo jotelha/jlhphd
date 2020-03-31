@@ -25,7 +25,9 @@ import ase.io
 import logging
 import os
 import datetime
+import pickle
 
+import dill
 import numpy as np
 import pint
 import miniball
