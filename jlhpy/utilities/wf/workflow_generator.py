@@ -23,6 +23,7 @@ import ase.io
 
 # system basics
 import logging
+import itertools
 import os
 import datetime
 import pickle
@@ -79,7 +80,10 @@ HPC_SPECS = {
         'logical_cores_per_node':  96,
         'nodes': 1024,
         'walltime':  '00:30:00'
-    }
+    },
+    'ubuntu': {
+        'fw_noqueue_category': 'ubuntu_noqueue'
+    },
 }
 
 HPC_EXPORTS = { # standard settings for environment variables
@@ -135,22 +139,41 @@ class FireWorksWorkflowGenerator:
             self,
             project_id,
             machine,
+            hpc_specs=None,
             fw_name_template='',
-            hpc_specs=HPC_SPECS,
+            # parametric_dimension_labels = ['nmolecules'],
             **kwargs
         ):
         """All **kwargs are treated as meta data."""
         self.project_id = project_id
-        self.hpc_specs = hpc_specs
+        if hpc_specs:
+            self.hpc_specs = hpc_specs
+        elif machine:
+            self.hpc_specs = HPC_SPECS[machine]
         self.machine = machine
-        self.fw_name_template=fw_name_template
+        self.fw_name_template = fw_name_template
         self.kwargs = kwargs
+
+        if 'wf_name' in kwargs:
+            self.wf_name = kwargs['wf_name']
+        elif 'wf_name_prefix' in kwargs:
+            '{prefix:}} {machine:}, {id:}'.format(
+                prefix=kwargs['wf_name_prefix'], machine=machine, id=project_id)
+
+        if 'infile_prefix' in kwargs:
+            self.infile_prefix = kwargs['infile_prefix']
+
+
         #if 'project_id' in kwargs:
         #    self.project_id = kwargs['project_id']
         #if 'source_project_id' in kwargs:
         #    self.project_id = kwargs['source_project_id']
 
+
 class SubWorkflowGenerator(FireWorksWorkflowGenerator):
+
+    def get_step_label(self, suffix):
+        return '_'.join((type(self).__name__, suffix))
 
     def pull(self, fws_root):
         """Generate FireWorks for querying input files."""
@@ -165,6 +188,17 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         pass
 
 
+class ParametricStudyGenerator():
+    def __init__(
+            parametric_dimension_labels = ['nmolecules'],
+            parametric_dimension_values = [ { 'nmolecules': [100] } ],
+            ):
+        parameter_sets = list(
+            itertools.chain(*[
+                    itertools.product(*list(
+                            p.values())) for p in parametric_dimension_values ]) )
+
+        self.parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
     def __init__(self,

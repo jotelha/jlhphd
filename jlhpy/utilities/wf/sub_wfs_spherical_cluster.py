@@ -7,22 +7,54 @@ Created on Sat Mar 28 23:53:39 2020
 """
 
 import datetime
-# import dill
+import glob
+import os
 import pymongo
 
 from fireworks import Firework, Workflow
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PyEnvTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
 
 from jlhpy.utilities.geometry.bounding_sphere import get_bounding_sphere_from_file
 
 from jlhpy.utilities.wf.serialize import serialize_module_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator, HPC_SPECS
+from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+
 
 class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
+    def push_infiles(self, fp):
+        step = self.get_step_label('push_infiles')
+
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix, '*.pdb')))
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'initial_file_pdb',
+            'step': step,
+            **self.kwargs
+        }
+
+        fp_files = []
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        return fp_files
+
     def pull(self, fws_root=[]):
-        # global project_id, source_project_id, HPC_SPECS, machine
+        step = self.get_step_label('pull')
 
         fw_list = []
 
@@ -31,30 +63,51 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             'data_file':       'default.pdb',
         }
 
-        fts_fetch = [
+        fts = [
             GetFilesByQueryTask(
                 query = {
                     'metadata->project':    self.project_id, # earlier
                     'metadata->type':       'initial_file_pdb',
-                    'metadata->nmolecules': self.kwargs["nmolecules"]
+                    #'metadata->nmolecules': self.kwargs["nmolecules"]
+                    ## TODO: generalize query
                 },
                 sort_key = 'metadata.datetime',
                 sort_direction = pymongo.DESCENDING,
                 limit = 1,
                 new_file_names = ['default.pdb'] ) ]
 
+        fw = Firework(fts,
+            name = ', '.join((
+                step, self.fw_name_template.format(**self.kwargs))),
+            spec = {
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in': files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project': self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':    step,
+                     **self.kwargs
+                }
+            },
+            parents = fws_root )
+
+        fw_list.append(fw)
+
+        return fw_list, fw
+
     def main(self, fws_root):
-        step = '_'.join((type(self).__name__, 'main'))
+        step = self.get_step_label('main')
         fw_list = []
 
         files_in = {
-            'input_file':      'default.pdb',
+            'data_file':      'default.pdb',
         }
         files_out = {}
 
         func_str = serialize_module_obj(get_bounding_sphere_from_file)
 
-        fts = [ PyEnvTask(
+        fts = [ PickledPyEnvTask(
             func = func_str,
             args = [ 'default.pdb' ],
             outputs = [
@@ -67,11 +120,11 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             store_stderr = True,
             ) ]
 
-        fw = Firework(fts,
+        fw = Firework( fts,
             name = ', '.join((
                 step, self.fw_name_template.format(**self.kwargs))),
             spec = {
-                '_category': self.hpc_specs[self.machine]['fw_noqueue_category'],
+                '_category': self.hpc_specs['fw_noqueue_category'],
                 '_files_in':  files_in,
                 '_files_out': files_out,
                 'metadata': {
@@ -84,7 +137,8 @@ class GetBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             parents = fws_root )
 
         fw_list.append(fw)
-        return fw_list
+
+        return fw_list, fw
 
     # def get_center(self, infile):
     #
