@@ -43,8 +43,43 @@ def get_bounding_sphere_from_ase_atoms(atoms):
     return get_bounding_sphere_from_coordinates(coordinates)
 
 
-def get_bounding_sphere_from_file(
+def get_bounding_sphere_via_ase(
         infile, format='proteindatabank'):
     ase = __import__('ase.io')  # import ase.io
     atoms = ase.io.read(infile, format=format)
     return get_bounding_sphere_from_ase_atoms(atoms)
+
+
+def get_bounding_sphere_via_parmed(
+        infile, atomic_number_replacements={}):
+    """atomic_number_replacements: {str: int}."""
+    pmd = __import__('parmed')
+    ase = __import__('ase')
+    pmd_structure = pmd.load_file(infile)
+    ase_structure = ase.Atoms(
+        numbers=[
+            atomic_number_replacements[str(a.atomic_number)]
+            if str(a.atomic_number) in atomic_number_replacements
+            else a.atomic_number for a in pmd_structure.atoms],
+        positions=pmd_structure.get_coordinates(0))
+    return get_bounding_sphere_from_ase_atoms(ase_structure)
+
+
+def get_atom_position_via_parmed(
+        infile, n, atomic_number_replacements={}):
+    pmd = __import__('parmed')
+    ase = __import__('ase')
+    pmd_structure = pmd.load_file(infile)
+    ase_structure = ase.Atoms(
+        numbers=[
+            atomic_number_replacements[str(a.atomic_number)]
+            if str(a.atomic_number) in atomic_number_replacements
+            else a.atomic_number for a in pmd_structure.atoms],
+        positions=pmd_structure.get_coordinates(0))
+
+    return ase_structure.get_positions()[n, :]
+
+
+def get_distance(x, y):
+    np = __import__('numpy')
+    return np.linalg.norm(np.array(x) - np.array(y))

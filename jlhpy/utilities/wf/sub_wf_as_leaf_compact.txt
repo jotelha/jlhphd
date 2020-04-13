@@ -1,0 +1,29 @@
+# Graph::Easy v0.76 input file
+graph { flow: south; }
+
+( main
+  [ main ] ->  [ push ]
+) {
+  border-style: dashed;
+  }
+
+( analysis
+  [ analysus_pull ] { label: "pull"; origin: analysis_main; offset: 0,-2; } -> { start: south,0; end: north,0; } [ analysis_main ] { label: "main"; } ->  [ analysis_push ] { label: "push" }
+
+) {
+  border-style: dashed;
+  }
+
+( vis
+  [ vis_pull ] { label: "pull"; origin: vis_main; offset: 0,-2; } -> { start: south,0; end: north,0; } [ vis_main ] { label: "main"; } ->  [ vis_push ] { label: "push"; }
+
+) {
+  border-style: dashed;
+  }
+
+[ main ] -> { start: east; end: west; } [ analysis_main ] { origin: main; offset: 4,0; }
+[ main ] -> { start: east; end: west; } [ vis_main ] { origin: main; offset: 2,1; }
+[ analysis_main ] -> [ vis_main ]
+
+[ $sys$Node ] { shape: invisible; origin: main; offset: -2,0; } -- fws_root inputs --> { start: east; end: west,0; } [ main ]
+[ main ] -- fws_leaf outputs --> { start: west,1; end: east; } [ $sys$Node ]

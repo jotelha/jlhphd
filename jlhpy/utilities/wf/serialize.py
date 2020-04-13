@@ -38,6 +38,29 @@ import dill
 # https://github.com/uqfoundation/dill/issues/219
 
 
+def _fixed_create_function(fcode, fglobals, fname=None, fdefaults=None,
+                     fclosure=None, fdict=None, fkwdefaults=None):
+    # same as FunctionType, but enable passing __dict__ to new function,
+    # __dict__ is the storehouse for attributes added after function creation
+    if fdict is None: fdict = dict()
+    FunctionType = __import__('types').FunctionType
+    func = FunctionType(fcode, fglobals or dict(), fname, fdefaults, fclosure)
+    func.__dict__.update(fdict) #XXX: better copy? option to copy?
+    if fkwdefaults is not None:
+        func.__kwdefaults__ = fkwdefaults
+
+    # THE WORKAROUND:
+    # if the function was serialized without recurse, fglobals would actually contain
+    # __builtins__, but because of recurse only the referenced modules/objects
+    # end up in fglobals and we are missing the important __builtins__
+    if "__builtins__" not in func.__globals__:
+        func.__globals__["__builtins__"] = globals()["__builtins__"]
+    return func
+
+
+dill._dill._create_function = _fixed_create_function
+
+
 def get_module_member_list(module):
     """Get list of objects within 'module'."""
     # logger = logging.getLogger(__name__)
@@ -50,7 +73,7 @@ def get_module_member_list(module):
 
 
 def serialize_module_obj(obj):
-    """Serializes all objects within module of 'obj' along with 'obj'."""
+    """Serialize all objects within module of 'obj' along with 'obj'."""
     logger = logging.getLogger(__name__)
     module = inspect.getmodule(obj)
     logger.info("{:s} belongs to {:s}".format(obj.__name__, module.__name__))
@@ -94,4 +117,11 @@ def serialize_module_obj(obj):
     for name in main_deletes:
         delattr(__main__, name)
 
+    return func_str
+
+
+def serialize_obj(obj):
+    """Serialize an object without following any dependencies."""
+    func_str = dill.dumps(
+        obj, protocol=dill.HIGHEST_PROTOCOL, byref=False, recurse=True)
     return func_str

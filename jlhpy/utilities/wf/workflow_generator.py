@@ -52,140 +52,439 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 # for testing
 # from fireworks.utilities.filepad import FilePad
 
-# HPC machine related settings
-HPC_SPECS = {
-    'forhlr2': {
-        'fw_queue_category':   'forhlr2_queue',
-        'fw_noqueue_category': 'forhlr2_noqueue',
-        'queue':'develop',
-        'physical_cores_per_node': 20,
-        'logical_cores_per_node':  40,
-        'nodes': 4,
-        'walltime':  '00:60:00'
-    },
-    'juwels_devel': {
-        'fw_queue_category':   'juwels_queue',
-        'fw_noqueue_category': 'juwels_noqueue',
-        'queue':'devel',
-        'physical_cores_per_node': 48,
-        'logical_cores_per_node':  96,
-        'nodes': 8,
-        'walltime':  '00:30:00'
-    },
-    'juwels': {
-        'fw_queue_category':   'juwels_queue',
-        'fw_noqueue_category': 'juwels_noqueue',
-        'queue':'batch',
-        'physical_cores_per_node': 48,
-        'logical_cores_per_node':  96,
-        'nodes': 1024,
-        'walltime':  '00:30:00'
-    },
-    'ubuntu': {
-        'fw_noqueue_category': 'ubuntu_noqueue'
-    },
+# suggested in_files, out_file labels
+FILE_LABELS = {
+    'data_file': 'general',
+    'input_file': 'general',
+    'png_file': 'image',
 }
 
-HPC_EXPORTS = { # standard settings for environment variables
-    'forhlr2': {
-        'OMP_NUM_THREADS': 1,
-        'KMP_AFFINITY':    "'verbose,compact,1,0'",
-        'I_MPI_PIN_DOMAIN':'core'
-    },
-    'juwels': {
-        'OMP_NUM_THREADS': 1,
-        'KMP_AFFINITY':    "'verbose,compact,1,0'",
-        'I_MPI_PIN_DOMAIN':'core'
-    }
-}
-
-UNITS = pint.UnitRegistry()
-
-# hard-coded system-sepcific
-
-SURFACTANTS = {
-    'SDS': {
-        # sds length, from head sulfur to tail carbon
-        'length': 14.0138 * UNITS.angstrom,
-        # atom  1:   S, in head group
-        # atom 39: C12, in tail
-        'head_atom_number': 1,
-        'tail_atom_number': 39,
-    },
-    'CTAB': {
-        # ctab length, from head nitrogen to tail carbon
-        'length': 19.934  * UNITS.angstrom,
-        # atom 17: N1, in head group
-        # atom  1: C1, in tail
-       'head_atom_number': 17,
-       'tail_atom_number': 1,
-    }
-}
-
-# measured on NEMO with
-# module load vmd/1.9.3-text
-# vmd
-#   source distance.tcl
-#   distance "name S" "name C12" 1 dist.txt hist.txt
-#   exit
-# cat dist.txt
-
-# Tolerance in packmol
-tolerance = 2 # Angstrom
+from jlhpy.utilities.wf.hpc_config import HPC_SPECS
+from jlhpy.utilities.wf.utils import get_nested_dict_value
 
 
 class FireWorksWorkflowGenerator:
     def __init__(
             self,
             project_id,
-            machine,
+            machine=None,
             hpc_specs=None,
-            fw_name_template='',
-            # parametric_dimension_labels = ['nmolecules'],
+            infile_prefix=None,
+            fw_name_template=None,
+            fw_name_suffix=None,
+            wf_name_prefix=None,
+            # parametric_dimension_labels=None,  #  ['nmolecules'],
+            # parameter_keys=None,
             **kwargs
         ):
-        """All **kwargs are treated as meta data."""
+        """All **kwargs are treated as meta data.
+
+        While the xplicitly defined arguments above will not enter
+        workflow- and FireWorks-attached metadata directly, everything
+        within **kwargs will.
+
+        args
+        ----
+            project_id: unique name
+            machine: name of machine to run at
+            hpc_specs: if not specified, then look up by machine name
+            fw_name_template: template for building FireWorks name
+            fw_name_template:
+            fw_name_suffix:
+            wf_name_prefix:
+
+        kwargs
+        ------
+            parametric_keys: keys to treat as parametric
+            wf_name: Workflow name, by default concatenated 'wf_name_prefix',
+                'machine' and 'project_id'.
+            wf_name_prefix:
+            source_project_id: when querying files, use another project id
+            infile_prefix: when inserting files into db manually, use this prefix
+        """
         self.project_id = project_id
+        self.kwargs = kwargs
+        self.kwargs['project_id'] = project_id
+
+        if 'machine' in self.kwargs:
+            self.machine = self.kwargs['machine']
+        else:
+            self.machine = 'ubuntu'  # dummy
+
         if hpc_specs:
             self.hpc_specs = hpc_specs
         elif machine:
             self.hpc_specs = HPC_SPECS[machine]
-        self.machine = machine
-        self.fw_name_template = fw_name_template
-        self.kwargs = kwargs
-
-        if 'wf_name' in kwargs:
-            self.wf_name = kwargs['wf_name']
-        elif 'wf_name_prefix' in kwargs:
-            '{prefix:}} {machine:}, {id:}'.format(
-                prefix=kwargs['wf_name_prefix'], machine=machine, id=project_id)
-
-        if 'infile_prefix' in kwargs:
-            self.infile_prefix = kwargs['infile_prefix']
 
 
-        #if 'project_id' in kwargs:
-        #    self.project_id = kwargs['project_id']
-        #if 'source_project_id' in kwargs:
-        #    self.project_id = kwargs['source_project_id']
+        if wf_name_prefix:
+            self.wf_name_prefix = wf_name_prefix
+        else:
+            self.wf_name_prefix = type(self).__name__
+
+        if 'wf_name' in self.kwargs:
+            self.wf_name = self.kwargs['wf_name']
+        else:
+            self.wf_name = '{prefix:}, {machine:}, {id:}'.format(
+                prefix=self.wf_name_prefix,
+                machine=self.machine,
+                id=self.project_id)
+
+        if 'parameter_keys' in self.kwargs:
+            self.parameter_keys = self.kwargs['parameter_keys']
+            if isinstance(self.parameter_keys, str):
+                self.parameter_keys = [self.parameter_keys]
+        else:
+            self.parameter_keys = []
+
+
+        assert isinstance(self.parameter_keys, list)
+
+        self.parameter_dict = {
+            k: get_nested_dict_value(self.kwargs, k)
+            for k in self.parameter_keys}
+
+
+        if fw_name_template:
+            self.fw_name_template = fw_name_template
+        else:
+            self.fw_name_template = '{fw_name_prefix:} {fw_name_suffix:}'
+
+        if fw_name_suffix:
+            self.fw_name_suffix = fw_name_suffix
+        else:
+            self.fw_name_suffix = ', '.join(([
+                '{} = {}'.format(k, v) for k, v in self.parameter_dict.items()]
+            ))
+
+        if infile_prefix:
+            self.infile_prefix = infile_prefix
+
+        ## TODO needs extension to multiple sources
+        if 'source_project_id' in self.kwargs:
+            self.source_project_id = self.kwargs['source_project_id']
+        else:
+            self.source_project_id = self.project_id
 
 
 class SubWorkflowGenerator(FireWorksWorkflowGenerator):
+    """A sub-workflow generator should implement three methods:
+    pull, main and push. Each method returns three lists of FireWorks,
+    - fws_list: all (readily interconnected) FireWorks of a sub-workflow
+    - fws_leaf: all leaves of a sub-workflow
+    - fws_root: all roots of a sub-workflow
 
+    fws_list must always give rise to an interconnected sub-workflow.
+    The sub-workflow returned by
+    - pull: queries necessary input data
+    - push: stores results
+    - main: performs actual computations
+
+    A sub-workflow's interface is defined via
+    - the combined inputs expected by all FirewWorks withins its fws_root,
+    - the combined outputs produced by all FirewWorks withins its fws_leaf,
+    - arbitrary, documented fw_spec
+
+    pull sub-wf is a terminating stub and does not expect any inputs.
+    push sub-wf is a terminating stup and does not yield any outputs.
+    main sub-wf expects intputs and produces outputs.
+
+    Inputs and outputs can be files or specs.
+
+    The three-part workflow arising from connected pull, main and push
+    sub-workflows should ideally be runnable independently.
+
+                        + - - - - -+
+                        ' main     '
+                        '          '
+                        ' +------+ '
+                        ' | pull | '
+                        ' +------+ '
+                        '   |      '
+                        '   |      '
+                        '   v      '
+     fws_root inputs    ' +------+ '
+    ------------------> ' |      | '
+                        ' | main | '
+     fws_leaf outputs   ' |      | '
+    <------------------ ' |      | '
+                        ' +------+ '
+                        '   |      '
+                        '   |      '
+                        '   v      '
+                        ' +------+ '
+                        ' | push | '
+                        ' +------+ '
+                        '          '
+                        + - - - - -+
+
+    Extensions:
+
+    A sub-worklfow may implement standardized sub-branches, i.e.
+    - analysis: post-processing tasks performed on results of main body
+    - vis: visualization of refults from main body and analyisis branch
+    - according pull and push stubs
+    """
     def get_step_label(self, suffix):
-        return '_'.join((type(self).__name__, suffix))
+        return ', '.join((self.wf_name_prefix, suffix))
 
-    def pull(self, fws_root):
+    def get_fw_label(self, step_label):
+        return self.fw_name_template.format(
+            fw_name_prefix=step_label, fw_name_suffix=self.fw_name_suffix)
+
+    def get_wf_label(self):
+        return self.wf_name
+
+    def pull(self, fws_root=[]):
         """Generate FireWorks for querying input files."""
-        pass
+        return [], [], []
 
-    def main(self, fws_root):
+    def main(self, fws_root=[]):
         """Generate sub-workflow main part."""
-        pass
+        return [], [], []
 
-    def push(self, fws_root):
+    def push(self, fws_root=[]):
         """Generate FireWorks for storing output files."""
-        pass
+        return [], [], []
+
+    # optional analysis branch
+    def analysis_pull(self, fws_root=[]):
+        """Generate FireWorks for querying input files for post-processing analysis."""
+        return [], [], []
+
+    def analysis_main(self, fws_root=[]):
+        """Generate sub-workflow post-processing analysis part."""
+        return [], [], []
+
+    def analysis_push(self, fws_root=[]):
+        """Generate FireWorks for storing post-processing analysis output files."""
+        return [], [], []
+
+    # optional visualization branch
+    def vis_pull(self, fws_root=[]):
+        """Generate FireWorks for querying input files for visualization."""
+        return [], [], []
+
+    def vis_main(self, fws_root=[]):
+        """Generate sub-workflow visualization part."""
+        return [], [], []
+
+    def vis_push(self, fws_root=[]):
+        """Generate FireWorks for storing visualization output files."""
+        return [], [], []
+
+    def get_as_independent(self, fws_root=[]):
+        """Returns as self-sufficient FireWorks list with pull and push stub.
+
+                            + - - - - -+                      + - - - - - -+
+                            ' main     '                      ' analysis   '
+                            '          '                      '            '
+                            ' +------+ '                      ' +--------+ '
+                            ' | pull | '                      ' |  pull  | '
+                            ' +------+ '                      ' +--------+ '
+                            '   |      '                      '   |        '
+                            '   |      '                      '   |        '
+                            '   v      '                      '   v        '
+         fws_root inputs    ' +------+ '                      ' +--------+ '
+        ------------------> ' |      | ' -------------------> ' |  main  | ' -+
+                            ' |      | '                      ' +--------+ '  |
+                            ' |      | '     +- - - - - +     '   |        '  |
+                            ' |      | '     ' vis      '     '   |        '  |
+                            ' | main | '     '          '     '   |        '  |
+         fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
+        <------------------ ' |      | '     ' | pull | '     '   |        '  |
+                            ' |      | '     ' +------+ '     '   v        '  |
+                            ' |      | '     '   |      '     ' +--------+ '  |
+                            ' |      | ' -+  '   |      '     ' |  push  | '  |
+                            ' +------+ '  |  '   |      '     ' +--------+ '  |
+                            '   |      '  |  '   |      '     '            '  |
+                            '   |      '  |  '   v      '     + - - - - - -+  |
+                            '   |      '  |  ' +------+ '                     |
+                            '   |      '  +> ' | main | ' <-------------------+
+                            '   v      '     ' +------+ '
+                            ' +------+ '     '   |      '
+                            ' | push | '     '   |      '
+                            ' +------+ '     '   |      '
+                            '          '     '   |      '
+                            + - - - - -+     '   v      '
+                                             ' +------+ '
+                                             ' | push | '
+                                             ' +------+ '
+                                             '          '
+                                             +- - - - - +
+        """
+
+        fws_pull, fws_pull_leaf, _ = self.pull()
+        fws_main, fws_main_leaf, fws_main_root = self.main(
+            [*fws_pull_leaf, *fws_root])
+        fws_push, _, _ = self.push(fws_main_leaf)
+
+        # post-processing / analysis branch, attach to main leaf
+        fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
+        fws_analysis_main, fws_analysis_main_leaf, _ = \
+            self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
+        fws_analysis_push, _, _ = self.analysis_push(
+            fws_analysis_main_leaf)
+
+        # vis branch, attach to main and analysis leaf
+        fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
+        fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
+            [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
+        fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
+
+        fws_list = [
+            *fws_pull, *fws_main, *fws_push,
+            *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
+            *fws_vis_pull, *fws_vis_main, *fws_vis_push,
+        ]
+
+        return fws_list, fws_main_leaf, fws_main_root
+
+    def get_as_root(self, fws_root=[]):
+        """Return as root FireWorks list with pull stub, but no push stub.
+
+        Same is valid for pull and push stubs of analyis and vis branches.
+
+                            + - - - - -+                      + - - - - - -+
+                            ' main     '                      ' analysis   '
+                            '          '                      '            '
+                            ' +------+ '                      ' +--------+ '
+                            ' | pull | '                      ' |  pull  | '
+                            ' +------+ '                      ' +--------+ '
+                            '   |      '                      '   |        '
+                            '   |      '                      '   |        '
+                            '   v      '                      '   v        '
+         fws_root inputs    ' +------+ '                      ' +--------+ '
+        ------------------> ' |      | ' -------------------> ' |  main  | '
+                            ' |      | '                      ' +--------+ '
+                            ' |      | '     +- - - - - +     '            '
+                            ' |      | '     ' vis      '     '            '
+                            ' | main | '     '          '     + - - - - - -+
+         fws_leaf outputs   ' |      | '     ' +------+ '         |
+        <------------------ ' |      | '     ' | pull | '         |
+                            ' |      | '     ' +------+ '         |
+                            ' |      | '     '   |      '         |
+                            ' |      | ' -+  '   |      '         |
+                            ' +------+ '  |  '   |      '         |
+                            '          '  |  '   |      '         |
+                            + - - - - -+  |  '   v      '         |
+                                          |  ' +------+ '         |
+                                          +> ' | main | ' <-------+
+                                             ' +------+ '
+                                             '          '
+                                             +- - - - - +
+        """
+
+        # main processing branch
+        fws_pull, fws_pull_leaf, _ = self.pull()
+        fws_main, fws_main_leaf, fws_main_root = self.main(
+            [*fws_pull_leaf, *fws_root])
+
+        # post-processing / analysis branch, attach to main leaf
+        fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
+        fws_analysis_main, fws_analysis_main_leaf, _ = \
+            self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
+
+        # vis branch, attach to main and analysis leaf
+        fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
+        fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
+            [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
+
+        fws_list = [
+            *fws_pull, *fws_main,
+            *fws_analysis_pull, *fws_analysis_main,
+            *fws_vis_pull, *fws_vis_main
+        ]
+
+        return fws_list, fws_main_leaf, fws_main_root
+
+    def get_as_leaf(self, fws_root=[]):
+        """Return as leaf FireWorks list without pull stub, but with push stub.
+
+        Attaches push AND pull stubs to analyis and vis branches.
+                                                              + - - - - - -+
+                                                              ' analysis   '
+                                                              '            '
+                                                              ' +--------+ '
+                                                              ' |  pull  | '
+                                                              ' +--------+ '
+                                                              '   |        '
+                                                              '   |        '
+                                                              '   |        '
+                            + - - - - -+                      '   |        '
+                            ' main     '                      '   |        '
+                            '          '                      '   v        '
+         fws_root inputs    ' +------+ '                      ' +--------+ '
+        ------------------> ' |      | ' -------------------> ' |  main  | ' -+
+                            ' |      | '                      ' +--------+ '  |
+                            ' |      | '     +- - - - - +     '   |        '  |
+                            ' |      | '     ' vis      '     '   |        '  |
+                            ' | main | '     '          '     '   |        '  |
+         fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
+        <------------------ ' |      | '     ' | pull | '     '   |        '  |
+                            ' |      | '     ' +------+ '     '   v        '  |
+                            ' |      | '     '   |      '     ' +--------+ '  |
+                            ' |      | ' -+  '   |      '     ' |  push  | '  |
+                            ' +------+ '  |  '   |      '     ' +--------+ '  |
+                            '   |      '  |  '   |      '     '            '  |
+                            '   |      '  |  '   v      '     + - - - - - -+  |
+                            '   |      '  |  ' +------+ '                     |
+                            '   |      '  +> ' | main | ' <-------------------+
+                            '   v      '     ' +------+ '
+                            ' +------+ '     '   |      '
+                            ' | push | '     '   |      '
+                            ' +------+ '     '   |      '
+                            '          '     '   |      '
+                            + - - - - -+     '   v      '
+                                             ' +------+ '
+                                             ' | push | '
+                                             ' +------+ '
+                                             '          '
+                                             +- - - - - +
+        """
+
+        fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
+        fws_push, _, _ = self.push(fws_main_leaf)
+
+        # return [*fws_main, *fws_push], fws_main_leaf, fws_main_root
+
+        # post-processing / analysis branch, attach to main leaf
+        fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
+        fws_analysis_main, fws_analysis_main_leaf, _ = \
+            self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
+        fws_analysis_push, _, _ = self.analysis_push(
+            fws_analysis_main_leaf)
+
+        # vis branch, attach to main and analysis leaf
+        fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
+        fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
+            [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
+        fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
+
+        fws_list = [
+            *fws_main, *fws_push,
+            *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
+            *fws_vis_pull, *fws_vis_main, *fws_vis_push,
+        ]
+
+        return fws_list, fws_main_leaf, fws_main_root
+
+    def build_wf(self):
+        """Return self-sufficient pull->main->push workflow """
+        fw_list, _, _ = self.get_as_independent()
+        return Workflow(fw_list, name=self.get_wf_label())
+
+    def inspect_inputs(self):
+        """Return fw : _files_in dict of main sub-wf expected inputs."""
+        _, _, fws_root = self.main()
+        return {fw.name: fw.spec['_files_in'] for fw in fws_root}
+
+    def inspect_outputs(self):
+        """Return fw : _files_out dict of main sub-wf produced outputs."""
+        _, fws_leaf, _ = self.main()
+        return {fw.name: fw.spec['_files_out'] for fw in fws_leaf}
+
+
 
 
 class ParametricStudyGenerator():
@@ -201,241 +500,6 @@ class ParametricStudyGenerator():
         self.parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
-    def __init__(self,
-            project_id,
-            C,
-            R_inner_constraint,
-            R_outer_constraint,
-            surfactant,
-            counterion,
-            tail_atom_number,
-            head_atom_number,
-            **kwargs
-        ):
-        """Pack a surfactant film around ad quasi-spherical cluster.
-
-        Parameters
-        ----------
-        project_id: str
-            unique identifier for current (sub-)worklfow
-        C: (3,) np.ndarray of float
-            center of spehrical cluster
-        R: float
-            radius of spherical cluster
-
-        """
-
-        self.C = C
-
-        super().__init__(**kwargs)
-
-
-    def generate_pack_sphere_packmol_template_context(
-            C, R,
-            R_inner,
-            R_outer,
-            R_inner_constraint, # shell inner radius
-            R_outer_constraint, # shell outer radius
-            sfN, # number  of surfactant molecules
-            inner_atom_number, # inner atom
-            outer_atom_number, # outer atom
-            surfactant = 'SDS',
-            counterion = 'NA',
-            tolerance = 2,
-        ):
-        """Creates context for filling Jinja2 PACKMOL input template in order to
-        generate preassembled surfactant spheres with couinterions at polar heads"""
-
-        logger = logging.getLogger(__name__)
-        logger.info(
-            "sphere with {:d} surfactant molecules in total.".format(sfN ) )
-
-        # sbX, sbY, sbZ = sb_measures
-
-        # spheres parallelt to x-axis
-        sphere = {}
-        ionsphere = {}
-
-        # surfactant spheres
-        #   inner constraint radius: R + 1*tolerance
-        #   outer constraint radius: R + 1*tolerance + l_surfactant
-        # ions between cylindric planes at
-        #   inner radius:            R + 1*tolerance + l_surfactant
-        #   outer radius:            R + 2*tolerance + l_surfactant
-        sphere["surfactant"] = surfactant
-
-
-        sphere["inner_atom_number"] = inner_atom_number
-        sphere["outer_atom_number"] = outer_atom_number
-
-        sphere["N"] = sfN
-
-        sphere["c"] = C
-
-        sphere["r_inner"] = R_inner
-        sphere["r_inner_constraint"] = R_inner_constraint
-        sphere["r_outer_constraint"] = R_outer_constraint
-        sphere["r_outer"] = R_outer
-
-        logging.info(
-            "sphere with {:d} molecules at {}, radius {}".format(
-            sphere["N"], sphere["c"], sphere["r_outer"]))
-
-        # ions at outer surface
-        ionsphere["ion"] = counterion
-
-
-        ionsphere["N"] = sphere["N"]
-        ionsphere["c"] = sphere["c"]
-        ionsphere["r_inner"] = sphere["r_outer"]
-        ionsphere["r_outer"] = sphere["r_outer"] + tolerance
-
-
-        # experience shows: movebadrandom advantegous for (hemi-) spheres
-        context = {
-            'spheres':     [sphere],
-            'ionspheres':  [ionsphere],
-            'movebadrandom': True,
-        }
-        return context
-
-
-
-    def sub_wf_pack(d, fws_root):
-        # global project_id, fw_name_template,
-        # TODO: instead of global variables, use class
-
-        fw_list = []
-    ### Template
-
-        files_in = {'input_file': 'input.template' }
-        files_out = { 'input_file': 'input.inp' }
-
-        # exports = std_exports[machine].copy()
-
-        # Jinja2 context:
-        packmol_script_context = {
-            'header':        '{:s} packing SDS around AFM probe model'.format(project_id),
-            'system_name':   '{:d}_SDS_on_50_Ang_AFM_tip_model'.format(d["nmolecules"]),
-            'tolerance':     tolerance,
-            'write_restart': True,
-
-            'static_components': [
-                {
-                    'name': 'indenter'
-                }
-            ]
-        }
-
-        # use pack_sphere function at the notebook's head to generate template context
-        packmol_script_context.update(
-            pack_sphere(
-                C,R_inner_constraint,R_outer_constraint, d["nmolecules"],
-                tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
-
-        ft_template = TemplateWriterTask( {
-            'context': packmol_script_context,
-            'template_file': 'input.template',
-            'template_dir': '.',
-            'output_file': 'input.inp'} )
-
-
-        fw_template = Firework([ft_template],
-            name = ', '.join(('template', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'fill_template',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_template)
-
-    ### PACKMOL
-
-        files_in = {
-            'input_file': 'input.inp',
-            'indenter_file': 'indenter.pdb',
-            'surfatcant_file': '1_SDS.pdb',
-            'counterion_file': '1_NA.pdb' }
-        files_out = {
-            'data_file': '*_packmol.pdb'}
-
-        ft_pack = CmdTask(
-            cmd='packmol',
-            opt=['< input.inp'],
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            use_shell    = True,
-            fizzle_bad_rc= True)
-
-        fw_pack = Firework([ft_pack],
-            name = ', '.join(('packmol', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_queue_category'],
-                '_queueadapter': {
-                    'queue':           HPC_SPECS[machine]['queue'],
-                    'walltime' :       HPC_SPECS[machine]['walltime'],
-                    'ntasks':          1,
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'packmol',
-                     **d
-                }
-            },
-            parents = [ *fws_root, fw_template] )
-
-        fw_list.append(fw_pack)
-
-        return fw_list, fw_pack
-
-    def sub_wf_pack_push(d, fws_root):
-        global project_id, HPC_SPECS, machine
-
-        fw_list = []
-
-        files_in = {'data_file': 'packed.pdb' }
-
-        fts_push = [ AddFilesTask( {
-            'compress': True ,
-            'paths': "packed.pdb",
-            'metadata': {
-                'project': project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'initial_config',
-                 **d }
-            } ) ]
-
-        fw_push = Firework(fts_push,
-            name = ', '.join(('transfer', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in': files_in,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'transfer',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_push)
-
-        return fw_list, fw_push
-
 
     # #### Sub-WF: GMX prep
 

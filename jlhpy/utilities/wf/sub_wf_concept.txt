@@ -1,0 +1,11 @@
+# Graph::Easy v0.76 input file
+graph { flow: south; }
+
+( main
+  [ pull ] -> { start: south,0; end: north,0; } [ main ] { origin: pull; offset: 0,2; } ->  [ push ]
+) {
+  border-style: dashed;
+  }
+
+[ $sys$Node ] { shape: invisible; origin: main; offset: -2,0; } -- fws_root inputs --> { start: east; end: west,0; } [ main ]
+[ main ] -- fws_leaf outputs --> { start: west,1; end: east; } [ $sys$Node ]
