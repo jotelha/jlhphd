@@ -57,6 +57,9 @@ FILE_LABELS = {
     'data_file': 'general',
     'input_file': 'general',
     'png_file': 'image',
+
+    'topology_file':  'gromacs.top',
+    'restraint_file': 'gromacs.posre.itp'
 }
 
 from jlhpy.utilities.wf.hpc_config import HPC_SPECS
@@ -73,8 +76,7 @@ class FireWorksWorkflowGenerator:
             fw_name_template=None,
             fw_name_suffix=None,
             wf_name_prefix=None,
-            # parametric_dimension_labels=None,  #  ['nmolecules'],
-            # parameter_keys=None,
+            parameter_key_prefix='metadata',
             **kwargs
         ):
         """All **kwargs are treated as meta data.
@@ -95,7 +97,8 @@ class FireWorksWorkflowGenerator:
 
         kwargs
         ------
-            parametric_keys: keys to treat as parametric
+            parameter_keys: keys to treat as parametric
+            parameter_key_prefix: prepend to parametric keys in queries, default: 'metadata'
             wf_name: Workflow name, by default concatenated 'wf_name_prefix',
                 'machine' and 'project_id'.
             wf_name_prefix:
@@ -115,7 +118,6 @@ class FireWorksWorkflowGenerator:
             self.hpc_specs = hpc_specs
         elif machine:
             self.hpc_specs = HPC_SPECS[machine]
-
 
         if wf_name_prefix:
             self.wf_name_prefix = wf_name_prefix
@@ -137,12 +139,12 @@ class FireWorksWorkflowGenerator:
         else:
             self.parameter_keys = []
 
-
         assert isinstance(self.parameter_keys, list)
 
+
         self.parameter_dict = {
-            k: get_nested_dict_value(self.kwargs, k)
-            for k in self.parameter_keys}
+            '->'.join((parameter_key_prefix, k)): get_nested_dict_value(
+                self.kwargs, k) for k in self.parameter_keys}
 
 
         if fw_name_template:
@@ -611,251 +613,7 @@ class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
 
     # #### Sub-WF: GMX prep
 
-    def sub_wf_gmx_prep_pull(d, fws_root):
-        global project_id, HPC_SPECS, machine
 
-        fw_list = []
-
-        files_in = {}
-        files_out = { 'data_file': 'in.pdb' }
-
-        fts_pull = [ GetFilesByQueryTask(
-                query = {
-                    'metadata->project':    source_project_id,
-                    'metadata->type':       'initial_config',
-                    'metadata->nmolecules': d["nmolecules"]
-                },
-                sort_key = 'metadata.datetime',
-                sort_direction = pymongo.DESCENDING,
-                limit = 1,
-                new_file_names = ['in.pdb'] ) ]
-
-        fw_pull = Firework(fts_pull,
-            name = ', '.join(('fetch', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'fetch',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_pull)
-
-        return fw_list, fw_pull
-
-    def sub_wf_gmx_prep(d, fws_root):
-        global project_id, HPC_SPECS, machine
-        # TODO: instead of global variables, use class
-
-        fw_list = []
-
-    ### PDB chain
-
-        files_in =  {'data_file': 'in.pdb' }
-        files_out = {'data_file': 'out.pdb'}
-
-        fts_pdb_chain = CmdTask(
-            cmd='pdb_chain',
-            opt=['< in.pdb > out.pdb'],
-            store_stdout = False,
-            store_stderr = False,
-            use_shell    = True,
-            fizzle_bad_rc= True)
-
-        fw_pdb_chain = Firework(fts_pdb_chain,
-            name = ', '.join(('pdb_chain', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'pdb_chain',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_pdb_chain)
-
-    ### PDB tidy
-        files_in =  {'data_file': 'in.pdb' }
-        files_out = {'data_file': 'out.pdb'}
-
-        fts_pdb_tidy = CmdTask(
-            cmd='pdb_tidy',
-            opt=['< in.pdb > out.pdb'],
-            store_stdout = False,
-            store_stderr = False,
-            use_shell    = True,
-            fizzle_bad_rc= True)
-
-        fw_pdb_tidy = Firework(fts_pdb_tidy,
-            name = ', '.join(('pdb_tidy', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'pdb_tidy',
-                     **d
-                }
-            },
-            parents = [ fw_pdb_chain ] )
-
-        fw_list.append(fw_pdb_tidy)
-
-    ### GMX pdb2gro
-
-        files_in =  {'data_file': 'in.pdb' }
-        files_out = {
-            'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp'}
-
-        fts_gmx_pdb2gro = [ CmdTask(
-            cmd='gmx',
-            opt=['pdb2gmx',
-                 '-f', 'in.pdb',
-                 '-o', 'default.gro',
-                 '-p', 'default.top',
-                 '-i', 'default.posre.itp',
-                 '-ff', 'charmm36',
-                 '-water' , 'tip3p'],
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            use_shell    = True,
-            fizzle_bad_rc= True) ]
-
-        fw_gmx_pdb2gro = Firework(fts_gmx_pdb2gro,
-            name = ', '.join(('gmx_pdb2gro', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_pdb2gro',
-                     **d
-                }
-            },
-            parents = [ fw_pdb_tidy ] )
-
-        fw_list.append(fw_gmx_pdb2gro)
-
-
-    ### GMX editconf
-        files_in = {
-            'data_file': 'in.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp'}
-        files_out = {
-            'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp'}
-
-        fts_gmx_editconf = [ CmdTask(
-            cmd='gmx',
-            opt=['editconf',
-                 '-f', 'in.gro',
-                 '-o', 'default.gro',
-                 '-d', 2.0, # distance between content and box boundary in nm
-                 '-bt', 'cubic', # box type
-              ],
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            use_shell    = True,
-            fizzle_bad_rc= True) ]
-
-        fw_gmx_editconf = Firework(fts_gmx_editconf,
-            name = ', '.join(('gmx_editconf', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_editconf',
-                     **d
-                }
-            },
-            parents = [ fw_gmx_pdb2gro ] )
-
-        fw_list.append(fw_gmx_editconf)
-
-        return fw_list, fw_gmx_editconf
-
-    def sub_wf_gmx_prep_push(d, fws_root):
-        global project_id, HPC_SPECS, machine
-        fw_list = []
-        files_in = {
-            'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp' }
-
-        fts_push = [
-            AddFilesTask( {
-                'compress': True ,
-                'paths': "default.gro",
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_gro',
-                     **d }
-            } ),
-            AddFilesTask( {
-                'compress': True ,
-                'paths': "default.top",
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_top',
-                     **d }
-            } ),
-            AddFilesTask( {
-                'compress': True ,
-                'paths': "default.posre.itp",
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_posre_itp',
-                     **d }
-            } ) ]
-
-
-
-        fw_push = Firework(fts_push,
-            name = ', '.join(('push', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in': files_in,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'push',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_push)
-
-        return fw_list, fw_push
 
 
     # #### Sub-WF: GMX EM

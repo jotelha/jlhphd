@@ -15,7 +15,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 
 # from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_with_spheres_via_ase
 
-from jlhpy.utilities.wf.serialize import serialize_module_obj
+from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 
 from jlhpy.utilities.templates.spherical_packing import generate_pack_sphere_packmol_template_context
@@ -313,6 +313,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         fts_pack = [
             CmdTask(
                 cmd='packmol',
+                env='python',
                 # opt=['< input.inp'],
                 stdin_file   = 'input.inp',
                 stderr_file  = 'std.err',

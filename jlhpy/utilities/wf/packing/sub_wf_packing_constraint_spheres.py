@@ -14,7 +14,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
 from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
-from jlhpy.utilities.wf.serialize import serialize_module_obj, serialize_obj
+from imteksimfw.fireworks.utilities.serialize import serialize_module_obj, serialize_obj
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 
 

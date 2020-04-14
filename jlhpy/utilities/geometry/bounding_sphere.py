@@ -35,7 +35,11 @@ def get_bounding_sphere_from_coordinates(coordinates):
     np = __import__('numpy')  # import numpy as np
     C, R_sq = miniball.get_bounding_ball(coordinates)
     R = np.sqrt(R_sq)
-    return C, R
+    # for some reason, directly returning numpy types can make troubles
+    # when serializing results into database. Locally, everything worked
+    # fine, but on JUWELS, numpy arrays got serialized as their string
+    # representation. Numpy version-dependent?
+    return list(C), float(R)
 
 
 def get_bounding_sphere_from_ase_atoms(atoms):
@@ -78,9 +82,9 @@ def get_atom_position_via_parmed(
         positions=pmd_structure.get_coordinates(0))
 
     # PDB / parmed indices are 1-indexed, ase indices 0-indexed
-    return ase_structure.get_positions()[n-1, :]
+    return list(ase_structure.get_positions()[n-1, :])
 
 
 def get_distance(x, y):
     np = __import__('numpy')
-    return np.linalg.norm(np.array(x) - np.array(y))
+    return float(np.linalg.norm(np.array(x) - np.array(y)))
