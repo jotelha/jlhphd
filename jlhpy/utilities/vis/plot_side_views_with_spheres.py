@@ -91,7 +91,7 @@ def plot_side_views_with_spheres(
 
     # dim: sphere, view, coord
     center   = np.array([
-        [np.roll(C, i)[0:2] - internal_offset[i] for i in range(3)] for C in cc])
+        [np.roll(C, i)[0:2]-internal_offset[i] for i in range(3)] for C in cc])
 
     logger.info("projected cc({}) = {}".format(center.shape,center))
 

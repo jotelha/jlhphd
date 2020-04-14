@@ -58,7 +58,6 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             'project': self.project_id,
             'type': 'single_surfactant_molecule_pdb',
             'step': step_label,
-            **self.kwargs
         }
 
         fp_files = []

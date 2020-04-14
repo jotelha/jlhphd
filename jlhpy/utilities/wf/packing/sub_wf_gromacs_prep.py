@@ -14,6 +14,11 @@ from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 
 class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
 
+    def __init__(self, *args, **kwargs):
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = 'GROMACS perparations sub-workflow'
+        super().__init__(*args, **kwargs)
+
     def pull(self, fws_root=[]):
         fw_list = []
 
@@ -62,16 +67,14 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
         files_in =  {'data_file': 'in.pdb' }
         files_out = {'data_file': 'out.pdb'}
 
-        fts_pdb_chain = CmdTask(
+        fts_pdb_chain = [CmdTask(
             cmd='pdb_chain',
-            # opt=['< in.pdb > out.pdb'],
             env='python',
             stdin_file='in.pdb',
             stdout_file='out.pdb',
             store_stdout=False,
             store_stderr=False,
-            # use_shell =True,
-            fizzle_bad_rc=True)
+            fizzle_bad_rc=True)]
 
         fw_pdb_chain = Firework(fts_pdb_chain,
             name=self.get_fw_label(step_label),
@@ -97,16 +100,14 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
         files_in =  {'data_file': 'in.pdb' }
         files_out = {'data_file': 'out.pdb'}
 
-        fts_pdb_tidy = CmdTask(
+        fts_pdb_tidy = [CmdTask(
             cmd='pdb_tidy',
             env='python',
-            # opt=['< in.pdb > out.pdb'],
             stdin_file='in.pdb',
             stdout_file='out.pdb',
             store_stdout=False,
             store_stderr=False,
-            #use_shell    = True,
-            fizzle_bad_rc= True)
+            fizzle_bad_rc=True)]
 
         fw_pdb_tidy = Firework(fts_pdb_tidy,
             name=self.get_fw_label(step_label),
@@ -149,7 +150,6 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
             stdout_file='std.out',
             store_stdout=True,
             store_stderr=True,
-            use_shell=True,
             fizzle_bad_rc=True)]
 
         fw_gmx_pdb2gro = Firework(fts_gmx_pdb2gro,
@@ -161,7 +161,7 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_pdb2gro',
+                    'step':    step_label,
                     **self.kwargs
                 }
             },
@@ -196,7 +196,6 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
             stdout_file='std.out',
             store_stdout=True,
             store_stderr=True,
-            #use_shell=True,
             fizzle_bad_rc=True)]
 
         fw_gmx_editconf = Firework(fts_gmx_editconf,
@@ -208,7 +207,7 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_editconf',
+                    'step':    step_label,
                     **self.kwargs,
                 }
             },

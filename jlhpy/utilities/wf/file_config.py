@@ -1,6 +1,12 @@
 import os.path
 
 # TODO: looks through modules and replace hard-coded surfactant-specific names
+
+GMX_MDP_SUBDIR = os.path.join('gmx_input', 'mdp')
+GMX_EM_MDP = 'em.mdp'
+GMX_PULL_MDP_TEMPLATE = 'pull.mdp.template'
+
+
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB = '1_SDS.pdb'
 COUNTERION_PDB = '1_NA.pdb'
