@@ -35,17 +35,17 @@ restart_to {{ system_name }}_restart.pack
 
 
 {% if static_components %}
-{% for static_component in static_components %} 
+{% for static_component in static_components %}
 structure {{ static_component.name }}.pdb
   number 1
   resnumbers 2
-  fixed {{ "%.3f"|format(static_component.offset|default([0, 0, 0])|first) }} {{ "%.3f"|format((static_component.offset|default([0, 0, 0]))[1]) }} {{ "%.3f"|format(static_component.offset|default([0 ,0, 0])|last) }} 0. 0. 0. 
-end structure 
-{% endfor %} 
+  fixed {{ "%.3f"|format(static_component.offset|default([0, 0, 0])|first) }} {{ "%.3f"|format((static_component.offset|default([0, 0, 0]))[1]) }} {{ "%.3f"|format(static_component.offset|default([0 ,0, 0])|last) }} 0. 0. 0.
+end structure
+{% endfor %}
 {% endif %}
 
-{% for sphere in spheres %} 
-structure 1_{{ sphere.surfactant }}.pdb 
+{% for sphere in spheres %}
+structure {{ sphere.surfactant }}.pdb
   resnumbers 2
   number {{ sphere.N|int }}
   inside sphere {{ "%.3f"|format(sphere.c[0]) }} {{ "%.3f"|format(sphere.c[1]) }} {{ "%.3f"|format(sphere.c[2]) }}  {{ "%.3f"|format(sphere.r_outer) }}
@@ -64,7 +64,7 @@ end structure
 
 # ions outside sphere
 {% for sphere in ionspheres %}
-structure 1_{{ sphere.ion }}.pdb
+structure {{ sphere.ion }}.pdb
   resnumbers 2
   number {{ sphere.N|int }}
   # along x axis

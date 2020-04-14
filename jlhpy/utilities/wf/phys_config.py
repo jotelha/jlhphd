@@ -12,6 +12,7 @@ SURFACTANTS = {
         # atom  1:   S, in head group
         # atom 39: C12, in tail
         'head_atom_index': 1,   # 1-indexed, S in pdb
+        'connector_atom_index': 2,   # 1-indexed, OS1 in pdb, connects head and tail
         'tail_atom_index': 39,  # 1-indexed, C12 in pdb
     },
     'CTAB': {

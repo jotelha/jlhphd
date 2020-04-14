@@ -469,6 +469,74 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
 
         return fws_list, fws_main_leaf, fws_main_root
 
+    def get_as_embedded(self, fws_root=[]):
+        """Return as embeded FireWorks list without pull and push stub.
+
+        ATTTENTION: Attaches push AND pull stubs to analyis and vis branches.
+                                                              + - - - - - -+
+                                                              ' analysis   '
+                                                              '            '
+                                                              ' +--------+ '
+                                                              ' |  pull  | '
+                                                              ' +--------+ '
+                                                              '   |        '
+                                                              '   |        '
+                                                              '   |        '
+                            + - - - - -+                      '   |        '
+                            ' main     '                      '   |        '
+                            '          '                      '   v        '
+         fws_root inputs    ' +------+ '                      ' +--------+ '
+        ------------------> ' |      | ' -------------------> ' |  main  | ' -+
+                            ' |      | '                      ' +--------+ '  |
+                            ' |      | '     +- - - - - +     '   |        '  |
+                            ' |      | '     ' vis      '     '   |        '  |
+                            ' | main | '     '          '     '   |        '  |
+         fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
+        <------------------ ' |      | '     ' | pull | '     '   |        '  |
+                            ' |      | '     ' +------+ '     '   v        '  |
+                            ' |      | '     '   |      '     ' +--------+ '  |
+                            ' |      | ' -+  '   |      '     ' |  push  | '  |
+                            ' +------+ '  |  '   |      '     ' +--------+ '  |
+                            '          '  |  '   |      '     '            '  |
+                            +- - - - - +  |  '   v      '     + - - - - - -+  |
+                                          |  ' +------+ '                     |
+                                          +> ' | main | ' <-------------------+
+                                             ' +------+ '
+                                             '   |      '
+                                             '   |      '
+                                             '   |      '
+                                             '   |      '
+                                             '   v      '
+                                             ' +------+ '
+                                             ' | push | '
+                                             ' +------+ '
+                                             '          '
+                                             +- - - - - +
+        """
+
+        fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
+
+        # post-processing / analysis branch, attach to main leaf
+        fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
+        fws_analysis_main, fws_analysis_main_leaf, _ = \
+            self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
+        fws_analysis_push, _, _ = self.analysis_push(
+            fws_analysis_main_leaf)
+
+        # vis branch, attach to main and analysis leaf
+        fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
+        fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
+            [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
+        fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
+
+        fws_list = [
+            *fws_main,
+            *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
+            *fws_vis_pull, *fws_vis_main, *fws_vis_push,
+        ]
+
+        return fws_list, fws_main_leaf, fws_main_root
+
     def build_wf(self):
         """Return self-sufficient pull->main->push workflow """
         fw_list, _, _ = self.get_as_independent()
@@ -485,6 +553,45 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         return {fw.name: fw.spec['_files_out'] for fw in fws_leaf}
 
 
+class ChainWorkflowGenerator(SubWorkflowGenerator):
+    """Chains a set of sub-workflows."""
+    def __init__(self, sub_wf_components, *args, **kwargs):
+        """Takes list of instantiated sub-workflows."""
+        self.sub_wf_components = sub_wf_components
+
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = 'chain workflow'
+        super().__init__(*args, **kwargs)
+
+    def push_infiles(self, fp):
+        """fp: FilePad"""
+        for sub_wf in self.sub_wf_components:
+            if hasattr(sub_wf, 'push_infiles'):
+                sub_wf.push_infiles(fp)
+
+    # chain sub-workflows
+    def pull(self, fws_root=[]):
+        return self.sub_wf_components[0].pull(fws_root)
+
+    def main(self, fws_root=[]):
+        # TODO: pull queries within main, move to main per standard?
+        fws_first_sub_wf_root = None
+        fws_prev_sub_wf_leaf = fws_root
+        fw_list = []
+        for i, sub_wf in enumerate(self.sub_wf_components):
+            fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                sub_wf.get_as_embedded(fws_prev_sub_wf_leaf) if i == 0 else \
+                sub_wf.get_as_root(fws_prev_sub_wf_leaf)
+
+            fws_prev_sub_wf_leaf = fws_last_sub_wf_leaf
+            if not fws_first_sub_wf_root:
+                fws_first_sub_wf_root = fws_last_sub_wf_root
+            fw_list.extend(fws_last_sub_wf)
+
+        return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
+
+    def push(self, fws_root=[]):
+        return self.sub_wf_components[-1].push(fws_root)
 
 
 class ParametricStudyGenerator():
@@ -499,6 +606,7 @@ class ParametricStudyGenerator():
 
         self.parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
+# TODO: cast below into SubWorkflowGenerator pattern
 class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
 
     # #### Sub-WF: GMX prep
@@ -1500,7 +1608,7 @@ class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
 
         return fw_list, fw_push
 
-
+# TODO: cast below into workflow
 #     def __init__( self,
 
 

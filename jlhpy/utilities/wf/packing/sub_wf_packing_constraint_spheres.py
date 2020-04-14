@@ -373,7 +373,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
     def vis_push(self, fws_root=[]):
         fw_list = []
 
-        step_label = self.get_step_label('push')
+        step_label = self.get_step_label('vis_push')
 
         files_in = {'png_file': 'default.png'}
         files_out = {}

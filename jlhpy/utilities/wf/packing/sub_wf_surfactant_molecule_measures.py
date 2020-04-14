@@ -28,13 +28,13 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
     """Surfactant molecule mesasures sub workflow.
 
     Expected inputs:
-        - metadata->system->surfactant->head_atom->index (int)
+        - metadata->system->surfactant->connector_atom->index (int)
 
     Outputs:
         - metadata->system->surfactant->bounding_sphere->center ([float])
         - metadata->system->surfactant->bounding_sphere->radius (float)
-        - metadata->system->surfactant->bounding_sphere->radius_head_atom (float)
-        - metadata->system->surfactant->head_atom->position ([float])
+        - metadata->system->surfactant->bounding_sphere->radius_connector_atom (float)
+        - metadata->system->surfactant->connector_atom->position ([float])
         - metadata->system->surfactant->head_group->diameter (float)
     """
 
@@ -173,15 +173,15 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         func_str = serialize_module_obj(get_atom_position_via_parmed)
 
-        fts_head_atom_position = [PickledPyEnvTask(
+        fts_connector_atom_position = [PickledPyEnvTask(
             func=func_str,
             args=['default.pdb'],
             inputs=[
-                'metadata->system->surfactant->head_atom->index',
+                'metadata->system->surfactant->connector_atom->index',
             ],
             kwargs={'atomic_number_replacements': {'0': 1}},  # ase needs > 0
             outputs=[
-                'metadata->system->surfactant->head_atom->position',
+                'metadata->system->surfactant->connector_atom->position',
             ],
             env='imteksimpy',
             stderr_file='std.err',
@@ -191,7 +191,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             propagate=True,
         )]
 
-        fw_head_atom_position = Firework(fts_head_atom_position,
+        fw_connector_atom_position = Firework(fts_connector_atom_position,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
@@ -206,7 +206,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             },
             parents=fws_root)
 
-        fw_list.append(fw_head_atom_position)
+        fw_list.append(fw_connector_atom_position)
 
         # Get head atom - center distance
         # -------------------------------
@@ -217,14 +217,14 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         func_str = serialize_module_obj(get_distance)
 
-        fts_radius_head_atom = [PickledPyEnvTask(
+        fts_radius_connector_atom = [PickledPyEnvTask(
             func=func_str,
             inputs=[
-                'metadata->system->surfactant->head_atom->position',
+                'metadata->system->surfactant->connector_atom->position',
                 'metadata->system->surfactant->bounding_sphere->center',
             ],
             outputs=[
-                'metadata->system->surfactant->bounding_sphere->radius_head_atom',
+                'metadata->system->surfactant->bounding_sphere->radius_connector_atom',
             ],
             env='imteksimpy',
             stderr_file='std.err',
@@ -234,7 +234,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             propagate=True,
         )]
 
-        fw_radius_head_atom = Firework(fts_radius_head_atom,
+        fw_radius_connector_atom = Firework(fts_radius_connector_atom,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
@@ -247,9 +247,9 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=[fw_bounding_sphere, fw_head_atom_position])
+            parents=[fw_bounding_sphere, fw_connector_atom_position])
 
-        fw_list.append(fw_radius_head_atom)
+        fw_list.append(fw_radius_connector_atom)
 
         # head group diameter
         # -------------------
@@ -263,8 +263,8 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         fts_diameter_head_group = [PyEnvTask(
             func='numpy.subtract',
             inputs=[
-                'metadata->system->surfactant->bounding_sphere->radius_head_atom',
                 'metadata->system->surfactant->bounding_sphere->radius',
+                'metadata->system->surfactant->bounding_sphere->radius_connector_atom',
             ],
             outputs=[
                 'metadata->system->surfactant->head_group->diameter',  # rough estimate
@@ -290,14 +290,14 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=[fw_radius_head_atom])  # for data dependency fw_bounding_sphere
+            parents=[fw_radius_connector_atom])  # for data dependency fw_bounding_sphere
 
         fw_list.append(fw_diameter_head_group)
 
         return (
             fw_list,
             [fw_diameter_head_group],
-            [fw_bounding_sphere, fw_head_atom_position])
+            [fw_bounding_sphere, fw_connector_atom_position])
 
     # visualization branch
     def vis_pull(self, fws_root=[]):

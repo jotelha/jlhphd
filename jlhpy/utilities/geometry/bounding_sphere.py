@@ -77,7 +77,8 @@ def get_atom_position_via_parmed(
             else a.atomic_number for a in pmd_structure.atoms],
         positions=pmd_structure.get_coordinates(0))
 
-    return ase_structure.get_positions()[n, :]
+    # PDB / parmed indices are 1-indexed, ase indices 0-indexed
+    return ase_structure.get_positions()[n-1, :]
 
 
 def get_distance(x, y):

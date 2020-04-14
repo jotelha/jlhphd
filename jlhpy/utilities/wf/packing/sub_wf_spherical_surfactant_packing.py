@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Packing constraint spheres sub workflow."""
 import datetime
+import glob
+import os
 
 from fireworks import Firework
+from fireworks.user_objects.firetasks.dataflow_tasks import JoinListTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
+from fireworks.user_objects.firetasks.script_task import PyTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, PickledPyEnvTask
@@ -14,17 +18,21 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 from jlhpy.utilities.wf.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 
-# import jlhpy.utilities.wf.file_config as file_config
 from jlhpy.utilities.templates.spherical_packing import generate_pack_sphere_packmol_template_context
+from jlhpy.utilities.vis.plot_side_views_with_spheres import \
+    plot_side_views_with_spheres_via_parmed
+
+import jlhpy.utilities.wf.file_config as file_config
+
 
 class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
     """Packing constraint spheres sub workflow.
 
     Inputs:
-        - metadata->system->counterion->name (str)
+        - # metadata->system->counterion->name (str)
         - metadata->system->indenter->bounding_sphere->center ([float])
         - metadata->system->indenter->bounding_sphere->radius (float)
-        - metadata->system->surfactant->name (str)
+        - # metadata->system->surfactant->name (str)
         - metadata->system->surfactant->nmolecules (int)
         - metadata->system->packing->surfactant_indenter->inner_atom_index (int)
         - metadata->system->packing->surfactant_indenter->outer_atom_index (int)
@@ -35,7 +43,76 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         - metadata->system->packing->surfactant_indenter->tolerance (float)
     """
 
-    def push(self, fws_root=[]):
+    def push_infiles(self, fp):
+        fp_files = []
+
+        step_label = self.get_step_label('push_infiles')
+
+        # input files
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PACKMOL_SUBDIR,
+            file_config.PACKMOL_SPHERES_TEMPLATE)))
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'template',
+            'step': step_label,
+            **self.kwargs
+        }
+
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # data files
+        datafiles = [
+            *sorted(glob.glob(os.path.join(
+                self.infile_prefix,
+                file_config.PDB_SUBDIR,
+                file_config.SURFACTANT_PDB))),
+            *sorted(glob.glob(os.path.join(
+                self.infile_prefix,
+                file_config.PDB_SUBDIR,
+                file_config.COUNTERION_PDB))),
+            *sorted(glob.glob(os.path.join(
+                self.infile_prefix,
+                file_config.INDENTER_SUBDIR,
+                file_config.INDENTER_PDB)))]
+
+        files = {os.path.basename(f): f for f in datafiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'data',
+            'step': step_label,
+            **self.kwargs
+        }
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        return fp_files
+
+    def pull(self, fws_root=[]):
         fw_list = []
 
         # pull
@@ -46,39 +123,39 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         files_out = {
             'input_file':      'input.template',
             'indenter_file':   'indenter.pdb',
-            'surfatcant_file': '1_SDS.pdb',
-            'counterion_file': '1_NA.pdb'
+            'surfatcant_file': 'surfactant.pdb',
+            'counterion_file': 'counterion.pdb',
         }
 
         fts_pull = [
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    'surfactants_on_sphere.inp'
+                    'metadata->name':    file_config.PACKMOL_SPHERES_TEMPLATE,
                 },
                 limit=1,
                 new_file_names=['input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    'indenter_reres.pdb'
+                    'metadata->name':    file_config.INDENTER_PDB,
                 },
                 limit=1,
                 new_file_names=['indenter.pdb']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    '1_SDS.pdb'
+                    'metadata->name':    file_config.SURFACTANT_PDB,
                 },
                 limit=1,
-                new_file_names=['1_SDS.pdb']),
+                new_file_names=['surfactant.pdb']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    '1_NA.pdb'
+                    'metadata->name':    file_config.COUNTERION_PDB,
                 },
                 limit=1,
-                new_file_names=['1_NA.pdb'])
+                new_file_names=['counterion.pdb'])
         ]
 
         fw_pull = Firework(fts_pull,
@@ -113,18 +190,20 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         fts_context_generator = [PickledPyEnvTask(
             func=func_str,
+            kwargs={
+                'surfactant': 'surfactant',
+                'counterion': 'counterion',
+            },
             kwargs_inputs={
                 'C': 'metadata->system->indenter->bounding_sphere->center',
                 'R': 'metadata->system->indenter->bounding_sphere->radius',
                 'R_inner': 'metadata->system->packing->surfactant_indenter->constraints->R_inner',
-                'R_inner_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint', # shell inner radius
-                'R_outer_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint', # shell outer radius
+                'R_inner_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint',  # shell inner radius
+                'R_outer_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint',  # shell outer radius
                 'R_outer': 'metadata->system->packing->surfactant_indenter->constraints->R_outer',
                 'sfN': 'metadata->system->surfactant->nmolecules',  # number of surfactant molecules
                 'inner_atom_number': 'metadata->system->packing->surfactant_indenter->inner_atom_index',  # inner atom
                 'outer_atom_number': 'metadata->system->packing->surfactant_indenter->outer_atom_index',  # outer atom
-                'surfactant': 'metadata->system->surfactant->name',
-                'counterion': 'metadata->system->counterion->name',
                 'tolerance': 'metadata->system->packing->surfactant_indenter->tolerance',
             },
             outputs=['run->template->context'],
@@ -162,6 +241,12 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         # Jinja2 context:
         static_packmol_script_context = {
+            'system_name': 'default',
+            'header': ', '.join((
+                self.project_id,
+                self.get_fw_label(step_label),
+                str(datetime.datetime.now()))),
+
             'write_restart': True,
 
             'static_components': [
@@ -187,17 +272,16 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         #         tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
         #
 
-        ft_template = TemplateWriterTask( {
+        ft_template = TemplateWriterTask({
             'context': static_packmol_script_context,
             'context_inputs': context_inputs,
             'template_file': 'input.template',
             'template_dir': '.',
             'output_file': 'input.inp'} )
 
-
         fw_template = Firework([ft_template],
             name=self.get_fw_label(step_label),
-            spec = {
+            spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
                 '_files_in':  files_in,
                 '_files_out': files_out,
@@ -219,23 +303,29 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         files_in = {
             'input_file': 'input.inp',
             'indenter_file': 'indenter.pdb',
-            'surfatcant_file': '1_SDS.pdb',
-            'counterion_file': '1_NA.pdb' }
+            'surfatcant_file': 'surfactant.pdb',
+            'counterion_file': 'counterion.pdb',
+        }
         files_out = {
-            'data_file': '*_packmol.pdb'}
+            'data_file': 'default_packmol.pdb'}
 
-        ft_pack = CmdTask(
-            cmd='packmol',
-            # opt=['< input.inp'],
-            stdin_file   = 'input.inp',
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            use_shell    = False,
-            fizzle_bad_rc= True)
+        # ATTENTION: packmol return code == 0 even for failure
+        fts_pack = [
+            CmdTask(
+                cmd='packmol',
+                # opt=['< input.inp'],
+                stdin_file   = 'input.inp',
+                stderr_file  = 'std.err',
+                stdout_file  = 'std.out',
+                store_stdout = True,
+                store_stderr = True,
+                use_shell    = False,
+                fizzle_bad_rc= True),
+            PyTask(  # check for output file and fizzle if not existant
+                func='open',
+                args=['default_packmol.pdb'])]
 
-        fw_pack = Firework([ft_pack],
+        fw_pack = Firework(fts_pack,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
@@ -288,6 +378,141 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                     'datetime': str(datetime.datetime.now()),
                     'step':    step_label,
                     **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_push)
+
+        return fw_list, [fw_push], [fw_push]
+
+    def vis_main(self, fws_root=[]):
+        fw_list = []
+
+        # Join radii and centers
+        # ----------------------
+        step_label = self.get_step_label('join radii in list')
+
+        files_in = {}
+        files_out = {}
+
+        fts_join = [
+            JoinListTask(
+                inputs=[
+                    'metadata->system->indenter->bounding_sphere->radius',
+                    'metadata->system->packing->surfactant_indenter->constraints->R_inner',
+                    'metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint',
+                    'metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint',
+                    'metadata->system->packing->surfactant_indenter->constraints->R_outer',
+                ],
+                output='metadata->system->packing->surfactant_indenter->constraints->R_list',
+            ),
+            JoinListTask(
+                inputs=[
+                    'metadata->system->indenter->bounding_sphere->center',
+                    'metadata->system->indenter->bounding_sphere->center',
+                    'metadata->system->indenter->bounding_sphere->center',
+                    'metadata->system->indenter->bounding_sphere->center',
+                    'metadata->system->indenter->bounding_sphere->center',
+                ],
+                output='metadata->system->packing->surfactant_indenter->constraints->C_list',
+            )
+        ]
+
+        fw_join = Firework(fts_join,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                     **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_join)
+
+        # Plot sideviews
+        # --------------
+        step_label = self.get_step_label('vis')
+
+        files_in = {
+            'data_file': 'default.pdb',
+        }
+        files_out = {
+            'png_file': 'default.png',
+        }
+
+        func_str = serialize_module_obj(plot_side_views_with_spheres_via_parmed)
+
+        fts_vis = [PickledPyEnvTask(
+            func=func_str,
+            args=['default.pdb', 'default.png'],
+            inputs=[
+                'metadata->system->packing->surfactant_indenter->constraints->C_list',
+                'metadata->system->packing->surfactant_indenter->constraints->R_list',
+            ],  # inputs appended to args
+            kwargs={'atomic_number_replacements': {'0': 1}},  # ase needs > 0
+            env='imteksimpy',
+            stderr_file='std.err',
+            stdout_file='std.out',
+            store_stdout=True,
+            store_stderr=True,
+            propagate=True,
+        )]
+
+        fw_vis = Firework(fts_vis,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                     **self.kwargs
+                }
+            },
+            parents=[*fws_root, fw_join])
+
+        fw_list.append(fw_vis)
+
+        return fw_list, [fw_vis], [fw_join]
+
+    def vis_push(self, fws_root=[]):
+        fw_list = []
+
+        step_label = self.get_step_label('vis_push')
+
+        files_in = {'png_file': 'default.png'}
+        files_out = {}
+
+        fts_push = [AddFilesTask({
+            'compress': True,
+            'paths': "default.png",
+            'metadata': {
+                'project': self.project_id,
+                'datetime': str(datetime.datetime.now()),
+                'type':    'png_file',
+            }
+        })]
+
+        fw_push = Firework(fts_push,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in': files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project': self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':    step_label,
+                     **self.kwargs
                 }
             },
             parents=fws_root)
