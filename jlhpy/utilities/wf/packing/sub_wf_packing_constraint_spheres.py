@@ -49,8 +49,8 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
         files_out = {}
 
         fts_R_inner = [
-            PyEnvTask(
-                func='numpy.add',
+            EvalPyEnvTask(
+                func='lambda x, y: x + y',
                 inputs=[
                     'metadata->system->indenter->bounding_sphere->radius',
                     'metadata->system->packing->surfactant_indenter->tolerance',

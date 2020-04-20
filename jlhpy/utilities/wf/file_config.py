@@ -6,6 +6,8 @@ GMX_MDP_SUBDIR = os.path.join('gmx_input', 'mdp')
 GMX_EM_MDP = 'em.mdp'
 GMX_PULL_MDP_TEMPLATE = 'pull.mdp.template'
 
+GMX_TOP_SUBDIR = os.path.join('gmx_input', 'top')
+GMX_PULL_TOP_TEMPLATE = 'sys.top.template'
 
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB = '1_SDS.pdb'

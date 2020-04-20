@@ -29,6 +29,13 @@
 # imports as below (otherwise, the builtin __import__
 # will be missing when deserializing the functions)
 
+# NOTE: never return numpy types, always convert to standard types
+
+# https://stackoverflow.com/questions/9452775/converting-numpy-dtypes-to-native-python-types
+def as_std_type(value):
+    """Convert numpy type to standard type."""
+    return getattr(value, "tolist", lambda: value)()
+
 
 def get_bounding_sphere_from_coordinates(coordinates):
     miniball = __import__('miniball')  # import miniball
@@ -39,7 +46,7 @@ def get_bounding_sphere_from_coordinates(coordinates):
     # when serializing results into database. Locally, everything worked
     # fine, but on JUWELS, numpy arrays got serialized as their string
     # representation. Numpy version-dependent?
-    return list(C), float(R)
+    return as_std_type(C), as_std_type(R)
 
 
 def get_bounding_sphere_from_ase_atoms(atoms):
@@ -82,9 +89,9 @@ def get_atom_position_via_parmed(
         positions=pmd_structure.get_coordinates(0))
 
     # PDB / parmed indices are 1-indexed, ase indices 0-indexed
-    return list(ase_structure.get_positions()[n-1, :])
+    return as_std_type(ase_structure.get_positions()[n-1, :])
 
 
 def get_distance(x, y):
     np = __import__('numpy')
-    return float(np.linalg.norm(np.array(x) - np.array(y)))
+    return as_std_type(np.linalg.norm(np.array(x) - np.array(y)))

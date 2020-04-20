@@ -47,7 +47,7 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             'project': self.project_id,
             'type': 'initial_file_pdb',
             'step': step_label,
-            **self.kwargs
+            'name': file_config.INDENTER_PDB
         }
 
         fp_files = []
@@ -55,7 +55,6 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
         # insert these input files into data base
         for name, file_path in files.items():
             identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
-            metadata["name"] = name
             fp_files.append(
                 fp.add_file(
                     file_path,
@@ -128,8 +127,10 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
             env='imteksimpy',
             stderr_file='std.err',
             stdout_file='std.out',
+            stdlog_file='std.log',
             store_stdout=True,
             store_stderr=True,
+            store_stdlog=True,
             propagate=True,
         )]
 

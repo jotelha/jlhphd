@@ -59,16 +59,14 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             'project': self.project_id,
             'type': 'template',
             'step': step_label,
-            **self.kwargs
+            'name': file_config.PACKMOL_SPHERES_TEMPLATE
         }
-
 
         files = {os.path.basename(f): f for f in infiles}
 
         # insert these input files into data base
         for name, file_path in files.items():
             identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
-            metadata["name"] = name
             fp_files.append(
                 fp.add_file(
                     file_path,
@@ -112,29 +110,21 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fp_files
 
-    def pull(self, fws_root=[]):
+    def main(self, fws_root=[]):
         fw_list = []
 
-        # pull
-        # ----
-        step_label = self.get_step_label('pull')
+        # coordinates pull
+        # ----------------
+        step_label = self.get_step_label('coordinates pull')
 
         files_in = {}
         files_out = {
-            'input_file':      'input.template',
             'indenter_file':   'indenter.pdb',
             'surfatcant_file': 'surfactant.pdb',
             'counterion_file': 'counterion.pdb',
         }
 
-        fts_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project': self.project_id,
-                    'metadata->name':    file_config.PACKMOL_SPHERES_TEMPLATE,
-                },
-                limit=1,
-                new_file_names=['input.template']),
+        fts_coordinates_pull = [
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -158,7 +148,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                 new_file_names=['counterion.pdb'])
         ]
 
-        fw_pull = Firework(fts_pull,
+        fw_coordinates_pull = Firework(fts_coordinates_pull,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
@@ -170,14 +160,42 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                       'step':    step_label
                 }
             },
-            parents=fws_root)
+            parents=None)
 
-        fw_list.append(fw_pull)
+        fw_list.append(fw_coordinates_pull)
 
-        return fw_list, [fw_pull], [fw_pull]
+        # input files pull
+        # ----------------
+        step_label = self.get_step_label('inputs pull')
 
-    def main(self, fws_root=[]):
-        fw_list = []
+        files_in = {}
+        files_out = {
+            'input_file':      'input.template',
+        }
+
+        fts_inputs_pull = [GetFilesByQueryTask(
+            query={
+                'metadata->project': self.project_id,
+                'metadata->name':    file_config.PACKMOL_SPHERES_TEMPLATE,
+            },
+            limit=1,
+            new_file_names=['input.template'])]
+
+        fw_inputs_pull = Firework(fts_inputs_pull,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in': files_in,
+                '_files_out': files_out,
+                'metadata': {
+                      'project': self.project_id,
+                      'datetime': str(datetime.datetime.now()),
+                      'step':    step_label
+                }
+            },
+            parents=None)
+
+        fw_list.append(fw_inputs_pull)
 
         # Context generator
         # -----------------
@@ -225,7 +243,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                     'project':  self.project_id,
                     'datetime': str(datetime.datetime.now()),
                     'step':     step_label,
-                     **self.kwargs
+                    **self.kwargs
                 }
             },
             parents=fws_root)
@@ -263,21 +281,12 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             'movebadrandom': 'run->template->context->movebadrandom',
         }
 
-        # use pack_sphere function at the notebook's head to generate template context
-        # packmol_script_context.update(
-        #     pack_sphere(
-        #         C,
-        #         R_inner_constraint,
-        #         R_outer_constraint, d["nmolecules"],
-        #         tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
-        #
-
         ft_template = TemplateWriterTask({
             'context': static_packmol_script_context,
             'context_inputs': context_inputs,
             'template_file': 'input.template',
             'template_dir': '.',
-            'output_file': 'input.inp'} )
+            'output_file': 'input.inp'})
 
         fw_template = Firework([ft_template],
             name=self.get_fw_label(step_label),
@@ -288,11 +297,11 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project':  self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'step':    'fill_template',
+                    'step':    step_label,
                      **self.kwargs
                 }
             },
-            parents=[*fws_root, fw_context_generator])
+            parents=[fw_context_generator, fw_inputs_pull])
 
         fw_list.append(fw_template)
 
@@ -344,11 +353,11 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                     **self.kwargs
                 }
             },
-            parents=[*fws_root, fw_template])
+            parents=[fw_coordinates_pull, fw_template])
 
         fw_list.append(fw_pack)
 
-        return fw_list, [fw_pack], [fw_context_generator, fw_template, fw_pack]
+        return fw_list, [fw_pack], [fw_context_generator]
 
     def push(self, fws_root=[]):
         fw_list = []

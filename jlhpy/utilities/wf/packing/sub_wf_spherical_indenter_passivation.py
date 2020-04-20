@@ -9,6 +9,8 @@ from jlhpy.utilities.wf.packing.sub_wf_spherical_surfactant_packing import Spher
 from jlhpy.utilities.wf.packing.sub_wf_gromacs_prep import GromacsPrepSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_gromacs_em import GromacsEnergyMinimizationSubWorkflowGenerator
 
+from jlhpy.utilities.wf.packing.sub_wf_gromacs_pull_prep import GromacsPullPrepSubWorkflowGenerator
+
 
 class SphericalIndenterPassivationSubWorkflowGenerator(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
@@ -37,8 +39,10 @@ class IntermediateTestingWorkflow(ChainWorkflowGenerator):
 
     Concatenates
     - SphericalIndenterPassivationSubWorkflowGenerator
+
     - GromacsPrepSubWorkflowGenerator
     - GromacsEnergyMinimizationSubWorkflowGenerator
+    - GromacsPullPrepSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
@@ -46,6 +50,7 @@ class IntermediateTestingWorkflow(ChainWorkflowGenerator):
             SphericalIndenterPassivationSubWorkflowGenerator(*args, **kwargs),
             GromacsPrepSubWorkflowGenerator(*args, **kwargs),
             GromacsEnergyMinimizationSubWorkflowGenerator(*args, **kwargs),
+            GromacsPullPrepSubWorkflowGenerator(*args, **kwargs),
         ]
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = 'intermmediate testing workflow'

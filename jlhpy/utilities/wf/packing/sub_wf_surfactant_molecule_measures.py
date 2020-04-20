@@ -10,7 +10,7 @@ from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
-    import PickledPyEnvTask, PyEnvTask
+    import PickledPyEnvTask, EvalPyEnvTask
 
 from jlhpy.utilities.geometry.bounding_sphere import \
     get_bounding_sphere_via_parmed, \
@@ -74,8 +74,50 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fp_files
 
-    def pull(self, fws_root=[]):
-        step_label = self.get_step_label('pull')
+    # def pull(self, fws_root=[]):
+    #     step_label = self.get_step_label('pull')
+    #
+    #     fw_list = []
+    #
+    #     files_in = {}
+    #     files_out = {
+    #         'data_file': 'default.pdb',
+    #     }
+    #
+    #     fts_pull = [
+    #         GetFilesByQueryTask(
+    #             query={
+    #                 'metadata->project':    self.source_project_id, # earlier
+    #                 'metadata->type':       'single_surfactant_molecule_pdb',
+    #             },
+    #             sort_key='metadata.datetime',
+    #             sort_direction=pymongo.DESCENDING,
+    #             limit=1,
+    #             new_file_names=['default.pdb'])]
+    #
+    #     fw_pull = Firework(fts_pull,
+    #         name=self.get_fw_label(step_label),
+    #         spec={
+    #             '_category': self.hpc_specs['fw_noqueue_category'],
+    #             '_files_in': files_in,
+    #             '_files_out': files_out,
+    #             'metadata': {
+    #                 'project': self.project_id,
+    #                 'datetime': str(datetime.datetime.now()),
+    #                 'step':    step_label,
+    #                 **self.kwargs
+    #             }
+    #         },
+    #         parents=fws_root)
+    #
+    #     fw_list.append(fw_pull)
+    #
+    #     return fw_list, [fw_pull], [fw_pull]
+
+    def main(self, fws_root=[]):
+        fw_list = []
+
+        step_label = self.get_step_label('input_files_pull')
 
         fw_list = []
 
@@ -87,7 +129,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         fts_pull = [
             GetFilesByQueryTask(
                 query={
-                    'metadata->project':    self.source_project_id, # earlier
+                    'metadata->project':    self.project_id, # earlier
                     'metadata->type':       'single_surfactant_molecule_pdb',
                 },
                 sort_key='metadata.datetime',
@@ -108,14 +150,9 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
                     **self.kwargs
                 }
             },
-            parents=fws_root)
+            parents=None)
 
         fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
-
-    def main(self, fws_root=[]):
-        fw_list = []
 
         # Bounding sphere Fireworks
         # -------------------------
@@ -157,7 +194,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
                     **self.kwargs
                 }
             },
-            parents=fws_root)
+            parents=[*fws_root, fw_pull])
 
         fw_list.append(fw_bounding_sphere)
 
@@ -203,7 +240,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=fws_root)
+            parents=[*fws_root,fw_pull])
 
         fw_list.append(fw_connector_atom_position)
 
@@ -259,8 +296,8 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         # func_str = serialize_module_obj(get_distance)
 
-        fts_diameter_head_group = [PyEnvTask(
-            func='numpy.subtract',
+        fts_diameter_head_group = [EvalPyEnvTask(
+            func='lambda x, y: x - y',
             inputs=[
                 'metadata->system->surfactant->bounding_sphere->radius',
                 'metadata->system->surfactant->bounding_sphere->radius_connector_atom',
@@ -312,7 +349,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         fts_pull = [
             GetFilesByQueryTask(
                 query={
-                    'metadata->project':    self.source_project_id, # earlier
+                    'metadata->project':    self.source_project_id,
                     'metadata->type':       'single_surfactant_molecule_pdb',
                 },
                 sort_key='metadata.datetime',
