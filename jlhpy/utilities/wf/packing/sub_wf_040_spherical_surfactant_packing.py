@@ -34,13 +34,13 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         - metadata->system->indenter->bounding_sphere->radius (float)
         - # metadata->system->surfactant->name (str)
         - metadata->system->surfactant->nmolecules (int)
-        - metadata->system->packing->surfactant_indenter->inner_atom_index (int)
-        - metadata->system->packing->surfactant_indenter->outer_atom_index (int)
-        - metadata->system->packing->surfactant_indenter->constraints->R_inner (float)
-        - metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint (float)
-        - metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint (float)
-        - metadata->system->packing->surfactant_indenter->constraints->R_outer (float)
-        - metadata->system->packing->surfactant_indenter->tolerance (float)
+        - metadata->step_specific->packing->surfactant_indenter->inner_atom_index (int)
+        - metadata->step_specific->packing->surfactant_indenter->outer_atom_index (int)
+        - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner (float)
+        - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint (float)
+        - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
+        - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
+        - metadata->step_specific->packing->surfactant_indenter->tolerance (float)
     """
 
     def push_infiles(self, fp):
@@ -215,14 +215,14 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             kwargs_inputs={
                 'C': 'metadata->system->indenter->bounding_sphere->center',
                 'R': 'metadata->system->indenter->bounding_sphere->radius',
-                'R_inner': 'metadata->system->packing->surfactant_indenter->constraints->R_inner',
-                'R_inner_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint',  # shell inner radius
-                'R_outer_constraint': 'metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint',  # shell outer radius
-                'R_outer': 'metadata->system->packing->surfactant_indenter->constraints->R_outer',
+                'R_inner': 'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner',
+                'R_inner_constraint': 'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint',  # shell inner radius
+                'R_outer_constraint': 'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint',  # shell outer radius
+                'R_outer': 'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer',
                 'sfN': 'metadata->system->surfactant->nmolecules',  # number of surfactant molecules
-                'inner_atom_number': 'metadata->system->packing->surfactant_indenter->inner_atom_index',  # inner atom
-                'outer_atom_number': 'metadata->system->packing->surfactant_indenter->outer_atom_index',  # outer atom
-                'tolerance': 'metadata->system->packing->surfactant_indenter->tolerance',
+                'inner_atom_number': 'metadata->step_specific->packing->surfactant_indenter->inner_atom_index',  # inner atom
+                'outer_atom_number': 'metadata->step_specific->packing->surfactant_indenter->outer_atom_index',  # outer atom
+                'tolerance': 'metadata->step_specific->packing->surfactant_indenter->tolerance',
             },
             outputs=['run->template->context'],
             env='imteksimpy',
@@ -275,7 +275,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         }
 
         context_inputs = {
-            'tolerance': 'metadata->system->packing->surfactant_indenter->tolerance',
+            'tolerance': 'metadata->step_specific->packing->surfactant_indenter->tolerance',
             'spheres': 'run->template->context->spheres',
             'ionspheres': 'run->template->context->ionspheres',
             'movebadrandom': 'run->template->context->movebadrandom',
@@ -410,12 +410,12 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             JoinListTask(
                 inputs=[
                     'metadata->system->indenter->bounding_sphere->radius',
-                    'metadata->system->packing->surfactant_indenter->constraints->R_inner',
-                    'metadata->system->packing->surfactant_indenter->constraints->R_inner_constraint',
-                    'metadata->system->packing->surfactant_indenter->constraints->R_outer_constraint',
-                    'metadata->system->packing->surfactant_indenter->constraints->R_outer',
+                    'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner',
+                    'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint',
+                    'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint',
+                    'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer',
                 ],
-                output='metadata->system->packing->surfactant_indenter->constraints->R_list',
+                output='metadata->step_specific->packing->surfactant_indenter->constraints->R_list',
             ),
             JoinListTask(
                 inputs=[
@@ -425,7 +425,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
                     'metadata->system->indenter->bounding_sphere->center',
                     'metadata->system->indenter->bounding_sphere->center',
                 ],
-                output='metadata->system->packing->surfactant_indenter->constraints->C_list',
+                output='metadata->step_specific->packing->surfactant_indenter->constraints->C_list',
             )
         ]
 
@@ -463,8 +463,8 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             func=func_str,
             args=['default.pdb', 'default.png'],
             inputs=[
-                'metadata->system->packing->surfactant_indenter->constraints->C_list',
-                'metadata->system->packing->surfactant_indenter->constraints->R_list',
+                'metadata->step_specific->packing->surfactant_indenter->constraints->C_list',
+                'metadata->step_specific->packing->surfactant_indenter->constraints->R_list',
             ],  # inputs appended to args
             kwargs={'atomic_number_replacements': {'0': 1}},  # ase needs > 0
             env='imteksimpy',

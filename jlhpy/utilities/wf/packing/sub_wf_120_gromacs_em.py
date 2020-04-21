@@ -17,6 +17,38 @@ import jlhpy.utilities.wf.file_config as file_config
 
 
 class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
+    """
+    Energy minimization with GROMACS.
+
+    dynamic infiles:
+        only queried in pull stub, otherwise expected through data flow
+
+    - data_file:     default.gro
+        queried by { 'metadata->type': 'initial_config_gro' }
+    - topology_file: default.top
+        queried by { 'metadata->type': 'initial_config_top' }
+    - restraint_file: default.posre.itp
+        queried by { 'metadata->type': 'initial_config_posre_itp' }
+
+    static infiles:
+        always queried within main trunk
+
+    - parameter_file: default.mdp,
+        queried by {'metadata->name': file_config.GMX_EM_MDP}
+
+    outfiles:
+        use regex replacement /'([^']*)':(\\s*)'([^']*)',/- $1:$2$3/
+        to format from files_out dict
+
+    - log_file:        em.log
+        tagged as {'metadata->type': 'em_log'}
+    - energy_file:     em.edr
+        tagged as {'metadata->type': 'em_edr'}
+    - trajectory_file: em.trr
+        tagged as {'metadata->type': 'em_trr'}
+    - data_file:       em.gro
+        tagged as {'metadata->type': 'em_gro'}
+    """
 
     def __init__(self, *args, **kwargs):
         if 'wf_name_prefix' not in kwargs:
@@ -280,7 +312,7 @@ class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
                     'type':    'em_edr'}
             }),
             AddFilesTask({
-                'compress': True ,
+                'compress': True,
                 'paths': "em.trr",
                 'metadata': {
                     'project': self.project_id,
@@ -288,7 +320,7 @@ class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
                     'type':    'em_trr'}
             }),
             AddFilesTask({
-                'compress': True ,
+                'compress': True,
                 'paths': "em.gro",
                 'metadata': {
                     'project': self.project_id,
@@ -304,7 +336,7 @@ class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'step':    'push',
+                    'step':    step_label,
                     **self.kwargs
                 }
             },

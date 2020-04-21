@@ -47,13 +47,13 @@ def plot_side_views_with_spheres(
     fig: matplotlib.figure, default None
     ax:  list of three matploblib.axes objects
     """
-    logging = __import__('logging')
-    np = __import__('numpy')
-    plt = __import__('matplotlib.pyplot').pyplot
-    plot_atoms = __import__('ase.visualize.plot').visualize.plot.plot_atoms
+    import logging
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ase.visualize.plot import plot_atoms
     # from ase.visualize.plot import plot_atoms  # has nasty offset issues
     # from cycler import cycler  # here used for cycling through colors in plots
-    cycler = __import__('cycler').cycler
+    from cycler import cycler
 
     logger = logging.getLogger(__name__)
 
@@ -137,15 +137,15 @@ def plot_side_views_with_spheres(
 
 
 def plot_side_views_with_spheres_via_ase(infile, outfile, C, R):
-    ase = __import__('ase')
+    import ase.io
     atoms = ase.io.read(infile, format='proteindatabank')
     fig, ax = plot_side_views_with_spheres(atoms=atoms, cc=C, R=R)
     fig.savefig(outfile)
 
 def plot_side_views_with_spheres_via_parmed(infile, outfile, C, R,
         atomic_number_replacements={}):
-    pmd = __import__('parmed')
-    ase = __import__('ase')
+    import parmed as pmd
+    import ase
     pmd_structure = pmd.load_file(infile)
     ase_structure = ase.Atoms(
         numbers=[

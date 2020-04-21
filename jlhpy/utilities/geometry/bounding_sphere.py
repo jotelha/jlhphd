@@ -38,8 +38,8 @@ def as_std_type(value):
 
 
 def get_bounding_sphere_from_coordinates(coordinates):
-    miniball = __import__('miniball')  # import miniball
-    np = __import__('numpy')  # import numpy as np
+    import miniball
+    import numpy as np
     C, R_sq = miniball.get_bounding_ball(coordinates)
     R = np.sqrt(R_sq)
     # for some reason, directly returning numpy types can make troubles
@@ -56,7 +56,7 @@ def get_bounding_sphere_from_ase_atoms(atoms):
 
 def get_bounding_sphere_via_ase(
         infile, format='proteindatabank'):
-    ase = __import__('ase.io')  # import ase.io
+    import ase.io
     atoms = ase.io.read(infile, format=format)
     return get_bounding_sphere_from_ase_atoms(atoms)
 
@@ -64,8 +64,8 @@ def get_bounding_sphere_via_ase(
 def get_bounding_sphere_via_parmed(
         infile, atomic_number_replacements={}):
     """atomic_number_replacements: {str: int}."""
-    pmd = __import__('parmed')
-    ase = __import__('ase')
+    import parmed as pmd
+    import ase
     pmd_structure = pmd.load_file(infile)
     ase_structure = ase.Atoms(
         numbers=[
@@ -78,8 +78,8 @@ def get_bounding_sphere_via_parmed(
 
 def get_atom_position_via_parmed(
         infile, n, atomic_number_replacements={}):
-    pmd = __import__('parmed')
-    ase = __import__('ase')
+    import parmed as pmd
+    import ase
     pmd_structure = pmd.load_file(infile)
     ase_structure = ase.Atoms(
         numbers=[
@@ -93,5 +93,5 @@ def get_atom_position_via_parmed(
 
 
 def get_distance(x, y):
-    np = __import__('numpy')
+    import numpy as np
     return as_std_type(np.linalg.norm(np.array(x) - np.array(y)))

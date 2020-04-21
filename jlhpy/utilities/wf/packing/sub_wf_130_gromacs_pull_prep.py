@@ -20,14 +20,37 @@ import jlhpy.utilities.wf.file_config as file_config
 
 class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
     """
+    Prepare pseudo-pulling via GROMACS.
 
-    Inputs:
-        - metadata->system->surfactant->nmolecules
-        - metadata->system->surfactant->name
-        - metadata->system->counterion->nmolecules
-        - metadata->system->counterion->name
-        - metadata->system->substrate->natoms
-        - metadata->system->substrate->name
+    dynamic infiles:
+    - data_file: default.gro
+
+    static infiles:
+    - template_file: sys.top.template,
+        queried by {'metadata->name': file_config.GMX_PULL_TOP_TEMPLATE}
+    - parameter_file: pull.mdp.template,
+        queried by {'metadata->name': file_config.GMX_PULL_MDP_TEMPLATE}
+
+    fw_spec inputs:
+    - metadata->system->surfactant->nmolecules
+    - metadata->system->surfactant->name
+    - metadata->system->counterion->nmolecules
+    - metadata->system->counterion->name
+    - metadata->system->substrate->natoms
+    - metadata->system->substrate->name
+
+    - metadata->step_specific->pulling->pull_atom_name
+    - metadata->step_specific->pulling->spring_constant
+    - metadata->step_specific->pulling->rate
+
+    outfiles:
+    - data_file:      default.gro
+    - topology_file:  default.top
+        tagged as {metadata->type: top_pull}
+    - index_file:     out.ndx
+        tagged as {metadata->type: ndx_pull}
+    - input_file:     out.mdp
+        tagged as {metadata->type: mdp_pull}
     """
     def __init__(self, *args, **kwargs):
         if 'wf_name_prefix' not in kwargs:
@@ -159,7 +182,7 @@ class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':   'pull.mdp.template',
+                    'metadata->name':    file_config.GMX_PULL_MDP_TEMPLATE,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -293,30 +316,31 @@ class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
         }
 
         # TODO:
-        fts_make_pull_groups = [ CmdTask(
+        fts_make_pull_groups = [CmdTask(
             cmd='gmx_tools',
             opt=['--verbose', '--log', 'default.log',
-                'make','pull_groups',
+                'make', 'pull_groups',
                 '--topology-file', 'default.top',
                 '--coordinates-file', 'default.gro',
-                '--residue-name', 'SDS',  # TODO
-                '--atom-name', 'C12',  # TODO
+                '--residue-name', {'key': 'metadata->system->surfactant->name'},
+                '--atom-name', {'key': 'metadata->step_specific->pulling->pull_atom_name'},
                 '--reference-group-name', 'Substrate',
-                 '-k', 1000,
-                 '--rate', 0.1, '--',
+                '-k', {'key': 'metadata->step_specific->pulling->spring_constant'},
+                '--rate', {'key': 'metadata->step_specific->pulling->rate'},
+                '--',
                 'in.ndx', 'out.ndx', 'in.mdp', 'out.mdp'],
-            env = 'python',
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            stdlog_file  = 'std.log',
-            store_stdout = True,
-            store_stderr = True,
-            store_stdlog = True,
-            fizzle_bad_rc= True) ]
+            env='python',
+            stderr_file='std.err',
+            stdout_file='std.out',
+            stdlog_file='std.log',
+            store_stdout=True,
+            store_stderr=True,
+            store_stdlog=False,
+            fizzle_bad_rc=True)]
 
         fw_make_pull_groups = Firework(fts_make_pull_groups,
             name=self.get_fw_label(step_label),
-            spec = {
+            spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
                 '_files_in':  files_in,
                 '_files_out': files_out,
@@ -351,7 +375,7 @@ class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'top_pull',
+                    'type':    'pull_top',
                 }
             }),
             AddFilesTask({
@@ -360,7 +384,7 @@ class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'ndx_pull',
+                    'type':    'pull_ndx',
                 }
             }),
             AddFilesTask({
@@ -369,7 +393,7 @@ class GromacsPullPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'mdp_pull',
+                    'type':    'pull_mdp',
                 }
             })]
 

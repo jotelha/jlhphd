@@ -190,7 +190,47 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
     push sub-wf is a terminating stup and does not yield any outputs.
     main sub-wf expects intputs and produces outputs.
 
-    Inputs and outputs can be files or specs.
+    Inputs and outputs can be files or specs. They are to be documented
+    in the following manner (use as template):
+
+    ### sample template ###
+
+    dynamic infiles:
+        only queried in pull stub, otherwise expected through data flow
+
+    - data_file: default.gro
+    - input_file: default.mdp
+
+    static infiles:
+        always queried within main trunk
+
+    - template_file: sys.top.template,
+        queried by {'metadata->name': file_config.GMX_PULL_TOP_TEMPLATE}
+    - parameter_file: pull.mdp.template,
+        queried by {'metadata->name': file_config.GMX_PULL_MDP_TEMPLATE}
+
+    fw_spec inputs:
+        key-value pairs referred to within sub-workflow
+    - metadata->system->surfactant->nmolecules
+    - metadata->system->surfactant->name
+
+    outfiles:
+        use regex replacement /'([^']*)':(\\s*)'([^']*)',/- \1:\2\3/
+        to format from files_out dict
+
+    - topology_file:  default.top
+        tagged as {metadata->type: top_pull}
+    - index_file:     out.ndx
+        tagged as {metadata->type: ndx_pull}
+    - input_file:     out.mdp
+        tagged as {metadata->type: mdp_pull}
+
+    fw_spec outputs:
+        key - value pairs modified within sub-workflow
+
+    - metadata->system->surfactant->length
+
+    ### end of sample template ###
 
     The three-part workflow arising from connected pull, main and push
     sub-workflows should ideally be runnable independently.
@@ -613,182 +653,6 @@ class ParametricStudyGenerator():
 class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
 
     # #### Sub-WF: GMX pull
-
-    def sub_wf_gmx_pull_pull(d, fws_root):
-        global project_id, source_project_id, HPC_SPECS, machine
-
-        fw_list = []
-
-        files_in = {}
-        files_out = {
-            'data_file':       'default.gro',
-            'topology_file':   'default.top',
-            'input_file':      'default.mdp',
-            'indef_file':      'default.ndx',
-        }
-
-        fts_fetch = [
-            GetFilesByQueryTask(
-                query = {
-                    'metadata->project':    source_project_id, # earlier
-                    'metadata->type':       'initial_config_gro',
-                    'metadata->nmolecules': d["nmolecules"]
-                },
-                sort_key = 'metadata.datetime',
-                sort_direction = pymongo.DESCENDING,
-                limit = 1,
-                new_file_names = ['default.gro'] ),
-            GetFilesByQueryTask(
-                query = {
-                    'metadata->project':    source_project_id,
-                    'metadata->type':       'top_pull',
-                    'metadata->nmolecules': d["nmolecules"]
-                },
-                sort_key = 'metadata.datetime',
-                sort_direction = pymongo.DESCENDING,
-                limit = 1,
-                new_file_names = ['default.top'] ),
-            GetFilesByQueryTask(
-                query = {
-                    'metadata->project':    source_project_id,
-                    'metadata->type':       'ndx_pull',
-                    'metadata->nmolecules': d["nmolecules"]
-                },
-                sort_key = 'metadata.datetime',
-                sort_direction = pymongo.DESCENDING,
-                limit = 1,
-                new_file_names = ['default.ndx'] ),
-            GetFilesByQueryTask(
-                query = {
-                    'metadata->project':    source_project_id,
-                    'metadata->type':       'mdp_pull',
-                    'metadata->nmolecules': d["nmolecules"]
-                },
-                sort_key = 'metadata.datetime',
-                sort_direction = pymongo.DESCENDING,
-                limit = 1,
-                new_file_names = ['default.mdp'] ) ]
-
-        fw_fetch = Firework(fts_fetch,
-            name = ', '.join(('pull', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'pull',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_fetch)
-
-        return fw_list, fw_fetch
-
-    def sub_wf_gmx_pull(d, fws_root):
-        global project_id, HPC_SPECS, machine
-
-        fw_list = []
-    ### GMX grompp
-        files_in = {
-            'input_file':      'default.mdp',
-            'index_file':      'default.ndx',
-            'data_file':       'default.gro',
-            'topology_file':   'default.top'}
-        files_out = {
-            'input_file':      'default.tpr',
-            'parameter_file':  'mdout.mdp',
-        }
-
-        # gmx grompp -f pull.mdp -n pull_groups.ndx -c em.gro -r em.gro -o pull.tpr -p sys.top
-        fts_gmx_grompp = [ CmdTask(
-            cmd='gmx',
-            opt=['grompp',
-                 '-f', 'default.mdp',  # parameter file
-                 '-n', 'default.ndx',  # index file
-                 '-c', 'default.gro',  # coordinates file
-                 '-r', 'default.gro',  # restraint positions
-                 '-p', 'default.top',  # topology file
-                 '-o', 'default.tpr',  # compiled output
-              ],
-            env          = 'python',
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            fizzle_bad_rc= True) ]
-
-        fw_gmx_grompp = Firework(fts_gmx_grompp,
-            name = ', '.join(('gmx_grompp_pull', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_grompp_pull',
-                     **d
-                }
-            },
-            parents = fws_root )
-
-        fw_list.append(fw_gmx_grompp)
-
-    ### GMX mdrun
-
-        files_in = {'input_file': 'default.tpr'}
-        files_out = {
-            'log_file':        'default.log',
-            'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
-            'compressed_trajectory_file': 'default.xtc',
-            'data_file':       'default.gro',
-            'pullf_file':      'default_pullf.xvg',
-            'pullx_file':      'default_pullx.xvg',}
-
-        fts_gmx_mdrun = [ CmdTask(
-            cmd='gmx',
-            opt=['mdrun',
-                 '-deffnm', 'default', '-v' ],
-            env='python',
-            stderr_file  = 'std.err',
-            stdout_file  = 'std.out',
-            store_stdout = True,
-            store_stderr = True,
-            fizzle_bad_rc= True) ]
-
-        fw_gmx_mdrun = Firework(fts_gmx_mdrun,
-            name = ', '.join(('gmx_mdrun_pull', fw_name_template.format(**d))),
-            spec = {
-                '_category': HPC_SPECS[machine]['fw_queue_category'],
-                '_queueadapter': {
-                    'queue':           HPC_SPECS[machine]['queue'],
-                    'walltime' :       HPC_SPECS[machine]['walltime'],
-                    'ntasks':          HPC_SPECS[machine]['physical_cores_per_node'],
-                    'ntasks_per_node': HPC_SPECS[machine]['physical_cores_per_node'],
-                    # JUWELS GROMACS
-                    # module("load","Stages/2019a","Intel/2019.3.199-GCC-8.3.0","IntelMPI/2019.3.199")
-                    # module("load","GROMACS/2019.3","GROMACS-Top/2019.3")
-                    # fails with segmentation fault when using SMT (96 logical cores)
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'gmx_mdrun_pull',
-                     **d
-                }
-            },
-            parents = [ fw_gmx_grompp ] )
-
-        fw_list.append(fw_gmx_mdrun)
-
-        return fw_list, fw_gmx_mdrun
 
     def sub_wf_gmx_pull_push(d, fws_root):
         global project_id, HPC_SPECS, machine

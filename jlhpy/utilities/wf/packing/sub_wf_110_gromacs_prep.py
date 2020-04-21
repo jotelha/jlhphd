@@ -261,7 +261,7 @@ class GromacsPrepSubWorkflowGenerator(SubWorkflowGenerator):
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'step':    'push',
+                    'step':    step_label,
                     **self.kwargs
                 }
             },

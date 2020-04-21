@@ -12,8 +12,11 @@ SURFACTANTS = {
         # atom  1:   S, in head group
         # atom 39: C12, in tail
         'head_atom_index': 1,   # 1-indexed, S in pdb
+        'head_atom_name': 'S',
         'connector_atom_index': 2,   # 1-indexed, OS1 in pdb, connects head and tail
+        'connector_atom_name': 'OS1',
         'tail_atom_index': 39,  # 1-indexed, C12 in pdb
+        'tail_atom_name': 'C12',
     },
     'CTAB': {
         # ctab length, from head nitrogen to tail carbon
@@ -25,4 +28,4 @@ SURFACTANTS = {
     }
 }
 
-TOLERANCE = 2 # Angstrom
+TOLERANCE = 2  # Angstrom
