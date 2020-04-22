@@ -20,3 +20,11 @@ INDENTER_PDB    = 'AU_111_r_25.pdb'
 
 PACKMOL_SUBDIR  = 'packmol'
 PACKMOL_SPHERES_TEMPLATE = 'sphere.inp.template'
+
+# visualization-related
+
+PML_SUBDIR = 'pymol'
+PML_MOVIE_TEMPLATE = 'movie.pml.template'
+
+BASH_SCRIPT_SUBDIR = 'bash'
+BASH_RENUMBER_PNG = 'renumber_png.sh'

@@ -1,0 +1,60 @@
+# {{ header|default("--- header ---", True) }}
+# render trajcectory, i.e. from a .xtc or .trr
+# pymol -c frame.pml -- "${pml_struct}" "${pml_prefix}" "${vid_prefix}" "${start_frame}"
+# pymol -c ../template/movie_CTAB.pml -- md_nonWater.tpr md_nonWater_pbcmol.xtc "md_nonWater_vid/md_nonWater_" 45000
+python
+from sys import argv
+args = argv[1:]
+structure = args[0]
+trajectory = args[1]
+prefix = args[2]
+start_frame = args[3]
+cmd.load(structure)
+python end
+
+select solvent, resn {{ solvent|default('SOL',true) }}
+select counterion, resn {{ counterion|default('NA',true) }}
+select substrate, resn {{ substrate|default('AUM',true) }}
+# select surfactant, not (solvent or counterion or substrate)
+select surfactant, resn {{ surfactant|default('SDS',true) }}
+select hydrogen, surfactant and elem H
+select shell, solvent within 3.5 of surfactant
+
+bg_color white
+hide everything, solvent
+hide dots, counterion
+hide dots, substrate
+hide lines, surfactant
+hide everything, solvent
+
+set_bond stick_radius, 0.1, surfactant
+alter counterion, vdw=0.5
+alter surfactant, vdw=0.4
+alter hydrogen, vdw=0.2
+show spheres, surfactant
+show spheres, surfactant
+show sticks, surfactant
+
+center surfactant
+orient
+
+# https://pymolwiki.org/index.php/Defer_builds_mode
+set defer_builds_mode, 3
+set async_builds, 1
+set cache_frames, 0
+set ray_trace_frames, 0
+
+#mpng npt_ds_,1
+
+# load_traj md.xtc, , , , , ,30000
+# Loading a large trajectory may take up a lot of RAM, unless the defer_builds_mode is set to 3.
+# load_traj filename [,object [,state [,format [,interval [,average ]
+#                   [,start [,stop [,max [,selection [,image [,shift
+#                   [, plugin ]
+#                   ]]]]]]]]]
+
+# mpng md_ds_test_, 30000
+python
+cmd.load_traj(trajectory)
+cmd.mpng(prefix,start_frame)
+python end

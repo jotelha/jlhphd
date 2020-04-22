@@ -27,6 +27,7 @@
 !packmol
 !pdb
 !py
+!pymol
 !jlhpy
 !ref
 !regex
@@ -45,6 +46,7 @@
 !packmol/**/*
 !pdb/**/*
 !py/**/*
+!pymol/**/*
 !jlhpy/**/*
 !ref/**/*
 !regex/**/*
