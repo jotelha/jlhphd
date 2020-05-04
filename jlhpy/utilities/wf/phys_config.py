@@ -5,6 +5,30 @@ UNITS = pint.UnitRegistry()
 
 # hard-coded system-sepcific
 
+COUNTERIONS = {
+    'NA': {
+        'name': 'NA',
+        'resname': 'NA',
+        'reference_atom': { 'name: NA'},
+    }
+}
+
+SOLVENTS = {
+    'H2O': {
+        'name': 'H2O',
+        'resname': 'SOL',
+        'reference_atom': { 'name': 'OW' },
+    }
+}
+
+SUBSTRATES = {
+    'AU': {
+        'name': 'AU',
+        'resname': 'AUM',
+        'reference_atom': { 'name': 'AU' },
+    }
+}
+
 SURFACTANTS = {
     'SDS': {
         # sds length, from head sulfur to tail carbon
@@ -20,11 +44,11 @@ SURFACTANTS = {
     },
     'CTAB': {
         # ctab length, from head nitrogen to tail carbon
-        'length': 19.934 * UNITS.angstrom,
         # atom 17: N1, in head group
+        'length': 19.934 * UNITS.angstrom,
         # atom  1: C1, in tail
-       'head_atom_index': 17,
-       'tail_atom_index': 1,
+        'head_atom_index': 17,
+        'tail_atom_index': 1,
     }
 }
 

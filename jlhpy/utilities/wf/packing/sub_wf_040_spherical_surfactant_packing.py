@@ -340,9 +340,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
                 '_queueadapter': {
-                    'queue':           self.hpc_specs['queue'],
-                    'walltime':        self.hpc_specs['walltime'],
-                    'ntasks':          1,  # packmol only serial
+                    **self.hpc_specs['single_core_job_queueadapter_defaults'],  # packmol only serial
                 },
                 '_files_in':  files_in,
                 '_files_out': files_out,

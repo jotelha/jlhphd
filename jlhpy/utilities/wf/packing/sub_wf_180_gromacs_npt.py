@@ -18,16 +18,18 @@ from jlhpy.utilities.wf.mixin.mixin_wf_gromacs_analysis import GromacsVacuumTraj
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
+class GromacsNPTEquilibrationSubWorkflowGenerator(
         GromacsVacuumTrajectoryAnalysisMixin, SubWorkflowGenerator):
     """
-    Energy minimization with GROMACS.
+    NPT equilibration with GROMACS.
 
     dynamic infiles:
         only queried in pull stub, otherwise expected through data flow
 
-    - data_file:     default.gro
-        queried by { 'metadata->type': 'solvate_gro' }
+    - data_file:       default.gro
+        tagged as {'metadata->type': 'nvt_gro'}
+    - index_file:      default.ndx
+        tagged as {'metadata->type': 'nvt_ndx'}
     - topology_file: default.top
         queried by { 'metadata->type': 'solvate_top' }
 
@@ -35,7 +37,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         always queried within main trunk
 
     - parameter_file: default.mdp,
-        queried by {'metadata->name': file_config.GMX_EM_SOLVATED_MDP}
+        queried by {'metadata->name': file_config.GMX_NPT_MDP}
 
     vis static infiles:
     - script_file: renumber_png.sh,
@@ -44,17 +46,19 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         queried by {'metadata->name': file_config.PML_MOVIE_TEMPLATE}
 
     outfiles:
-    - log_file:        em.log
-        tagged as {'metadata->type': 'em_solvated_log'}
-    - energy_file:     em.edr
-        tagged as {'metadata->type': 'em_solvated_edr'}
-    - trajectory_file: em.trr
-        tagged as {'metadata->type': 'em_solvated_trr'}
-    - data_file:       em.gro
-        tagged as {'metadata->type': 'em_solvated_gro'}
+    - log_file:        default.log
+        tagged as {'metadata->type': 'npt_log'}
+    - energy_file:     default.edr
+        tagged as {'metadata->type': 'npt_edr'}
+    - trajectory_file: default.trr
+        tagged as {'metadata->type': 'npt_trr'}
+    - data_file:       default.gro
+        tagged as {'metadata->type': 'npt_gro'}
 
-    - topology_file:  default.top
-        passed through unmodified
+    - index_file:      default.ndx
+        pass through untouched
+    - topology_file:   default.top
+        pass through untouched
 
     vis outfiles:
     - mp4_file: default.mp4
@@ -63,7 +67,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
 
     def __init__(self, *args, **kwargs):
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'GROMACS energy minimization after solvation sub-workflow'
+            kwargs['wf_name_prefix'] = 'GROMACS NPT equilibration sub-workflow'
         super().__init__(*args, **kwargs)
 
     def push_infiles(self, fp):
@@ -75,7 +79,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.GMX_MDP_SUBDIR,
-            file_config.GMX_EM_SOLVATED_MDP)))
+            file_config.GMX_NPT_MDP)))
 
         files = {os.path.basename(f): f for f in infiles}
 
@@ -83,7 +87,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         metadata = {
             'project': self.project_id,
             'type': 'input',
-            'name': file_config.GMX_EM_SOLVATED_MDP,
+            'name': file_config.GMX_NPT_MDP,
             'step': step_label,
         }
 
@@ -160,6 +164,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         files_in = {}
         files_out = {
             'data_file':      'default.gro',
+            'index_file':     'default.ndx',
             'topology_file':  'default.top',
         }
 
@@ -167,13 +172,23 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
             GetFilesByQueryTask(
                 query={
                     'metadata->project':    self.source_project_id,
-                    'metadata->type':       'solvate_gro',
+                    'metadata->type':       'nvt_gro',
                     **self.parameter_dict
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
                 new_file_names=['default.gro']),
+            GetFilesByQueryTask(
+                query={
+                    'metadata->project':    self.source_project_id,
+                    'metadata->type':       'nvt_ndx',
+                    **self.parameter_dict
+                },
+                sort_key='metadata.datetime',
+                sort_direction=pymongo.DESCENDING,
+                limit=1,
+                new_file_names=['default.ndx']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project':    self.source_project_id,
@@ -215,18 +230,18 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         files_in = {}
         files_out = {'input_file': 'default.mdp'}
 
-        fts_pull = [
+        fts_pull_mdp = [
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.GMX_EM_SOLVATED_MDP,
+                    'metadata->name':    file_config.GMX_NPT_MDP,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
                 new_file_names=['default.mdp'])]
 
-        fw_pull = Firework(fts_pull,
+        fw_pull_mdp = Firework(fts_pull_mdp,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_noqueue_category'],
@@ -241,13 +256,14 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
             },
             parents=None)
 
-        fw_list.append(fw_pull)
+        fw_list.append(fw_pull_mdp)
 
         # GMX grompp
         # ----------
         step_label = self.get_step_label('gmx grompp')
 
         files_in = {
+            'index_file':      'default.ndx',
             'input_file':      'default.mdp',
             'data_file':       'default.gro',
             'topology_file':   'default.top',
@@ -255,13 +271,16 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         files_out = {
             'input_file':     'default.tpr',
             'parameter_file': 'mdout.mdp',
-            'topology_file':  'default.top',  # passed throught unmodified
+            'topology_file':  'default.top',  # pass through untouched
+            'index_file':     'default.ndx',  # pass through untouched
         }
 
+        # gmx grompp -f nvt.mdp -n nvt.ndx -c em_solvated.gro -r em_solvated.gro -o nvt.tpr -p sys.top
         fts_gmx_grompp = [CmdTask(
             cmd='gmx',
             opt=['grompp',
                  '-f', 'default.mdp',
+                 '-n', 'default.ndx',
                  '-c', 'default.gro',
                  '-r', 'default.gro',
                  '-o', 'default.tpr',
@@ -288,7 +307,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
                     **self.kwargs
                 }
             },
-            parents=[*fws_root, fw_pull])
+            parents=[*fws_root, fw_pull_mdp])
 
         fw_list.append(fw_gmx_grompp)
 
@@ -298,15 +317,17 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
         step_label = self.get_step_label('gmx mdrun')
 
         files_in = {
-            'input_file':   'default.tpr',
-            'topology_file': 'default.top',  # passed throught unmodified
+            'input_file':    'default.tpr',
+            'topology_file': 'default.top',  # pass through untouched
+            'index_file':    'default.ndx',  # pass through untouched
         }
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
             'trajectory_file': 'default.trr',
             'data_file':       'default.gro',
-            'topology_file':   'default.top',  # passed throught unmodified
+            'topology_file':   'default.top',  # pass through untouched
+            'index_file':      'default.ndx',  # pass through untouched
         }
 
         fts_gmx_mdrun = [CmdTask(
@@ -353,7 +374,8 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
             'log_file':        'default.log',
             'energy_file':     'default.edr',
             'trajectory_file': 'default.trr',
-            'data_file':       'default.gro'}
+            'data_file':       'default.gro',
+        }
 
         fts_push = [
             AddFilesTask({
@@ -362,7 +384,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'em_solvated_log'}
+                    'type':    'npt_log'}
             }),
             AddFilesTask({
                 'compress': True,
@@ -370,7 +392,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'em_solvated_edr'}
+                    'type':    'npt_edr'}
             }),
             AddFilesTask({
                 'compress': True,
@@ -378,7 +400,7 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'em_solvated_trr'}
+                    'type':    'npt_trr'}
             }),
             AddFilesTask({
                 'compress': True,
@@ -386,8 +408,9 @@ class GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(
                 'metadata': {
                     'project': self.project_id,
                     'datetime': str(datetime.datetime.now()),
-                    'type':    'em_solvated_gro'}
-            })]
+                    'type':    'npt_gro'}
+            })
+        ]
 
         fw_push = Firework(fts_push,
             name=self.get_fw_label(step_label),

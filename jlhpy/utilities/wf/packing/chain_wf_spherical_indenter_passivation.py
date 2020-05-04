@@ -15,6 +15,9 @@ from jlhpy.utilities.wf.packing.sub_wf_140_gromacs_pull import GromacsPullSubWor
 from jlhpy.utilities.wf.packing.sub_wf_150_gromacs_solvate import GromacsSolvateSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_160_gromacs_em_solvated import GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator
 
+from jlhpy.utilities.wf.packing.sub_wf_170_gromacs_nvt import GromacsNVTEquilibrationSubWorkflowGenerator
+from jlhpy.utilities.wf.packing.sub_wf_180_gromacs_npt import GromacsNPTEquilibrationSubWorkflowGenerator
+
 
 class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
@@ -50,6 +53,8 @@ class GromacsPackingMinimizationChainWorkflowGenerator(ChainWorkflowGenerator):
 
     - GromacsSolvateSubWorkflowGenerator
     - GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator
+
+    - GromacsNVTEquilibrationSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
@@ -60,12 +65,15 @@ class GromacsPackingMinimizationChainWorkflowGenerator(ChainWorkflowGenerator):
             GromacsPullSubWorkflowGenerator(*args, **kwargs),
             GromacsSolvateSubWorkflowGenerator(*args, **kwargs),
             GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(*args, **kwargs),
+            GromacsNVTEquilibrationSubWorkflowGenerator(*args, **kwargs),
+            GromacsNPTEquilibrationSubWorkflowGenerator(*args, **kwargs),
         ]
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'intermmediate testing workflow'
+            kwargs['wf_name_prefix'] = 'intermediate testing workflow'
         super().__init__(sub_wf_components, *args, **kwargs)
 
-class IntermediateTestingWorkflow(ChainWorkflowGenerator):
+
+class IndenterPassivationChainWorkflow(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
 
     Concatenates
@@ -79,5 +87,5 @@ class IntermediateTestingWorkflow(ChainWorkflowGenerator):
             GromacsPackingMinimizationChainWorkflowGenerator(*args, **kwargs),
         ]
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'intermmediate testing workflow'
+            kwargs['wf_name_prefix'] = 'indenter passivation workflow'
         super().__init__(sub_wf_components, *args, **kwargs)

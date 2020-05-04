@@ -1,0 +1,109 @@
+#; nvt.mdp - used as input into grompp to generate nvt.tpr
+# adapted sample nvt equilibration input file from 
+# http://www.bevanlab.biochem.vt.edu/Pages/Personal/justin/gmx-tutorials/lysozyme/Files/nvt.mdp
+title   = Surfactant adsorption film on gold cluster NPT equilibration
+
+; Run parameters
+integrator  = md    ; leap-frog integrator
+nsteps    = 50000   ; 2 * 50000 = 100 ps
+dt        = 0.002   ; 2 fs
+
+; Output control
+nstxout   = 500   ; save coordinates every 1.0 ps
+nstvout   = 500   ; save velocities every 1.0 ps
+nstxtcout = 500    
+nstfout   = 500
+nstenergy = 500   ; save energies every 1.0 ps
+nstlog    = 500   ; update log file every 1.0 ps
+energygrps = Surfactant Substrate Ion SOL
+
+; modifications for CHARMM36 as suggested by
+; http://manual.gromacs.org/documentation/2018/user-guide/force-fields.html
+
+; Bond parameters
+continuation            = yes
+constraint_algorithm    = lincs     ; holonomic constraints 
+constraints             = h-bonds
+lincs_iter              = 1       ; accuracy of LINCS
+lincs_order             = 4       ; also related to accuracy
+
+; Neighbor searching
+; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
+cutoff-scheme   = Verlet
+ns_type         = grid          ; search neighboring grid cells
+nstlist         = 10            ; 20 fs, largely irrelevant with Verlet
+vdwtype         = cutoff
+vdw-modifier    = force-switch
+rlist           = 1.2
+rvdw            = 1.2           ; Short-range Van der Waals cut-off, CHARMM outer cutoff for LJ
+rvdw-switch     = 1.0           ; CHARMM inner cutoff for LJ 
+; Please also note that the switching distance is a matter of some debate in 
+; lipid bilayer simulations, and it is dependent to some extent on the nature 
+; of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
+; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
+; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+; literature for their chosen lipid(s) before beginning a simulation!
+
+; Electrostatics
+
+coulombtype     = PME  ; Particle Mesh Ewald for long-range electrostatics
+pme_order       = 4    ; cubic interpolation
+rcoulomb        = 1.2  ; Short-range electrostatic cut-off
+fourierspacing  = 0.16 ; grid spacing for FFT
+
+; Temperature coupling is on
+tcoupl      = V-rescale             ; modified Berendsen thermostat
+tc-grps = non-Substrate Substrate
+tau_t   = 1.0    1.0   ; time constant, in ps
+ref_t   = 298.15 0.0 ; reference temperature, one for each group, in K
+
+; Pressure coupling is on
+pcoupl              = Parrinello-Rahman     ; Pressure coupling on in NPT
+pcoupltype          = isotropic             ; uniform scaling of box vectors
+tau_p               = 10.0                  ; time constant, in ps
+ref_p               = 1.013                 ; reference pressure, in bar
+compressibility     = 4.5e-5                ; isothermal compressibility of water, bar^-1
+refcoord_scaling    = all
+
+; Periodic boundary conditions
+pbc   = xyz       ; 3-D PBC
+; Dispersion correction
+; DispCorr  = EnerPres  ; account for cut-off vdW scheme
+DispCorr        = no
+; Note that dispersion correction should be applied in the case of lipid monolayers, but not bilayers.
+
+; Velocity generation
+gen_vel   = no
+
+; Restraints
+; define    = -DPOSRES  ; position restrain during equilibration
+; define = -DPOSRES_SURFACTANT -DPOSRES_SUBSTRATE -DPOSRES_ION
+; define = -DDISRES_SURFACTANT -DPOSRES_ION
+; disre  = simple
+; Freeze substrate to preserve EAM equilibrated lattice spacing
+freezegrps     = Substrate
+freezedim  = Y Y Y ; freeze all three dimensions
+; Atoms that belong to a freeze group are kept stationary in the dynamics. This is
+; useful during equilibration, e.g. to avoid badly placed solvent molecules giving
+; unreasonable kicks to protein atoms, although the same effect can also be
+; obtained by putting a restraining potential on the atoms that must be protected.
+; The freeze option can be used, if desired, on just one or two coordinates of an
+; atom, thereby freezing the atoms in a plane or on a line. When an atom is
+; partially frozen, constraints will still be able to move it, even in a frozen
+; direction. A fully frozen atom can not be moved by constraints. Many freeze
+; groups can be defined. Frozen coordinates are unaffected by pressure scaling; in
+; some cases this can produce unwanted results, particularly when constraints are
+; also used (in this case you will get very large pressures). Accordingly, it is
+; recommended to avoid combining freeze groups with constraints and pressure
+; coupling. For the sake of equilibration it could suffice to start with freezing
+; in a constant volume simulation, and afterward use position restraints in
+; conjunction with constant pressure.
+
+; energygrp-excl = Substrate Substrate SOL SOL
+; Pairs of energy groups for which all non-bonded interactions are excluded. 
+; An example: if you have two energy groups Protein and SOL, specifying 
+; energygrp-excl = Protein Protein SOL SOL would give only the non-bonded 
+; interactions between the protein and the solvent. This is especially useful 
+; for speeding up energy calculations with mdrun -rerun and for excluding 
+; interactions within frozen groups.
+; BUT: Energy group exclusions are not (yet) implemented for the Verlet scheme

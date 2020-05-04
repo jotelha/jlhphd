@@ -17,7 +17,37 @@ HPC_SPECS = {
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
         'nodes': 8,
-        'walltime':  '00:30:00',
+        'walltime':  '02:00:00',
+        'single_core_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '02:00:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'quick_single_core_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'single_node_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   96,
+            'ntasks_per_node': 96,
+        },
+        'no_smt_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '01:00:00',
+            # 'ntasks': 48,
+            'ntasks_per_node': 48,
+        },
+        'smt_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '01:00:00',
+            # 'ntasks': 96,
+            'ntasks_per_node': 96,
+        },
     },
     'juwels': {
         'fw_queue_category':   'juwels_queue',
@@ -26,7 +56,35 @@ HPC_SPECS = {
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
         'nodes': 1024,
-        'walltime':  '00:30:00',
+        'walltime':  '06:00:00',
+        'single_core_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'quick_single_core_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'single_node_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks':   96,
+            'ntasks_per_node': 96,
+        },
+        'no_smt_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks_per_node': 48,
+        },
+        'smt_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks_per_node': 96,
+        },
     },
     'ubuntu': {
         'fw_noqueue_category': 'ubuntu_noqueue',
@@ -36,6 +94,11 @@ HPC_SPECS = {
         'logical_cores_per_node':  1,
         'nodes': 1,
         'walltime':  '99:99:99',
+        'single_core_job_queueadapter_defaults': {},
+        'quick_single_core_job_queueadapter_defaults': {},
+        'single_node_job_queueadapter_defaults': {},
+        'no_smt_job_queueadapter_defaults': {},
+        'smt_job_queueadapter_defaults': {},
     },
 }
 

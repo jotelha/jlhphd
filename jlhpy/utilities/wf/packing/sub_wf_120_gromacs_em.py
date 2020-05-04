@@ -13,11 +13,13 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.mixin.mixin_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisMixin
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
+class GromacsEnergyMinimizationSubWorkflowGenerator(
+        GromacsVacuumTrajectoryAnalysisMixin, SubWorkflowGenerator):
     """
     Energy minimization with GROMACS.
 
@@ -37,9 +39,13 @@ class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
     - parameter_file: default.mdp,
         queried by {'metadata->name': file_config.GMX_EM_MDP}
 
+    vis static infiles:
+    - script_file: renumber_png.sh,
+        queried by {'metadata->name': file_config.BASH_RENUMBER_PNG}
+    - template_file: default.pml.template,
+        queried by {'metadata->name': file_config.PML_MOVIE_TEMPLATE}
+
     outfiles:
-        use regex replacement /'([^']*)':(\\s*)'([^']*)',/- $1:$2$3/
-        to format from files_out dict
 
     - log_file:        em.log
         tagged as {'metadata->type': 'em_log'}
@@ -49,6 +55,10 @@ class GromacsEnergyMinimizationSubWorkflowGenerator(SubWorkflowGenerator):
         tagged as {'metadata->type': 'em_trr'}
     - data_file:       em.gro
         tagged as {'metadata->type': 'em_gro'}
+
+    vis outfiles:
+    - mp4_file: default.mp4
+        tagged as {'metadata->type': 'mp4_file'}
     """
 
     def __init__(self, *args, **kwargs):

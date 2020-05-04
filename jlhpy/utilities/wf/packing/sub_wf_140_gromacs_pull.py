@@ -13,11 +13,13 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.mixin.mixin_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisMixin
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsPullSubWorkflowGenerator(SubWorkflowGenerator):
+class GromacsPullSubWorkflowGenerator(
+        GromacsVacuumTrajectoryAnalysisMixin, SubWorkflowGenerator):
     """
     Pseudo-pulling via GROMACS.
 
@@ -40,6 +42,12 @@ class GromacsPullSubWorkflowGenerator(SubWorkflowGenerator):
         queried by {'metadata->name': file_config.GMX_PULL_TOP_TEMPLATE}
     - parameter_file: pull.mdp.template,
         queried by {'metadata->name': file_config.GMX_PULL_MDP_TEMPLATE}
+
+    vis static infiles:
+    - script_file: renumber_png.sh,
+        queried by {'metadata->name': file_config.BASH_RENUMBER_PNG}
+    - template_file: default.pml.template,
+        queried by {'metadata->name': file_config.PML_MOVIE_TEMPLATE}
 
     fw_spec inputs:
     - metadata->system->surfactant->nmolecules
@@ -75,6 +83,9 @@ class GromacsPullSubWorkflowGenerator(SubWorkflowGenerator):
     - topology_file:  default.top
         passed through unmodified
 
+    vis outfiles:
+    - mp4_file: default.mp4
+        tagged as {'metadata->type': 'mp4_file'}
     """
 
     def __init__(self, *args, **kwargs):
@@ -308,10 +319,7 @@ class GromacsPullSubWorkflowGenerator(SubWorkflowGenerator):
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
                 '_queueadapter': {
-                    'queue':    self.hpc_specs['queue'],
-                    'walltime': self.hpc_specs['walltime'],
-                    'ntasks':   self.hpc_specs['physical_cores_per_node'],
-                    'ntasks_per_node': self.hpc_specs['physical_cores_per_node'],
+                    **self.hpc_specs['no_smt_job_queueadapter_defaults'],
                     # NOTE: JUWELS GROMACS
                     # module("load","Stages/2019a","Intel/2019.3.199-GCC-8.3.0","IntelMPI/2019.3.199")
                     # module("load","GROMACS/2019.3","GROMACS-Top/2019.3")

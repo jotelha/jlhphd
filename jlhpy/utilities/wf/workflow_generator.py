@@ -232,6 +232,13 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
 
     ### end of sample template ###
 
+    SubWorkflowGenerators should list dynamic infiles and outfiles in its
+    attributes 'files_out_list' and 'files_in_list' of the format
+
+    [ {'file_label' : 'label1', 'file_name': 'name1'}, {...}, {...} ]
+
+    to enable mixins to easyly operate on those.
+
     The three-part workflow arising from connected pull, main and push
     sub-workflows should ideally be runnable independently.
 
@@ -592,6 +599,29 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         """Return fw : _files_out dict of main sub-wf produced outputs."""
         _, fws_leaf, _ = self.main()
         return {fw.name: fw.spec['_files_out'] for fw in fws_leaf}
+
+    @property
+    def files_in_list(self):
+        return [
+            {
+                'file_label': label,
+                'file_name': name,
+            }
+            for file in self.inspect_inputs().values
+            for label, name in file.items()
+        ]
+
+    @property
+    def files_out_list(self):
+        return [
+            {
+                'file_label': label,
+                'file_name': name,
+            }
+            for file in self.inspect_outputs().values 
+            for label, name in file.items()
+        ]
+
 
 
 class ChainWorkflowGenerator(SubWorkflowGenerator):
