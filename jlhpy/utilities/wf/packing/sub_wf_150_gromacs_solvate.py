@@ -11,12 +11,14 @@ from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsSolvateSubWorkflowGenerator(SubWorkflowGenerator):
+class GromacsSolvateMain(SubWorkflowGenerator):
     """
     Solvate in water via GROMACS.
 
@@ -36,8 +38,11 @@ class GromacsSolvateSubWorkflowGenerator(SubWorkflowGenerator):
     """
 
     def __init__(self, *args, **kwargs):
+        sub_wf_name = 'GromacsSolvateMain'
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'GROMACS solvate sub-workflow'
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
 
@@ -195,3 +200,18 @@ class GromacsSolvateSubWorkflowGenerator(SubWorkflowGenerator):
         fw_list.append(fw_push)
 
         return fw_list, [fw_push], [fw_push]
+
+
+class GromacsSolvateSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = ' GromacsSolvate'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=GromacsSolvateMain(*args, **kwargs),
+            *args, **kwargs)

@@ -36,6 +36,12 @@ HPC_SPECS = {
             'ntasks':   96,
             'ntasks_per_node': 96,
         },
+        'no_smt_single_node_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   48,
+            'ntasks_per_node': 48,
+        },
         'no_smt_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '01:00:00',
@@ -74,6 +80,12 @@ HPC_SPECS = {
             'walltime': '06:00:00',
             'ntasks':   96,
             'ntasks_per_node': 96,
+        },
+        'no_smt_single_node_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks':   48,
+            'ntasks_per_node': 48,
         },
         'no_smt_job_queueadapter_defaults': {
             'queue':    'batch',

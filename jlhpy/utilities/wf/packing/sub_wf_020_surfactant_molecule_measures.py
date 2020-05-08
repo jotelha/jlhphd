@@ -19,28 +19,38 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
+class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
     """Surfactant molecule mesasures sub workflow.
 
-    Expected inputs:
-        - metadata->system->surfactant->connector_atom->index (int)
 
-    Outputs:
-        - metadata->system->surfactant->bounding_sphere->center ([float])
-        - metadata->system->surfactant->bounding_sphere->radius (float)
-        - metadata->system->surfactant->bounding_sphere->radius_connector_atom (float)
-        - metadata->system->surfactant->connector_atom->position ([float])
-        - metadata->system->surfactant->head_group->diameter (float)
+    static infiles:
+    - surfactant_file: default.pdb,
+        queried by {'metadata->type': single_surfactant_molecule_pdb}
+
+    inputs:
+    - metadata->system->surfactant->connector_atom->index (int)
+
+    outputs:
+    - metadata->system->surfactant->bounding_sphere->center ([float])
+    - metadata->system->surfactant->bounding_sphere->radius (float)
+    - metadata->system->surfactant->bounding_sphere->radius_connector_atom (float)
+    - metadata->system->surfactant->connector_atom->position ([float])
+    - metadata->system->surfactant->head_group->diameter (float)
     """
 
     def __init__(self, *args, **kwargs):
+        sub_wf_name = 'SurfactantMoleculeMeasuresMain'
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'surfactant molecule measures sub-workflow'
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
     def push_infiles(self, fp):
@@ -123,7 +133,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'data_file': 'default.pdb',
+            'surfactant_file': 'default.pdb',
         }
 
         fts_pull = [
@@ -159,9 +169,13 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         step_label = self.get_step_label('bounding sphere')
 
         files_in = {
-            'data_file':      'default.pdb',
+            'indenter_file':   'indenter.pdb',
+            'surfactant_file': 'default.pdb',
         }
-        files_out = {}
+        files_out = {
+            'indenter_file':   'indenter.pdb',
+            'surfactant_file': 'default.pdb',
+        }
 
         func_str = serialize_module_obj(get_bounding_sphere_via_parmed)
 
@@ -203,9 +217,10 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         step_label = self.get_step_label('head atom position')
 
         files_in = {
-            'data_file':      'default.pdb',
+            'surfactant_file':      'default.pdb',
         }
-        files_out = {}
+        files_out = {
+        }
 
         func_str = serialize_module_obj(get_atom_position_via_parmed)
 
@@ -291,8 +306,12 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         # -------------------
         step_label = self.get_step_label('head group diameter')
 
-        files_in = {}
-        files_out = {}
+        files_in = {
+            'indenter_file': 'indenter.pdb',
+        }
+        files_out = {
+            'indenter_file': 'indenter.pdb',
+        }
 
         # func_str = serialize_module_obj(get_distance)
 
@@ -305,7 +324,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             outputs=[
                 'metadata->system->surfactant->head_group->diameter',  # rough estimate
             ],
-            env='imteksimpy',
+            # env='imteksimpy',
             stderr_file='std.err',
             stdout_file='std.out',
             store_stdout=True,
@@ -335,15 +354,30 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             [fw_diameter_head_group],
             [fw_bounding_sphere, fw_connector_atom_position])
 
+
+class SurfactantMoleculeMeasuresVis(SubWorkflowGenerator):
+    """Surfactant molecule measures visualization sub workflow.
+
+    dynamic infiles:
+    - surfactant_file:     default.pdb
+        queried by { 'metadata->type': 'single_surfactant_molecule_pdb' }
+
+    inputs:
+    - metadata->system->surfactant->bounding_sphere->center
+    - metadata->system->surfactant->bounding_sphere->radius
+
+    outfiles:
+    - png_file:     default.png
+    """
     # visualization branch
-    def vis_pull(self, fws_root=[]):
-        step_label = self.get_step_label('vis_pull')
+    def pull(self, fws_root=[]):
+        step_label = self.get_step_label('vis pull')
 
         fw_list = []
 
         files_in = {}
         files_out = {
-            'data_file': 'default.pdb',
+            'surfactant_file': 'default.pdb',
         }
 
         fts_pull = [
@@ -376,7 +410,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_pull], [fw_pull]
 
-    def vis_main(self, fws_root=[]):
+    def main(self, fws_root=[]):
 
         fw_list = []
 
@@ -385,7 +419,7 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         step_label = self.get_step_label('vis')
 
         files_in = {
-            'data_file': 'default.pdb',
+            'surfactant_file': 'default.pdb',
         }
         files_out = {
             'png_file': 'default.png',
@@ -431,10 +465,10 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
             [fw_vis],
             [fw_vis])
 
-    def vis_push(self, fws_root=[]):
+    def push(self, fws_root=[]):
         fw_list = []
 
-        step_label = self.get_step_label('vis_push')
+        step_label = self.get_step_label('vis push')
 
         files_in = {'png_file': 'default.png'}
         files_out = {}
@@ -467,3 +501,19 @@ class SurfactantMoleculeMeasuresSubWorkflowGenerator(SubWorkflowGenerator):
         fw_list.append(fw_push)
 
         return fw_list, [fw_push], [fw_push]
+
+
+class SurfactantMoleculeMeasuresSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'SurfactantMoleculeMeasures'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=SurfactantMoleculeMeasuresMain(*args, **kwargs),
+            vis_sub_wf=SurfactantMoleculeMeasuresVis(*args, **kwargs),
+            *args, **kwargs)

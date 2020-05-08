@@ -15,27 +15,31 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj, serialize_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
 
-
-class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
+class PackingConstraintSpheresMain(SubWorkflowGenerator):
     """Packing constraint spheres sub workflow.
 
     Inputs:
-        - metadata->system->indenter->bounding_sphere->radius (float)
-        - metadata->system->surfactant->bounding_sphere->radius (float)
-        - metadata->system->surfactant->head_group->diameter (float)
-        - metadata->step_specific->packing->surfactant_indenter->tolerance (float)
+    - metadata->system->indenter->bounding_sphere->radius (float)
+    - metadata->system->surfactant->bounding_sphere->radius (float)
+    - metadata->system->surfactant->head_group->diameter (float)
+    - metadata->step_specific->packing->surfactant_indenter->tolerance (float)
 
     Outputs:
-        - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner (float)
-        - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint (float)
-        - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
-        - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
     """
     def __init__(self, *args, **kwargs):
+        sub_wf_name = 'PackingConstraintSpheresMain'
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'constraint spheres sub-workflow'
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
     def main(self, fws_root=[]):
@@ -45,8 +49,12 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
         # -------
         step_label = self.get_step_label('R_inner')
 
-        files_in = {}
-        files_out = {}
+        files_in = {
+            'indenter_file': 'default.pdb',  # pass through
+        }
+        files_out = {
+            'indenter_file': 'default.pdb',  # pass through
+        }
 
         fts_R_inner = [
             EvalPyEnvTask(
@@ -58,7 +66,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
                 outputs=[
                     'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner',
                 ],
-                env='imteksimpy',
+                # env='imteksimpy',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -102,7 +110,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
                 outputs=[
                     'metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint',
                 ],
-                env='imteksimpy',
+                # env='imteksimpy',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -151,7 +159,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
                 outputs=[
                     'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint',
                 ],
-                env='imteksimpy',
+                # env='imteksimpy',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -200,7 +208,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
                 outputs=[
                     'metadata->step_specific->packing->surfactant_indenter->constraints->R_outer',
                 ],
-                env='imteksimpy',
+                # env='imteksimpy',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -232,14 +240,41 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
             [fw_R_inner, fw_R_inner_constraint, fw_R_outer_constraint, fw_R_outer])
 
 
-    def vis_pull(self, fws_root=[]):
-        step_label = self.get_step_label('vis_pull')
+class PackingConstraintSpheresVis(
+        SubWorkflowGenerator):
+    """Packing constraint spheres visualization sub workflow.
+
+    dynamic infiles:
+    - indenter_file:     default.pdb
+        queried by { 'metadata->type': 'initial_file_pdb' }
+
+    inputs:
+    - metadata->system->indenter->bounding_sphere->center ([float])
+    - metadata->system->indenter->bounding_sphere->radius (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
+
+    outfiles:
+    - png_file:     default.png
+    """
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'PackingConstraintSpheresVis'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
+
+    def pull(self, fws_root=[]):
+        step_label = self.get_step_label('vis pull')
 
         fw_list = []
 
         files_in = {}
         files_out = {
-            'data_file':       'default.pdb',
+            'indenter_file':       'default.pdb',
         }
 
         fts_pull = [
@@ -272,7 +307,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_pull], [fw_pull]
 
-    def vis_main(self, fws_root=[]):
+    def main(self, fws_root=[]):
         fw_list = []
 
         # Join radii and centers
@@ -327,7 +362,7 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
         step_label = self.get_step_label('vis')
 
         files_in = {
-            'data_file': 'default.pdb',
+            'indenter_file': 'default.pdb',
         }
         files_out = {
             'png_file': 'default.png',
@@ -368,12 +403,12 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
 
         fw_list.append(fw_vis)
 
-        return fw_list, [fw_vis], [fw_join]
+        return fw_list, [fw_vis], [fw_join, fw_vis]
 
-    def vis_push(self, fws_root=[]):
+    def push(self, fws_root=[]):
         fw_list = []
 
-        step_label = self.get_step_label('vis_push')
+        step_label = self.get_step_label('vis push')
 
         files_in = {'png_file': 'default.png'}
         files_out = {}
@@ -406,3 +441,19 @@ class PackingConstraintSpheresSubWorkflowGenerator(SubWorkflowGenerator):
         fw_list.append(fw_push)
 
         return fw_list, [fw_push], [fw_push]
+
+
+class PackingConstraintSpheresSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'PackingConstraintSpheres'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=PackingConstraintSpheresMain(*args, **kwargs),
+            vis_sub_wf=PackingConstraintSpheresVis(*args, **kwargs),
+            *args, **kwargs)

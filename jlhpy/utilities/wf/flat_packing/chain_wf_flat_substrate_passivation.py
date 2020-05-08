@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator, ChainWorkflowGenerator
-from jlhpy.utilities.wf.packing.sub_wf_010_indenter_bounding_sphere import IndenterBoundingSphereSubWorkflowGenerator
+from jlhpy.utilities.wf.flat_packing.sub_wf_010_indenter_bounding_sphere import IndenterBoundingSphereSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_020_surfactant_molecule_measures import SurfactantMoleculeMeasuresSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_030_packing_constraint_spheres import PackingConstraintSpheresSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_040_spherical_surfactant_packing import SphericalSurfactantPackingSubWorkflowGenerator
@@ -18,8 +18,8 @@ from jlhpy.utilities.wf.packing.sub_wf_160_gromacs_em_solvated import GromacsEne
 from jlhpy.utilities.wf.packing.sub_wf_170_gromacs_nvt import GromacsNVTEquilibrationSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_180_gromacs_npt import GromacsNPTEquilibrationSubWorkflowGenerator
 
-class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
-    """Spherical surfactant packing with PACKMOL sub workflow.
+class FlatSubstratePackingChainWorkflowGenerator(ChainWorkflowGenerator):
+    """Flat substrate packing with PACKMOL sub workflow.
 
     Concatenates
     - IndenterBoundingSphereSubWorkflowGenerator
@@ -30,12 +30,11 @@ class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            IndenterBoundingSphereSubWorkflowGenerator(*args, **kwargs),
             SurfactantMoleculeMeasuresSubWorkflowGenerator(*args, **kwargs),
-            PackingConstraintSpheresSubWorkflowGenerator(*args, **kwargs),
-            SphericalSurfactantPackingSubWorkflowGenerator(*args, **kwargs),
+            PackingConstraintPlanesSubWorkflowGenerator(*args, **kwargs),
+            PlanarSurfactantPackingSubWorkflowGenerator(*args, **kwargs),
         ]
-        sub_wf_name = 'SphericalSurfactantPacking'
+        sub_wf_name = 'FlatSubstratePacking'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
@@ -48,15 +47,12 @@ class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflo
 
     Concatenates
     - GromacsPrepSubWorkflowGenerator
-    - GromacsEnergyMinimizationSubWorkflowGenerator
-
-    - GromacsPullPrepSubWorkflowGenerator
-    - GromacsPullSubWorkflowGenerator
 
     - GromacsSolvateSubWorkflowGenerator
     - GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator
 
     - GromacsNVTEquilibrationSubWorkflowGenerator
+    - GromacsNPTEquilibrationSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):

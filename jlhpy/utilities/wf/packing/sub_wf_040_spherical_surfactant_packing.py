@@ -16,7 +16,9 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 # from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_with_spheres_via_ase
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
 
 from jlhpy.utilities.templates.spherical_packing import generate_pack_sphere_packmol_template_context
 from jlhpy.utilities.vis.plot_side_views_with_spheres import \
@@ -24,11 +26,11 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
 
 import jlhpy.utilities.wf.file_config as file_config
 
-
-class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
+# TODO: insert pull for indenter file again
+class SphericalSurfactantPackingMain(SubWorkflowGenerator):
     """Packing constraint spheres sub workflow.
 
-    Inputs:
+    inputs:
         - # metadata->system->counterion->name (str)
         - metadata->system->indenter->bounding_sphere->center ([float])
         - metadata->system->indenter->bounding_sphere->radius (float)
@@ -82,11 +84,11 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
             *sorted(glob.glob(os.path.join(
                 self.infile_prefix,
                 file_config.PDB_SUBDIR,
-                file_config.COUNTERION_PDB))),
-            *sorted(glob.glob(os.path.join(
-                self.infile_prefix,
-                file_config.INDENTER_SUBDIR,
-                file_config.INDENTER_PDB)))]
+                file_config.COUNTERION_PDB)))]
+            # *sorted(glob.glob(os.path.join(
+            #     self.infile_prefix,
+            #     file_config.INDENTER_SUBDIR,
+            #     file_config.INDENTER_PDB)))]
 
         files = {os.path.basename(f): f for f in datafiles}
 
@@ -119,19 +121,19 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'indenter_file':   'indenter.pdb',
+            #'indenter_file':   'indenter.pdb',
             'surfatcant_file': 'surfactant.pdb',
             'counterion_file': 'counterion.pdb',
         }
 
         fts_coordinates_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project': self.project_id,
-                    'metadata->name':    file_config.INDENTER_PDB,
-                },
-                limit=1,
-                new_file_names=['indenter.pdb']),
+            # GetFilesByQueryTask(
+            #     query={
+            #         'metadata->project': self.project_id,
+            #         'metadata->name':    file_config.INDENTER_PDB,
+            #     },
+            #     limit=1,
+            #     new_file_names=['indenter.pdb']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -394,7 +396,33 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_push], [fw_push]
 
-    def vis_main(self, fws_root=[]):
+
+class SphericalSurfactantPackingVis(SubWorkflowGenerator):
+    """Spherical surfactant packing visualization sub workflow.
+
+    dynamic infiles:
+    - data_file:     default.pdb
+
+    inputs:
+    - metadata->system->indenter->bounding_sphere->center ([float])
+    - metadata->system->indenter->bounding_sphere->radius (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_inner_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
+    - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
+
+    outfiles:
+    - png_file:     default.png
+    """
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'SphericalSurfactantPackingVis'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
+
+    def main(self, fws_root=[]):
         fw_list = []
 
         # Join radii and centers
@@ -492,10 +520,10 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_vis], [fw_join]
 
-    def vis_push(self, fws_root=[]):
+    def push(self, fws_root=[]):
         fw_list = []
 
-        step_label = self.get_step_label('vis_push')
+        step_label = self.get_step_label('vis push')
 
         files_in = {'png_file': 'default.png'}
         files_out = {}
@@ -528,3 +556,19 @@ class SphericalSurfactantPackingSubWorkflowGenerator(SubWorkflowGenerator):
         fw_list.append(fw_push)
 
         return fw_list, [fw_push], [fw_push]
+
+
+class SphericalSurfactantPackingSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'SphericalSurfactantPacking'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=SphericalSurfactantPackingMain(*args, **kwargs),
+            vis_sub_wf=SphericalSurfactantPackingVis(*args, **kwargs),
+            *args, **kwargs)

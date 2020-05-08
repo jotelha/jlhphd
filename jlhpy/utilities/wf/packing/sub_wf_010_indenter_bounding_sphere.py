@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Indenter bounding sphere sub workflow."""
-
 import datetime
 import glob
 import os
@@ -15,22 +13,34 @@ from jlhpy.utilities.geometry.bounding_sphere import get_bounding_sphere_via_ase
 from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_with_spheres_via_ase
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
+class IndenterBoundingSphereMain(SubWorkflowGenerator):
     """Indenter bounding sphere sub workflow.
 
-    Outputs:
+    dynamic infiles:
+    - indenter_file:     default.pdb
+        queried by { 'metadata->type': 'em_solvated_gro' }
+
+    outfiles:
+    - indenter_file:     default.pdb (unchanged)
+
+    outputs:
         - metadata->system->indenter->bounding_sphere->center ([float])
         - metadata->system->indenter->bounding_sphere->radius (float)
     """
 
     def __init__(self, *args, **kwargs):
+        sub_wf_name = 'IndenterBoundingSphereMain'
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'bounding sphere sub-workflow'
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
     def push_infiles(self, fp):
@@ -70,7 +80,7 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'data_file':       'default.pdb',
+            'indenter_file':       'default.pdb',
         }
 
         fts_pull = [
@@ -111,9 +121,11 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
         step_label = self.get_step_label('bounding sphere')
 
         files_in = {
-            'data_file':      'default.pdb',
+            'indenter_file':      'default.pdb',
         }
-        files_out = {}
+        files_out = {
+            'indenter_file':      'default.pdb',
+        }
 
         func_str = serialize_module_obj(get_bounding_sphere_via_ase)
 
@@ -191,14 +203,38 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_push], [fw_push]
 
-    def vis_pull(self, fws_root=[]):
-        step_label = self.get_step_label('vis_pull')
+
+class IndenterBoundingSphereVis(
+        SubWorkflowGenerator):
+    """Indenter bounding sphere visualization sub workflow.
+
+    dynamic infiles:
+    - indenter_file:     default.pdb
+        queried by { 'metadata->type': 'initial_file_pdb' }
+
+    inputs:
+    - metadata->system->indenter->bounding_sphere->center ([float])
+    - metadata->system->indenter->bounding_sphere->radius (float)
+
+    outfiles:
+    - png_file:     default.png
+    """
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'IndenterBoundingSphereVis'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
+
+    def pull(self, fws_root=[]):
+        step_label = self.get_step_label('vis pull')
 
         fw_list = []
 
         files_in = {}
         files_out = {
-            'data_file': 'default.pdb',
+            'indenter_file': 'default.pdb',
         }
 
         fts_pull = [
@@ -231,14 +267,14 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_pull], [fw_pull]
 
-    def vis_main(self, fws_root=[]):
+    def main(self, fws_root=[]):
         fw_list = []
         # Plot sideviews
         # --------------
         step_label = self.get_step_label('vis')
 
         files_in = {
-            'data_file': 'default.pdb',
+            'indenter_file': 'default.pdb',
         }
         files_out = {
             'png_file': 'default.png'
@@ -278,3 +314,19 @@ class IndenterBoundingSphereSubWorkflowGenerator(SubWorkflowGenerator):
 
         fw_list.append(fw_vis)
         return fw_list, [fw_vis], [fw_vis]
+
+
+class IndenterBoundingSphereSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'IndenterBoundingSphere'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=IndenterBoundingSphereMain(*args, **kwargs),
+            vis_sub_wf=IndenterBoundingSphereVis(*args, **kwargs),
+            *args, **kwargs)

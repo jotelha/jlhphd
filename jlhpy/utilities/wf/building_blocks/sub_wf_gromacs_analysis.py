@@ -17,7 +17,7 @@ from jlhpy.utilities.analysis.rdf import atom_atom_rdf
 from jlhpy.utilities.analysis.msd import atom_rmsd
 
 
-class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
+class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
     """
     Abstract base class for partial analysis worklfow.
 
@@ -40,7 +40,7 @@ class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
     def rdf_list(self) -> list:
         ...
 
-    def analysis_main(self, fws_root=[]):
+    def main(self, fws_root=[]):
         fw_list = []
 
         # compute rdf
@@ -67,7 +67,7 @@ class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
                     'atom_name_a': rdf['atom_name_a'],
                     'atom_name_b': rdf['atom_name_b'],
                 },
-                env='imteksimpy',
+                env='mdanalysis',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -117,7 +117,7 @@ class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
                 kwargs_inputs={
                     'atom_name': rmsd['atom_name'],
                 },
-                env='imteksimpy',
+                env='mdanalysis',
                 stderr_file='std.err',
                 stdout_file='std.out',
                 store_stdout=True,
@@ -146,7 +146,7 @@ class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
 
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
-    def analysis_push(self, fws_root=[]):
+    def push(self, fws_root=[]):
         fw_list = []
 
         # push rdf
@@ -227,7 +227,8 @@ class GromacsTrajectoryAnalysisMixinABC(SubWorkflowGenerator, ABC):
 
         return fw_list, [fw_rdf_push, fw_rmsd_push], [fw_rdf_push, fw_rmsd_push]
 
-class GromacsVacuumTrajectoryAnalysisMixin(GromacsTrajectoryAnalysisMixinABC):
+class GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(
+        GromacsTrajectoryAnalysisSubWorkflowGenerator):
     """
     Implements partial analysis worklfow only.
 
@@ -268,6 +269,13 @@ class GromacsVacuumTrajectoryAnalysisMixin(GromacsTrajectoryAnalysisMixinABC):
     - surfactant_tail_surfactant_tail_rdf: surfactant_tail_surfactant_tail_rdf.txt
         tagged as {'metadata->type': 'surfactant_tail_surfactant_tail_rdf'}
     """
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'GromacsVacuumTrajectoryAnalysis'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
 
     @property
     def rmsd_list(self):
@@ -367,7 +375,8 @@ class GromacsVacuumTrajectoryAnalysisMixin(GromacsTrajectoryAnalysisMixinABC):
                 'atom_name_b': 'metadata->system->surfactant->tail_atom->name'},
         ]
 
-class GromacsSolvatedTrajectoryAnalysisMixin(GromacsVacuumTrajectoryAnalysisMixin):
+class GromacsSolvatedTrajectoryAnalysisSubWorkflowGenerator(
+        GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator):
     """
     Implements partial analysis worklfow only.
 
@@ -420,6 +429,13 @@ class GromacsSolvatedTrajectoryAnalysisMixin(GromacsVacuumTrajectoryAnalysisMixi
     - surfactant_tail_surfactant_tail_rdf: surfactant_tail_surfactant_tail_rdf.txt
         tagged as {'metadata->type': 'surfactant_tail_surfactant_tail_rdf'}
     """
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'GromacsSolvatedTrajectoryAnalysis'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
 
     @property
     def rmsd_list(self):

@@ -12,14 +12,17 @@ from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
-from jlhpy.utilities.wf.mixin.mixin_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisMixin
+from jlhpy.utilities.wf.workflow_generator import (
+    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationSubWorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsNPTEquilibrationSubWorkflowGenerator(
-        GromacsVacuumTrajectoryAnalysisMixin, SubWorkflowGenerator):
+class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
     """
     NPT equilibration with GROMACS.
 
@@ -66,8 +69,11 @@ class GromacsNPTEquilibrationSubWorkflowGenerator(
     """
 
     def __init__(self, *args, **kwargs):
+        sub_wf_name = 'GromacsNPTEquilibrationMain'
         if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = 'GROMACS NPT equilibration sub-workflow'
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
     def push_infiles(self, fp):
@@ -676,3 +682,20 @@ class GromacsNPTEquilibrationSubWorkflowGenerator(
         fw_list.append(fw_push)
 
         return fw_list, [fw_push], [fw_push]
+
+
+class GromacsNPTEquilibrationSubWorkflowGenerator(
+        DefaultStorageMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
+    def __init__(self, *args, **kwargs):
+        sub_wf_name = 'GromacsNPTEquilibration'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=GromacsNPTEquilibrationMain(*args, **kwargs),
+            analysis_sub_wf=GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
+            vis_sub_wf=GromacsTrajectoryVisualizationSubWorkflowGenerator(*args, **kwargs),
+            *args, **kwargs)
