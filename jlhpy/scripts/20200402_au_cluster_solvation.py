@@ -32,7 +32,7 @@ from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import S
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-05-07-dtool-trial'
+project_id = '2020-05-08-dtool-trial'
 wfg = SphericalSurfactantPackingChainWorkflowGenerator(
     project_id=project_id, 
     description="Trial runs for dtool from JUWELS to Isilon",
@@ -42,9 +42,6 @@ wfg = SphericalSurfactantPackingChainWorkflowGenerator(
         'username': 'fr_jh1130',
         'orcid': '0000-0001-5867-695X'
     }],
-    creation_date="2020-05-07",
-    expiration_date="2022-05-07",
-    # source_project_id=source_project_id,
     infile_prefix=prefix,
     machine='juwels_devel',
     parameter_label_key_dict={'n': 'system->surfactant->nmolecules'},
@@ -105,9 +102,6 @@ wfg = SphericalSurfactantPackingChainWorkflowGenerator(
         },
         'dtool_push': {
             'dtool_target': 'smb://rz-freiburg-user-share',
-            'dtool_metadata': {
-                'expiration_date': '2022-05-04'
-            },
             'dtool_config': {
                 'DTOOL_SMB_SERVER_NAME_rz-freiburg-user-share': 'localhost'
             },

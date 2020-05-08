@@ -12,7 +12,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationSubWorkflowGenerator
@@ -97,58 +98,6 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         return fp_files
 
-    def pull(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('pull')
-
-        files_in = {}
-        files_out = {
-            'data_file':      'default.gro',
-            'topology_file':  'default.top',
-        }
-
-        fts_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'em_solvated_gro',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.gro']),
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'solvate_top',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.top']),
-            ]
-
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
 
     def main(self, fws_root=[]):
         fw_list = []
@@ -190,7 +139,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX index file
         # --------------
-        step_label = self.get_step_label('gmx make_ndx')
+        step_label = self.get_step_label('$1_$2')
 
         files_in = {'data_file': 'default.gro'}
         files_out = {'index_file': 'default.ndx'}
@@ -232,7 +181,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX non-Substrate group
         # -----------------------
-        step_label = self.get_step_label('gmx non-Substrate group')
+        step_label = self.get_step_label('$1_$2_$3')
 
         files_in = {
             'data_file':      'default.gro',
@@ -286,7 +235,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX grompp
         # ----------
-        step_label = self.get_step_label('gmx grompp')
+        step_label = self.get_step_label('$1_$2')
 
         files_in = {
             'index_file':      'default.ndx',
@@ -340,7 +289,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX mdrun
         # ---------
-        step_label = self.get_step_label('gmx mdrun')
+        step_label = self.get_step_label('$1_$2')
 
         files_in = {
             'input_file':    'default.tpr',
@@ -423,7 +372,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
 
 class GromacsNVTEquilibrationSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):

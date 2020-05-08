@@ -12,7 +12,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationSubWorkflowGenerator
@@ -94,70 +95,6 @@ class GromacsEnergyMinimizationMain(SubWorkflowGenerator):
 
         return fp_files
 
-    def pull(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('pull')
-
-        files_in = {}
-        files_out = {
-            'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp',
-        }
-
-        fts_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'initial_config_gro',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.gro']),
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'initial_config_top',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.top']),
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'initial_config_posre_itp',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.posre.itp'])
-            ]
-
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -198,7 +135,7 @@ class GromacsEnergyMinimizationMain(SubWorkflowGenerator):
 
         # GMX grompp
         # ----------
-        step_label = self.get_step_label('gmx grompp')
+        step_label = self.get_step_label('gmx_grompp')
 
         files_in = {
             'input_file':      'default.mdp',
@@ -247,7 +184,7 @@ class GromacsEnergyMinimizationMain(SubWorkflowGenerator):
 
         # GMX mdrun
         # ---------
-        step_label = self.get_step_label('gmx mdrun')
+        step_label = self.get_step_label('gmx_mdrun')
 
         files_in = {'input_file':   'em.tpr'}
         files_out = {
@@ -293,73 +230,9 @@ class GromacsEnergyMinimizationMain(SubWorkflowGenerator):
 
         return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('push')
-
-        files_out = {}
-        files_in = {
-            'log_file':        'em.log',
-            'energy_file':     'em.edr',
-            'trajectory_file': 'em.trr',
-            'data_file':       'em.gro'}
-
-        fts_push = [
-            AddFilesTask({
-                'compress': True,
-                'paths': "em.log",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'em_log'}
-            }),
-            AddFilesTask({
-                'compress': True,
-                'paths': "em.edr",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'em_edr'}
-            }),
-            AddFilesTask({
-                'compress': True,
-                'paths': "em.trr",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'em_trr'}
-            }),
-            AddFilesTask({
-                'compress': True,
-                'paths': "em.gro",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'em_gro'}
-            })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
 
 class GromacsEnergyMinimizationSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):

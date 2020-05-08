@@ -314,39 +314,39 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_vis], [fw_template, fw_vis]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('vis push')
-
-        files_in = {'mp4_file': 'default.mp4'}
-        files_out = {}
-
-        fts_push = [AddFilesTask({
-            'compress': True,
-            'paths': "default.mp4",
-            'metadata': {
-                'project': self.project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'mp4_file',
-            }
-        })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
+    # def push(self, fws_root=[]):
+    #     fw_list = []
+    #
+    #     step_label = self.get_step_label('vis push')
+    #
+    #     files_in = {'mp4_file': 'default.mp4'}
+    #     files_out = {}
+    #
+    #     fts_push = [AddFilesTask({
+    #         'compress': True,
+    #         'paths': "default.mp4",
+    #         'metadata': {
+    #             'project': self.project_id,
+    #             'datetime': str(datetime.datetime.now()),
+    #             'type':    'mp4_file',
+    #         }
+    #     })]
+    #
+    #     fw_push = Firework(fts_push,
+    #         name=self.get_fw_label(step_label),
+    #         spec={
+    #             '_category': self.hpc_specs['fw_noqueue_category'],
+    #             '_files_in': files_in,
+    #             '_files_out': files_out,
+    #             'metadata': {
+    #                 'project': self.project_id,
+    #                 'datetime': str(datetime.datetime.now()),
+    #                 'step':    step_label,
+    #                  **self.kwargs
+    #             }
+    #         },
+    #         parents=fws_root)
+    #
+    #     fw_list.append(fw_push)
+    #
+    #     return fw_list, [fw_push], [fw_push]

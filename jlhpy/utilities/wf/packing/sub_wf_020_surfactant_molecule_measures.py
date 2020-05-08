@@ -21,7 +21,8 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 import jlhpy.utilities.wf.file_config as file_config
 
@@ -32,7 +33,6 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
     static infiles:
     - surfactant_file: default.pdb,
-        queried by {'metadata->type': single_surfactant_molecule_pdb}
 
     inputs:
     - metadata->system->surfactant->connector_atom->index (int)
@@ -66,7 +66,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
         # metadata common to all these files
         metadata = {
             'project': self.project_id,
-            'type': 'single_surfactant_molecule_pdb',
+            'type': 'surfactant_file',
             'step': step_label,
         }
 
@@ -84,46 +84,6 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
         return fp_files
 
-    # def pull(self, fws_root=[]):
-    #     step_label = self.get_step_label('pull')
-    #
-    #     fw_list = []
-    #
-    #     files_in = {}
-    #     files_out = {
-    #         'data_file': 'default.pdb',
-    #     }
-    #
-    #     fts_pull = [
-    #         GetFilesByQueryTask(
-    #             query={
-    #                 'metadata->project':    self.source_project_id, # earlier
-    #                 'metadata->type':       'single_surfactant_molecule_pdb',
-    #             },
-    #             sort_key='metadata.datetime',
-    #             sort_direction=pymongo.DESCENDING,
-    #             limit=1,
-    #             new_file_names=['default.pdb'])]
-    #
-    #     fw_pull = Firework(fts_pull,
-    #         name=self.get_fw_label(step_label),
-    #         spec={
-    #             '_category': self.hpc_specs['fw_noqueue_category'],
-    #             '_files_in': files_in,
-    #             '_files_out': files_out,
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'step':    step_label,
-    #                 **self.kwargs
-    #             }
-    #         },
-    #         parents=fws_root)
-    #
-    #     fw_list.append(fw_pull)
-    #
-    #     return fw_list, [fw_pull], [fw_pull]
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -140,7 +100,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project':    self.project_id, # earlier
-                    'metadata->type':       'single_surfactant_molecule_pdb',
+                    'metadata->type':       'surfactant_file',
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -166,7 +126,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
         # Bounding sphere Fireworks
         # -------------------------
-        step_label = self.get_step_label('bounding sphere')
+        step_label = self.get_step_label('bounding_sphere')
 
         files_in = {
             'indenter_file':   'indenter.pdb',
@@ -214,7 +174,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
         # Get head atom position
         # ----------------------
-        step_label = self.get_step_label('head atom position')
+        step_label = self.get_step_label('head_atom_position')
 
         files_in = {
             'surfactant_file':      'default.pdb',
@@ -304,7 +264,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
         # head group diameter
         # -------------------
-        step_label = self.get_step_label('head group diameter')
+        step_label = self.get_step_label('head_group_diameter')
 
         files_in = {
             'indenter_file': 'indenter.pdb',
@@ -359,8 +319,7 @@ class SurfactantMoleculeMeasuresVis(SubWorkflowGenerator):
     """Surfactant molecule measures visualization sub workflow.
 
     dynamic infiles:
-    - surfactant_file:     default.pdb
-        queried by { 'metadata->type': 'single_surfactant_molecule_pdb' }
+    - surfactant_file: default.pdb
 
     inputs:
     - metadata->system->surfactant->bounding_sphere->center
@@ -370,45 +329,6 @@ class SurfactantMoleculeMeasuresVis(SubWorkflowGenerator):
     - png_file:     default.png
     """
     # visualization branch
-    def pull(self, fws_root=[]):
-        step_label = self.get_step_label('vis pull')
-
-        fw_list = []
-
-        files_in = {}
-        files_out = {
-            'surfactant_file': 'default.pdb',
-        }
-
-        fts_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'single_surfactant_molecule_pdb',
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.pdb'])]
-
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
 
     def main(self, fws_root=[]):
 
@@ -465,46 +385,9 @@ class SurfactantMoleculeMeasuresVis(SubWorkflowGenerator):
             [fw_vis],
             [fw_vis])
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('vis push')
-
-        files_in = {'png_file': 'default.png'}
-        files_out = {}
-
-        fts_push = [AddFilesTask({
-            'compress': True,
-            'paths': "default.png",
-            'metadata': {
-                'project': self.project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'png_file',
-            }
-        })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
 
 class SurfactantMoleculeMeasuresSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):

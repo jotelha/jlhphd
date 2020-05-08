@@ -91,8 +91,10 @@ class FireWorksWorkflowGenerator:
                 'machine' and 'project_id'.
             wf_name_prefix:
             source_project_id: when querying files, use another project id
+            source_step: when querying files, use this particular step label
             infile_prefix: when inserting files into db manually, use this prefix
         """
+        # TODO: standardize and sort kwargs with special meaning
         self.project_id = project_id
 
         self.kwargs = kwargs
@@ -153,11 +155,22 @@ class FireWorksWorkflowGenerator:
         if infile_prefix:
             self.infile_prefix = infile_prefix
 
-        ## TODO needs extension to multiple sources
+        # TODO needs extension to multiple sources
         if 'source_project_id' in self.kwargs:
             self.source_project_id = self.kwargs['source_project_id']
         else:
             self.source_project_id = self.project_id
+
+        if 'source_step' in self.kwargs:
+            self.source_step = self.kwargs['source_step']
+
+        creation_date = datetime.datetime.now()
+        if 'creation_date' not in self.kwargs:
+            self.kwargs['creation_date'] = str(creation_date)
+
+        if 'expiration_date' not in self.kwargs:
+            self.kwargs['expiration_date'] = str(
+                creation_date + datetime.timedelta(days=365*5))
 
 
 class SubWorkflowGenerator(FireWorksWorkflowGenerator):
@@ -262,7 +275,7 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
 
     """
     def get_step_label(self, suffix):
-        return ', '.join((self.wf_name_prefix, suffix))
+        return ':'.join((self.wf_name_prefix, suffix))
 
     # TODO: only suffix instead of step_label
     def get_fw_label(self, step_label):
@@ -287,7 +300,7 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
 
         if len(slug) > 80:  # ellipsis
             slug = slug[:39] + '--' + slug[-39:]
-            
+
         return slug
 
     def get_wf_label(self):

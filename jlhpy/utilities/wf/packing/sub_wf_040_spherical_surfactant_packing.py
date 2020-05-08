@@ -18,7 +18,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 from jlhpy.utilities.templates.spherical_packing import generate_pack_sphere_packmol_template_context
 from jlhpy.utilities.vis.plot_side_views_with_spheres import \
@@ -117,7 +118,7 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
 
         # coordinates pull
         # ----------------
-        step_label = self.get_step_label('coordinates pull')
+        step_label = self.get_step_label('coordinates_pull')
 
         files_in = {}
         files_out = {
@@ -168,7 +169,7 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
 
         # input files pull
         # ----------------
-        step_label = self.get_step_label('inputs pull')
+        step_label = self.get_step_label('inputs_pull')
 
         files_in = {}
         files_out = {
@@ -201,7 +202,7 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
 
         # Context generator
         # -----------------
-        step_label = self.get_step_label('packmol template context')
+        step_label = self.get_step_label('packmol_template_context')
 
         files_in = {}
         files_out = {}
@@ -254,7 +255,7 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
 
         # PACKMOL input script template
         # -----------------------------
-        step_label = self.get_step_label('packmol template')
+        step_label = self.get_step_label('packmol_template')
 
         files_in =  {'input_file': 'input.template'}
         files_out = {'input_file': 'input.inp'}
@@ -359,43 +360,6 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
 
         return fw_list, [fw_pack], [fw_context_generator]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('push')
-
-        files_in = {'data_file': 'packed.pdb'}
-        files_out = {}
-
-        fts_push = [AddFilesTask({
-            'compress': True,
-            'paths': "packed.pdb",
-            'metadata': {
-                'project': self.project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'initial_config',
-            }
-        })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
 
 class SphericalSurfactantPackingVis(SubWorkflowGenerator):
     """Spherical surfactant packing visualization sub workflow.
@@ -427,7 +391,7 @@ class SphericalSurfactantPackingVis(SubWorkflowGenerator):
 
         # Join radii and centers
         # ----------------------
-        step_label = self.get_step_label('join radii in list')
+        step_label = self.get_step_label('join_radii_in_list')
 
         files_in = {}
         files_out = {}
@@ -520,46 +484,8 @@ class SphericalSurfactantPackingVis(SubWorkflowGenerator):
 
         return fw_list, [fw_vis], [fw_join]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('vis push')
-
-        files_in = {'png_file': 'default.png'}
-        files_out = {}
-
-        fts_push = [AddFilesTask({
-            'compress': True,
-            'paths': "default.png",
-            'metadata': {
-                'project': self.project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'png_file',
-            }
-        })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
-
 class SphericalSurfactantPackingSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):

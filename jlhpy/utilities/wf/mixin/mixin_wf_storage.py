@@ -1,46 +1,102 @@
 # -*- coding: utf-8 -*-
+import abc
 import datetime
 import re
 import unicodedata
 
-from abc import ABC, abstractmethod
+import pymongo
 
 from fireworks import Firework
 from fireworks.features.background_task import BackgroundTask
-from fireworks.user_objects.firetasks.fileio_tasks import ArchiveDirTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
+# from fireworks.user_objects.firetasks.fileio_tasks import ArchiveDirTask
+from fireworks.user_objects.firetasks.filepad_tasks import (
+    GetFilesByQueryTask, AddFilesTask)
 from imteksimfw.fireworks.user_objects.firetasks.dtool_tasks import (
     CreateDatasetTask, FreezeDatasetTask, CopyDatasetTask)
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import (
-    PyEnvTask, EvalPyEnvTask)
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import EvalPyEnvTask
 from imteksimfw.fireworks.user_objects.firetasks.ssh_tasks import SSHForwardTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+
+class PullMixinABC(abc.ABC):
+    """Abstract base class for querying in files."""
+
+    def pull(self, fws_root=[]):
+        return [], [], []
 
 
-class PushMixinABC(ABC):
-    """Abstract base class for storing out files.
+class PushMixinABC(abc.ABC):
+    """Abstract base class for storing out files."""
 
-    Implementation must provide files_out_list."""
-    ...
-    # @property
-    # @abstractmethod
-    # def files_out_list(self) -> list:
-    #     """list of dict with fields file_label, file_name, type_label..."""
-    #     ...
-    #
-    @abstractmethod
     def push(self, fws_root=[]):
-        ...
+        return [], [], []
+
+
+class PullFromFilePadMixin(PushMixinABC):
+    """Mixin for querying in files from file pad.
+
+    Implementation shall provide 'source_project_id' and 'source_step'
+    attributes. These may be provided file-wise by according per-file keys
+    within the 'files_in_list' attribute."""
+
+    def pull(self, fws_root=[]):
+        fw_list = []
+
+        step_label = self.get_step_label('pull_filepad')
+
+        files_in = {}
+        files_out = {
+            f['file_label']: f['file_name'] for f in self.files_in_list}
+
+        # build default query
+        query = {}
+        if hasattr(self, 'source_step'):
+            query['metadata->step'] = self.source_step
+
+        if hasattr(self, 'source_project_id'):
+            query['metadata->project_id'] = self.source_project_id
+
+        fts_pull = []
+        for file in self.files_in_list:
+            fts_pull.append(
+                GetFilesByQueryTask(
+                    query={
+                        **query,
+                        'metadata->type': file['file_label'],
+                    },
+                    sort_key='metadata.datetime',
+                    sort_direction=pymongo.DESCENDING,
+                    limit=1,
+                    new_file_names=[file['file_name']])
+                )
+
+        fw_pull = Firework(fts_pull,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                    **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_pull)
+
+        return fw_list, [fw_pull], [fw_pull]
+
 
 
 class PushToFilePadMixin(PushMixinABC):
     """Abstract base class for storing out files in file pad."""
 
     def push(self, fws_root=[]):
-        fw_list = []
+        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
 
-        step_label = self.get_step_label('push filepad')
+        step_label = self.get_step_label('push_filepad')
 
         files_out = {}
         files_in = {
@@ -56,7 +112,7 @@ class PushToFilePadMixin(PushMixinABC):
                     'metadata': {
                         'project': self.project_id,
                         'datetime': str(datetime.datetime.now()),
-                        'type':    file['file_label']}
+                        'type':    file['file_label']},
                 })
             )
 
@@ -76,8 +132,10 @@ class PushToFilePadMixin(PushMixinABC):
             parents=fws_root)
 
         fw_list.append(fw_push)
+        fws_leaf_out.append(fw_push)
+        fws_root_out.append(fw_push)
 
-        return fw_list, [fw_push], [fw_push]
+        return fw_list, fws_leaf_out, fws_root_out
 
 
 # TODO: add per item annotation for file label
@@ -85,9 +143,9 @@ class PushToDtoolRepositoryMixin(PushMixinABC):
     """Abstract base class for storing out files in dtool dataset."""
 
     def push(self, fws_root=[]):
-        fw_list = []
+        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
 
-        step_label_suffix = 'push dtool'
+        step_label_suffix = 'push_dtool'
         step_label = self.get_step_label(step_label_suffix)
 
         files_out = {}
@@ -136,17 +194,19 @@ class PushToDtoolRepositoryMixin(PushMixinABC):
             parents=fws_root)
 
         fw_list.append(fw_push)
+        fws_leaf_out.append(fw_push)
+        fws_root_out.append(fw_push)
 
-        return fw_list, [fw_push], [fw_push]
+        return fw_list, fws_leaf_out, fws_root_out
 
 
 class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
     """Abstract base class for storing out files in dtool dataset."""
 
     def push(self, fws_root=[]):
-        fw_list = []
+        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
 
-        step_label_suffix = 'push dtool'
+        step_label_suffix = 'push_dtool'
         step_label = self.get_step_label(step_label_suffix)
 
         files_out = {}
@@ -154,27 +214,6 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
             f['file_label']: f['file_name'] for f in self.files_out_list
         }
 
-        # # background connectivity task
-        # ft_ssh = PyEnvTask(
-        #     func='imteksimfw.fireworks.utilities.ssh_forward.forward',
-        #     kwargs={
-        #         'port_file': '.port',
-        #     },
-        #     kwargs_inputs={
-        #         'remote_host':  'metadata->step_specific->dtool_push->ssh_config->remote_host',
-        #         'remote_port':  'metadata->step_specific->dtool_push->ssh_config->remote_port',
-        #         'ssh_host':     'metadata->step_specific->dtool_push->ssh_config->ssh_host',
-        #         'ssh_user':     'metadata->step_specific->dtool_push->ssh_config->ssh_user',
-        #         'ssh_keyfile':  'metadata->step_specific->dtool_push->ssh_config->ssh_keyfile',
-        #     },
-        #     stderr_file='bg_task.err',
-        #     stdout_file='bg_task.out',
-        #     stdlog_file='bg_task.log',
-        #     py_hist_file='bg_task.py',
-        #     call_log_file='bg_task.calls_trace',
-        #     vars_log_file='bg_task.vars_trace',
-        #     fizzle_bad_rc=False
-        # )
         # background connectivity task
         ft_ssh = SSHForwardTask(
             port_file='.port',
@@ -189,11 +228,6 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
         bg_fts_push = [BackgroundTask(ft_ssh,
             num_launches=1, run_on_finish=False, sleep_time=0)]
 
-        # make step label a valid 80 char dataset name
-        # dataset_name = self.get_fw_label(step_label).replace("->", "-")
-        # if len(dataset_name) > 80:
-        #     dataset_name = dataset_name[:38] + '---' + dataset_name[-38:]
-        # dataset_name = slugify(dataset_name)
         dataset_name = self.get_80_char_slug()
 
         fts_push = [
@@ -274,9 +308,19 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
             parents=fws_root)
 
         fw_list.append(fw_push)
+        fws_leaf_out.append(fw_push)
+        fws_root_out.append(fw_push)
 
-        return fw_list, [fw_push], [fw_push]
+        return fw_list, fws_leaf_out, fws_root_out
 
 
-class DefaultStorageMixin(PushToDtoolRepositoryViaSSHJumpHostMixin):
+class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
+        PushToDtoolRepositoryViaSSHJumpHostMixin, PushToFilePadMixin):
+    pass
+
+
+class DefaultPullMixin(PullFromFilePadMixin):
+    pass
+
+class DefaultPushMixin(PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin):
     pass

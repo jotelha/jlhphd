@@ -17,7 +17,8 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj, serialize_obj
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 class PackingConstraintSpheresMain(SubWorkflowGenerator):
     """Packing constraint spheres sub workflow.
@@ -246,7 +247,6 @@ class PackingConstraintSpheresVis(
 
     dynamic infiles:
     - indenter_file:     default.pdb
-        queried by { 'metadata->type': 'initial_file_pdb' }
 
     inputs:
     - metadata->system->indenter->bounding_sphere->center ([float])
@@ -267,52 +267,12 @@ class PackingConstraintSpheresVis(
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
-    def pull(self, fws_root=[]):
-        step_label = self.get_step_label('vis pull')
-
-        fw_list = []
-
-        files_in = {}
-        files_out = {
-            'indenter_file':       'default.pdb',
-        }
-
-        fts_pull = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project': self.source_project_id,  # earlier
-                    'metadata->type':    'initial_file_pdb',
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['default.pdb'])]
-
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
-
     def main(self, fws_root=[]):
         fw_list = []
 
         # Join radii and centers
         # ----------------------
-        step_label = self.get_step_label('join radii in list')
+        step_label = self.get_step_label('join_radii_in_list')
 
         files_in = {}
         files_out = {}
@@ -405,46 +365,9 @@ class PackingConstraintSpheresVis(
 
         return fw_list, [fw_vis], [fw_join, fw_vis]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('vis push')
-
-        files_in = {'png_file': 'default.png'}
-        files_out = {}
-
-        fts_push = [AddFilesTask({
-            'compress': True,
-            'paths': "default.png",
-            'metadata': {
-                'project': self.project_id,
-                'datetime': str(datetime.datetime.now()),
-                'type':    'png_file',
-            }
-        })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
 
 class PackingConstraintSpheresSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):

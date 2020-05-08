@@ -11,7 +11,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
     SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultStorageMixin
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
+   DefaultPullMixin, DefaultPushMixin)
 
 class GromacsPrepMain(SubWorkflowGenerator):
     def __init__(self, *args, **kwargs):
@@ -21,44 +22,6 @@ class GromacsPrepMain(SubWorkflowGenerator):
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
-
-    def pull(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('pull')
-
-        files_in = {}
-        files_out = {'data_file': 'in.pdb'}
-
-        fts_pull = [GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.source_project_id,
-                    'metadata->type':       'initial_config',
-                    **self.parameter_dict
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['in.pdb'])]
-
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_pull)
-
-        return fw_list, [fw_pull], [fw_pull]
 
     def main(self, fws_root=[]):
         fw_list = []
@@ -131,7 +94,7 @@ class GromacsPrepMain(SubWorkflowGenerator):
 
         # GMX pdb2gro
         # -----------
-        step_label = self.get_step_label('gmx gmx2gro')
+        step_label = self.get_step_label('gmx_gmx2gro')
 
         files_in =  {'data_file': 'in.pdb'}
         files_out = {
@@ -175,7 +138,7 @@ class GromacsPrepMain(SubWorkflowGenerator):
 
         # GMX editconf
         # ------------
-        step_label = self.get_step_label('gmx editconf')
+        step_label = self.get_step_label('gmx_editconf')
 
         files_in = {
             'data_file': 'in.gro',
@@ -220,63 +183,9 @@ class GromacsPrepMain(SubWorkflowGenerator):
 
         return fw_list, [fw_gmx_editconf], [fw_pdb_chain]
 
-    def push(self, fws_root=[]):
-        fw_list = []
-
-        step_label = self.get_step_label('push')
-
-        files_in = {
-            'data_file':      'default.gro',
-            'topology_file':  'default.top',
-            'restraint_file': 'default.posre.itp'}
-
-        fts_push = [
-            AddFilesTask({
-                'compress': True,
-                'paths': "default.gro",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_gro'}
-            }),
-            AddFilesTask({
-                'compress': True,
-                'paths': "default.top",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_top'}
-            }),
-            AddFilesTask({
-                'compress': True ,
-                'paths': "default.posre.itp",
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'type':    'initial_config_posre_itp'}
-            })]
-
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
-
-        fw_list.append(fw_push)
-
-        return fw_list, [fw_push], [fw_push]
-
 
 class GromacsPrepSubWorkflowGenerator(
-        DefaultStorageMixin,
+        DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
