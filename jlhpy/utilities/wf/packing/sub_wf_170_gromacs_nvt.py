@@ -139,7 +139,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX index file
         # --------------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_make_ndx')
 
         files_in = {'data_file': 'default.gro'}
         files_out = {'index_file': 'default.ndx'}
@@ -181,7 +181,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX non-Substrate group
         # -----------------------
-        step_label = self.get_step_label('$1_$2_$3')
+        step_label = self.get_step_label('gmx_tools_make_group')
 
         files_in = {
             'data_file':      'default.gro',
@@ -235,7 +235,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX grompp
         # ----------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_grompp')
 
         files_in = {
             'index_file':      'default.ndx',
@@ -289,7 +289,7 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX mdrun
         # ---------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_mdrun')
 
         files_in = {
             'input_file':    'default.tpr',

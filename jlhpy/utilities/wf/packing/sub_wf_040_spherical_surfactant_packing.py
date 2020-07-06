@@ -484,6 +484,7 @@ class SphericalSurfactantPackingVis(SubWorkflowGenerator):
 
         return fw_list, [fw_vis], [fw_join]
 
+
 class SphericalSurfactantPackingSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,

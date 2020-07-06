@@ -154,7 +154,7 @@ class GromacsPullMain(SubWorkflowGenerator):
 
         # GMX grompp
         # ----------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_grompp')
 
         files_in = {
             'input_file':      'default.mdp',
@@ -207,7 +207,7 @@ class GromacsPullMain(SubWorkflowGenerator):
 
         # GMX mdrun
         # ---------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_mdrun')
 
         files_in = {
             'input_file': 'default.tpr',

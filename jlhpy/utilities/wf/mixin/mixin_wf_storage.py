@@ -53,7 +53,7 @@ class PullFromFilePadMixin(PushMixinABC):
             query['metadata->step'] = self.source_step
 
         if hasattr(self, 'source_project_id'):
-            query['metadata->project_id'] = self.source_project_id
+            query['metadata->project'] = self.source_project_id
 
         fts_pull = []
         for file in self.files_in_list:
@@ -314,6 +314,10 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
         return fw_list, fws_leaf_out, fws_root_out
 
 
+class PushToDtoolRepositoryAndFilePadMixin(
+        PushToDtoolRepositoryMixin, PushToFilePadMixin):
+    pass
+
 class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
         PushToDtoolRepositoryViaSSHJumpHostMixin, PushToFilePadMixin):
     pass
@@ -322,5 +326,5 @@ class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
 class DefaultPullMixin(PullFromFilePadMixin):
     pass
 
-class DefaultPushMixin(PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin):
+class DefaultPushMixin(PushToDtoolRepositoryAndFilePadMixin):
     pass

@@ -36,7 +36,6 @@ class GromacsPullPrepMain(SubWorkflowGenerator):
     fw_spec inputs:
     - metadata->system->surfactant->nmolecules
     - metadata->system->surfactant->name
-    - metadata->system->counterion->nmolecules
     - metadata->system->counterion->name
     - metadata->system->substrate->natoms
     - metadata->system->substrate->name
@@ -187,7 +186,7 @@ class GromacsPullPrepMain(SubWorkflowGenerator):
         dynamic_template_context = {
             'nsurfactant': 'metadata->system->surfactant->nmolecules',
             'surfactant':  'metadata->system->surfactant->name',
-            'ncounterion': 'metadata->system->counterion->nmolecules',
+            'ncounterion': 'metadata->system->surfactant->nmolecules',  # make system symmetric
             'counterion':  'metadata->system->counterion->name',
             'nsubstrate':  'metadata->system->substrate->natoms',
             'substrate':   'metadata->system->substrate->name',

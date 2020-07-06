@@ -203,7 +203,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX grompp
         # ----------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_grompp')
 
         files_in = {
             'index_file':      'default.ndx',
@@ -257,7 +257,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
 
         # GMX mdrun
         # ---------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('gmx_mdrun')
 
         files_in = {
             'input_file':    'default.tpr',
@@ -314,7 +314,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         # pull pymol template
         # -------------------
 
-        step_label = self.get_step_label('$1_$2_$3_$4')
+        step_label = self.get_step_label('pull_pymol_template')
 
         files_in = {}
         files_out = {
@@ -351,7 +351,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
 
         # PYMOL input script template
         # -----------------------------
-        step_label = self.get_step_label('$1_$2_$3')
+        step_label = self.get_step_label('fill_pymol_template')
 
         files_in =  {'template_file': 'default.template'}
         files_out = {'input_file': 'default.pml'}
@@ -435,7 +435,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
 
         # Render trajectory
         # ----------------
-        step_label = self.get_step_label('$1_$2')
+        step_label = self.get_step_label('pymol')
 
         files_in = {
             'data_file': 'default.gro',

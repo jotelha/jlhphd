@@ -1,3 +1,6 @@
+# TODO:
+# 2020/07/02 remove all project_id, only project
+
 # computational
 import numpy as np
 #import matplotlib.pyplot as plt
@@ -19,10 +22,11 @@ import ase.io
 # https://stackoverflow.com/questions/5903720/recursive-diff-of-two-python-dictionaries-keys-and-values
 
 # system basics
+import copy
+import datetime
 import logging
 import itertools
 import os
-import datetime
 import pickle
 
 import dill
@@ -30,9 +34,13 @@ import numpy as np
 import pint
 import miniball
 
+from collections.abc import Iterable
+
 # fireworks
 import pymongo
 from fireworks import Firework, Workflow
+
+from fireworks.utilities.dict_mods import set_nested_dict_value
 
 from jlhpy.utilities.wf.utils import slugify
 
@@ -123,9 +131,15 @@ class FireWorksWorkflowGenerator:
                 machine=self.machine,
                 id=self.project_id)
 
+        # define label and key such as:
+        # "parameter_label_key_dict": {
+        #     "n": "system->surfactant->nmolecules"
+        # },
         if 'parameter_label_key_dict' in self.kwargs:
             self.parameter_label_key_dict = self.kwargs['parameter_label_key_dict']
             self.parameter_keys = list(self.parameter_label_key_dict.values())
+        # or only keys such as:
+        # "parameter_keys": [ "system->surfactant->nmolecules" ]
         elif 'parameter_keys' in self.kwargs:
             self.parameter_keys = self.kwargs['parameter_keys']
             if isinstance(self.parameter_keys, str):
@@ -829,17 +843,161 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
         return self.sub_wf_components[-1].push(fws_root)
 
 
-class ParametricStudyGenerator():
-    def __init__(
-            parametric_dimension_labels = ['nmolecules'],
-            parametric_dimension_values = [ { 'nmolecules': [100] } ],
-            ):
-        parameter_sets = list(
-            itertools.chain(*[
-                    itertools.product(*list(
-                            p.values())) for p in parametric_dimension_values ]) )
+# class BranchingWorkflowGenerator(SubWorkflowGenerator):
+#     """Assemble a set of sub-workflows in parallel."""
+#     def __init__(self, sub_wf_components, *args, **kwargs):
+#         """Takes list of instantiated sub-workflows."""
+#         self.sub_wf_components = sub_wf_components
+#
+#         sub_wf_name = 'branching workflow'
+#         if 'wf_name_prefix' not in kwargs:
+#             kwargs['wf_name_prefix'] = sub_wf_name
+#         else:
+#             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+#         super().__init__(*args, **kwargs)
+#
+#     def push_infiles(self, fp):
+#         """fp: FilePad"""
+#         for sub_wf in self.sub_wf_components:
+#             if hasattr(sub_wf, 'push_infiles'):
+#                 sub_wf.push_infiles(fp)
+#
+#     def pull(self, fws_root=[]):
+#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+#         for sub_wf in self.sub_wf_components:
+#             if hasattr(sub_wf, 'push_infiles'):
+#                 cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.pull(fws_root)
+#                 fws_list.extend(cur_fws_list)
+#                 fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+#                 fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+#
+#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+#
+#     def main(self, fws_root=[]):
+#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+#         for sub_wf in self.sub_wf_components:
+#             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.main(fws_root)
+#             fws_list.extend(cur_fws_list)
+#             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+#             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+#
+#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+#
+#     def push(self, fws_root=[]):
+#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+#         for sub_wf in self.sub_wf_components:
+#             if hasattr(sub_wf, 'pull'):
+#                 cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.push(fws_root)
+#                 fws_list.extend(cur_fws_list)
+#                 fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+#                 fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+#
+#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
 
-        self.parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
+
+class ParametricBranchingWorkflowGenerator(SubWorkflowGenerator):
+    """Parametric branching of workflow.
+
+    args
+    ----
+    - sub_wf: SubWorkflowGenerator
+    - parameter_values: [ { k: [v] } ]
+        list of dict of parameter label: list of parameter values, i.e.
+        [{'nmolecules': [100]}]
+
+    examples
+    --------
+
+        parameter_values = [
+            {'nmolecules': [100, 200, 300], 'temperature': [10]},
+            {'nmolecules': [400], 'temperature': [20, 30]}]
+
+    will result in the following tuples
+
+        [(100, 10), (200, 10), (300, 10), (400, 20), (400, 30)]
+
+    or labeled tuples
+
+        [{'nmolecules': 100, 'temperature': 10},
+         {'nmolecules': 200, 'temperature': 10},
+         {'nmolecules': 300, 'temperature': 10},
+         {'nmolecules': 400, 'temperature': 20},
+         {'nmolecules': 400, 'temperature': 30}]
+
+    of ('nmolecules', temperature') parameter values
+    """
+
+    def __init__(self, sub_wf, *args, **kwargs):
+        labeled_parameter_sets = []
+
+        sub_wf_name = 'ParametricBranching'
+        if 'wf_name_prefix' not in kwargs:
+            kwargs['wf_name_prefix'] = sub_wf_name
+        else:
+            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        super().__init__(*args, **kwargs)
+
+        # build atomic parameter sets from parameter_values
+        for parameter_package in self.kwargs['parameter_values']:
+            expanded_parameter_package = list(
+                itertools.product(
+                    *[p if isinstance(p, Iterable) else [p] for p in parameter_package.values()]
+                ))
+            labeled_parameter_set = [{
+                    k: v for k, v in zip(
+                        parameter_package.keys(), parameter_set)
+                } for parameter_set in expanded_parameter_package]
+            labeled_parameter_sets.extend(labeled_parameter_set)
+
+        # build one sub-workflow for each parameter set
+        sub_wf_components = []
+        for parameter_set in labeled_parameter_sets:
+            cur_kwargs = copy.deepcopy(kwargs)
+            for k, v in parameter_set.items():
+                parameter_key = self.parameter_label_key_dict[k]
+                cur_kwargs = set_nested_dict_value(cur_kwargs, parameter_key, v)
+            sub_wf_components.append(sub_wf(*args, **cur_kwargs))
+
+        self.sub_wf_components = sub_wf_components
+
+    def push_infiles(self, fp):
+        """fp: FilePad"""
+        for sub_wf in self.sub_wf_components:
+            if hasattr(sub_wf, 'push_infiles'):
+                sub_wf.push_infiles(fp)
+
+    # def pull(self, fws_root=[]):
+    #     fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+    #     for sub_wf in self.sub_wf_components:
+    #         if hasattr(sub_wf, 'push_infiles'):
+    #             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.pull(fws_root)
+    #             fws_list.extend(cur_fws_list)
+    #             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+    #             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+    #
+    #     return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+
+    def main(self, fws_root=[]):
+        fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+        for sub_wf in self.sub_wf_components:
+            cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.get_as_leaf(fws_root)
+            fws_list.extend(cur_fws_list)
+            fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+            fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+
+        return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+
+    # def push(self, fws_root=[]):
+    #     fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+    #     for sub_wf in self.sub_wf_components:
+    #         if hasattr(sub_wf, 'pull'):
+    #             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.push(fws_root)
+    #             fws_list.extend(cur_fws_list)
+    #             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+    #             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+    #
+    #     return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+
 
 # TODO: cast below into SubWorkflowGenerator pattern
 class SphericalClusterPassivationWorkflowGenerator(FireWorksWorkflowGenerator):
