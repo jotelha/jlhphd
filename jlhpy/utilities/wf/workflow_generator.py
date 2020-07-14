@@ -64,6 +64,7 @@ class FireWorksWorkflowGenerator:
             project_id=None,
             hpc_specs=None,
             infile_prefix=None,
+            integrate_push=False,
             fw_name_template=None,
             fw_name_prefix=None,
             fw_name_suffix=None,
@@ -104,6 +105,7 @@ class FireWorksWorkflowGenerator:
         """
         # TODO: standardize and sort kwargs with special meaning
         self.project_id = project_id
+        self.integrate_push = integrate_push
 
         self.kwargs = kwargs
         self.kwargs['project_id'] = project_id
@@ -287,6 +289,28 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
                         '          '
                         + - - - - -+
 
+    If 'integrate_push' is set, then the layout is modified to
+
+                        + - - - - -+
+                        ' main     '
+                        '          '
+                        ' +------+ '
+                        ' | pull | '
+                        ' +------+ '
+                        '   |      '
+                        '   |      '
+                        '   v      '
+     fws_root inputs    ' +------+ '
+    ------------------> ' |      | '
+                        ' | main | '
+     fws_leaf outputs   ' |      | '
+    <------------------ ' |  &   | '
+                        ' |      | '
+                        ' | push | '
+                        ' +------+ '
+                        '          '
+                        + - - - - -+
+
     """
     def get_step_label(self, suffix):
         return ':'.join((self.wf_name_prefix, suffix))
@@ -338,13 +362,16 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         fws_pull, fws_pull_leaf, _ = self.pull()
         fws_main, fws_main_leaf, fws_main_root = self.main(
             [*fws_pull_leaf, *fws_root])
-        fws_push, _, _ = self.push(fws_main_leaf)
+        fws_push, fws_push_leaf, _ = self.push(fws_main_leaf)
 
-        fws_list = [
-            *fws_pull, *fws_main, *fws_push,
-        ]
+        fws_list = [*fws_pull, *fws_main, *fws_push]
+        fws_root = [*fws_main_root]
+        fws_leaf = [*fws_main_leaf]
 
-        return fws_list, fws_main_leaf, fws_main_root
+        if self.integrate_push:
+            fws_leaf.extend(fws_push_leaf)
+
+        return fws_list, fws_leaf, fws_root
 
     def get_as_root(self, fws_root=[]):
         """Return as root FireWorks list with pull stub, but no push stub.
@@ -366,24 +393,27 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         """
 
         fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
-        fws_push, _, _ = self.push(fws_main_leaf)
+        fws_push, fws_push_leaf, _ = self.push(fws_main_leaf)
 
-        fws_list = [
-            *fws_main, *fws_push,
-        ]
+        fws_list = [*fws_main, *fws_push]
+        fws_root = [*fws_main_root]
+        fws_leaf = [*fws_main_leaf]
 
-        return fws_list, fws_main_leaf, fws_main_root
+        if self.integrate_push:
+            fws_leaf.extend(fws_push_leaf)
+
+        return fws_list, fws_leaf, fws_root
 
     def get_as_embedded(self, fws_root=[]):
         """Return as embeded FireWorks list without pull and push stub."""
 
         fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
 
-        fws_list = [
-            *fws_main,
-        ]
+        fws_list = [*fws_main]
+        fws_root = [*fws_main_root]
+        fws_leaf = [*fws_main_leaf]
 
-        return fws_list, fws_main_leaf, fws_main_root
+        return fws_list, fws_leaf, fws_root
 
     def build_wf(self):
         """Return self-sufficient pull->main->push workflow """
@@ -505,8 +535,6 @@ class ProcessAnalyzeAndVisualizeSubWorkflowGenerator(SubWorkflowGenerator):
         fw_list = []
         fws_leaf = []
 
-        # sub_wf.get_as_leaf(fws_prev_sub_wf_leaf)
-
         fws_main, fws_main_leaf, fws_main_root = \
             self.sub_wf_components['main'].get_as_embedded(fws_root)
         fw_list.extend(fws_main)
@@ -530,272 +558,6 @@ class ProcessAnalyzeAndVisualizeSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, fws_leaf, fws_main_root
 
-    # def push(self, fws_root=[]):
-    #     return self.sub_wf_components['main'].push(fws_root)
-
-    # def get_as_independent(self, fws_root=[]):
-    #     """Returns as self-sufficient FireWorks list with pull and push stub.
-    #
-    #                         + - - - - -+                      + - - - - - -+
-    #                         ' main     '                      ' analysis   '
-    #                         '          '                      '            '
-    #                         ' +------+ '                      ' +--------+ '
-    #                         ' | pull | '                      ' |  pull  | '
-    #                         ' +------+ '                      ' +--------+ '
-    #                         '   |      '                      '   |        '
-    #                         '   |      '                      '   |        '
-    #                         '   v      '                      '   v        '
-    #      fws_root inputs    ' +------+ '                      ' +--------+ '
-    #     ------------------> ' |      | ' -------------------> ' |  main  | ' -+
-    #                         ' |      | '                      ' +--------+ '  |
-    #                         ' |      | '     +- - - - - +     '   |        '  |
-    #                         ' |      | '     ' vis      '     '   |        '  |
-    #                         ' | main | '     '          '     '   |        '  |
-    #      fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
-    #     <------------------ ' |      | '     ' | pull | '     '   |        '  |
-    #                         ' |      | '     ' +------+ '     '   v        '  |
-    #                         ' |      | '     '   |      '     ' +--------+ '  |
-    #                         ' |      | ' -+  '   |      '     ' |  push  | '  |
-    #                         ' +------+ '  |  '   |      '     ' +--------+ '  |
-    #                         '   |      '  |  '   |      '     '            '  |
-    #                         '   |      '  |  '   v      '     + - - - - - -+  |
-    #                         '   |      '  |  ' +------+ '                     |
-    #                         '   |      '  +> ' | main | ' <-------------------+
-    #                         '   v      '     ' +------+ '
-    #                         ' +------+ '     '   |      '
-    #                         ' | push | '     '   |      '
-    #                         ' +------+ '     '   |      '
-    #                         '          '     '   |      '
-    #                         + - - - - -+     '   v      '
-    #                                          ' +------+ '
-    #                                          ' | push | '
-    #                                          ' +------+ '
-    #                                          '          '
-    #                                          +- - - - - +
-    #     """
-    #
-    #     fws_pull, fws_pull_leaf, _ = self.pull()
-    #     fws_main, fws_main_leaf, fws_main_root = self.main(
-    #         [*fws_pull_leaf, *fws_root])
-    #     fws_push, _, _ = self.push(fws_main_leaf)
-    #
-    #     # post-processing / analysis branch, attach to main leaf
-    #     fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
-    #     fws_analysis_main, fws_analysis_main_leaf, _ = \
-    #         self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
-    #     fws_analysis_push, _, _ = self.analysis_push(
-    #         fws_analysis_main_leaf)
-    #
-    #     # vis branch, attach to main and analysis leaf
-    #     fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
-    #     fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
-    #         [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
-    #     fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
-    #
-    #     fws_list = [
-    #         *fws_pull, *fws_main, *fws_push,
-    #         *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
-    #         *fws_vis_pull, *fws_vis_main, *fws_vis_push,
-    #     ]
-    #
-    #     return fws_list, fws_main_leaf, fws_main_root
-    #
-    # def get_as_root(self, fws_root=[]):
-    #     """Return as root FireWorks list with pull stub, but no push stub.
-    #
-    #     Same is valid for pull and push stubs of analyis and vis branches.
-    #
-    #                         + - - - - -+                      + - - - - - -+
-    #                         ' main     '                      ' analysis   '
-    #                         '          '                      '            '
-    #                         ' +------+ '                      ' +--------+ '
-    #                         ' | pull | '                      ' |  pull  | '
-    #                         ' +------+ '                      ' +--------+ '
-    #                         '   |      '                      '   |        '
-    #                         '   |      '                      '   |        '
-    #                         '   v      '                      '   v        '
-    #      fws_root inputs    ' +------+ '                      ' +--------+ '
-    #     ------------------> ' |      | ' -------------------> ' |  main  | '
-    #                         ' |      | '                      ' +--------+ '
-    #                         ' |      | '     +- - - - - +     '            '
-    #                         ' |      | '     ' vis      '     '            '
-    #                         ' | main | '     '          '     + - - - - - -+
-    #      fws_leaf outputs   ' |      | '     ' +------+ '         |
-    #     <------------------ ' |      | '     ' | pull | '         |
-    #                         ' |      | '     ' +------+ '         |
-    #                         ' |      | '     '   |      '         |
-    #                         ' |      | ' -+  '   |      '         |
-    #                         ' +------+ '  |  '   |      '         |
-    #                         '          '  |  '   |      '         |
-    #                         + - - - - -+  |  '   v      '         |
-    #                                       |  ' +------+ '         |
-    #                                       +> ' | main | ' <-------+
-    #                                          ' +------+ '
-    #                                          '          '
-    #                                          +- - - - - +
-    #     """
-    #
-    #     # main processing branch
-    #     fws_pull, fws_pull_leaf, _ = self.pull()
-    #     fws_main, fws_main_leaf, fws_main_root = self.main(
-    #         [*fws_pull_leaf, *fws_root])
-    #
-    #     # post-processing / analysis branch, attach to main leaf
-    #     fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
-    #     fws_analysis_main, fws_analysis_main_leaf, _ = \
-    #         self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
-    #
-    #     # vis branch, attach to main and analysis leaf
-    #     fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
-    #     fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
-    #         [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
-    #
-    #     fws_list = [
-    #         *fws_pull, *fws_main,
-    #         *fws_analysis_pull, *fws_analysis_main,
-    #         *fws_vis_pull, *fws_vis_main
-    #     ]
-    #
-    #     return fws_list, fws_main_leaf, fws_main_root
-    #
-    # def get_as_leaf(self, fws_root=[]):
-    #     """Return as leaf FireWorks list without pull stub, but with push stub.
-    #
-    #     Attaches push AND pull stubs to analyis and vis branches.
-    #                                                           + - - - - - -+
-    #                                                           ' analysis   '
-    #                                                           '            '
-    #                                                           ' +--------+ '
-    #                                                           ' |  pull  | '
-    #                                                           ' +--------+ '
-    #                                                           '   |        '
-    #                                                           '   |        '
-    #                                                           '   |        '
-    #                         + - - - - -+                      '   |        '
-    #                         ' main     '                      '   |        '
-    #                         '          '                      '   v        '
-    #      fws_root inputs    ' +------+ '                      ' +--------+ '
-    #     ------------------> ' |      | ' -------------------> ' |  main  | ' -+
-    #                         ' |      | '                      ' +--------+ '  |
-    #                         ' |      | '     +- - - - - +     '   |        '  |
-    #                         ' |      | '     ' vis      '     '   |        '  |
-    #                         ' | main | '     '          '     '   |        '  |
-    #      fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
-    #     <------------------ ' |      | '     ' | pull | '     '   |        '  |
-    #                         ' |      | '     ' +------+ '     '   v        '  |
-    #                         ' |      | '     '   |      '     ' +--------+ '  |
-    #                         ' |      | ' -+  '   |      '     ' |  push  | '  |
-    #                         ' +------+ '  |  '   |      '     ' +--------+ '  |
-    #                         '   |      '  |  '   |      '     '            '  |
-    #                         '   |      '  |  '   v      '     + - - - - - -+  |
-    #                         '   |      '  |  ' +------+ '                     |
-    #                         '   |      '  +> ' | main | ' <-------------------+
-    #                         '   v      '     ' +------+ '
-    #                         ' +------+ '     '   |      '
-    #                         ' | push | '     '   |      '
-    #                         ' +------+ '     '   |      '
-    #                         '          '     '   |      '
-    #                         + - - - - -+     '   v      '
-    #                                          ' +------+ '
-    #                                          ' | push | '
-    #                                          ' +------+ '
-    #                                          '          '
-    #                                          +- - - - - +
-    #     """
-    #
-    #     fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
-    #     fws_push, _, _ = self.push(fws_main_leaf)
-    #
-    #     # return [*fws_main, *fws_push], fws_main_leaf, fws_main_root
-    #
-    #     # post-processing / analysis branch, attach to main leaf
-    #     fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
-    #     fws_analysis_main, fws_analysis_main_leaf, _ = \
-    #         self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
-    #     fws_analysis_push, _, _ = self.analysis_push(
-    #         fws_analysis_main_leaf)
-    #
-    #     # vis branch, attach to main and analysis leaf
-    #     fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
-    #     fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
-    #         [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
-    #     fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
-    #
-    #     fws_list = [
-    #         *fws_main, *fws_push,
-    #         *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
-    #         *fws_vis_pull, *fws_vis_main, *fws_vis_push,
-    #     ]
-    #
-    #     return fws_list, fws_main_leaf, fws_main_root
-    #
-    # def get_as_embedded(self, fws_root=[]):
-    #     """Return as embeded FireWorks list without pull and push stub.
-    #
-    #     ATTTENTION: Attaches push AND pull stubs to analyis and vis branches.
-    #                                                           + - - - - - -+
-    #                                                           ' analysis   '
-    #                                                           '            '
-    #                                                           ' +--------+ '
-    #                                                           ' |  pull  | '
-    #                                                           ' +--------+ '
-    #                                                           '   |        '
-    #                                                           '   |        '
-    #                                                           '   |        '
-    #                         + - - - - -+                      '   |        '
-    #                         ' main     '                      '   |        '
-    #                         '          '                      '   v        '
-    #      fws_root inputs    ' +------+ '                      ' +--------+ '
-    #     ------------------> ' |      | ' -------------------> ' |  main  | ' -+
-    #                         ' |      | '                      ' +--------+ '  |
-    #                         ' |      | '     +- - - - - +     '   |        '  |
-    #                         ' |      | '     ' vis      '     '   |        '  |
-    #                         ' | main | '     '          '     '   |        '  |
-    #      fws_leaf outputs   ' |      | '     ' +------+ '     '   |        '  |
-    #     <------------------ ' |      | '     ' | pull | '     '   |        '  |
-    #                         ' |      | '     ' +------+ '     '   v        '  |
-    #                         ' |      | '     '   |      '     ' +--------+ '  |
-    #                         ' |      | ' -+  '   |      '     ' |  push  | '  |
-    #                         ' +------+ '  |  '   |      '     ' +--------+ '  |
-    #                         '          '  |  '   |      '     '            '  |
-    #                         +- - - - - +  |  '   v      '     + - - - - - -+  |
-    #                                       |  ' +------+ '                     |
-    #                                       +> ' | main | ' <-------------------+
-    #                                          ' +------+ '
-    #                                          '   |      '
-    #                                          '   |      '
-    #                                          '   |      '
-    #                                          '   |      '
-    #                                          '   v      '
-    #                                          ' +------+ '
-    #                                          ' | push | '
-    #                                          ' +------+ '
-    #                                          '          '
-    #                                          +- - - - - +
-    #     """
-    #
-    #     fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
-    #
-    #     # post-processing / analysis branch, attach to main leaf
-    #     fws_analysis_pull, fws_analysis_pull_leaf, _ = self.analysis_pull()
-    #     fws_analysis_main, fws_analysis_main_leaf, _ = \
-    #         self.analysis_main([*fws_analysis_pull_leaf, *fws_main_leaf])
-    #     fws_analysis_push, _, _ = self.analysis_push(
-    #         fws_analysis_main_leaf)
-    #
-    #     # vis branch, attach to main and analysis leaf
-    #     fws_vis_pull, fws_vis_pull_leaf, _ = self.vis_pull()
-    #     fws_vis_main, fws_vis_main_leaf, _ = self.vis_main(
-    #         [*fws_vis_pull_leaf, *fws_main_leaf, *fws_analysis_main_leaf])
-    #     fws_vis_push, _, _ = self.vis_push(fws_vis_main_leaf)
-    #
-    #     fws_list = [
-    #         *fws_main,
-    #         *fws_analysis_pull, *fws_analysis_main, *fws_analysis_push,
-    #         *fws_vis_pull, *fws_vis_main, *fws_vis_push,
-    #     ]
-    #
-    #     return fws_list, fws_main_leaf, fws_main_root
 
 class ChainWorkflowGenerator(SubWorkflowGenerator):
     """Chains a set of sub-workflows."""
@@ -818,6 +580,7 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
 
     # chain sub-workflows
     def pull(self, fws_root=[]):
+        """Returns the pull stub of first sub-workflow in chain."""
         return self.sub_wf_components[0].pull(fws_root)
 
     def main(self, fws_root=[]):
@@ -840,6 +603,7 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
         return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
 
     def push(self, fws_root=[]):
+        """Returns the push stub of last sub-workflow in chain."""
         return self.sub_wf_components[-1].push(fws_root)
 
 

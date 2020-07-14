@@ -23,7 +23,7 @@ R = 26.3906
 A_Ang = 4*np.pi*R**2 # area in Ansgtrom
 A_nm = A_Ang / 10**2
 n_per_nm_sq = np.array([0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0]) # molecules per square nm
-N = np.round(A_nm*n_per_nm_sq).astype(int)
+N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 
 
 # In[10]:
@@ -32,7 +32,7 @@ from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import S
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-05-08-dtool-trial'
+project_id = '2020-07-01-passiv-trial'
 wfg = SphericalSurfactantPackingChainWorkflowGenerator(
     project_id=project_id, 
     description="Trial runs for dtool from JUWELS to Isilon",
@@ -122,33 +122,37 @@ fp_files = wfg.push_infiles(fp)
 wf = wfg.build_wf()
 
 # In[20]:
-from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import IndenterPassivationChainWorkflowGenerator
+from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import IndenterPassivationParametricWorkflowGenerator
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-n = N[-2]
-
+# n = N[-2]
+parameter_values = [{'n': n, 'm': n } for n in N]
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-05-07'
-wfg = IndenterPassivationChainWorkflowGenerator(
+project_id = '2020-07-09-passivation'
+wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
-    description="Trial runs for dtool from JUWELS to Isilon",
+    integrate_push=True,
+    description="Parametric trial runs for indenter passivation",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
         'username': 'fr_jh1130',
         'orcid': '0000-0001-5867-695X'
     }],
-    creation_date="2020-05-07",
-    expiration_date="2022-05-07",
+    creation_date="2020-07-09",
+    expiration_date="2025-07-09",
     infile_prefix=prefix,
     machine='juwels_devel',
-    parameter_label_key_dict={'n': 'system->surfactant->nmolecules'},
-    mode='trial',
+    parameter_label_key_dict={
+        'n': 'system->surfactant->nmolecules', 
+        'm': 'system->counterion->nmolecules'},
+    parameter_values=parameter_values,
+    mode='production',
     system = { 
         'counterion': {
             'name': 'NA',
             'resname': 'NA',
-            'nmolecules': int(n),
+            'nmolecules': None,
             'reference_atom': {
                 'name': 'NA',
             },
@@ -156,7 +160,7 @@ wfg = IndenterPassivationChainWorkflowGenerator(
         'surfactant': {
             'name': 'SDS',
             'resname': 'SDS',
-            'nmolecules': int(n),
+            'nmolecules': None,
             'connector_atom': {
                 'index': int(SURFACTANTS["SDS"]["connector_atom_index"])
             },
@@ -199,21 +203,23 @@ wfg = IndenterPassivationChainWorkflowGenerator(
             'rate': 0.1  # pseudo-units
         },
         'dtool_push': {
+            'dtool_target': '/p/project/chfr13/hoermann4/dtool/DATASETS',
+            'remote_dataset': None,
+        }
             # 'dtool_target': 'smb://rz-freiburg-user-share',
-            'dtool_target': 'smb://rz-freiburg-user-share',
-            'dtool_config': {
-                'DTOOL_SMB_SERVER_NAME_rz-freiburg-user-share': 'localhost'
-            },
-            'ssh_config': {  # options for ssh port forwarding
-                'remote_host':  'tfsish01.public.ads.uni-freiburg.de',
-                'remote_port':  445,
-                'ssh_host':     'simdata.vm.uni-freiburg.de',  # jump host
-                'ssh_user':     'sshclient',
-                'ssh_keyfile':  '~/.ssh/sshclient-frrzvm',
-            },
-        },
+            # 'dtool_config': {
+            #    'DTOOL_SMB_SERVER_NAME_rz-freiburg-user-share': 'localhost'
+            # },
+            #'ssh_config': {  # options for ssh port forwarding
+            #    'remote_host':  'tfsish01.public.ads.uni-freiburg.de',
+            #    'remote_port':  445,
+            #    'ssh_host':     'simdata.vm.uni-freiburg.de',  # jump host
+            #    'ssh_user':     'sshclient',
+            #    'ssh_keyfile':  '~/.ssh/sshclient-frrzvm',
+            #},
+        # },
     },
-    dtool_port_config_key='DTOOL_SMB_SERVER_PORT_rz-freiburg-user-share'
+    # dtool_port_config_key='DTOOL_SMB_SERVER_PORT_rz-freiburg-user-share'
 )
 
 fp_files = wfg.push_infiles(fp)
