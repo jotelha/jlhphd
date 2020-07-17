@@ -154,11 +154,11 @@ class PushToDtoolRepositoryMixin(PushMixinABC):
         }
 
         # make step label a valid 80 char dataset name
-        # dataset_name = self.get_80_char_slug()
+        dataset_name = self.get_80_char_slug()
 
         fts_push = [
             CreateDatasetTask(
-                # name=dataset_name,
+                name=dataset_name,
                 metadata={'project': self.project_id},
                 metadata_key='metadata',
                 output='metadata->step_specific->dtool_push->local_proto_dataset',
@@ -221,11 +221,11 @@ class PushDerivedDatasetToDtoolRepositoryMixin(PushMixinABC):
         }
 
         # make step label a valid 80 char dataset name
-        # dataset_name = self.get_80_char_slug()
+        dataset_name = self.get_80_char_slug()
 
         fts_push = [
             CreateDatasetTask(
-                # name=dataset_name,
+                name=dataset_name,
                 metadata={'project': self.project_id},
                 metadata_key='metadata',
                 output='metadata->step_specific->dtool_push->local_proto_dataset',
@@ -296,11 +296,11 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
         bg_fts_push = [BackgroundTask(ft_ssh,
             num_launches=1, run_on_finish=False, sleep_time=0)]
 
-        # dataset_name = self.get_80_char_slug()
+        dataset_name = self.get_80_char_slug()
 
         fts_push = [
             CreateDatasetTask(
-                # name=dataset_name,
+                name=dataset_name,
                 metadata={'project': self.project_id},
                 metadata_key='metadata',
                 output='metadata->step_specific->dtool_push->local_proto_dataset',
@@ -386,9 +386,60 @@ class PushToDtoolRepositoryAndFilePadMixin(
         PushToDtoolRepositoryMixin, PushToFilePadMixin):
     pass
 
-class PushDerivedDatasetToDtoolRepositoryAndFilePadMixin(
-        PushDerivedDatasetToDtoolRepositoryMixin, PushToFilePadMixin):
-    pass
+
+# class PushDerivedDatasetToDtoolRepositoryAndFilePadMixin(
+#         PushDerivedDatasetToDtoolRepositoryMixin, PushToFilePadMixin):
+#     pass
+
+
+class PushDerivedDatasetToDtoolRepositoryAndFilePadMixin(PushDerivedDatasetToDtoolRepositoryMixin):
+    """Implements a FilePadMixin dependent on DtoolMixin"""
+    def push(self, fws_root=[]):
+        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+
+        step_label = self.get_step_label('push_filepad')
+
+        files_out = {}
+        files_in = {
+            f['file_label']: f['file_name'] for f in self.files_out_list
+        }
+
+        fts_push = []
+        for file in self.files_out_list:
+            fts_push.append(
+                AddFilesTask({
+                    'compress': True,
+                    'paths': file['file_name'],
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'type':    file['file_label']},
+                })
+            )
+
+        fw_push = Firework(fts_push,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project': self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':    step_label,
+                    **self.kwargs
+                }
+            },
+            # first difference to standatrd FilepadMixin: dependency on all super push Fireworks
+            parents=[*fws_root, *fws_leaf_out])
+
+        fw_list.append(fw_push)
+        # second difference to standatrd FilepadMixin: FilePad push always as stub
+        # fws_leaf_out.append(fw_push)
+        fws_root_out.append(fw_push)
+
+        return fw_list, fws_leaf_out, fws_root_out
+
 
 class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
         PushToDtoolRepositoryViaSSHJumpHostMixin, PushToFilePadMixin):

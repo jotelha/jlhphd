@@ -126,9 +126,9 @@ from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import I
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
 # n = N[-2]
-parameter_values = [{'n': n, 'm': n } for n in N]
+parameter_values = [{'n': n, 'm': n } for n in N[0:2]]
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-07-09-passivation'
+project_id = '2020-07-17-passivation-trial'
 wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,
@@ -147,7 +147,7 @@ wfg = IndenterPassivationParametricWorkflowGenerator(
         'n': 'system->surfactant->nmolecules', 
         'm': 'system->counterion->nmolecules'},
     parameter_values=parameter_values,
-    mode='production',
+    mode='trial',
     system = { 
         'counterion': {
             'name': 'NA',
@@ -200,26 +200,14 @@ wfg = IndenterPassivationParametricWorkflowGenerator(
         'pulling': {
             'pull_atom_name': SURFACTANTS["SDS"]["tail_atom_name"],
             'spring_constant': 1000,  # pseudo-units
-            'rate': 0.1  # pseudo-units
+            'rate': 0.1,  # pseudo-units
+            'nsteps': 500,
         },
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/DATASETS',
             'remote_dataset': None,
         }
-            # 'dtool_target': 'smb://rz-freiburg-user-share',
-            # 'dtool_config': {
-            #    'DTOOL_SMB_SERVER_NAME_rz-freiburg-user-share': 'localhost'
-            # },
-            #'ssh_config': {  # options for ssh port forwarding
-            #    'remote_host':  'tfsish01.public.ads.uni-freiburg.de',
-            #    'remote_port':  445,
-            #    'ssh_host':     'simdata.vm.uni-freiburg.de',  # jump host
-            #    'ssh_user':     'sshclient',
-            #    'ssh_keyfile':  '~/.ssh/sshclient-frrzvm',
-            #},
-        # },
     },
-    # dtool_port_config_key='DTOOL_SMB_SERVER_PORT_rz-freiburg-user-share'
 )
 
 fp_files = wfg.push_infiles(fp)

@@ -1,5 +1,5 @@
 #; nvt.mdp - used as input into grompp to generate nvt.tpr
-# adapted sample nvt equilibration input file from 
+# adapted sample nvt equilibration input file from
 # http://www.bevanlab.biochem.vt.edu/Pages/Personal/justin/gmx-tutorials/lysozyme/Files/nvt.mdp
 title   = Surfactant adsorption film on gold cluster NPT equilibration
 
@@ -11,7 +11,7 @@ dt        = 0.002   ; 2 fs
 ; Output control
 nstxout   = 500   ; save coordinates every 1.0 ps
 nstvout   = 500   ; save velocities every 1.0 ps
-nstxtcout = 500    
+nstxtcout = 500
 nstfout   = 500
 nstenergy = 500   ; save energies every 1.0 ps
 nstlog    = 500   ; update log file every 1.0 ps
@@ -22,7 +22,7 @@ energygrps = Surfactant Substrate Ion SOL
 
 ; Bond parameters
 continuation            = yes
-constraint_algorithm    = lincs     ; holonomic constraints 
+constraint_algorithm    = lincs     ; holonomic constraints
 constraints             = h-bonds
 lincs_iter              = 1       ; accuracy of LINCS
 lincs_order             = 4       ; also related to accuracy
@@ -36,12 +36,12 @@ vdwtype         = cutoff
 vdw-modifier    = force-switch
 rlist           = 1.2
 rvdw            = 1.2           ; Short-range Van der Waals cut-off, CHARMM outer cutoff for LJ
-rvdw-switch     = 1.0           ; CHARMM inner cutoff for LJ 
-; Please also note that the switching distance is a matter of some debate in 
-; lipid bilayer simulations, and it is dependent to some extent on the nature 
-; of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
-; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
-; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+rvdw-switch     = 1.0           ; CHARMM inner cutoff for LJ
+; Please also note that the switching distance is a matter of some debate in
+; lipid bilayer simulations, and it is dependent to some extent on the nature
+; of the lipid. Some studies have found that an 0.8-1.0 nm switch is
+; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by
+; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 ; literature for their chosen lipid(s) before beginning a simulation!
 
 ; Electrostatics
@@ -58,7 +58,9 @@ tau_t   = 1.0    1.0   ; time constant, in ps
 ref_t   = 298.15 0.0 ; reference temperature, one for each group, in K
 
 ; Pressure coupling is on
-pcoupl              = Parrinello-Rahman     ; Pressure coupling on in NPT
+; Parrinello-Rahman can lead to large oscillations in equilibration, thus use Berendsen here
+; see http://manual.gromacs.org/documentation/2018/user-guide/mdp-options.html#mdp-value-pcoupl=Parrinello-Rahman
+pcoupl              = Berendsen     ; Pressure coupling on in NPT
 pcoupltype          = isotropic             ; uniform scaling of box vectors
 tau_p               = 10.0                  ; time constant, in ps
 ref_p               = 1.013                 ; reference pressure, in bar
@@ -100,10 +102,10 @@ freezedim  = Y Y Y ; freeze all three dimensions
 ; conjunction with constant pressure.
 
 ; energygrp-excl = Substrate Substrate SOL SOL
-; Pairs of energy groups for which all non-bonded interactions are excluded. 
-; An example: if you have two energy groups Protein and SOL, specifying 
-; energygrp-excl = Protein Protein SOL SOL would give only the non-bonded 
-; interactions between the protein and the solvent. This is especially useful 
-; for speeding up energy calculations with mdrun -rerun and for excluding 
+; Pairs of energy groups for which all non-bonded interactions are excluded.
+; An example: if you have two energy groups Protein and SOL, specifying
+; energygrp-excl = Protein Protein SOL SOL would give only the non-bonded
+; interactions between the protein and the solvent. This is especially useful
+; for speeding up energy calculations with mdrun -rerun and for excluding
 ; interactions within frozen groups.
 ; BUT: Energy group exclusions are not (yet) implemented for the Verlet scheme

@@ -322,14 +322,18 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         return ', '.join((self.fw_name_prefix, step_label))
 
     def get_80_char_slug(self, suffix=''):
-        # project - parameters - sub-workflow hierarchy - step
+        # timestamp - project - parameters - sub-workflow hierarchy - step
+
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
 
         label = ' '.join((
-            self.project_id, self.fw_name_prefix, self.wf_name_prefix, suffix))
+            timestamp, self.project_id, self.fw_name_prefix,
+            self.wf_name_prefix, suffix))
         slug = slugify(label)
 
         if len(slug) > 80:  # ellipsis
             label = ' '.join((
+                timestamp,
                 self.project_id,
                 self.fw_name_prefix,
                 self.wf_name_prefix.split(':')[0],
@@ -565,7 +569,7 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
         """Takes list of instantiated sub-workflows."""
         self.sub_wf_components = sub_wf_components
 
-        sub_wf_name = 'chain workflow'
+        sub_wf_name = 'Chain'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
@@ -694,11 +698,11 @@ class ParametricBranchingWorkflowGenerator(SubWorkflowGenerator):
     def __init__(self, sub_wf, *args, **kwargs):
         labeled_parameter_sets = []
 
-        sub_wf_name = 'ParametricBranching'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
+        # sub_wf_name = 'ParametricBranching'
+        # if 'wf_name_prefix' not in kwargs:
+        #     kwargs['wf_name_prefix'] = sub_wf_name
+        # else:
+        #     kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
         # build atomic parameter sets from parameter_values

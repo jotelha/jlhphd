@@ -43,6 +43,7 @@ class GromacsPullPrepMain(SubWorkflowGenerator):
     - metadata->step_specific->pulling->pull_atom_name
     - metadata->step_specific->pulling->spring_constant
     - metadata->step_specific->pulling->rate
+    - metadata->step_specific->pulling->nsteps
 
     outfiles:
     - data_file:      default.gro
@@ -276,7 +277,6 @@ class GromacsPullPrepMain(SubWorkflowGenerator):
             'input_file':     'out.mdp',
         }
 
-        # TODO:
         fts_make_pull_groups = [CmdTask(
             cmd='gmx_tools',
             opt=['--verbose', '--log', 'default.log',
@@ -288,6 +288,7 @@ class GromacsPullPrepMain(SubWorkflowGenerator):
                 '--reference-group-name', 'Substrate',
                 '-k', {'key': 'metadata->step_specific->pulling->spring_constant'},
                 '--rate', {'key': 'metadata->step_specific->pulling->rate'},
+                '--nsteps', {'key': 'metadata->step_specific->pulling->nsteps'},
                 '--',
                 'in.ndx', 'out.ndx', 'in.mdp', 'out.mdp'],
             env='python',
