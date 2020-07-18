@@ -57,6 +57,8 @@ FILE_LABELS = {
 from jlhpy.utilities.wf.hpc_config import HPC_SPECS
 from jlhpy.utilities.wf.utils import get_nested_dict_value
 
+DEFAULT_LIFESPAN = 2*365  # default lifespan of datasets in days
+
 # TODO: remove mess around project and project_id
 class FireWorksWorkflowGenerator:
     def __init__(
@@ -186,7 +188,7 @@ class FireWorksWorkflowGenerator:
 
         if 'expiration_date' not in self.kwargs:
             self.kwargs['expiration_date'] = str(
-                creation_date + datetime.timedelta(days=365*5))
+                creation_date + datetime.timedelta(days=DEFAULT_LIFESPAN))
 
 
 class SubWorkflowGenerator(FireWorksWorkflowGenerator):
@@ -322,26 +324,25 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         return ', '.join((self.fw_name_prefix, step_label))
 
     def get_80_char_slug(self, suffix=''):
-        # timestamp - project - parameters - sub-workflow hierarchy - step
+        # timestamp - parameters - sub-workflow hierarchy - step
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
 
         label = ' '.join((
-            timestamp, self.project_id, self.fw_name_prefix,
+            timestamp, self.fw_name_prefix,
             self.wf_name_prefix, suffix))
         slug = slugify(label)
 
         if len(slug) > 80:  # ellipsis
             label = ' '.join((
                 timestamp,
-                self.project_id,
                 self.fw_name_prefix,
                 self.wf_name_prefix.split(':')[0],
                 suffix))
             slug = slugify(label)
 
         if len(slug) > 80:  # ellipsis
-            slug = slug[:39] + '--' + slug[-39:]
+            slug = slug[:39].rstrip('-') + '--' + slug[-39:].lstrip('-')
 
         return slug
 

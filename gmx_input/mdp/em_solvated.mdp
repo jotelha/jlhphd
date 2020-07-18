@@ -1,20 +1,20 @@
 ; em.mdp - used as input into grompp to generate em.tpr
-integrator  = steep   ; Algorithm (steep = steepest descent minimization)
-emtol     = 100.0   ; Stop minimization when the maximum force < 1000.0 kJ/mol/nm
-emstep    = 0.0001         ; Energy step size
-nsteps    = 10000      ; Maximum number of (minimization) steps to perform
+integrator = steep   ; Algorithm (steep = steepest descent minimization)
+emtol      = 100.0   ; Stop minimization when the maximum force < 1000.0 kJ/mol/nm
+emstep     = 0.0001  ; Energy step size
+nsteps     = 10000   ; Maximum number of (minimization) steps to perform
 
-nstxout   = 100
-nstvout   = 100
-nstfout   = 100
-nstxtcout = 100    
-nstenergy = 100   
-nstlog    = 100
+nstxout    = 100
+nstvout    = 100
+nstfout    = 100
+nstxtcout  = 100
+nstenergy  = 100
+nstlog     = 100
 
 ; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
 nstlist   = 1             ; Frequency to update the neighbor list and long range forces
 ns_type   = grid    ; Method to determine neighbor list (simple, grid)
-pbc   = xyz     ; Periodic Boundary Conditions (yes/no)
+pbc       = xyz     ; Periodic Boundary Conditions (yes/no)
 
 ; modifications for CHARMM36 as suggested by
 ; http://manual.gromacs.org/documentation/2018/user-guide/force-fields.html
@@ -29,19 +29,19 @@ rvdw            = 1.2           ; Short-range Van der Waals cut-off
 rvdw-switch     = 1.0
 coulombtype     = PME           ; Treatment of long range electrostatic interactions
 rcoulomb        = 1.2           ; Short-range electrostatic cut-off
-; DispCorr        = EnerPres
+; DispCorr      = EnerPres
 DispCorr        = no
 ; Note that dispersion correction should be applied in the case of lipid monolayers, but not bilayers.
 
-; Please also note that the switching distance is a matter of some debate in 
-; lipid bilayer simulations, and it is dependent to some extent on the nature 
-; of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
-; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
-; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+; Please also note that the switching distance is a matter of some debate in
+; lipid bilayer simulations, and it is dependent to some extent on the nature
+; of the lipid. Some studies have found that an 0.8-1.0 nm switch is
+; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by
+; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 ; literature for their chosen lipid(s) before beginning a simulation!
 
 define = -DPOSRES_SURFACTANT -DPOSRES_SUBSTRATE -DPOSRES_ION
 ; define = -DDISRES_SURFACTANT -DPOSRES_ION
-disre  = simple
+disre      = simple
 freezegrps = Substrate
 freezedim  = Y Y Y

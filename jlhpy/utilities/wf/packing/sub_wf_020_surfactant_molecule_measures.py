@@ -221,7 +221,7 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
 
         # Get head atom - center distance
         # -------------------------------
-        step_label = self.get_step_label('head atom - center distance')
+        step_label = self.get_step_label('head_atom_to_center_distance')
 
         files_in = {}
         files_out = {}

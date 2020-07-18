@@ -17,6 +17,7 @@ from jlhpy.utilities.wf.packing.sub_wf_160_gromacs_em_solvated import GromacsEne
 
 from jlhpy.utilities.wf.packing.sub_wf_170_gromacs_nvt import GromacsNVTEquilibrationSubWorkflowGenerator
 from jlhpy.utilities.wf.packing.sub_wf_180_gromacs_npt import GromacsNPTEquilibrationSubWorkflowGenerator
+from jlhpy.utilities.wf.packing.sub_wf_190_gromacs_relax import GromacsRelaxationSubWorkflowGenerator
 
 class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
@@ -57,6 +58,8 @@ class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflo
     - GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator
 
     - GromacsNVTEquilibrationSubWorkflowGenerator
+    - GromacsNPTEquilibrationSubWorkflowGenerator
+    - GromacsRelaxationSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
@@ -70,6 +73,7 @@ class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflo
             GromacsEnergyMinimizationAfterSolvationSubWorkflowGenerator(*args, **kwargs),
             GromacsNVTEquilibrationSubWorkflowGenerator(*args, **kwargs),
             GromacsNPTEquilibrationSubWorkflowGenerator(*args, **kwargs),
+            GromacsRelaxationSubWorkflowGenerator(*args, **kwargs),
         ]
         sub_wf_name = 'GromacsPackingMinimizationEquilibration'
         if 'wf_name_prefix' not in kwargs:

@@ -8,6 +8,7 @@ GMX_PULL_MDP_TEMPLATE = 'pull.mdp.template'
 GMX_EM_SOLVATED_MDP = 'em_solvated.mdp'
 GMX_NVT_MDP = 'nvt.mdp'
 GMX_NPT_MDP = 'npt.mdp'
+GMX_RELAX_MDP = 'relax.mdp'
 
 GMX_TOP_SUBDIR = os.path.join('gmx_input', 'top')
 GMX_PULL_TOP_TEMPLATE = 'sys.top.template'

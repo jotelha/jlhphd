@@ -46,7 +46,7 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
         # compute rdf
         # -----------
 
-        step_label = self.get_step_label('analysis rdf')
+        step_label = self.get_step_label('analysis_rdf')
 
         files_in = {
             'data_file': 'default.gro',
@@ -97,7 +97,7 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
         # compute rmsd
         # ------------
 
-        step_label = self.get_step_label('analysis rmsd')
+        step_label = self.get_step_label('analysis_rmsd')
 
         files_in = {
             'data_file': 'default.gro',
@@ -151,7 +151,7 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
     #
     #     # push rdf
     #     # --------
-    #     step_label = self.get_step_label('analysis push rdf')
+    #     step_label = self.get_step_label('analysis_push_rdf')
     #
     #     files_out = {}
     #     files_in = {
@@ -189,7 +189,7 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
     #     fw_list.append(fw_rdf_push)
     #
     #     # analyisis push rmsd
-    #     step_label = self.get_step_label('analysis push rmsd')
+    #     step_label = self.get_step_label('analysis_push_rmsd')
     #
     #     files_out = {}
     #     files_in = {

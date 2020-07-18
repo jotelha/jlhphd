@@ -3,14 +3,14 @@ title       = Pseudo pulling of surfactant molecules towards substrate
 integrator  = md   ; Algorithm (steep = steepest descent minimization)
 dt          = 0.002
 tinit       = 0
-nsteps    = 100000      ; Maximum number of (minimization) steps to perform
+nsteps    = 100      ; Maximum number of (minimization) steps to perform
 
-nstxout   = 100   ; save coordinates every 1.0 ps
-nstvout   = 100   ; save velocities every 1.0 ps
-nstfout   = 100
-nstxtcout = 100       ; every 1 ps
-nstenergy = 100   ; save energies every 1.0 ps
-nstlog    = 100   ; update log file every 1.0 ps
+nstxout   = 10   ; save coordinates every 1.0 ps
+nstvout   = 10   ; save velocities every 1.0 ps
+nstfout   = 10
+nstxtcout = 10       ; every 1 ps
+nstenergy = 10   ; save energies every 1.0 ps
+nstlog    = 10   ; update log file every 1.0 ps
 
 ; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
 nstlist   = 1      ; Frequency to update the neighbor list and long range forces
@@ -40,16 +40,16 @@ rcoulomb        = 1.2           ; Short-range electrostatic cut-off
 ; ewald_rtol      = 1e-5
 ; optimize_fft    = yes
 ; Generate velocities is off
-gen_vel         = no 
+gen_vel         = no
 ; DispCorr      = EnerPres
 DispCorr        = no
 ; Note that dispersion correction should be applied in the case of lipid monolayers, but not bilayers.
 
-; Please also note that the switching distance is a matter of some debate in 
-; lipid bilayer simulations, and it is dependent to some extent on the nature 
-; of the lipid. Some studies have found that an 0.8-1.0 nm switch is 
-; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by 
-; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field 
+; Please also note that the switching distance is a matter of some debate in
+; lipid bilayer simulations, and it is dependent to some extent on the nature
+; of the lipid. Some studies have found that an 0.8-1.0 nm switch is
+; appropriate, others argue 0.8-1.2 nm is best, and yet others stand by
+; 1.0-1.2 nm. The user is cautioned to thoroughly investigate the force field
 ; literature for their chosen lipid(s) before beginning a simulation!
 
 ; define = -DPOSRES_SURFACTANT -DPOSRES_SUBSTRATE -DPOSRES_ION

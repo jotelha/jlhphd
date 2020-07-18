@@ -23,17 +23,17 @@ from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTraject
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
+class GromacsRelaxationMain(SubWorkflowGenerator):
     """
-    NPT equilibration with GROMACS.
+ Relaxation with GROMACS.
 
     dynamic infiles:
         only queried in pull stub, otherwise expected through data flow
 
     - data_file:       default.gro
-        tagged as {'metadata->type': 'nvt_gro'}
+        tagged as {'metadata->type': 'npt_gro'}
     - index_file:      default.ndx
-        tagged as {'metadata->type': 'nvt_ndx'}
+        tagged as {'metadata->type': 'npt_ndx'}
     - topology_file: default.top
         queried by { 'metadata->type': 'solvate_top' }
 
@@ -41,7 +41,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         always queried within main trunk
 
     - parameter_file: default.mdp,
-        queried by {'metadata->name': file_config.GMX_NPT_MDP}
+        queried by {'metadata->name': file_config.GMX_RLEAX_MDP}
 
     vis static infiles:
     - script_file: renumber_png.sh,
@@ -51,13 +51,13 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
 
     outfiles:
     - log_file:        default.log
-        tagged as {'metadata->type': 'npt_log'}
+        tagged as {'metadata->type': 'relax_log'}
     - energy_file:     default.edr
-        tagged as {'metadata->type': 'npt_edr'}
+        tagged as {'metadata->type': 'relax_edr'}
     - trajectory_file: default.trr
-        tagged as {'metadata->type': 'npt_trr'}
+        tagged as {'metadata->type': 'relax_trr'}
     - data_file:       default.gro
-        tagged as {'metadata->type': 'npt_gro'}
+        tagged as {'metadata->type': 'relax_gro'}
 
     - index_file:      default.ndx
         pass through untouched
@@ -70,7 +70,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
     """
 
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsNPTEquilibrationMain'
+        sub_wf_name = 'GromacsRelaxationEquilibrationMain'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
@@ -86,7 +86,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.GMX_MDP_SUBDIR,
-            file_config.GMX_NPT_MDP)))
+            file_config.GMX_RELAX_MDP)))
 
         files = {os.path.basename(f): f for f in infiles}
 
@@ -94,7 +94,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         metadata = {
             'project': self.project_id,
             'type': 'input',
-            'name': file_config.GMX_NPT_MDP,
+            'name': file_config.GMX_RELAX_MDP,
             'step': step_label,
         }
 
@@ -177,7 +177,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.GMX_NPT_MDP,
+                    'metadata->name':    file_config.GMX_RELAX_MDP,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -306,7 +306,6 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         fw_list.append(fw_gmx_mdrun)
 
         return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
-
 
     def vis_main(self, fws_root=[]):
         fw_list = []
@@ -556,18 +555,18 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         return fw_list, [fw_push], [fw_push]
 
 
-class GromacsNPTEquilibrationSubWorkflowGenerator(
+class GromacsRelaxationSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsNPTEquilibration'
+        sub_wf_name = 'GromacsRelaxation'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
-            main_sub_wf=GromacsNPTEquilibrationMain(*args, **kwargs),
+            main_sub_wf=GromacsRelaxationMain(*args, **kwargs),
             analysis_sub_wf=GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
             vis_sub_wf=GromacsTrajectoryVisualizationSubWorkflowGenerator(*args, **kwargs),
             *args, **kwargs)

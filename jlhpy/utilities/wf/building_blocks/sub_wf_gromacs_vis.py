@@ -110,7 +110,7 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
         # pull pymol template
         # -------------------
 
-        step_label = self.get_step_label('vis pull pymol template')
+        step_label = self.get_step_label('vis_pull_pymol_template')
 
         files_in = {}
         files_out = {
@@ -147,7 +147,7 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
 
         # PYMOL input script template
         # -----------------------------
-        step_label = self.get_step_label('vis pymol template')
+        step_label = self.get_step_label('vis_pymol_template')
 
         files_in =  {'template_file': 'default.template'}
         files_out = {'input_file': 'default.pml'}
@@ -194,7 +194,7 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
         # pull renumber bash script
         # -------------------------
 
-        step_label = self.get_step_label('vis pull renumber bash script')
+        step_label = self.get_step_label('vis_pull_renumber_bash_script')
 
         files_in = {}
         files_out = {
@@ -231,7 +231,7 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
 
         # Render trajectory
         # ----------------
-        step_label = self.get_step_label('vis pymol')
+        step_label = self.get_step_label('vis_pymol')
 
         files_in = {
             'data_file': 'default.gro',
@@ -317,7 +317,7 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
     # def push(self, fws_root=[]):
     #     fw_list = []
     #
-    #     step_label = self.get_step_label('vis push')
+    #     step_label = self.get_step_label('vis_push')
     #
     #     files_in = {'mp4_file': 'default.mp4'}
     #     files_out = {}
