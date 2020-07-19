@@ -70,7 +70,7 @@ class GromacsRelaxationMain(SubWorkflowGenerator):
     """
 
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsRelaxationEquilibrationMain'
+        sub_wf_name = 'GromacsRelaxationMain'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
