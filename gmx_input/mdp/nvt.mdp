@@ -11,7 +11,7 @@ dt        = 0.002   ; 2 fs
 ; Output control
 nstxout   = 500   ; save coordinates every 1.0 ps
 nstvout   = 500   ; save velocities every 1.0 ps
-nstxtcout = 500
+nstxout-compressed = 500
 nstfout   = 500
 nstenergy = 500   ; save energies every 1.0 ps
 nstlog    = 500   ; update log file every 1.0 ps
@@ -79,3 +79,27 @@ define = -DPOSRES_SURFACTANT -DPOSRES_SUBSTRATE -DPOSRES_ION
 ; Freeze substrate to preserve EAM equilibrated lattice spacing
 freezegrps = Substrate
 freezedim  = Y Y Y ; freeze all three dimensions
+; Atoms that belong to a freeze group are kept stationary in the dynamics. This is
+; useful during equilibration, e.g. to avoid badly placed solvent molecules giving
+; unreasonable kicks to protein atoms, although the same effect can also be
+; obtained by putting a restraining potential on the atoms that must be protected.
+; The freeze option can be used, if desired, on just one or two coordinates of an
+; atom, thereby freezing the atoms in a plane or on a line. When an atom is
+; partially frozen, constraints will still be able to move it, even in a frozen
+; direction. A fully frozen atom can not be moved by constraints. Many freeze
+; groups can be defined. Frozen coordinates are unaffected by pressure scaling; in
+; some cases this can produce unwanted results, particularly when constraints are
+; also used (in this case you will get very large pressures). Accordingly, it is
+; recommended to avoid combining freeze groups with constraints and pressure
+; coupling. For the sake of equilibration it could suffice to start with freezing
+; in a constant volume simulation, and afterward use position restraints in
+; conjunction with constant pressure.
+
+; energygrp-excl = Substrate Substrate
+; Pairs of energy groups for which all non-bonded interactions are excluded.
+; An example: if you have two energy groups Protein and SOL, specifying
+; energygrp-excl = Protein Protein SOL SOL would give only the non-bonded
+; interactions between the protein and the solvent. This is especially useful
+; for speeding up energy calculations with mdrun -rerun and for excluding
+; interactions within frozen groups.
+; BUT: Energy group exclusions are not (yet) implemented for the Verlet scheme

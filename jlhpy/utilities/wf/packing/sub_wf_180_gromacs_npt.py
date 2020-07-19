@@ -228,6 +228,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
                  '-r', 'default.gro',
                  '-o', 'default.tpr',
                  '-p', 'default.top',
+                 '-maxwarn', 1,
                 ],
             env='python',
             stderr_file='std.err',

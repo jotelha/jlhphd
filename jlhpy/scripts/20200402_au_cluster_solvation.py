@@ -128,7 +128,7 @@ from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 # n = N[-2]
 parameter_values = [{'n': n, 'm': n } for n in N[-4:-2]]
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-07-18-passivation-trial'
+project_id = '2020-07-19-passivation-trial-a'
 wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,

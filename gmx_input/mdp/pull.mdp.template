@@ -8,7 +8,7 @@ nsteps    = 100      ; Maximum number of (minimization) steps to perform
 nstxout   = 10   ; save coordinates every 1.0 ps
 nstvout   = 10   ; save velocities every 1.0 ps
 nstfout   = 10
-nstxtcout = 10       ; every 1 ps
+nstxout-compressed = 10       ; every 1 ps
 nstenergy = 10   ; save energies every 1.0 ps
 nstlog    = 10   ; update log file every 1.0 ps
 
