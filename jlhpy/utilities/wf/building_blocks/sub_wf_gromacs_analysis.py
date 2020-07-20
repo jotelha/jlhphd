@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Indenter bounding sphere sub workflow."""
+"""Generic GROMACS trajectory analyisis blocks."""
 
 import datetime
 
@@ -146,86 +146,6 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
 
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
-    # def push(self, fws_root=[]):
-    #     fw_list = []
-    #
-    #     # push rdf
-    #     # --------
-    #     step_label = self.get_step_label('analysis_push_rdf')
-    #
-    #     files_out = {}
-    #     files_in = {
-    #         f['file_label']: f['file_name'] for f in self.rdf_list
-    #     }
-    #
-    #
-    #     fts_rdf_push = [
-    #         ArchiveDirTask({
-    #             'base_name': 'rdf.tar.gz'
-    #         }),
-    #         AddFilesTask({
-    #             'paths': "rdf.tar.gz",
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'type':    'rdf_archive'}
-    #         }),
-    #     ]
-    #
-    #     fw_rdf_push = Firework(fts_rdf_push,
-    #         name=self.get_fw_label(step_label),
-    #         spec={
-    #             '_category': self.hpc_specs['fw_noqueue_category'],
-    #             '_files_in': files_in,
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'step':    step_label,
-    #                 **self.kwargs
-    #             }
-    #         },
-    #         parents=fws_root)
-    #
-    #     fw_list.append(fw_rdf_push)
-    #
-    #     # analyisis push rmsd
-    #     step_label = self.get_step_label('analysis_push_rmsd')
-    #
-    #     files_out = {}
-    #     files_in = {
-    #         f['file_label']: f['file_name'] for f in self.rmsd_list
-    #     }
-    #
-    #     fts_rmsd_push = [
-    #         ArchiveDirTask({
-    #             'base_name': 'rmsd.tar.gz'
-    #         }),
-    #         AddFilesTask({
-    #             'paths': "rmsd.tar.gz",
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'type':    'rmsd_archive'}
-    #         }),
-    #     ]
-    #
-    #     fw_rmsd_push = Firework(fts_rmsd_push,
-    #         name=self.get_fw_label(step_label),
-    #         spec={
-    #             '_category': self.hpc_specs['fw_noqueue_category'],
-    #             '_files_in': files_in,
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'step':    step_label,
-    #                 **self.kwargs
-    #             }
-    #         },
-    #         parents=fws_root)
-    #
-    #     fw_list.append(fw_rmsd_push)
-    #
-    #     return fw_list, [fw_rdf_push, fw_rmsd_push], [fw_rdf_push, fw_rmsd_push]
 
 class GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(
         GromacsTrajectoryAnalysisSubWorkflowGenerator):

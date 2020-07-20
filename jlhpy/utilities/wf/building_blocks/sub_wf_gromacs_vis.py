@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GROMACS trajectory visualization sub workflow."""
+"""Generic GROMACS trajectory visualization sub workflow."""
 
 import datetime
 import glob

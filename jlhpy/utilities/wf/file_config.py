@@ -1,4 +1,5 @@
 import os.path
+# python package-internal paths and file names are to be defined here
 
 # TODO: looks through modules and replace hard-coded surfactant-specific names
 

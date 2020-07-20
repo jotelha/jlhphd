@@ -1,5 +1,5 @@
 import pint
-
+# parameters defining a system's physics go here
 
 UNITS = pint.UnitRegistry()
 

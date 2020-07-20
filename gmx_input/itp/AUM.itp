@@ -9,5 +9,5 @@ Substrate          3
 #ifdef POSRES_SUBSTRATE
 [ position_restraints ]
 ; atom  type      fx      fy      fz
-     1     1  1000  1000  1000
+     1     1     1000   1000    1000
 #endif

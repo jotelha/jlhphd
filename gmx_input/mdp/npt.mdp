@@ -78,6 +78,22 @@ refcoord_scaling    = no
 ;        even when there are multiple molecules with position restraints. For calculating the COM of the reference
 ;        coordinates in the starting configuration, periodic boundary conditions are not taken into account.
 
+comm-mode = Linear
+;    Linear
+;        Remove center of mass translational velocity
+;    Angular
+;        Remove center of mass translational and rotational velocity around the center of mass
+;    Linear-acceleration-correction
+;        Remove center of mass translational velocity. Correct the center of mass position assuming linear acceleration
+;        over nstcomm steps. This is useful for cases where an acceleration is expected on the center of mass which is
+;        nearly constant over mdp:nstcomm steps. This can occur for example when pulling on a group using an absolute
+;        reference.
+;    None
+;        No restriction on the center of mass motion
+comm-grps = non-Substrate
+;    group(s) for center of mass motion removal, default is the whole system
+
+
 ; Periodic boundary conditions
 pbc   = xyz       ; 3-D PBC
 ; Dispersion correction

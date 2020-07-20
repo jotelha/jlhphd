@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# hpc infrastructure-related specifications go here
 
 HPC_SPECS = {
     'forhlr2': {

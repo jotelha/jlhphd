@@ -126,9 +126,9 @@ from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import I
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
 # n = N[-2]
-parameter_values = [{'n': n, 'm': n } for n in N]
+parameter_values = [{'n': n, 'm': n } for n in N[0:2]]
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-07-19-passivation'
+project_id = '2020-07-20-passivation-trial-d'
 wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,
@@ -197,9 +197,9 @@ wfg = IndenterPassivationParametricWorkflowGenerator(
         },
         'pulling': {
             'pull_atom_name': SURFACTANTS["SDS"]["tail_atom_name"],
-            'spring_constant': 1000,  # pseudo-units
-            'rate': 0.1,  # pseudo-units
-            'nsteps': 100,
+            'spring_constant': 10000,  # pseudo-units
+            'rate': -0.1,  # pseudo-units
+            'nsteps': 1000,
         },
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/DATASETS',

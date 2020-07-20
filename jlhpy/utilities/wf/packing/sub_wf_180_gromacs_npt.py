@@ -228,7 +228,7 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
                  '-r', 'default.gro',
                  '-o', 'default.tpr',
                  '-p', 'default.top',
-                 '-maxwarn', 1,
+                 '-maxwarn', 2,
                 ],
             env='python',
             stderr_file='std.err',
@@ -237,6 +237,16 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
             store_stdout=True,
             store_stderr=True,
             fizzle_bad_rc=True)]
+        # -maxwarn 2 allows for the following two warnings:
+        #
+        # WARNING 1 [file default.mdp]:
+        #   Some atoms are not part of any center of mass motion removal group.
+        #   This may lead to artifacts.
+        #   In most cases one should use one group for the whole system.
+        # 
+        # WARNING 2 [file default.mdp]:
+        #   You are using pressure coupling with absolute position restraints, this
+        #   will give artifacts. Use the refcoord_scaling option.
 
         fw_gmx_grompp = Firework(fts_gmx_grompp,
             name=self.get_fw_label(step_label),

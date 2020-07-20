@@ -1,4 +1,28 @@
 # -*- coding: utf-8 -*-
+"""Storage mixins. All mixins are derived from PullMixinABC and PushMixinABC.
+
+Each pull (or push) mixin must implement the method
+
+    def pull(self, fws_root=[])
+
+or
+
+    def push(self, fws_root=[])
+
+and those methods should call
+
+    fw_list, fws_root_out, fws_leaf_out = super().pull(fws_root)
+
+or
+
+    fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+
+initialy to allow for arbitrary combinations of storage mixins.
+Those three lists are to be extended accordingly eventually returned with
+
+    return fw_list, fws_leaf_out, fws_root_out
+
+"""
 import abc
 import datetime
 import re

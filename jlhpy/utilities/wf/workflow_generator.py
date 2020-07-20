@@ -1,26 +1,6 @@
 # TODO:
 # 2020/07/02 remove all project_id, only project
 
-# computational
-import numpy as np
-#import matplotlib.pyplot as plt
-#import scipy as scp
-#import scipy.interpolate
-import scipy.constants as C
-#import ase.data
-import ase.io
-
-# formats & visualization
-# import parmed as pmd
-# from parmed import gromacs
-# visualization
-
-# PrettyPrint
-
-# for dictionary comparison:
-# from deepdiff import DeepDiff
-# https://stackoverflow.com/questions/5903720/recursive-diff-of-two-python-dictionaries-keys-and-values
-
 # system basics
 import copy
 import datetime
@@ -28,11 +8,6 @@ import logging
 import itertools
 import os
 import pickle
-
-import dill
-import numpy as np
-import pint
-import miniball
 
 from collections.abc import Iterable
 
