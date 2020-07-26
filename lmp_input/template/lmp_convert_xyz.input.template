@@ -1,0 +1,29 @@
+# convert xyz file to "atom_style full" LAMMPS data file
+# specify desired box width, depth and height as x, y, z and
+variable type     index {{ type|default(11,false)|int }}
+variable in_file  index {{ in_file|default('default.xyz',true) }}
+variable out_file index {{ out_file|default('default.lammps',true) }}
+
+# LAMMPS won't process box measures stored within xyz files.
+# Thus, specify explicitly.
+variable x        index {{ measures[0]|default(149.84,false) }}
+variable y        index {{ measures[1]|default(149.73,false) }}
+variable z        index {{ measures[2]|default(148.22,false) }}
+
+dimension  3
+
+units      real
+boundary   f f f
+atom_style full
+
+region domain block 0 ${x} 0 ${y} 0 ${z} units box
+create_box ${type} domain
+include    mass.input
+
+read_dump  ${in_file} 0 x y z box no purge yes add yes replace no trim no scaled no wrapped no format xyz
+set        group all type ${type}
+
+# center COM at origin:
+change_box all set x final $(xlo-xcm(all,x)) $(xhi-xcm(all,x)) y final $(ylo-xcm(all,y)) $(yhi-xcm(all,y)) z final $(zlo-xcm(all,z)) $(zhi-xcm(all,z)) remap units box
+
+write_data ${out_file} nocoeff

@@ -3,6 +3,7 @@ import os.path
 
 # TODO: looks through modules and replace hard-coded surfactant-specific names
 
+# GROMACS-related
 GMX_MDP_SUBDIR = os.path.join('gmx_input', 'mdp')
 GMX_EM_MDP = 'em.mdp'
 GMX_PULL_MDP_TEMPLATE = 'pull.mdp.template'
@@ -13,6 +14,18 @@ GMX_RELAX_MDP = 'relax.mdp'
 
 GMX_TOP_SUBDIR = os.path.join('gmx_input', 'top')
 GMX_PULL_TOP_TEMPLATE = 'sys.top.template'
+
+# LAMMPS-related
+LMP_INPUT_SUBDIR = 'lmp_input'
+LMP_INPUT_TEMPLATE_SUBDIR = os.path.join(LMP_INPUT_SUBDIR, 'template')
+LMP_CONVERT_XYZ_INPUT_TEMPLATE = 'lmp_convert_xyz.input.template'
+LMP_HEADER_INPUT_TEMPLATE = 'lmp_header.input.template'
+LMP_MINIMIZATION_INPUT_TEMPLATE = 'lmp_minimization.input.template'
+
+
+LMP_FF_SUBDIR = 'ff'
+LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'
+LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB = '1_SDS.pdb'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# bounding_spher.py
+# bounding_sphere.py
 #
 # Copyright (C) 2020 IMTEK Simulation
 # Author: Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de
