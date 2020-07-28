@@ -5,6 +5,7 @@ import datetime
 import glob
 import os
 import pymongo
+import warnings
 
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
@@ -25,6 +26,7 @@ from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 import jlhpy.utilities.wf.file_config as file_config
+import jlhpy.utilities.wf.phys_config as phys_config
 
 
 class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
@@ -56,10 +58,19 @@ class SurfactantMoleculeMeasuresMain(SubWorkflowGenerator):
     def push_infiles(self, fp):
         step_label = self.get_step_label('push_infiles')
 
+        # try to get surfactant pdb file from kwargs
+        try:
+            surfactant = self.kwargs["system"]["surfactant"]["name"]
+        except:
+            surfactant = phys_config.DEFAULT_SURFACTANT
+            warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
+
+        surfactant_pdb = file_config.SURFACTANT_PDB_PATTERN.format(name=surfactant)
+
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.PDB_SUBDIR,
-            file_config.SURFACTANT_PDB)))
+            surfactant_pdb)))
 
         files = {os.path.basename(f): f for f in infiles}
 

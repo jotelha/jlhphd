@@ -28,8 +28,8 @@ LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 
 PDB_SUBDIR     = 'pdb'
-SURFACTANT_PDB = '1_SDS.pdb'
-COUNTERION_PDB = '1_NA.pdb'
+SURFACTANT_PDB_PATTERN = '1_{name:s}.pdb'
+COUNTERION_PDB_PATTERN = '1_{name:s}.pdb'
 
 DAT_SUBDIR      = 'dat'
 INDENTER_SUBDIR = os.path.join(DAT_SUBDIR, 'indenter')

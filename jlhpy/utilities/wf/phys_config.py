@@ -9,7 +9,12 @@ COUNTERIONS = {
     'NA': {
         'name': 'NA',
         'resname': 'NA',
-        'reference_atom': { 'name: NA'},
+        'reference_atom': { 'name': 'NA'},
+    },
+    'BR': {
+        'name': 'BR',
+        'resname': 'BR',
+        'reference_atom': { 'name': 'BR'},
     }
 }
 
@@ -28,6 +33,8 @@ SUBSTRATES = {
         'reference_atom': { 'name': 'AU' },
     }
 }
+
+DEFAULT_SURFACTANT = 'SDS'
 
 SURFACTANTS = {
     'SDS': {
@@ -48,7 +55,11 @@ SURFACTANTS = {
         'length': 19.934 * UNITS.angstrom,
         # atom  1: C1, in tail
         'head_atom_index': 17,
+        'head_atom_name': 'N1',
+        'connector_atom_index': 15,
+        'connector_atom_name': 'C15',  # not first, but second hydrocarbon in chain
         'tail_atom_index': 1,
+        'tail_atom_name': 'C1',
     }
 }
 

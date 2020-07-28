@@ -26,6 +26,7 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
 import jlhpy.utilities.wf.file_config as file_config
+import jlhpy.utilities.wf.phys_config as phys_config
 
 # TODO: insert pull for indenter file again
 class SphericalSurfactantPackingMain(SubWorkflowGenerator):
@@ -76,27 +77,62 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
                     identifier=identifier,
                     metadata=metadata))
 
-        # data files
-        datafiles = [
-            *sorted(glob.glob(os.path.join(
-                self.infile_prefix,
-                file_config.PDB_SUBDIR,
-                file_config.SURFACTANT_PDB))),
-            *sorted(glob.glob(os.path.join(
-                self.infile_prefix,
-                file_config.PDB_SUBDIR,
-                file_config.COUNTERION_PDB)))]
-            # *sorted(glob.glob(os.path.join(
-            #     self.infile_prefix,
-            #     file_config.INDENTER_SUBDIR,
-            #     file_config.INDENTER_PDB)))]
+        # datafiles:
+
+        # try to get surfactant pdb file from kwargs
+        try:
+            surfactant = self.kwargs["system"]["surfactant"]["name"]
+        except:
+            surfactant = phys_config.DEFAULT_SURFACTANT
+            warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
+
+        surfactant_pdb = file_config.SURFACTANT_PDB_PATTERN.format(name=surfactant)
+
+        datafiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PDB_SUBDIR,
+            surfactant_pdb)))
 
         files = {os.path.basename(f): f for f in datafiles}
 
         # metadata common to all these files
         metadata = {
             'project': self.project_id,
-            'type': 'data',
+            'type': 'surfactant_file',
+            'step': step_label,
+            **self.kwargs
+        }
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # try to get counterion pdb file from kwargs
+        try:
+            counterion = self.kwargs["system"]["counterion"]["name"]
+        except:
+            counterion = phys_config.DEFAULT_COUNTERION
+            warnings.warn("No counterion specified, falling back to {:s}.".format(surfactant))
+
+        counterion_pdb = file_config.COUNTERION_PDB_PATTERN.format(name=counterion)
+
+        datafiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PDB_SUBDIR,
+            counterion_pdb)))
+
+        files = {os.path.basename(f): f for f in datafiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'counterion_file',
             'step': step_label,
             **self.kwargs
         }
@@ -128,24 +164,17 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
         }
 
         fts_coordinates_pull = [
-            # GetFilesByQueryTask(
-            #     query={
-            #         'metadata->project': self.project_id,
-            #         'metadata->name':    file_config.INDENTER_PDB,
-            #     },
-            #     limit=1,
-            #     new_file_names=['indenter.pdb']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.SURFACTANT_PDB,
+                    'metadata->type':    'surfactant_file',
                 },
                 limit=1,
                 new_file_names=['surfactant.pdb']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.COUNTERION_PDB,
+                    'metadata->type':    'counterion_file',
                 },
                 limit=1,
                 new_file_names=['counterion.pdb'])
