@@ -6,7 +6,7 @@ title   = Surfactant adsorption film on gold cluster NPT relaxation
 
 ; Run parameters
 integrator  = md    ; leap-frog integrator
-nsteps    = 100000   ; 2 * 100000 = 200 ps
+nsteps    = 1500000   ; 2 * 1500000 = 3 ns
 dt        = 0.002   ; 2 fs
 
 ; Output control
