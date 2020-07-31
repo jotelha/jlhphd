@@ -1,245 +1,82 @@
 ###############################################################################
 ### lmp_header.input
 
-# Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de, 2019
+# Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de, 2019, 2020
 
 ###############################################################################
 ### global parameters
 
 # index varibles can be overridden by command line parameters "-v varName value"
-#
-# RECOMMENDED PARAMETER OVERRIDES AT COMMAND LINE
-#
-# # Interface minimization:
-#   based on lmp_minimization.input
-#
-#   lmp -in lmp_minimization.input
-#     -v coeff_infile              coeff.input
-#     -v compute_interactions     0
-#     -v data_file                 datafile.lammps
-#     -v freeze_substrate         1    # hold entire substrate fixed
-#     -v freeze_substrate_layer   14.0 # only for group definition for subsequent steps
-#     -v has_indenter             0
-#     -v minimization_ftol        1e-06
-#     -v minimization_maxiter     10000
-#     -v minimization_maxeval     10000
-#     -v mpiio                    1
-#     -v relax_box                0
-#     -v random_seed              518760906
-#     -v robust_minimization      0
-#     -v store_forces             0
-#     -v surfactant_name          SDS
-#     -v thermo_frequency         10
-#     -v use_eam                  1
-#     -v use_ewald                1
-#     -v write_coeff_to_datafile  0
-#     -v write_groups_to_file     1
-#     -v coulomb_cutoff           8.0
-#     -v ewald_accuracy           0.0001
-#     -v neigh_delay              2
-#     -v neigh_every              1
-#     -v neigh_check              1
-#     -v skin_distance            3.0
-#
-#   All subsequent equilibration steps use the same lmp_production.input as
-#   input, just with differing options:
-#
-# # Interface NVT equilibration:
-#   utilizes
-#     * Langevin thermostat on whole system
-#
-#   lmp -in lmp_production.input
-#     -v coeff_infile              coeff.input
-#     -v compute_group_properties 1
-#     -v data_file                 datafile.lammps
-#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box restrained
-#     -v has_indenter             0
-#     -v langevin_damping         1000.0
-#     -v mpiio                    1
-#     -v netcdf_frequency         1000
-#     -v production_steps          10000
-#     -v initialT                 298.0
-#     -v temperatureT             298.0
-#     -v reinitialize_velocities  1
-#     -v random_seed              567608762
-#     -v read_groups_from_file    0
-#     -v surfactant_name          SDS
-#     -v temper_solid_only        0
-#     -v thermo_frequency         1000
-#     -v thermo_average_frequency 1000
-#     -v use_barostat             0
-#     -v use_berendsen_bstat      0
-#     -v use_dpd_tstat            0
-#     -v use_eam                  1
-#     -v use_ewald                1
-#     -v coulomb_cutoff           8.0
-#     -v ewald_accuracy           0.0001
-#     -v neigh_delay              2
-#     -v neigh_every              1
-#     -v neigh_check              1
-#     -v skin_distance            3.0
-#
-# # NPT equilibration
-#   utilizes
-#     * Langevin thermostat on whole system
-#     * Parrinello-Rahman barostat in z direction, dilating solution only
-#
-#
-#   lmp -in lmp_production.input
-#     -v barostat_damping         10000.0
-#     -v box_shift_z              10.0
-#     -v coeff_infile              coeff.input
-#     -v compute_group_properties 1
-#     -v data_file                 datafile.lammps
-#     -v dilate_solution_only     1
-#     -v has_indenter             0
-#     -v langevin_damping         1000.0
-#     -v mpiio                    1
-#     -v netcdf_frequency         1000
-#     -v production_steps          100000
-#     -v pressureP                1.0
-#     -v pressurize_z_only        1
-#     -v pressurize_solution_only 0
-#     -v random_seed              788457852
-#     -v reinitialize_velocities  0
-#     -v read_groups_from_file    0
-#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box restrained
-#     -v restrained_indenter      1
-#     -v surfactant_name          SDS
-#     -v temperatureT             298.0
-#     -v temper_solid_only        0
-#     -v thermo_frequency         1000
-#     -v thermo_average_frequency 1000
-#     -v use_barostat             1
-#     -v use_berendsen_bstat      0
-#     -v use_dpd_tstat            0
-#     -v use_eam                  1
-#     -v use_ewald                1
-#     -v coulomb_cutoff           8.0
-#     -v ewald_accuracy           0.0001
-#     -v neigh_delay              2
-#     -v neigh_every              1
-#     -v neigh_check              1
-#     -v skin_distance            3.0
-#
-# DPD equilibration
-#   utilizes
-#     * DPD thermostat on substrate only
-#     * no barostat
-#   lmp -in lmp_production.input
-#     -v barostat_damping         10000.0
-#     -v coeff_infile              coeff.input
-#     -v compute_group_properties 1
-#     -v data_file                 datafile.lammps
-#     -v dilate_solution_only     1
-#     -v has_indenter             0
-#     -v mpiio                    1
-#     -v netcdf_frequency         1000
-#     -v production_steps          100000
-#     -v pressureP                1.0
-#     -v pressurize_z_only        1
-#     -v pressurize_solution_only 0
-#     -v random_seed              194200264
-#     -v reinitialize_velocities  0
-#     -v read_groups_from_file    0
-#     -v restrain_substrate_layer 14.0 # keep 14.0 Angstrom of AU at botton of box
-#     -v surfactant_name          SDS
-#     -v temperatureT             298.0
-#     -v temper_solid_only        1
-#     -v thermo_frequency         1000
-#     -v thermo_average_frequency 1000
-#     -v use_barostat             0
-#     -v use_berendsen_bstat      0
-#     -v use_dpd_tstat            1
-#     -v use_eam                  1
-#     -v use_ewald                1
-#     -v coulomb_cutoff           8.0
-#     -v ewald_accuracy           0.0001
-#     -v neigh_delay              2
-#     -v neigh_every              1
-#     -v neigh_check              1
-#     -v skin_distance            3.0
-#
-# # general recommended overrides, independent of actual purpose
-#
-#     -v barostat_damping         10000.0
-#     -v coeff_infile              coeff.input
-#     -v compute_interactions     0
-#     -v data_file                 datafile.lammps
-#     -v langevin_damping         1000.0
-#     -v mpiio                    1
-#     -v netcdf_frequency         1000
-#     -v store_forces             0
-#     -v thermo_frequency         1000
-#     -v thermo_average_frequency 1000
-#     -v use_eam                  1
-#     -v use_ewald                1
-#     -v write_coeff_to_datafile  0
-#     -v write_groups_to_file     1
-#     -v coulomb_cutoff           8.0
-#     -v ewald_accuracy           1.0e-4
-#     -v neigh_delay              2
-#     -v neigh_every              1
-#     -v neigh_check              1
-#     -v skin_distance            3.0
 
-{# switches: generic #}
-{% set read_datafile=read_datafile or true %} {# do not read data file if 0 #}
-{% set read_groups_from_file=read_groups_from_file or false %}
-{% set compute_interactions=compute_interactions or false %} {# group-goup interactions to thermo_out #}
-{% set compute_group_properties=compute_group_properties or false %} {# # compute and output distinct temperatures and pressures for components of the system #}
-{% set mpiio=mpiio or true %} {# parallel io on or off #}
-{% set store_forces=store_forces or true %} {# store constrained AND unconstrained forces in NetcDF #}
-{% set thermo_to_netcdf=thermo_to_netcdf or false %} {# if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style #}
-{% set write_coeff=write_coeff or true %}{# write force field parameters to independent file #}
-{% set write_coeff_to_datafile=write_coeff_to_datafile or false %} {## write force filed parameters to system datafile #}
-{% set write_groups_to_file=write_groups_to_file or true %}
-{% set verbose=verbose or false %} {# log detailed system info at differents stages of input script #}
-{% set freeze_substrate=freeze_substrate or false %} {# keep substrate frozen (during minim) #}
-{% set neigh_check=neigh_check or true %}
-{% set exclude_frozen_interactions=exclude_frozen_interactions or false %} {# do not compute interactions between frozen atoms #}
-{% set rigid_h_bonds=rigid_h_bonds or true %} {# apply SHAPE or RATTLE to H #}
-{% set use_eam=use_eam or false %} {# use pairstyle eam for solid #}
-{% set use_ewald=use_ewald or true %} {# switch ewald sum (kspace solver) #}                                                #
+{#- switches: generic #}
+{%- set read_datafile=read_datafile or true %} {# do not read data file if 0 #}
+{%- set read_groups_from_file=read_groups_from_file or false %}
+{%- set compute_interactions=compute_interactions or false %} {# group-goup interactions to thermo_out #}
+{%- set compute_group_properties=compute_group_properties or false %} {# # compute and output distinct temperatures and pressures for components of the system #}
+{%- set mpiio=mpiio or true %} {# parallel io on or off #}
+{%- set store_forces=store_forces or true %} {# store constrained AND unconstrained forces in NetcDF #}
+{%- set thermo_to_netcdf=thermo_to_netcdf or false %} {# if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style #}
+{%- set write_coeff=write_coeff or true %}{# write force field parameters to independent file #}
+{%- set write_coeff_to_datafile=write_coeff_to_datafile or false %} {## write force filed parameters to system datafile #}
+{%- set write_groups_to_file=write_groups_to_file or true %}
+{%- set verbose=verbose or false %} {# log detailed system info at differents stages of input script #}
+{%- set freeze_substrate=freeze_substrate or false %} {# keep substrate frozen (during minim) #}
+{%- set neigh_check=neigh_check or true %}
+{%- set exclude_frozen_interactions=exclude_frozen_interactions or false %} {# do not compute interactions between frozen atoms #}
+{%- set rigid_h_bonds=rigid_h_bonds or true %} {# apply SHAPE or RATTLE to H #}
+{%- set use_eam=use_eam or false %} {# use pairstyle eam for solid #}
+{%- set use_ewald=use_ewald or true %} {# switch ewald sum (kspace solver) #}
 
-{# switches: minimization-relatedt #}
-{% set robust_minimization=robust_minimization or false %} {# this can be useful if a very dense initial packing would result into substrate deformation otherwise #}
-{% set relax_box=relax_box or false %} {# relax box tor specified pressureP in minimization #}
+{#- switches: minimization-relatedt #}
+{%- set robust_minimization=robust_minimization or false %} {# this can be useful if a very dense initial packing would result into substrate deformation otherwise #}
+{%- set relax_box=relax_box or false %} {# relax box tor specified pressureP in minimization #}
 
-{# thermostat-related #}
-{% set temper_solid_only=temper_solid_only or true %} {# if false, everything (except frozen atoms) is tempered #}
-{% set temper_substrate_only=temper_substrate_only or false %} {# if true, only substrate is tempered (for Langevin only, DPD always tempers all solid)} #}
+{#- thermostat-related #}
+{%- set temper_solid_only=temper_solid_only or true %} {# if false, everything (except frozen atoms) is tempered #}
+{%- set temper_substrate_only=temper_substrate_only or false %} {# if true, only substrate is tempered (for Langevin only, DPD always tempers all solid)} #}
 
-{# barostat-related #}
-{% set use_dpd_tstat=use_dpd_tstat or false %} {# temperizes all solid atoms
+{#- barostat-related #}
+{%- set use_dpd_tstat=use_dpd_tstat or false %} {# temperizes all solid atoms
                                                 # with dpd thermostat (instead
                                                 # of Langevin) #}
-{% set dilate_solution_only=dilate_solution_only or true %} {# if true, only solution (i.e.
+{%- set dilate_solution_only=dilate_solution_only or true %} {# if true, only solution (i.e.
                                                 # non-solid, non-frozen) atoms
                                                 # are rescaled with a change of
                                                 # volume #}
-{% set pressurize_z_only=pressurize_z_only or false %} {# if true, barostats are applied in z direction only #}
-{% set pressurize_solution_only=pressurize_solution_only or false %} {# if false, pressurizes all non-frozen atoms, otherwise only liquid #}
-{% set use_barostat=use_barostat or true %} {# if false, run NVT instead of NPT or NVE instead of NPH #}
-{% set use_berendsen_bstat=use_berendsen_bstat or false %} {# use Berenden instead of Parrinelol-Rahman barostat (i.e. for NPT equilibration) #}
+{%- set pressurize_z_only=pressurize_z_only or false %} {# if true, barostats are applied in z direction only #}
+{%- set pressurize_solution_only=pressurize_solution_only or false %} {# if false, pressurizes all non-frozen atoms, otherwise only liquid #}
+{%- set use_barostat=use_barostat or true %} {# if false, run NVT instead of NPT or NVE instead of NPH #}
+{%- set use_berendsen_bstat=use_berendsen_bstat or false %} {# use Berenden instead of Parrinelol-Rahman barostat (i.e. for NPT equilibration) #}
 
-{% set add_vacuum=add_vacuum or false %} {# adds vacuum of specified thickness in z-direction #}
-{% set is_restart=is_restart or false %} {# marks current run as restart #}
-{% set has_vacuum=has_vacuum or false %} {# z-direction not pressurized #}
-{% set pbc2d=pbc2d or false %} {# false: 3d periodic, true: 2d periodic #}
-{% set reinitialize_velocities=reinitialize_velocities or false %}
-{% set remove_drift=remove_drift or false %} {# remove substrate COM movement #}
-{% set shrink_wrap_once=shrink_wrap_once or false %} {# shrinks simulation box around system once after reading data #}
-{% set substrate_recenter=substrate_recenter or false %} {# same as remove drift #}
+{%- set add_vacuum=add_vacuum or false %} {# adds vacuum of specified thickness in z-direction #}
+{%- set is_restart=is_restart or false %} {# marks current run as restart #}
+{%- set has_vacuum=has_vacuum or false %} {# z-direction not pressurized #}
+{%- set pbc2d=pbc2d or false %} {# false: 3d periodic, true: 2d periodic #}
+{%- set reinitialize_velocities=reinitialize_velocities or false %}
+{%- set remove_drift=remove_drift or false %} {# remove substrate COM movement #}
+{%- set shrink_wrap_once=shrink_wrap_once or false %} {# shrinks simulation box around system once after reading data #}
+{%- set substrate_recenter=substrate_recenter or false %} {# same as remove drift #}
 
-{# AFM-tip related #}
-{% set has_indenter=has_indenter or false %}
-{% set rigid_indenter=rigid_indenter or false %} {# treat whole indenter as rigid #}
-{% set restrained_indenter=restrained_indenter or false %} {# do not treat indenter as rigid but remove total linear and angular momentum #}
+{#- AFM-tip related #}
+{%- set has_indenter=has_indenter or false %}
+{%- set rigid_indenter=rigid_indenter or false %} {# treat whole indenter as rigid #}
+{%- set restrained_indenter=restrained_indenter or false %} {# do not treat indenter as rigid but remove total linear and angular momentum #}
 
-{% set indenter_nve_noforce=indenter_nve_noforce or false %} {# use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid #}
-{% set manual_indenter_region=manual_indenter_region or false %} {# if set to 1 use measures below #}
+{%- set indenter_nve_noforce=indenter_nve_noforce or false %} {# use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid #}
+{%- set manual_indenter_region=manual_indenter_region or false %} {# if set to 1 use measures below #}
 
+{#- non-boolean #}
+{%- set box_shift_z=box_shift_z or 0.0 %}
+{%- set freeze_substrate_layer=freeze_substrate_layer or 0.0 %}
+{%- set restrain_substrate_layer=restrain_substrate_layer or 0.0 %}
+{%- set thermo_frequency=thermo_frequency or 1000 %}
+{%- set thermo_average_frequency=thermo_average_frequency or thermo_frequency %}
+
+{%- set solvent_types=solvent_types or [8,9] %}
+{%- set counterion_type=counterion_type or 10 %}
+{%- set substrate_type=substrate_type or 11 %}
+
+{%- set solvent_angle=solvent_angle or 11 %}
 
 # input settings
 variable base_name               index  {{ base_name|default("default", true) }}
@@ -248,20 +85,21 @@ variable pair_coeff_infile       index  {{ pair_coeff_infile|default("pair_coeff
 variable bonded_coeff_infile     index  {{ bonded_coeff_infile|default("bonded_coeff_dummy.input", true) }}  # ... and bonded coeffs from different files
 variable colvars_file            index  {{ colvars_file|default("colvars.inp", true) }}
 variable data_file               index  {{ data_file|default("datafile.lammps", true) }}
+variable eam_alloy_file          index  {{ eam_alloy_file|default("default.eam.alloy", true) }}
 
 # output settings
 variable coeff_outfile           index  {{ coeff_outfile|default("coeff.input.transient", true) }} # file to store ff parameters
 variable netcdf_frequency        index  {{ netcdf_frequency|default(1000, false)|int }}
 variable png_frequency           index  {{ png_frequency|default(100000, false)|int }}
 variable restart_frequency       index  {{ restart_frequency|default(100000, false)|int }}
-variable thermo_frequency        index  {{ thermo_frequency|default(1000, false)|int }} # outputs stats at single time step
+variable thermo_frequency        index  {{ thermo_frequency }} # outputs stats at single time step
 variable thermo_average_frequency index ${thermo_frequency} # outputs stats averaged over N timesteps. 0: disabled
 variable ndx_file                index  {{ ndx_file|default("groups.ndx", true) }}
 
 # minimization-related settings:
 variable minimization_maxiter    index  {{ minimization_maxiter|default(100000, false)|int }}
 variable minimization_maxeval    index  {{ minimization_maxeval|default(1000000, false)|int }}
-variable minimization_ftol       index  {{ minimization_ftol|default(1.0e-5, false)|float }}
+variable minimization_ftol       index  {{ minimization_ftol|default(0.00001, false)|float }}  {# Jinja2 supports scientific notation only >= 2.11 #}
 
 # neighbour list settings
 variable skin_distance           index  {{ skin_distance|default(2.0, false)|float }}  # skin distance for neighbour list
@@ -276,12 +114,9 @@ variable neigh_one               index  {{ neigh_one|default(2000, false)|int }}
 variable inner_cutoff            index  {{ inner_cutoff|default(8.0, false)|float }}     # CHARMM standard
 variable outer_cutoff            index  {{ outer_cutoff|default(12.0, false)|float }}    # CHARMM standard
 variable coulomb_cutoff          index  {{ coulomb_cutoff|default(12.0, false)|float }}    # Coulomb cutoff
-                                                # bonds and TIP3P water angle
-## EAM-related:
-variable eam_alloy_file          index  {{ eam_alloy_file|default("Au-Grochola-JCP05-units-real.eam.alloy", true) }}
 
 ## Ewald summation settings:
-variable ewald_accuracy          index  {{ ewald_accuracy|default(1.0e-4, false)|float }} # relative RMS
+variable ewald_accuracy          index  {{ ewald_accuracy|default(0.0001, false)|float }} # relative RMS
 
 # thermostat-related
 
@@ -304,17 +139,17 @@ variable dpd_damping_parameter   index  {{ dpd_damping_parameter|default(461.21,
 variable barostat_damping        index  {{ barostat_damping|default(1000, false)|int }}    # fs, damping parameter for
                                                 # Parrinello-Rahman barostat
 # other technical settings:
-variable box_shift_z             index  {{ box_shift_z|default(0.0, false)|float }}     # shift box once in negative
+variable box_shift_z             index  {{ box_shift_z }}     # shift box once in negative
                                                 # direction by this distance
-variable freeze_substrate_layer  index  {{ freeze_substrate_layer|default(0.0, false)|float }}     # if > 0, a substrate layer of
+variable freeze_substrate_layer  index  {{ freeze_substrate_layer }}     # if > 0, a substrate layer of
                                                 # the specified thickness is
                                                 # frozen at the bottom box
                                                 # boundary
-variable restrain_substrate_layer index  {{ restrain_substrate_layer|default(0.0, false)|float }}    # if > 0, a substrate layer of
+variable restrain_substrate_layer index  {{ restrain_substrate_layer }}    # if > 0, a substrate layer of
                                                 # the specified thickness is
                                                 # frozen at the bottom box
                                                 # boundary
-variable random_seed             index  {{ random_seed|default(range(0,1e9)|random, false)|int }} # global random seed
+variable random_seed             index  {{ random_seed|default(range(0,1000000000)|random, false)|int }} # global random seed
 variable timestep                index  {{ timestep|default(2, false)|float }}       # fs
 # variable use_colvars             index  0
 
@@ -324,8 +159,6 @@ variable temperatureT            index  {{ temperatureT|default(298, false)|floa
 variable initialT                index  ${temperatureT}  # for ramped temp.
 variable pressureP               index  {{ pressureP|default(1, false)|float }}       # atm
 
-# variable nvtEqSteps              index  {{ nvtEqSteps|default(100000, false)|int }}  # 200 ps
-# variable nptEqSteps              index  {{ nptEqSteps|default(100000, false)|int }}  # 200 ps
 variable production_steps         index  {{ production_steps|default(5000000, false)|int }} #  10 ns
 
 # AFM-tip-related settings:
@@ -343,22 +176,22 @@ variable region_tolerance           index {{ region_tolerance|default(5.0, false
 # but also the HOH angle. Here we set the ID of this angle.
 # Look it up within the data file. Usually 11 for SDS, 16 for CTAB
 
-variable angle_id_water index {{ solvent.angle|default(11,false)|int }}
+variable angle_id_water index {{ solvent_angle }}
 # if "${surfactant_name} == SDS" then &
 #   "variable angleIdWater   index     11" &
 # else &
 #   "variable angleIdWater   index     16"
 
 # per default substrate is gold and assumed to be type 11
-variable substrate_type index {{ substrate.type|default(11,false)|int }}
+variable substrate_type index {{ substrate_type }}
 
 ###############################################################################
 ### system intialization
-{%- if (not is_restart is sameas true) and (pbc2d is sameas true) -%}
+{%- if (not is_restart is sameas true) and (pbc2d is sameas true) %}
 boundary p p f
-{%- endif -%}
+{%- endif %}
 
-{%- if use_dpd_tstat is sameas true -%}
+{%- if use_dpd_tstat is sameas true %}
 comm_modify vel yes
 # https://lammps.sandia.gov/doc/comm_modify.html
 # The vel keyword enables velocity information to be communicated with ghost
@@ -368,9 +201,9 @@ comm_modify vel yes
 # no then they do not. The yes setting is needed by some pair styles which
 # require the velocity state of both the I and J particles to compute a
 # pairwise I,J interaction, as well as by some compute and fix commands.
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) -%}
+{%- if (not is_restart is sameas true) %}
 units real
 # http://lammps.sandia.gov/doc/units.html
     #mass = grams/mole
@@ -389,7 +222,7 @@ units real
     #dipole = charge*Angstroms
     #electric field = volts/Angstrom
     #density = gram/cm^dim
-{%- endif -%}
+{%- endif %}
 
 neighbor ${skin_distance} bin
 # The style value selects what algorithm is used to build the list. The bin
@@ -402,13 +235,13 @@ neighbor ${skin_distance} bin
 # Defaults: 2.0 bin for units = real or metal, skin = 2.0 Angstroms
 
 
-{%- if neigh_check is sameas true -%}
+{%- if neigh_check is sameas true %}
 neigh_modify delay ${neigh_delay} every ${neigh_every} check yes &
     page ${neigh_page} one ${neigh_one}
-{%- else -%}}
+{%- else %}}
 neigh_modify delay ${neigh_delay} every ${neigh_every} check no &
     page ${neigh_page} one ${neigh_one}
-{%- endif -%}
+{%- endif %}
 # This command sets parameters that affect the building and use of pairwise
 # neighbor lists. Depending on what pair interactions and other commands
 # are defined, a simulation may require one or more neighbor lists.
@@ -428,10 +261,10 @@ neigh_modify delay ${neigh_delay} every ${neigh_every} check no &
 #    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
+{%- if (not is_restart is sameas true) %}
 ###############################################################################
 ### CHARMM potential specific styles
 
-{%- if (not is_restart is sameas true) -%}
 atom_style      full
 bond_style      harmonic
 
@@ -447,26 +280,26 @@ dihedral_style  charmmfsw
 #             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
 
 improper_style  harmonic
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### hybrid potential style descriptions
 
 ### without EAM
 
-{%- if (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) -%}
+{%- if (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- if (not is_restart is sameas true) and (not use_eam is sameas true) and (use_dpd_tstat is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- if (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) %}
 pair_style lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}
-{%- if (not is_restart is sameas true) and (not use_eam is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) %}
 pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}
-{%- endif -%}
+{%- endif %}
 
 # Quote from http://lammps.sandia.gov/doc/pair_charmm.html
 # The newer styles with charmmfsw or charmmfsh in their name replace the
@@ -552,34 +385,34 @@ pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb
 
 ### with EAM
 
-{%- if (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) -%}
+{%- if (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_dpd_tstat is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) %}
 pair_style hybrid &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) -%}
+{%- elif (not is_restart is sameas true) and (use_eam is sameas true) %}
   "pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy"
-{%- endif -%}
+{%- endif %}
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
 # one simulation. With the hybrid style, exactly one pair style is assigned to
 # each pair of atom types. With the hybrid/overlay style, one or more pair
 # styles can be assigned to each pair of atom types. The assignment of pair
 # styles to type pairs is made via the pair_coeff command.
 
-{%- if not is_restart is sameas true -%}
+{%- if not is_restart is sameas true %}
 pair_modify mix arithmetic
-{%- endif -%}
+{%- endif %}
 
-{%- if use_ewald is sameas true -%}
+{%- if use_ewald is sameas true %}
 kspace_style    pppm ${ewald_accuracy}
 # Quote from http://lammps.sandia.gov/doc/kspace_style.html:
 # pppm value = accuracy
@@ -612,9 +445,9 @@ kspace_style    pppm ${ewald_accuracy}
 #             Adam Hilger, NY (1989).
 # (Darden)    Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
 # (Pollock)   Pollock and Glosli, Comp Phys Comm, 95, 93 (1996).
-{%- endif -%}
+{%- endif %}
 
-{%- if (pbc2d is sameas true) and (use_ewald is sameas true) -%}
+{%- if (pbc2d is sameas true) and (use_ewald is sameas true) %}
 kspace_modify slab 3.0
 # The slab keyword allows an Ewald or PPPM solver to be used for a systems that
 # are periodic in x,y but non-periodic in z - a boundary setting of
@@ -643,33 +476,33 @@ kspace_modify slab 3.0
 # +/- Z surfaces. If you do it via the fix efield command, it will not give the
 # correct dielectric constant due to the Yeh/Berkowitz (Yeh) correction not
 # being compatible with how fix efield works.
-{%- endif -%}
+{%- endif %}
 
+{%- if (not is_restart is sameas true) and (read_datafile is sameas true)%}
 ###############################################################################
 ### data file input
 
-{%- if (not is_restart is sameas true) and (read_datafile is sameas true)-%}
 read_data ${data_file}
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### box modifications
 
 # shrink wrap if desired to "tighten" box around system:
-{%- if shrink_wrap_once is sameas true -%}
+{%- if shrink_wrap_once is sameas true %}
 change_box all boundary s s s
-{%- endif -%}
+{%- endif %}
 
-{%- if (shrink_wrap_once is sameas true) and (pbc2d is sameas true) -%}
+{%- if (shrink_wrap_once is sameas true) and (pbc2d is sameas true) %}
 change_box all boundary p p f
-{%- elif shrink_wrap_once is sameas true -%}
+{%- elif shrink_wrap_once is sameas true %}
 change_box all boundary p p p
-{%- endif -%}
+{%- endif %}
 
-{%- if add_vacuum > 0.0 -%}
+{%- if add_vacuum > 0.0 %}
 # add vacuum to box
 change_box all z final $(zlo) $(zhi+v_add_vacuum) units box
-{%- endif -%}
+{%- endif %}
 
 # shift (periodic) box, but not atom coordinates:
 # This can be used to avoid having frozen substrate atoms close to the periodic
@@ -681,13 +514,13 @@ change_box all z final $(zlo) $(zhi+v_add_vacuum) units box
 # A combination of displace_atoms and change_box with remapping achieves
 # the preservation of atom coordinates and setting of image flags if crossing
 # a periodic boundary during the box shift.
-{%- if box_shift_z > 0.0 -%}
+{%- if box_shift_z > 0.0 %}
 variable desired_zlo equal $(zlo-v_box_shift_z)
 variable desired_zhi equal $(zhi-v_box_shift_z)
 print "Box current z range [$(zlo),$(zhi)], desired z range [${desired_zlo},${desired_zhi}]"
 displace_atoms all move 0.0 0.0 ${box_shift_z} units box
 change_box all set z final ${desired_zlo} ${desired_zhi} remap units box
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### force field parameter input
@@ -704,14 +537,14 @@ include ${pair_coeff_infile}
 shell touch bonded_coeff_dummy.input
 include ${bonded_coeff_infile}
 
-{%- if (use_eam is sameas true) -%}
+{%- if (use_eam is sameas true) %}
 ###############################################################################
 ### EAM potential pair coeffs
 
 # override Au-Au LJ interaction by EAM potential:
 # TODO: currently, substrate must be last type
 pair_coeff * * eam/alloy ${eam_alloy_file} &
-    {% for i in range(substrate.type-1) %} NULL{% endfor %} {{ substrate.element|default("Au", true) }}
+    {% for i in range(substrate_type-1) %} NULL{% endfor %} {{ substrate_element|default("Au", true) }}
 # https://lammps.sandia.gov/doc/pair_hybrid.html
 # For the hybrid style, each atom type pair I,J is assigned to exactly one
 # sub-style. Just as with a simulation using a single pair style, if you specify
@@ -778,20 +611,20 @@ pair_coeff * * eam/alloy ${eam_alloy_file} &
 # since it is stored in tabulated potential files. Thus, you need to re-specify
 # the pair_style and pair_coeff commands in an input script that reads a restart
 # file.
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### DPD thermostat pair coeffs
 
 # if using dpd/tstat, pair_style is hybrid/overlay, and thus AU-AU LJ
 # interactions must be switched of explicitely
-{%- if (use_dpd_tstat is sameas true) and (use_ewald is sameas true) -%}
+{%- if (use_dpd_tstat is sameas true) and (use_ewald is sameas true) %}
 pair_coeff ${substrate_type} ${substrate_type} lj/charmmfsw/coul/long 0.0 0.0
-{%- elif use_dpd_tstat is sameas true -%}
+{%- elif use_dpd_tstat is sameas true %}
 pair_coeff ${substrate_type} ${substrate_type} lj/charmmfsw/coul/charmmfsh 0.0 0.0
-{%- endif -%}
+{%- endif %}
 
-{%- if use_dpd_tstat is sameas true -%}
+{%- if use_dpd_tstat is sameas true %}
 pair_coeff ${substrate_type} ${substrate_type} dpd/tstat ${dpd_damping_parameter}
 # https://lammps.sandia.gov/doc/pair_hybrid.html
 # For the hybrid/overlay style, each atom type pair I,J can be assigned to one
@@ -806,12 +639,12 @@ pair_coeff ${substrate_type} ${substrate_type} dpd/tstat ${dpd_damping_parameter
 # If an assignment to none is made in a simulation with the hybrid/overlay
 # pair style, it wipes out all previous assignments of that atom type pair
 # to sub-styles.
-{%- endif -%}
+{%- endif %}
 
 # force field is defined completely at this point
-{%- if (write_coeff is sameas true) -%}
+{%- if (write_coeff is sameas true) %}
 write_coeff ${coeff_outfile}
-{%- endif -%}
+{%- endif %}
 # The write_coeff command is not yet fully implemented as some pair styles do
 # not output their coefficient information. This means you will need to add/copy
 # this information manually.
@@ -829,11 +662,11 @@ variable z_center equal $(( zlo + zhi ) / 2.0)
 # length. The "inside" of the plane is the half-space in the direction of the
 # normal vector; see the discussion of the side option below.
 #
-{%- if (manual_indenter_region is sameas true) -%}
+{%- if (manual_indenter_region is sameas true) %}
 variable indenter_region_bottom equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist - v_region_tolerance))
 variable indenter_region_top equal $((zlo + v_substrate_thickness + v_indenter_substrate_dist + v_indenter_height + v_region_tolerance))
 region indenter_region block INF INF INF INF ${indenter_region_bottom} ${indenter_region_top} units box
-{%- else -%}
+{%- else %}
 # ATTENTION: if no manual indenter position and measures are specified, then
 # upper half of simulation box is used to select indenter.
 # if indenter protudes into lower half, this results in wrong atom selection!
@@ -841,18 +674,18 @@ region indenter_region plane 0  0  ${region_tolerance} 0 0 1 side in units box
 #                                 ^x ^y ^z                  ^plane normal
 #                                                                 ^everything in direction of normal in region
 #                                                                         ^Ang as unit
-{%- endif -%}
+{%- endif %}
 
 # 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
-{%- if (not is_restart is sameas true) -%}
+{%- if (not is_restart is sameas true) %}
 region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in
 #                              ^cylinder axis
 #                                ^cylinder coordinates in x,y dim
 #                                                        ^cylinder radius
 #                                                            ^lower and ^upper point
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) -%}
+{%- if (not is_restart is sameas true) %}
 special_bonds charmm
 # http://lammps.sandia.gov/doc/special_bonds.html
 # The charmm keyword sets the 3 coefficients to 0.0, 0.0, 0.0 for both LJ and
@@ -862,7 +695,7 @@ special_bonds charmm
 # pairwise contributions are computed as part of the charmm dihedral style
 # - see the pair_coeff and dihedral_style commands for more information.
 # See (MacKerell) for a description of the CHARMM force field.
-{%- endif -%}
+{%- endif %}
 
 # if "${use_eam} > 0" then &
 #     "special_bonds  pair eam/fs 1.0 1.0 1.0"
@@ -872,9 +705,9 @@ special_bonds charmm
 # disable or enable registering compute */tally computes for a given sub-style.
 # More details are given below.
 
-{%- if (not is_restart is sameas true) -%}
+{%- if (not is_restart is sameas true) %}
 timestep ${timestep} # 0.002 ps = 2 fs"
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### group definitions
@@ -895,7 +728,7 @@ timestep ${timestep} # 0.002 ps = 2 fs"
 # Group[12]: surface (static)
 # Group[13]: water (static)
 # Group[14]: nonsolvent (static)
-{%- if (not is_restart is sameas true) -%}
+{%- if (not is_restart is sameas true) %}
 group atoms_in_central_column empty
 group atoms_in_frozen_substrate_layer_region empty
 group atoms_in_indenter_region empty
@@ -915,19 +748,19 @@ group substrate empty
 group surfactant empty
 group surface empty
 group water empty
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) -%}
-group solvent    type {% for type in solvent.types %} {{ type }} {% endfor %}  # 8 - H, 10 - O
-group solid      type {{ substrate.type }}
-group ion        type {{ counterion.type }}
+{%- if (not is_restart is sameas true) %}
+group solvent    type {% for type in solvent_types %} {{ type }} {% endfor %}  # 8 - H, 10 - O
+group solid      type {{ substrate_type }}
+group ion        type {{ counterion_type }}
 group surfactant subtract all solvent solid ion
 group nonwater   subtract all solvent
 group nonsolid   subtract all solid
-{%- endif -%}
+{%- endif %}
 
 # correct if indenter is present
-{%- if (not is_restart is sameas true) and (has_indenter is sameas true) -%}
+{%- if (not is_restart is sameas true) and (has_indenter is sameas true) %}
 group atoms_in_indenter_region region indenter_region
 group atoms_in_central_column  region central_column
 group substrate      subtract  solid atoms_in_indenter_region
@@ -935,15 +768,15 @@ group indenter       subtract  solid substrate
 group indenter_apex  intersect indenter atoms_in_central_column
 group nonindenter    subtract all indenter
 group nonsubstrate   subtract all substrate
-{%- elif not is_restart is sameas true -%}
+{%- elif not is_restart is sameas true %}
 group substrate      intersect all solid
 group nonsubstrate   subtract all substrate
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) and (has_indenter is sameas true) and (rigid_indenter is sameas true) -%}
+{%- if (not is_restart is sameas true) and (has_indenter is sameas true) and (rigid_indenter is sameas true) %}
 # freeze indenter if explicitly specified
 group frozen union frozen indenter
-{%- elif (not is_restart is sameas true) and (has_indenter is sameas true) and (rigid_indenter_core_radius > 0.0) -%}
+{%- elif (not is_restart is sameas true) and (has_indenter is sameas true) and (rigid_indenter_core_radius > 0.0) %}
 variable indenterComX equal xcm(indenter,x)
 variable indenterComY equal xcm(indenter,y)
 variable indenterComZ equal xcm(indenter,z)
@@ -951,48 +784,48 @@ region rigid_indenter_core_region sphere ${indenterComX} ${indenterComY} &
         ${indenterComZ} ${rigid_indenter_core_radius}
 group rigid_indenter_core  region  rigid_indenter_core_region
 group frozen               union   frozen rigid_indenter_core
-{%- endif -%}
+{%- endif %}
 
 # define region of frozen substrate layer if desired:
-{%- if (not is_restart is sameas true) and (freeze_substrate_layer > 0.0) -%}
+{%- if (not is_restart is sameas true) and (freeze_substrate_layer > 0.0) %}
 region frozen_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_freeze_substrate_layer)) 0 0 1 side out units box
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) and (restrain_substrate_layer > 0.0) -%}
+{%- if (not is_restart is sameas true) and (restrain_substrate_layer > 0.0) %}
 # define region of restrained substrate layer if desired:
 region restrained_substrate_layer_region plane 0 0 $((bound(substrate,zmin)+v_restrain_substrate_layer)) 0 0 1 side out units box
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) and (freeze_substrate_layer > 0.0) -%}
+{%- if (not is_restart is sameas true) and (freeze_substrate_layer > 0.0) %}
 # create substrate layer group to hold frozen at bottom if desired:
 group atoms_in_frozen_substrate_layer_region region frozen_substrate_layer_region
 group frozen_substrate_layer intersect substrate atoms_in_frozen_substrate_layer_region
 group frozen union frozen frozen_substrate_layer
-{%- endif -%}
+{%- endif %}
 
-{%- if (not is_restart is sameas true) and (restrain_substrate_layer > 0.0) -%}
+{%- if (not is_restart is sameas true) and (restrain_substrate_layer > 0.0) %}
 # create substrate layer group to hold restrained at bottom if desired:
 group atoms_in_restrained_substrate_layer_region region restrained_substrate_layer_region
 group restrained_substrate_layer intersect substrate atoms_in_restrained_substrate_layer_region
-{%- endif -%}
+{%- endif %}
 
 # create groups of substrate and indenter without frozen parts for computes
-{%- if not is_restart is sameas true -%}
+{%- if not is_restart is sameas true %}
 group warm_substrate   subtract substrate      frozen
 group warm_indenter    subtract indenter       frozen
 group warm_nonindenter subtract nonindenter    frozen
 group warm_system      subtract all            frozen
-{%- endif -%}
+{%- endif %}
 
-{%- if not is_restart is sameas true -%}
+{%- if not is_restart is sameas true %}
 # If the group ID already exists, the group command adds the specified atoms to the group.
 # for compatibility reasons:
 group surface     intersect all substrate
 group water       intersect all solvent
 group nonsolvent  subtract all solvent
-{%- endif -%}
+{%- endif %}
 
-{%- if read_groups_from_file is sameas true -%}
+{%- if read_groups_from_file is sameas true %}
 ndx2group ${ndx_file}
 print "#atoms atoms_in_central_column:                $(count(atoms_in_central_column))"
 print "#atoms atoms_in_frozen_substrate_layer_region: $(count(atoms_in_frozen_substrate_layer_region))"
@@ -1013,9 +846,9 @@ print "#atoms substrate:                              $(count(substrate))"
 print "#atoms surfactant:                             $(count(surfactant))"
 print "#atoms surface:                                $(count(surface))"
 print "#atoms water:                                  $(count(water))"
-{%- elif write_groups_to_file is sameas true -%}
+{%- elif write_groups_to_file is sameas true %}
 group2ndx ${ndx_file}
-{%- endif -%}
+{%- endif %}
 # https://lammps.sandia.gov/doc/group2ndx.html#ndx2group-command
 # Without specifying any group IDs, all groups except System will be read from
 # the index file and the corresponding groups recreated. If a group of the same
@@ -1048,17 +881,17 @@ compute system_virial all pressure NULL virial
 # include a bias.
 
 # kspace no: AU atoms neutral
-{%- if compute_interactions is sameas true and has_indenter is sameas true -%}
+{%- if compute_interactions is sameas true and has_indenter is sameas true %}
 compute indenter_substrate_interaction indenter group/group substrate pair yes kspace no
 compute indenter_surfactant_interaction indenter group/group surfactant pair yes kspace no
 compute indenter_solvent_interaction indenter group/group solvent pair yes kspace no
 compute indenter_ion_interaction indenter group/group ion pair yes kspace no
 compute indenter_nonindenter_interaction indenter group/group nonindenter pair yes kspace no
-{%- endif -%}
+{%- endif %}
 # indenter_substrate_interaction indenter_surfactant_interaction
 # indenter_solvent_interaction indenter_ion_interaction
 
-{%- if compute_interactions is sameas true -%}
+{%- if compute_interactions is sameas true %}
 if "${compute_interactions} > 0" then &
 compute substrate_solvent_interaction substrate group/group solvent pair yes kspace no
 compute substrate_surfactant_interaction substrate group/group surfactant pair yes kspace no
@@ -1071,9 +904,9 @@ compute surfactant_ion_interaction surfactant group/group solvent pair yes kspac
 # substrate_ion_interaction surfactant_surfactant_intermolecular_interaction
 # surfactant_surfactant_intramolecular_interaction surfactant_solvent_interaction
 # surfactant_solvent_interaction surfactant_ion_interaction
-{%- endif -%}
+{%- endif %}
 
-{%- if compute_group_properties is sameas true -%}
+{%- if compute_group_properties is sameas true %}
 # in the follwoing, only "warm" (i.e. not frozen) parts are considered for
 # temperature and pressure computations. Two temperatures and pressures are
 # determined for the indenter, namely biased and unbiased, latter corrected
@@ -1176,7 +1009,7 @@ variable total_press equal &
 # The per-atom stress does not include any Lennard-Jones tail corrections to the
 # pressure added by the pair_modify tail yes command, since those are
 # contributions to the global system pressure.
-{%- endif -%}
+{%- endif %}
 
 # https://lammps.sandia.gov/doc/compute_reduce.html
 # Define a calculation that "reduces" one or more vector inputs into scalar
@@ -1229,13 +1062,13 @@ variable total_press equal &
 #
 # exclude intra-frozen interactions for rigid indenter and substrate
 variable number_of_frozen_atoms equal count(frozen)
-{%- if exclude_frozen_interactions is sameas true -%}
+{%- if exclude_frozen_interactions is sameas true %}
 if "${number_of_frozen_atoms} > 0" then &
   "neigh_modify exclude group frozen frozen"
-{%- endif -%}
+{%- endif %}
 
 # walls if box non-periodic, use AU paramters (sigma ignored)
-{%- if pbc2d is sameas true -%}
+{%- if pbc2d is sameas true %}
 fix upper_wall all wall/harmonic zhi EDGE 5.29 2.629 3.0
 fix_modify upper_wall energy yes virial yes
 #                   ^style        ^face
@@ -1275,7 +1108,7 @@ fix_modify upper_wall energy yes virial yes
 # The fix_modify virial option is supported by this fix to add the contribution
 # due to the interaction between atoms and each wall to the system's virial as
 # part of thermodynamic output. The default is virial no
-{%- endif -%}
+{%- endif %}
 
 ###############################################################################
 ### thermo outputs
@@ -1305,7 +1138,7 @@ fix_modify upper_wall energy yes virial yes
 # 7     | no        | no        | yes
 # 8     | no        | no        | no        covers case 4 as well
 
-{%- if compute_group_properties is sameas true and compute_interactions is sameas true and has_indenter is sameas true -%}
+{%- if compute_group_properties is sameas true and compute_interactions is sameas true and has_indenter is sameas true %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
    pxx pyy pzz pxy pxz pyz &
@@ -1329,7 +1162,7 @@ thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
    c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
    c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
    c_indenter_ion_interaction c_indenter_ion_interaction[*]
-{%- elif compute_interactions is sameas true and has_indenter is sameas true -%}
+{%- elif compute_interactions is sameas true and has_indenter is sameas true %}
 thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    edihed eimp epair evdwl ecoul elong etail vol &
    pxx pyy pzz pxy pxz pyz &
@@ -1346,7 +1179,7 @@ thermo_style   custom step etotal ke pe temp press enthalpy ebond eangle &
    c_indenter_surfactant_interaction c_indenter_surfactant_interaction[*] &
    c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
    c_indenter_ion_interaction c_indenter_ion_interaction[*]
-{%- elif compute_group_properties is sameas true and has_indenter is sameas true -%}
+{%- elif compute_group_properties is sameas true and has_indenter is sameas true %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz &
@@ -1357,7 +1190,7 @@ thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     c_indenter_stress_biased[*] c_indenter_stress[*] c_ion_stress[*] &
     c_solvent_stress[*] c_substrate_stress[*] c_surfactant_stress[*] &
     c_total_stress[*]
-{%- elif compute_group_properties is sameas true and compute_interactions is sameas true -%}
+{%- elif compute_group_properties is sameas true and compute_interactions is sameas true %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz &
@@ -1376,7 +1209,7 @@ thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     c_surfactant_surfactant_intramolecular_interaction[*] &
     c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*]
-{%- elif compute_interactions is sameas true -%}
+{%- elif compute_interactions is sameas true %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz &
@@ -1389,7 +1222,7 @@ thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     c_surfactant_surfactant_intramolecular_interaction[*] &
     c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*]
-{%- elif compute_group_properties is sameas true -%}
+{%- elif compute_group_properties is sameas true %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz &
@@ -1399,11 +1232,11 @@ thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     v_substrate_press v_surfactant_press v_total_press &
     c_ion_stress[*] c_solvent_stress[*] &
     c_substrate_stress[*] c_surfactant_stress[*] c_total_stress[*]
-{%- else -%}
+{%- else %}
 thermo_style custom step etotal ke pe temp press enthalpy ebond eangle &
     edihed eimp epair evdwl ecoul elong etail vol &
     pxx pyy pzz pxy pxz pyz
-{%- endif -%}
+{%- endif %}
 
 # log output every 2 ps per default
 thermo         ${thermo_frequency}
@@ -1471,7 +1304,7 @@ thermo_modify temp system_temp press system_press norm no flush yes
 # averaging output
 #     v Nrepeat                   v Nfreq
 #   v Nevery
-{%- if thermo_average_frequency > 0 and compute_interactions is sameas true and has_indenter is sameas true -%}
+{%- if thermo_average_frequency > 0 and compute_interactions is sameas true and has_indenter is sameas true %}
 fix thermo_average all ave/time &
     1 ${thermo_average_frequency} ${thermo_average_frequency} &
     c_thermo_pe c_thermo_temp c_thermo_press &
@@ -1489,7 +1322,7 @@ fix thermo_average all ave/time &
     c_indenter_solvent_interaction c_indenter_solvent_interaction[*] &
     c_indenter_ion_interaction c_indenter_ion_interaction[*] &
     file thermo_ave.out
-{%- elif thermo_average_frequency > 0 and compute_interactions is sameas true -%}
+{%- elif thermo_average_frequency > 0 and compute_interactions is sameas true %}
 fix thermo_average all ave/time &
     1 ${thermo_average_frequency} ${thermo_average_frequency} &
     c_thermo_pe c_thermo_temp c_thermo_press &
@@ -1503,12 +1336,12 @@ fix thermo_average all ave/time &
     c_surfactant_solvent_interaction c_surfactant_solvent_interaction[*] &
     c_surfactant_ion_interaction c_surfactant_ion_interaction[*] &
     file thermo_ave.out
-{%- elif thermo_average_frequency > 0 -%}
+{%- elif thermo_average_frequency > 0 %}
 fix thermo_average all ave/time &
     1 ${thermo_average_frequency} ${thermo_average_frequency} &
     c_thermo_pe c_thermo_temp c_thermo_press &
     file thermo_ave.out
-{%- endif -%}
+{%- endif %}
 # https://lammps.sandia.gov/doc/fix_ave_time.html
 # Use one or more global values as inputs every few timesteps, and average them
 # over longer timescales. The resulting averages can be used by other output
@@ -1550,7 +1383,7 @@ fix thermo_average all ave/time &
 ###############################################################################
 ### system info
 
-{%- if verbose is sameas true -%}
+{%- if verbose is sameas true %}
 print "Force field parameters in lmp_header.input:"
 info coeffs out screen
 info coeffs out log
@@ -1572,4 +1405,4 @@ info system out log
 print "Variables in lmp_header.input:"
 info variables out screen
 info variables out log
-{%- endif -%}
+{%- endif %}

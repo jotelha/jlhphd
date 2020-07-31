@@ -17,8 +17,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-# from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator
-# from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationSubWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 
@@ -26,6 +25,14 @@ import jlhpy.utilities.wf.file_config as file_config
 class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     """
     Fixed box minimization with LAMMPS.
+
+    inputs:
+    - metadata->step_specific->minimization->ftol
+    - metadata->step_specific->minimization->maxiter
+    - metadata->step_specific->minimization->maxeval
+
+    - metadata->system->substrate->element
+    - metadata->system->substrate->lmp->type
 
     dynamic infiles:
         only queried in pull stub, otherwise expected through data flow
@@ -36,14 +43,10 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     static infiles:
         always queried within main trunk
 
-    - input_header_file:      header.input
-        tagged as {'metadata->type': 'em_input_header'}
-    - input_body_file:        body.input
-        tagged as {'metadata->type': 'em_input_body'}
+    - input_header_template: lmp_header.input.template
+    - input_body_template: lmp_minimization.input.template
     - mass_file: mass.input
-        queried by { 'metadata->type': 'mass_input' }
     - coeff_file: coeff.input
-        queried by { 'metadata->type': 'coeff_input' }
 
     vis static infiles:
     - script_file: renumber_png.sh,
@@ -56,17 +59,8 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         tagged as {'metadata->type': 'em_log'}
     - trajectory_file: default.nc
         tagged as {'metadata->type': 'em_nc'}
-    - data_file:       default.gro
+    - data_file:       default.lammps
         tagged as {'metadata->type': 'em_lammps'}
-
-    - index_file:      default.ndx
-        pass through untouched
-    - topology_file:   default.top
-        pass through untouched
-
-    vis outfiles:
-    - mp4_file: default.mp4
-        tagged as {'metadata->type': 'mp4_file'}
     """
 
     def __init__(self, *args, **kwargs):
@@ -86,20 +80,24 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         glob_patterns = [
             os.path.join(
                 self.infile_prefix,
-                file_config.LMP_INPUT_STEMPLATE_UBDIR,
+                file_config.LMP_INPUT_TEMPLATE_SUBDIR,
                 file_config.LMP_HEADER_INPUT_TEMPLATE),
             os.path.join(
                 self.infile_prefix,
-                file_config.LMP_INPUT_SUBDIR,
-                file_config.LMP_MINIMIZATION),
+                file_config.LMP_INPUT_TEMPLATE_SUBDIR,
+                file_config.LMP_MINIMIZATION_INPUT_TEMPLATE),
             os.path.join(
                 self.infile_prefix,
-                file_config.LMP_INPUT_SUBDIR,
+                file_config.LMP_FF_SUBDIR,
                 file_config.LMP_COEFF_INPUT),
             os.path.join(
                 self.infile_prefix,
-                file_config.LMP_INPUT_SUBDIR,
-                file_config.LMP_MASS_INPUT)
+                file_config.LMP_FF_SUBDIR,
+                file_config.LMP_MASS_INPUT),
+            os.path.join(
+                self.infile_prefix,
+                file_config.LMP_FF_SUBDIR,
+                file_config.LMP_EAM_ALLOY)
         ]
 
         infiles = sorted([
@@ -141,6 +139,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             'input_body_template':   'lmp_minimization.input.template',
             'mass_file':             'mass.input',
             'coeff_file':            'coeff.input',
+            'eam_file':              'default.eam.alloy'
         }
 
         fts_pull = [
@@ -152,7 +151,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['header.input']),
+                new_file_names=['lmp_header.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -161,7 +160,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['body.input']),
+                new_file_names=['lmp_minimization.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -179,7 +178,17 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['mass.input'])]
+                new_file_names=['mass.input']),
+            GetFilesByQueryTask(
+                query={
+                    'metadata->project': self.project_id,
+                    'metadata->name':    file_config.LMP_EAM_ALLOY,
+                },
+                sort_key='metadata.datetime',
+                sort_direction=pymongo.DESCENDING,
+                limit=1,
+                new_file_names=['default.eam.alloy']),
+        ]
 
         fw_pull = Firework(fts_pull,
             name=self.get_fw_label(step_label),
@@ -196,7 +205,9 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             },
             parents=None)
 
-        # input file template
+        fw_list.append(fw_pull)
+
+        # fill input file template
         # -------------------
         step_label = self.get_step_label('fill_template')
 
@@ -230,9 +241,12 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         }
 
         dynamic_template_context = {
-            'minimization_ftol': 'metadata->step_specific->minimizeation->ftol',
-            'minimization_maxiter': 'metadata->step_specific->minimizeation->maxiter',
-            'minimization_maxeval': 'metadata->step_specific->minimizeation->maxeval',
+            'minimization_ftol': 'metadata->step_specific->minimization->ftol',
+            'minimization_maxiter': 'metadata->step_specific->minimization->maxiter',
+            'minimization_maxeval': 'metadata->step_specific->minimization->maxeval',
+
+            'substrate_element': 'metadata->system->substrate->element',
+            'substrate_type': 'metadata->system->substrate->lmp->type',
         }
 
         fts_template = [TemplateWriterTask({
@@ -255,7 +269,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=[fw_pull])
+            parents=[fw_pull, *fws_root])
 
         fw_list.append(fw_template)
 
@@ -268,12 +282,14 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             'input_file': 'default.input',
             'mass_file':  'mass.input',
             'coeff_file': 'coeff.input',
+            'eam_file':   'default.eam.alloy',
         }
         files_out = {
             'data_file':  'default.lammps',
             'input_file': 'default.input',  # untouched
             'mass_file':  'mass.input',  # untouched
             'coeff_file': 'coeff.input',  # untouched
+            'eam_file':   'default.eam.alloy',  # untouched
         }
         fts_lmp_run = [CmdTask(
             cmd='lmp',
@@ -290,6 +306,9 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
+                '_queueadapter': {
+                    **self.hpc_specs['single_node_job_queueadapter_defaults'],  # get 1 node
+                },
                 '_files_in':  files_in,
                 '_files_out': files_out,
                 'metadata': {
@@ -303,11 +322,12 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
 
         fw_list.append(fw_lmp_run)
 
-        return fw_list, [fw_lmp_run], [fw_lmp_run]
+        return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
 class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'LAMMPSFixedBoxMinimization'
@@ -315,4 +335,7 @@ class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=LAMMPSFixedBoxMinimizationMain(*args, **kwargs),
+            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
+            *args, **kwargs)

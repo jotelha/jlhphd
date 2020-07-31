@@ -15,8 +15,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPushMixin
+from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin
 from jlhpy.utilities.prep.create_fcc_111 import create_fcc_111_data_file
 
 import jlhpy.utilities.wf.file_config as file_config
@@ -33,8 +33,9 @@ class CreateSubstrateMain(SubWorkflowGenerator):
 
     inputs:
     - metadata->system->substrate->approximate_measures ([float])
-    - metadata->system->substrate->element (str)
-    - metadata->system->substrate->type (int)
+    - metadata->system->substrate->element (str): Element name for ASE (i.e. 'Au')
+    - metadata->system->substrate->lattice_constant ([float])
+    - metadata->system->substrate->lmp->type (int): Type number in LAMMPS
 
     outfiles:
     - data_file:       default.lammps
@@ -129,7 +130,7 @@ class CreateSubstrateMain(SubWorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['sys.top.template']),
+                new_file_names=['default.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -163,7 +164,7 @@ class CreateSubstrateMain(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'data_file': 'default.pdb',
+            'data_file': 'default.xyz',
         }
 
         func_str = serialize_module_obj(create_fcc_111_data_file)
@@ -204,7 +205,7 @@ class CreateSubstrateMain(SubWorkflowGenerator):
 
         fw_list.append(fw_create_substrate)
 
-        # convert xyz template
+        # fill convert xyz template
         # --------------------
         step_label = self.get_step_label('fill_template')
 
@@ -219,7 +220,7 @@ class CreateSubstrateMain(SubWorkflowGenerator):
         # static_template_context = {}
 
         dynamic_template_context = {
-            'type':     'metadata->system->substrate->type',
+            'type':     'metadata->system->substrate->lmp->type',
             'measures': 'metadata->system->substrate->measures',
         }
 
@@ -244,6 +245,8 @@ class CreateSubstrateMain(SubWorkflowGenerator):
                 }
             },
             parents=[fw_pull, fw_create_substrate])
+
+        fw_list.append(fw_template)
 
         # Convert to LAMMPS data
         # ----------------------
@@ -290,11 +293,16 @@ class CreateSubstrateMain(SubWorkflowGenerator):
         return fw_list, [fw_lmp_convert_xyz], [fw_create_substrate]
 
 
-class CreateSubstrateSubWorkflowGenerator(DefaultPushMixin):
+class CreateSubstrateSubWorkflowGenerator(
+        DefaultPushMixin,
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'CreateSubstrate'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
+        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+            main_sub_wf=CreateSubstrateMain(*args, **kwargs),
+            *args, **kwargs)

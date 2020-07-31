@@ -14,12 +14,10 @@ neigh_modify            delay 0 every 1 check yes
 # If the "delay" setting is non-zero, then it must be a multiple of the "every"
 # setting.
 
-# thermo                  100
+###############################################################################
+### restraints
 
-############
-# restraints
-############
-{%- if has_indenter is sameas true -%}
+{%- if has_indenter is sameas true %}
 # Keep indenter restrained during minimzation
 # Note that you can minimize some atoms in the system while holding the
 # coordinates of other atoms fixed by applying fix setforce to the other atoms.
@@ -32,24 +30,24 @@ fix freeze indenter setforce 0.0 0.0 0.0
 # certain atoms in the simulation by zeroing their force, either for running
 # dynamics or performing an energy minimization. For dynamics, this assumes
 # their initial velocity is also zero.
-{%- endif -%}
+{%- endif %}
 
-{%- if freeze_substrate is sameas true -%}
+{%- if freeze_substrate is sameas true %}
 # keep substrate restrained during minimization
 print 'Substrate frozen during minimization'
 fix freezeSubstrate substrate setforce 0.0 0.0 0.0
-{%- endif -%}
+{%- endif %}
 
-################
-# box relaxation
-################
-{%- if (relax_box is sameas true) and ((pbc2d is sameas true) or (has_vacuum is sameas true)) -%}
+###############################################################################
+### box relaxation
+
+{%- if (relax_box is sameas true) and ((pbc2d is sameas true) or (has_vacuum is sameas true)) %}
 fix boxRelaxation all box/relax x ${pressureP} y ${pressureP} couple none fixedpoint 0 0 0 nreset 100
-{%- elif (relax_box is sameas true) and (pressurize_z_only is sameas true) -%}
+{%- elif (relax_box is sameas true) and (pressurize_z_only is sameas true) %}
 fix boxRelaxation all box/relax z ${pressureP} couple none fixedpoint 0 0 0 nreset 100
-{%- elif (relax_box is sameas true) -%}
+{%- elif (relax_box is sameas true) %}
 fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100
-{%- endif -%}
+{%- endif %}
 # https://lammps.sandia.gov/doc/fix_box_relax.html
 # Apply an external pressure or stress tensor to the simulation box during an
 # energy minimization. This allows the box size and shape to vary during the
@@ -129,9 +127,9 @@ fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100
 # simply continuing the minimization from a restart file.
 
 
-##############
-# minimization
-##############
+###############################################################################
+### minimization
+
 # fix restraint surfactant spring/self 10.0
 # http://lammps.sandia.gov/doc/fix_spring_self.html
 # Apply a spring force independently to each atom in the group to tether it to
@@ -145,10 +143,10 @@ fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100
 print "LAMMPS state before minimization:"
 info all out log
 
-{%- if robust_minimization is sameas true -%}
+{%- if robust_minimization is sameas true %}
 print 'Using alternative robust minimization settings'
 neigh_modify delay 0 every 1 check yes one 5000 page 250000
-{%- endif -%}
+{%- endif %}
 
 minimize 0.0 ${minimization_ftol} ${minimization_maxiter} ${minimization_maxeval}
 
@@ -169,10 +167,10 @@ minimize 0.0 ${minimization_ftol} ${minimization_maxiter} ${minimization_maxeval
 # Either or both of the etol and ftol values can be set to 0.0, in which case
 # some other criterion will terminate the minimization.
 
-{%- if write_coeff_to_datafile is sameas true -%}
+{%- if write_coeff_to_datafile is sameas true %}
 write_data ${base_name}.lammps
-{%- else -%}
+{%- else %}
 write_data ${base_name}.lammps nocoeff
-{%- endif -%}
+{%- endif %}
 
 reset_timestep  0

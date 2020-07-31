@@ -126,9 +126,9 @@ from jlhpy.utilities.wf.packing.chain_wf_spherical_indenter_passivation import I
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
 # n = N[-2]
-parameter_values = [{'n': n, 'm': n } for n in N[0:2]]
+parameter_values = [{'n': n, 'm': n } for n in N]
 # source_project_id = '2020-04-21-intermediate-trial'
-project_id = '2020-07-20-passivation-trial-d'
+project_id = '2020-07-21-passivation-trial'
 wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,

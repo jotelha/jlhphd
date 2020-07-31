@@ -137,13 +137,15 @@ class FireWorksWorkflowGenerator:
 
         if fw_name_prefix:
             self.fw_name_prefix = fw_name_prefix
-        else:
+        elif len(self.parameter_dict) > 0:
             self.fw_name_prefix = ', '.join(([
                 '{}={}'.format(
                     label,
                     self.parameter_dict['->'.join((parameter_key_prefix, key))]
                 ) for label, key in self.parameter_label_key_dict.items()]
             ))
+        else:
+            self.fw_name_prefix = ''
 
         if infile_prefix:
             self.infile_prefix = infile_prefix
@@ -296,7 +298,10 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
     def get_fw_label(self, step_label):
         # return self.fw_name_template.format(
         #     fw_name_prefix=step_label, fw_name_suffix=self.fw_name_suffix)
-        return ', '.join((self.fw_name_prefix, step_label))
+        if len(self.fw_name_prefix) > 0:
+            return ', '.join((self.fw_name_prefix, step_label))
+        else:
+            return step_label
 
     def get_80_char_slug(self, suffix=''):
         # timestamp - parameters - sub-workflow hierarchy - step

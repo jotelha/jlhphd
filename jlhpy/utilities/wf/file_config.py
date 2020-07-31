@@ -26,6 +26,7 @@ LMP_MINIMIZATION_INPUT_TEMPLATE = 'lmp_minimization.input.template'
 LMP_FF_SUBDIR = 'ff'
 LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
+LMP_EAM_ALLOY = 'Au-Grochola-JCP05-units-real.eam.alloy'
 
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB_PATTERN = '1_{name:s}.pdb'

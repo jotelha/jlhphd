@@ -49,13 +49,13 @@ def create_fcc_111(
         element, size=(1,2,3), a=lattice_constant, periodic=True, orthogonal=True)
     print(
         "Reference FCC 111 (1,2,3) block has measures {measures:}".format(
-            measures=unit_cell.cell.lengths()))
-    multiples_123 = np.array(approximate_measures)/unit_cell.cell.lengths()
+            measures=np.diagonal(unit_cell.cell)))
+    multiples_123 = np.array(approximate_measures)/np.diagonal(unit_cell.cell)
     print("Desired measures correspond to FCC 111 (1,2,3) block {} multiples.".format(multiples_123))
     multiples_111 = np.round(multiples_123).astype(int)*np.array([1,2,3])
     substrate = fcc111(
         element, size=multiples_111, a=lattice_constant, periodic=True, orthogonal=True)
-    exact_measures = substrate.cell.lengths()
+    exact_measures = np.diagonal(substrate.cell)
     print((
         "Created {element:} FCC 111 (1,1,1) {multiples:} block with exact measures "
         "{measures:}").format(
@@ -73,6 +73,7 @@ def create_fcc_111_data_file(outfile='default.pdb', *args, **kwargs):
         list of float: exact measures
     """
     import ase.io
+    import numpy as np
     substrate = create_fcc_111(*args, **kwargs)
     ase.io.write(outfile, substrate)
-    return as_std_type(substrate.cell.lengths())
+    return as_std_type(np.diagonal(substrate.cell))
