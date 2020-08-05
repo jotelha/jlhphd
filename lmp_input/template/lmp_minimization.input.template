@@ -126,6 +126,20 @@ fix boxRelaxation all box/relax aniso ${pressureP} fixedpoint 0 0 0 nreset 100
 # minimization to fail. This can be resolved by changing the value of nreset, or
 # simply continuing the minimization from a restart file.
 
+###############################################################################
+### output
+
+dump dumpPng nonsolvent image ${png_frequency} ${base_name}.*.png type type
+
+{%- if mpiio is sameas true %}
+print 'netcdf/mpiio output'
+dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+    ${base_name}.nc id mol type mass x y z
+{%- else %}
+print 'netcdf output (no netcdf/mpiiio)'
+dump dumpNetCDF all netcdf ${netcdf_frequency} &
+    ${base_name}.nc id mol type mass x y z
+{%- endif %}
 
 ###############################################################################
 ### minimization
@@ -172,5 +186,3 @@ write_data ${base_name}.lammps
 {%- else %}
 write_data ${base_name}.lammps nocoeff
 {%- endif %}
-
-reset_timestep  0

@@ -9,74 +9,140 @@
 # index varibles can be overridden by command line parameters "-v varName value"
 
 {#- switches: generic #}
-{%- set read_datafile=read_datafile or true %} {# do not read data file if 0 #}
-{%- set read_groups_from_file=read_groups_from_file or false %}
-{%- set compute_interactions=compute_interactions or false %} {# group-goup interactions to thermo_out #}
-{%- set compute_group_properties=compute_group_properties or false %} {# # compute and output distinct temperatures and pressures for components of the system #}
-{%- set mpiio=mpiio or true %} {# parallel io on or off #}
-{%- set store_forces=store_forces or true %} {# store constrained AND unconstrained forces in NetcDF #}
-{%- set thermo_to_netcdf=thermo_to_netcdf or false %} {# if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style #}
-{%- set write_coeff=write_coeff or true %}{# write force field parameters to independent file #}
-{%- set write_coeff_to_datafile=write_coeff_to_datafile or false %} {## write force filed parameters to system datafile #}
-{%- set write_groups_to_file=write_groups_to_file or true %}
-{%- set verbose=verbose or false %} {# log detailed system info at differents stages of input script #}
-{%- set freeze_substrate=freeze_substrate or false %} {# keep substrate frozen (during minim) #}
-{%- set neigh_check=neigh_check or true %}
-{%- set exclude_frozen_interactions=exclude_frozen_interactions or false %} {# do not compute interactions between frozen atoms #}
-{%- set rigid_h_bonds=rigid_h_bonds or true %} {# apply SHAPE or RATTLE to H #}
-{%- set use_eam=use_eam or false %} {# use pairstyle eam for solid #}
-{%- set use_ewald=use_ewald or true %} {# switch ewald sum (kspace solver) #}
+{%- set read_datafile=read_datafile|default(true) %} {# do not read data file if 0 #}
+{%- set read_groups_from_file=read_groups_from_file|default(false) %}
+{%- set compute_interactions=compute_interactions|default(false) %} {# group-goup interactions to thermo_out #}
+{%- set compute_group_properties=compute_group_properties|default(false) %} {# # compute and output distinct temperatures and pressures for components of the system #}
+{%- set mpiio=mpiio|default(true) %} {# parallel io on or off #}
+{%- set store_forces=store_forces|default(true) %} {# store constrained AND unconstrained forces in NetcDF #}
+{%- set thermo_to_netcdf=thermo_to_netcdf|default(false) %} {# if 1, puts thermo output to netcdf as well. Causes segmentation faults for variables in custom thermo style #}
+{%- set write_coeff=write_coeff|default(true) %}{# write force field parameters to independent file #}
+{%- set write_coeff_to_datafile=write_coeff_to_datafile|default(false) %} {## write force filed parameters to system datafile #}
+{%- set write_groups_to_file=write_groups_to_file|default(true) %}
+{%- set verbose=verbose|default(false) %} {# log detailed system info at differents stages of input script #}
+{%- set freeze_substrate=freeze_substrate|default(false) %} {# keep substrate frozen (during minim) #}
+{%- set neigh_check=neigh_check|default(true) %}
+{%- set exclude_frozen_interactions=exclude_frozen_interactions|default(false) %} {# do not compute interactions between frozen atoms #}
+{%- set rigid_h_bonds=rigid_h_bonds|default(true) %} {# apply SHAPE or RATTLE to H #}
+{%- set use_eam=use_eam|default(false) %} {# use pairstyle eam for solid #}
+{%- set use_ewald=use_ewald|default(true) %} {# switch ewald sum (kspace solver) #}
 
 {#- switches: minimization-relatedt #}
-{%- set robust_minimization=robust_minimization or false %} {# this can be useful if a very dense initial packing would result into substrate deformation otherwise #}
-{%- set relax_box=relax_box or false %} {# relax box tor specified pressureP in minimization #}
+{%- set robust_minimization=robust_minimization|default(false) %} {# this can be useful if a very dense initial packing would result into substrate deformation otherwise #}
+{%- set relax_box=relax_box|default(false) %} {# relax box tor specified pressureP in minimization #}
 
 {#- thermostat-related #}
-{%- set temper_solid_only=temper_solid_only or true %} {# if false, everything (except frozen atoms) is tempered #}
-{%- set temper_substrate_only=temper_substrate_only or false %} {# if true, only substrate is tempered (for Langevin only, DPD always tempers all solid)} #}
+{%- set temper_solid_only=temper_solid_only|default(true) %} {# if false, everything (except frozen atoms) is tempered #}
+{%- set temper_substrate_only=temper_substrate_only|default(false) %} {# if true, only substrate is tempered (for Langevin only, DPD always tempers all solid)} #}
 
 {#- barostat-related #}
-{%- set use_dpd_tstat=use_dpd_tstat or false %} {# temperizes all solid atoms
+{%- set use_dpd_tstat=use_dpd_tstat|default(false) %} {# temperizes all solid atoms
                                                 # with dpd thermostat (instead
                                                 # of Langevin) #}
-{%- set dilate_solution_only=dilate_solution_only or true %} {# if true, only solution (i.e.
+{%- set dilate_solution_only=dilate_solution_only|default(true) %} {# if true, only solution (i.e.
                                                 # non-solid, non-frozen) atoms
                                                 # are rescaled with a change of
                                                 # volume #}
-{%- set pressurize_z_only=pressurize_z_only or false %} {# if true, barostats are applied in z direction only #}
-{%- set pressurize_solution_only=pressurize_solution_only or false %} {# if false, pressurizes all non-frozen atoms, otherwise only liquid #}
-{%- set use_barostat=use_barostat or true %} {# if false, run NVT instead of NPT or NVE instead of NPH #}
-{%- set use_berendsen_bstat=use_berendsen_bstat or false %} {# use Berenden instead of Parrinelol-Rahman barostat (i.e. for NPT equilibration) #}
+{%- set pressurize_z_only=pressurize_z_only|default(false) %} {# if true, barostats are applied in z direction only #}
+{%- set pressurize_solution_only=pressurize_solution_only|default(false) %} {# if false, pressurizes all non-frozen atoms, otherwise only liquid #}
+{%- set use_barostat=use_barostat|default(true) %} {# if false, run NVT instead of NPT or NVE instead of NPH #}
+{%- set use_berendsen_bstat=use_berendsen_bstat|default(false) %} {# use Berenden instead of Parrinelol-Rahman barostat (i.e. for NPT equilibration) #}
 
-{%- set add_vacuum=add_vacuum or false %} {# adds vacuum of specified thickness in z-direction #}
-{%- set is_restart=is_restart or false %} {# marks current run as restart #}
-{%- set has_vacuum=has_vacuum or false %} {# z-direction not pressurized #}
-{%- set pbc2d=pbc2d or false %} {# false: 3d periodic, true: 2d periodic #}
-{%- set reinitialize_velocities=reinitialize_velocities or false %}
-{%- set remove_drift=remove_drift or false %} {# remove substrate COM movement #}
-{%- set shrink_wrap_once=shrink_wrap_once or false %} {# shrinks simulation box around system once after reading data #}
-{%- set substrate_recenter=substrate_recenter or false %} {# same as remove drift #}
+{%- set add_vacuum=add_vacuum|default(false) %} {# adds vacuum of specified thickness in z-direction #}
+{%- set is_restart=is_restart|default(false) %} {# marks current run as restart #}
+{%- set has_vacuum=has_vacuum|default(false) %} {# z-direction not pressurized #}
+{%- set pbc2d=pbc2d|default(false) %} {# false: 3d periodic, true: 2d periodic #}
+{%- set reinitialize_velocities=reinitialize_velocities|default(false) %}
+{%- set remove_drift=remove_drift|default(false) %} {# remove substrate COM movement #}
+{%- set shrink_wrap_once=shrink_wrap_once|default(false) %} {# shrinks simulation box around system once after reading data #}
+{%- set substrate_recenter=substrate_recenter|default(false) %} {# same as remove drift #}
 
 {#- AFM-tip related #}
-{%- set has_indenter=has_indenter or false %}
-{%- set rigid_indenter=rigid_indenter or false %} {# treat whole indenter as rigid #}
-{%- set restrained_indenter=restrained_indenter or false %} {# do not treat indenter as rigid but remove total linear and angular momentum #}
+{%- set has_indenter=has_indenter|default(false) %}
+{%- set rigid_indenter=rigid_indenter|default(false) %} {# treat whole indenter as rigid #}
+{%- set restrained_indenter=restrained_indenter|default(false) %} {# do not treat indenter as rigid but remove total linear and angular momentum #}
 
-{%- set indenter_nve_noforce=indenter_nve_noforce or false %} {# use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid #}
-{%- set manual_indenter_region=manual_indenter_region or false %} {# if set to 1 use measures below #}
+{%- set indenter_nve_noforce=indenter_nve_noforce|default(false) %} {# use 'fix nve/noforce' instead of 'fix setforce' to treat indenter as rigid #}
+{%- set manual_indenter_region=manual_indenter_region|default(false) %} {# if set to 1 use measures below #}
 
 {#- non-boolean #}
-{%- set box_shift_z=box_shift_z or 0.0 %}
-{%- set freeze_substrate_layer=freeze_substrate_layer or 0.0 %}
-{%- set restrain_substrate_layer=restrain_substrate_layer or 0.0 %}
-{%- set thermo_frequency=thermo_frequency or 1000 %}
-{%- set thermo_average_frequency=thermo_average_frequency or thermo_frequency %}
+{%- set box_shift_z=box_shift_z|default(0.0) %}
+{%- set freeze_substrate_layer=freeze_substrate_layer|default(0.0) %}
+{%- set restrain_substrate_layer=restrain_substrate_layer|default(0.0) %}
+{%- set thermo_frequency=thermo_frequency|default(1000) %}
+{%- set thermo_average_frequency=thermo_average_frequency|default(thermo_frequency) %}
 
-{%- set solvent_types=solvent_types or [8,9] %}
-{%- set counterion_type=counterion_type or 10 %}
-{%- set substrate_type=substrate_type or 11 %}
+{%- set solvent_types=solvent_types|default([8,9]) %}
+{%- set counterion_type=counterion_type|default(10) %}
+{%- set substrate_type=substrate_type|default(11) %}
 
-{%- set solvent_angle=solvent_angle or 11 %}
+{%- set solvent_angle=solvent_angle|default(11) %}
+
+# template-level options
+#     read_datafile = {{ read_datafile }}
+#     read_groups_from_file = {{ read_groups_from_file }}
+#     compute_interactions = {{ compute_interactions }}
+#     compute_group_properties = {{ compute_group_properties }}
+#     mpiio = {{ mpiio }}
+#     store_forces = {{ store_forces }}
+#     thermo_to_netcdf = {{ thermo_to_netcdf }}
+#     write_coeff = {{ write_coeff }}
+#     write_coeff_to_datafile = {{ write_coeff_to_datafile }}
+#     write_groups_to_file = {{ write_groups_to_file }}
+#     verbose = {{ verbose }}
+#     freeze_substrate = {{ freeze_substrate }}
+#     neigh_check = {{ neigh_check }}
+#     exclude_frozen_interactions = {{ exclude_frozen_interactions }}
+#     rigid_h_bonds = {{ rigid_h_bonds }}
+#     use_eam = {{ use_eam }}
+#     use_ewald = {{ use_ewald }}
+#
+# switches: minimization-related
+#     robust_minimization = {{ robust_minimization }}
+#     relax_box = {{ relax_box }}
+#
+# thermostat-related
+#     temper_solid_only = {{ temper_solid_only }}
+#     temper_substrate_only = {{ temper_substrate_only }}
+#
+# barostat-related
+#     use_dpd_tstat = {{ use_dpd_tstat }}
+#     dilate_solution_only = {{ dilate_solution_only }}
+#     pressurize_z_only = {{ pressurize_z_only }}
+#     pressurize_solution_only = {{ pressurize_solution_only }}
+#     use_barostat = {{ use_barostat }}
+#     use_berendsen_bstat = {{ use_berendsen_bstat }}
+#
+#     add_vacuum = {{ add_vacuum }}
+#     is_restart = {{ is_restart }}
+#     has_vacuum = {{ has_vacuum }}
+#     pbc2d = {{ pbc2d }}
+#     reinitialize_velocities = {{ reinitialize_velocities }}
+#     remove_drift = {{ remove_drift }}
+#     shrink_wrap_once = {{ shrink_wrap_once }}
+#     substrate_recenter = {{ substrate_recenter }}
+#
+# AFM-tip related
+#     has_indenter = {{ has_indenter }}
+#     rigid_indenter = {{ rigid_indenter }}
+#     restrained_indenter = {{ restrained_indenter }}
+#
+#     indenter_nve_noforce = {{ indenter_nve_noforce }}
+#     manual_indenter_region = {{ manual_indenter_region }}
+
+# non-boolean
+#     box_shift_z = {{ box_shift_z }}
+#     freeze_substrate_layer = {{ freeze_substrate_layer }}
+#     restrain_substrate_layer = {{ restrain_substrate_layer }}
+#     thermo_frequency = {{ thermo_frequency }}
+#     thermo_average_frequency = {{ thermo_average_frequency }}
+#
+# types and topology
+#     solvent_types = {{ solvent_types }}
+#     counterion_type = {{ counterion_type }}
+#     substrate_type = {{ substrate_type }}
+#
+#     solvent_angle = {{ solvent_angle }}
 
 # input settings
 variable base_name               index  {{ base_name|default("default", true) }}
@@ -400,7 +466,7 @@ pair_style hybrid &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy
 {%- elif (not is_restart is sameas true) and (use_eam is sameas true) %}
-  "pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy"
+pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy
 {%- endif %}
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
 # one simulation. With the hybrid style, exactly one pair style is assigned to
@@ -706,7 +772,7 @@ special_bonds charmm
 # More details are given below.
 
 {%- if (not is_restart is sameas true) %}
-timestep ${timestep} # 0.002 ps = 2 fs"
+timestep ${timestep}
 {%- endif %}
 
 ###############################################################################
@@ -892,7 +958,6 @@ compute indenter_nonindenter_interaction indenter group/group nonindenter pair y
 # indenter_solvent_interaction indenter_ion_interaction
 
 {%- if compute_interactions is sameas true %}
-if "${compute_interactions} > 0" then &
 compute substrate_solvent_interaction substrate group/group solvent pair yes kspace no
 compute substrate_surfactant_interaction substrate group/group surfactant pair yes kspace no
 compute substrate_ion_interaction substrate group/group ion pair yes kspace no

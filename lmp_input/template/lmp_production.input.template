@@ -1,0 +1,616 @@
+###############################################################################
+### Parameter definitions and header inclusion
+
+# setting $is_restart continues a run from given restart file
+# Source: https://lammps.sandia.gov/doc/read_restart.html
+# Here is a list of information not stored in a restart file, which means you
+# must re-issue these commands in your input script, after reading the restart
+# file.
+#    newton pair (see discussion of newton command below)
+#    fix commands (see below)
+#    compute commands (see below)
+#    variable commands
+#    region commands
+#    neighbor list criteria including neigh_modify settings
+#    kspace_style and kspace_modify settings
+#    info for thermodynamic, dump, or restart output
+
+{%- set is_restart=is_restart|default(false) %} {# marks current run as restart #}
+
+# name of restart file dpends on whether mpiio is used or not
+{%- if not is_restart is sameas true %}
+print 'Initial run on system'
+{%- elif not mpiio is sameas true %}
+variable restart_file index default.restart
+{%- else %}
+variable restart_file index default.mpiio.restart
+# in the last case, run is restart and mpiio is used
+{%- endif %}
+
+print "Variables in lmp_production.input:"
+info variables
+
+{%- if is_restart is sameas true %}
+read_restart ${restart_file}
+{%- endif %}
+
+{% include 'lmp_header.input.template' %}
+
+# consecutively numbered restart files ...
+# restart               100000 ${baseName}.restart # every 200 ps
+# ... or two alternating files ...
+{%- if mpiio is sameas true %}
+print 'mpiio restart files'
+restart ${restart_frequency} ${base_name}.mpiio.restart1 ${base_name}.mpiio.restart2
+{%- else %}
+print 'standard restart files (no mpiiio)'
+restart ${restart_frequency} ${base_name}.restart1 ${base_name}.restart2
+{%- endif %}
+# Source: https://lammps.sandia.gov/doc/restart.html
+# [...]
+# If a "%" character appears in the restart filename(s), then one file is
+# written for each processor and the "%" character is replaced with the
+# processor ID from 0 to P-1. An additional file with the "%" replaced by
+# "base" is also written, which contains global information. For example,
+# the files written on step 1000 for filename restart.% would be
+# restart.base.1000, restart.0.1000, restart.1.1000, ..., restart.P-1.1000.
+# This creates smaller files and can be a fast mode of output and subsequent
+# input on parallel machines that support parallel I/O. The optional fileper
+# and nfile keywords discussed below can alter the number of files written.
+#
+# The restart file can also be written in parallel as one large binary file via
+# the MPI-IO library, which is part of the MPI standard for versions 2.0 and
+# above. Using MPI-IO requires two steps. First, build LAMMPS with its MPIIO
+# package installed [...]
+#
+# Second, use a restart filename which contains ".mpiio". Note that it does not
+# have to end in ".mpiio", just contain those characters. Unlike MPI-IO dump
+# files, a particular restart file must be both written and read using MPI-IO.
+#                       ^ every 200 ps
+
+{%- if store_forces is sameas true %}
+###############################################################################
+### Monitor unconstrained forces
+fix storeUnconstrainedForces all store/force
+fix storeUnconstrainedForcesAve all ave/atom 1 ${netcdf_frequency} &
+    ${netcdf_frequency} f_storeUnconstrainedForces[*]
+# https://lammps.sandia.gov/doc/fix_store_force.html
+# Store the forces on atoms in the group at the point during each timestep when
+# the fix is invoked, as described below. This is useful for storing forces
+# before constraints or other boundary conditions are computed which modify the
+# forces, so that unmodified forces can be written to a dump file or accessed by
+# other output commands that use per-atom quantities.
+
+# This fix is invoked at the point in the velocity-Verlet timestepping
+# immediately after pair, bond, angle, dihedral, improper, and long-range forces
+# have been calculated. It is the point in the timestep when various fixes that
+# compute constraint forces are calculated and potentially modify the force on
+# each atom. Examples of such fixes are fix shake, fix wall, and fix indent.
+
+# The order in which various fixes are applied which operate at the same point
+# during the timestep, is the same as the order they are specified in the input
+# script. Thus normally, if you want to store per-atom forces due to force field
+# interactions, before constraints are applied, you should list this fix first
+# within that set of fixes, i.e. before other fixes that apply constraints.
+# However, if you wish to include certain constraints (e.g. fix shake) in the
+# stored force, then it could be specified after some fixes and before others.
+{%- endif %}
+
+{%- if use_colvars is sameas true %}
+################################################################################
+### Collective variables group interface
+
+# variable colvarsFile             index  colvars.inp
+# set in lmp_header.lammps
+
+group2ndx colvars.ndx
+# https://lammps.sandia.gov/doc/group2ndx.html
+# Write or read a Gromacs style index file in text format that associates atom
+# IDs with the corresponding group definitions. This index file can be used with
+# in combination with Gromacs analysis tools or to import group definitions into
+# the fix colvars input file. It can also be used to save and restore group
+# definitions for static groups.
+#
+# The group2ndx command will write group definitions to an index file. Without
+# specifying any group IDs, all groups will be written to the index file. When
+# specifying group IDs, only those groups will be written to the index file. In
+# order to follow the Gromacs conventions, the group all will be renamed to
+# System in the index file.
+
+###############################################################################
+### Collective variables
+
+fix cv all colvars ${colvars_file} seed ${random_seed} output ${base_name} unwrap yes
+#      ^ID ^group (ignored)          ^random seed  ^prefix for all out files
+# source: https://lammps.sandia.gov/doc/fix_colvars.html
+# This fix interfaces LAMMPS to the collective variables "Colvars" library,
+# which allows to calculate potentials of mean force (PMFs) for any set of
+# colvars, using different sampling methods: currently implemented are the
+# Adaptive Biasing Force (ABF) method, metadynamics, Steered Molecular Dynamics
+# (SMD) and Umbrella Sampling (US) via a flexible harmonic restraint bias.
+
+# The group-ID entry is ignored. The collective variable module will always
+# apply to the entire system and there can only be one instance of the colvars
+# fix at a time. The colvars fix will only communicate the minimum information
+# necessary and the colvars library supports multiple, completely independent
+# collective variables, so there is no restriction to functionality by limiting
+# the number of colvars fixes.
+
+# The input keyword allows to specify a state file that would contain the
+# restart information required in order to continue a calculation from a
+# prerecorded state. Fix colvars records it state in binary restart files, so
+# when using the read_restart command, this is usually not needed. The output
+# keyword allows to specify the output prefix. All output files generated will
+# use this prefix followed by the ".colvars." and a word like "state" or "traj".
+
+# The seed keyword contains the seed for the random number generator that will
+# be used in the colvars module.
+
+# The unwrap keyword controls whether wrapped or unwrapped coordinates are
+# passed to the colvars library for calculation of the collective variables and
+# the resulting forces. The default is yes, i.e. to use the image flags to
+# reconstruct the absolute atom positions. Setting this to no will use the
+# current local coordinates that are wrapped back into the simulation cell at
+# each re-neighboring instead.
+
+# The tstat keyword can be either NULL or the label of a thermostating fix that
+# thermostats all atoms in the fix colvars group. This will be used to provide
+# the colvars module with the current thermostat target temperature.
+{%- endif %}
+
+{%- if store_forces is sameas true %}
+###############################################################################
+###  Monitor ante-freeze forces
+fix storeAnteFreezeForces all store/force
+fix storeAnteFreezeForcesAve all ave/atom 1 ${netcdf_frequency} &
+    ${netcdf_frequency} f_storeAnteFreezeForces[*]
+{%- endif %}
+
+################################################################################
+### con- & restraints
+{%- if (has_indenter is sameas true) and (rigid_indenter_core_radius > 0.0) %}
+group rigid_part_of_indenter intersect all rigid_indenter_core
+{%- elif (has_indenter is sameas true) and (rigid_indenter is sameas true) %}
+group rigid_part_of_indenter intersect all indenter
+{%- endif %}
+
+# if indenter in system, then either move whole indenter or only frozen core
+{%- if (has_indenter is sameas true) and (constant_indenter_velocity != 0.0) and (direction_of_linear_movement == 0) %}
+velocity rigid_part_of_indenter set ${constant_indenter_velocity} 0.0 0.0 sum no units box
+#                                   ^vx                           ^vy ^vz
+{%- elif (has_indenter is sameas true) and (constant_indenter_velocity != 0.0) and (direction_of_linear_movement == 1) %}
+velocity rigid_part_of_indenter set 0.0 ${constant_indenter_velocity} 0.0 sum no units box
+#                                   ^vx ^vy                           ^vz
+{%- elif (has_indenter is sameas true) and (constant_indenter_velocity != 0.0) and (direction_of_linear_movement == 2) %}
+velocity rigid_part_of_indenter set 0.0 0.0 ${constant_indenter_velocity} sum no units box
+#                                   ^vx ^vy ^vz
+{%- endif %}
+# The sum keyword is used by all styles, except zero. The new velocities will be
+# added to the existing ones if sum = yes, or will replace them if sum = no.
+# The units keyword is used by set and ramp. If units = box, the velocities and
+# coordinates specified in the velocity command are in the standard units
+# described by the units command (e.g. Angstroms/fmsec for real units). If
+# units = lattice, velocities are in units of lattice spacings per time (e.g.
+# spacings/fmsec) and coordinates are in lattice spacings. The lattice command
+# must have been previously used to define the lattice spacing.
+
+# treats indenter rigid, i.e. removes all forces on indenter
+# 20190227: doubts about performance of nve/noforce
+# 20190228: unjustified, same performance for both options
+{%- if (has_indenter is sameas true) and (indenter_nve_noforce is sameas true) and (constant_indenter_velocity != 0.0) %}
+fix integrateIndenter rigid_part_of_indenter nve/noforce
+{%- elif (has_indenter is sameas true) and (constant_indenter_velocity != 0.0) %}
+fix freeze rigid_part_of_indenter setforce 0.0 0.0 0.0
+fix integrateIndenter rigid_part_of_indenter nve
+{%- elif (has_indenter is sameas true) and (rigid_indenter is sameas true) %}
+fix freeze rigid_part_of_indenter setforce 0.0 0.0 0.0
+{%- endif %}
+# source: https://lammps.sandia.gov/doc/fix_nve_noforce.html
+# Perform updates of position, but not velocity for atoms in the group each
+# timestep. In other words, the force on the atoms is ignored and their velocity
+# is not updated. The atom velocities are used to update their positions.
+#
+# This can be useful for wall atoms, when you set their velocities, and want the
+# wall to move (or stay stationary) in a prescribed fashion.
+#
+# This can also be accomplished via the fix setforce command, but with fix
+# nve/noforce, the forces on the wall atoms are unchanged, and can thus be
+# printed by the dump command or queried with an equal-style variable that uses
+# the fcm() group function to compute the total force on the group of atoms.
+
+{%- if freeze_substrate_layer is sameas true %}
+# Keep substrate layer frozen
+velocity frozen_substrate_layer set 0.0 0.0 0.0 sum no units box
+fix freeze_substrate_layer frozen_substrate_layer setforce 0.0 0.0 0.0
+{%- endif %}
+
+{%- if store_forces is sameas true %}
+################################################################################
+### Monitor ante-npt-barostatting forces
+
+# store forces before thermo- and barostatting, but after contraints
+fix storeAnteStatForces all store/force
+fix storeAnteStatForcesAve all ave/atom 1 ${netcdf_frequency} ${netcdf_frequency} f_storeAnteStatForces[*]
+{%- endif %}
+
+################################################################################
+### THERMOSTAT
+
+# either only temper solid, and only the non-frozen part,
+# or everything (except frozen atoms):
+{%- if (not is_restart is sameas true) and (temper_solid_only is sameas true) %}
+group tempered_group subtract solid frozen
+{%- elif (not is_restart is sameas true) and (temper_substrate_only is sameas true) %}
+group tempered_group subtract substrate frozen
+{%- elif (not is_restart is sameas true) %}
+group tempered_group subtract all frozen
+{%- endif %}
+
+{%- if not use_dpd_tstat is sameas true %}
+# not applying DPD thermostat
+fix thermostat tempered_group langevin ${initialT} ${temperatureT} &
+    ${langevin_damping} ${random_seed}
+#   ^ID        ^group-ID      ^langevin
+#                                      ^Tstart     ^Tstop
+#   ^damp               ^seed
+# source: https://lammps.sandia.gov/doc/fix_langevin.html
+# fix ID group-ID langevin Tstart Tstop damp seed keyword values ...
+# Apply a Langevin thermostat as described in (Schneider) to a group of atoms
+# which models an interaction with a background implicit solvent. Used with
+# fix nve, this command performs Brownian dynamics (BD), since the total force
+# on each atom will have the form:
+#
+# F = Fc + Ff + Fr
+# Ff = - (m / damp) v
+# Fr is proportional to sqrt(Kb T m / (dt damp))
+#
+# Note that unless you use the omega or angmom keywords, the thermostat effect
+# of this fix is applied to only the translational degrees of freedom for the
+# particles, which is an important consideration for finite-size particles,
+# which have rotational degrees of freedom, are being thermostatted. The
+# translational degrees of freedom can also have a bias velocity removed
+# from them before thermostatting takes place; see the description below.
+#
+# Unlike the fix nvt command which performs Nose/Hoover thermostatting
+# AND time integration, this fix does NOT perform time integration. It
+# only modifies forces to effect thermostatting. Thus you must use a
+# separate time integration fix, like fix nve to actually update the
+# velocities and positions of atoms using the modified forces. Likewise,
+# this fix should not normally be used on atoms that also have their
+# temperature controlled by another fix - e.g. by fix nvt or fix
+# temp/rescale commands.
+#
+# The damp parameter is specified in time units and determines how rapidly the
+# temperature is relaxed. For example, a value of 100.0 means to relax the
+# temperature in a timespan of (roughly) 100 time units (tau or fmsec or psec
+# - see the units command). The damp factor can be thought of as inversely
+# related to the viscosity of the solvent. I.e. a small relaxation time
+# implies a hi-viscosity solvent and vice versa. See the discussion about
+# gamma and viscosity in the documentation for the fix viscous command for
+# more details.
+{%- endif %}
+
+################################################################################
+### BAROSTAT
+
+{%- if (not is_restart is sameas true) and (not pressurize_solution_only is sameas true) %}
+# the "pressured" group are all atoms, except the frozen ones
+group pressured_group subtract all frozen
+{%- elif (not is_restart is sameas true) %}
+group pressured_group subtract all frozen solid
+{%- endif %}
+
+{%- if (not is_restart is sameas true) and (not dilate_solution_only is sameas true) %}
+group dilated_group subtract all frozen
+{%- elif (not is_restart is sameas true) %}
+group dilated_group subtract all frozen solid
+{%- endif %}
+
+{%- if (use_berendsen_bstat is sameas true) and (( pbc2d is sameas true) or (has_vacuum is sameas true)) %}
+fix barostat pressured_group press/berendsen x ${pressureP} ${pressureP} 100 y ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial
+{%- elif (use_berendsen_bstat is sameas true) and ( pressurize_z_only is sameas true) %}
+fix barostat pressured_group press/berendsen z ${pressureP} ${pressureP} 100 couple none modulus 2.1e6 dilate partial
+{%- elif (use_berendsen_bstat is sameas true) %}
+fix barostat pressured_group press/berendsen aniso ${pressureP} ${pressureP} 100 modulus 2.1e6 dilate partial
+{%- elif (use_barostat is sameas true) and (pressurize_z_only is sameas true) %}
+fix barostat pressured_group nph z ${pressureP} ${pressureP} &
+    ${barostat_damping} dilate dilated_group fixedpoint $(xlo) $(ylo) $(zlo)
+{%- elif (use_barostat is sameas true) %}
+fix barostat pressured_group nph aniso ${pressureP} ${pressureP} &
+    ${barostat_damping} dilate dilated_group fixedpoint $(xlo) $(ylo) $(zlo)
+{%- else %}
+fix nve pressured_group nve
+# fix nve is necessary for integration if nor barostat is applied
+{%- endif %}
+
+# source https://lammps.sandia.gov/doc/fix_nh.html#fix-nph-command
+# As with the thermostats, the Nose/Hoover methods (fix npt and fix nph) perform
+# time integration. Fix press/berendsen does NOT, so it should be used with one
+# of the constant NVE fixes or with one of the NVT fixes.
+
+# In some cases (e.g. for solids) the pressure (volume) and/or temperature of
+# the system can oscillate undesirably when a Nose/Hoover barostat and
+# thermostat is applied. The optional drag keyword will damp these oscillations,
+# although it alters the Nose/Hoover equations. A value of 0.0 (no drag) leaves
+# the Nose/Hoover formalism unchanged. A non-zero value adds a drag term; the
+# larger the value specified, the greater the damping effect. Performing a short
+# run and monitoring the pressure and temperature is the best way to determine
+# if the drag term is working. Typically a value between 0.2 to 2.0 is
+# sufficient to damp oscillations after a few periods. Note that use of the drag
+# keyword will interfere with energy conservation and will also change the
+# distribution of positions and velocities so that they do not correspond to the
+# nominal NVT, NPT, or NPH ensembles.
+
+################################################################################
+### INDENTER AND SUBSTRATE RESTRAINT
+
+{%- if restrain_substrate_layer > 0.0 %}
+fix restrain_substrate restrained_substrate_layer momentum 1 linear 1 1 1 angular rescale
+{%- endif %}
+
+{%- if (has_indenter is sameas true) and (restrained_indenter is sameas true) %}
+fix restrain_indenter indenter momentum 1 linear 1 1 1 angular rescale
+#                                       ^N       ^xyz          ^preserve kinetic energy
+# source: https://lammps.sandia.gov/doc/fix_momentum.html
+# If the linear keyword is used, the linear momentum is zeroed by subtracting
+# the center-of-mass velocity of the group from each atom. This does not change
+# the relative velocity of any pair of atoms. One or more dimensions can be
+# excluded from this operation by setting the corresponding flag to 0.
+#
+# If the angular keyword is used, the angular momentum is zeroed by subtracting
+# a rotational component from each atom.
+#
+# This command can be used to insure the entire collection of atoms (or a
+# subset of them) does not drift or rotate during the simulation due to random
+# perturbations (e.g. fix langevin thermostatting).
+#
+# The rescale keyword enables conserving the kinetic energy of the group of
+# atoms by rescaling the velocities after the momentum was removed.
+#
+# No information about this fix is written to binary restart files. None of the
+# fix_modify options are relevant to this fix. No global or per-atom quantities
+# are stored by this fix for access by various output commands. No parameter of
+# this fix can be used with the start/stop keywords of the run command. This
+# fix is not invoked during energy minimization.
+{%- endif %}
+
+{%- if (remove_drift is sameas true) or (substrate_recenter is sameas true) %}
+################################################################################
+### DRIFT REMOVAL
+
+# Keep substrate slab's position COM position fixed, remove relative drift
+fix fixedSubstrateCOM frozen_substrate_layer recenter INIT INIT INIT shift all
+#   ^ID               ^group-ID
+#                                             ^style   ^x   ^y   ^z   ^keyword
+#                                                                          ^group
+# source: https://lammps.sandia.gov/doc/fix_recenter.html
+# fix ID group-ID recenter x y z keyword value ...
+#   shift value = group-ID
+#     group-ID = group of atoms whose coords are shifted
+#
+# Constrain the center-of-mass position of a group of atoms by adjusting the
+# coordinates of the atoms every timestep. This is simply a small shift that
+# does not alter the dynamics of the system or change the relative coordinates
+# of any pair of atoms in the group. This can be used to insure the entire
+# collection of atoms (or a portion of them) do not drift during the simulation
+# due to random perturbations (e.g. fix langevin thermostatting).
+#
+# The center-of-mass (COM) is computed for the group specified by the fix.
+# If the current COM is different than the specified x,y,z, then a group of
+# atoms has their coordinates shifted by the difference. By default the shifted
+# group is also the group specified by the fix. A different group can be shifted
+# by using the shift keyword. For example, the COM could be computed on a
+# protein to keep it in the center of the simulation box. But the entire system
+# (protein + water) could be shifted.
+#
+# Distance units for the x,y,z values are determined by the setting of the units
+# keyword, as discussed below. One or more x,y,z values can also be specified
+# as NULL, which means exclude that dimension from this operation. Or it can be
+# specified as INIT which means to constrain the center-of-mass to its initial
+# value at the beginning of the run.
+{%- endif %}
+
+{%- if store_forces is sameas true %}
+################################################################################
+### Monitor forces before SHAKE constraint
+fix storeAnteShakeForces all store/force
+fix storeAnteShakeForcesAve all ave/atom 1 ${netcdf_frequency} &
+    ${netcdf_frequency} f_storeAnteShakeForces[*]
+{%- endif %}
+
+{%- if rigid_h_bonds is sameas true %}
+################################################################################
+### RIGID TIP3P WATER and RIGID HYDROGEN BONDS
+
+#
+# fix equilibrateNVT all nvt temp ${temperatureT} ${temperatureT} 100 tchain 1
+#  WARNING: Fix rattle should come after all other integration fixes
+#    (../fix_rattle.cpp:147)
+fix rigidHbonds pressured_group rattle 1e-6 500 0 m 1.0 a ${angle_id_water}
+# fix rigidHbonds all shake 1e-6 500 0 m 1.0 a ${angle_id_water}
+
+# The b constraint lists bond types that will be constrained.
+# The t constraint lists atom types. All bonds connected to an
+#  atom of the specified type will be constrained. The m constraint
+# lists atom masses. All bonds connected to atoms of the specified
+# masses will be constrained (within a fudge factor of MASSDELTA specified
+# in fix_shake.cpp). The a constraint lists angle types. If both bonds in
+# the angle are constrained then the angle will also be constrained if its
+# type is in the list.
+# The mentioned MASSDELTA is defined as 0.1 (16Mar18).
+# Therefore, all hydrogen
+# The fix rattle command modifies forces and velocities and thus should be
+# defined after all other integration fixes in your input script. If you
+# define other fixes that modify velocities or forces after fix rattle operates,
+# then fix rattle will not take them into account and the overall time
+# integration will typically not satisfy the RATTLE constraints. You can
+# check whether the constraints work correctly by setting the value of
+# RATTLE_DEBUG in src/fix_rattle.cpp to 1 and recompiling LAMMPS.
+# The degrees-of-freedom removed by SHAKE bonds and angles are accounted for in
+# temperature and pressure computations. Similarly, the SHAKE contribution to
+# the pressure of the system (virial) is also accounted for.
+{%- endif %}
+
+################################################################################
+### OUTPUT
+
+{%- if store_forces is sameas true %}
+# average final (constrained) forces
+fix storeForcesAve all ave/atom 1 ${netcdf_frequency} &
+  ${netcdf_frequency} fx fy fz
+{%- endif %}
+
+{%- if compute_group_properties is sameas true %}
+# average per atom stress
+fix peratom_stress_ave all ave/atom &
+  1 ${netcdf_frequency} ${netcdf_frequency} c_peratom_stress[*]
+{%- endif %}
+
+
+dump dumpPng nonsolvent image ${png_frequency} ${base_name}.*.png type type
+
+# output format for stored forces:
+# col  1 -  5: id mol type position[3]
+# col  6 - 17: instantaneous forces:
+#  fully_constrained[3] ante_shake[3] ante_stats[3] unconstrained[3]
+# col 18 - 26: interval-averaged forces
+#  fully_constrained[3] ante_shake[3] ante_stats[3] unconstrained[3]
+#
+# output cases
+#
+# index | mpiio     | f_forces  | c_group
+# 1     | yes       | yes       | yes
+# 2     | yes       | yes       | no
+# 3     | yes       | no        | yes
+# 4     | yes       | no        | no
+# 5     | no        | yes       | yes
+# 6     | no        | yes       | no
+# 7     | no        | no        | yes
+# 8     | no        | no        | no        covers case 4 as well
+
+{%- if (compute_group_properties is sameas true) and (mpiio is sameas true) and (store_forces is sameas true) %}
+print 'netcdf/mpiio output, store constrained and unconstrained forces as well as per atom stresses'
+dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz fx fy fz &
+   f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+   f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+   f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+   f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+   f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+   f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+   f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+   f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+   f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+   c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+   f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]
+{%- elif (mpiio is sameas true) and (store_forces is sameas true) %}
+print 'netcdf/mpiio output, store constrained and unconstrained forces'
+dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz fx fy fz &
+   f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+   f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+   f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+   f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+   f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+   f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+   f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+   f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+   f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]
+{%- elif (compute_group_properties is sameas true) and (mpiio is sameas true) %}
+print 'netcdf/mpiio output, store per atom stresses'
+dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz &
+  c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3]
+{%- elif mpiio is sameas true %}
+print 'netcdf/mpiio output'
+dump dumpNetCDF all netcdf/mpiio ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz
+{%- elif (compute_group_properties is sameas true) and (store_forces is sameas true) %}
+print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces as well as per atom stresses'
+dump dumpNetCDF all netcdf ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz fx fy fz &
+   f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+   f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+   f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+   f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+   f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+   f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+   f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+   f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+   f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3] &
+   c_peratom_stress[1]               c_peratom_stress[2]               c_peratom_stress[3] &
+   f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]
+{%- elif store_forces is sameas true %}
+print 'netcdf output (no netcdf/mpiiio), store constrained and unconstrained forces'
+dump dumpNetCDF all netcdf ${netcdf_frequency} &
+  ${base_name}.nc id mol type mass x y z vx vy vz fx fy fz &
+   f_storeAnteShakeForces[1]         f_storeAnteShakeForces[2]         f_storeAnteShakeForces[3] &
+   f_storeAnteStatForces[1]          f_storeAnteStatForces[2]          f_storeAnteStatForces[3] &
+   f_storeAnteFreezeForces[1]        f_storeAnteFreezeForces[2]        f_storeAnteFreezeForces[3] &
+   f_storeUnconstrainedForces[1]     f_storeUnconstrainedForces[2]     f_storeUnconstrainedForces[3] &
+   f_storeForcesAve[1]               f_storeForcesAve[2]               f_storeForcesAve[3] &
+   f_storeAnteShakeForcesAve[1]      f_storeAnteShakeForcesAve[2]      f_storeAnteShakeForcesAve[3] &
+   f_storeAnteStatForcesAve[1]       f_storeAnteStatForcesAve[2]       f_storeAnteStatForcesAve[3] &
+   f_storeAnteFreezeForcesAve[1]     f_storeAnteFreezeForcesAve[2]     f_storeAnteFreezeForcesAve[3] &
+   f_storeUnconstrainedForcesAve[1]  f_storeUnconstrainedForcesAve[2]  f_storeUnconstrainedForcesAve[3]
+{%- elif compute_group_properties is sameas true %}
+print 'netcdf output (no netcdf/mpiiio), store per atom stresses'
+dump dumpNetCDF all netcdf ${netcdf_frequency} &
+  ${baseName}.nc id mol type mass x y z vx vy vz &
+   c_peratom_stress[1] c_peratom_stress[2] c_peratom_stress[3] &
+   f_peratom_stress_ave[1]           f_peratom_stress_ave[2]           f_peratom_stress_ave[3]
+{%- else %}
+print 'netcdf output (no netcdf/mpiiio)'
+dump dumpNetCDF all netcdf ${netcdf_frequency} &
+  ${baseName}.nc id mol type mass x y z vx vy vz
+{%- endif %}
+# interestingly, wildcard * operator does not work for dump netcdf
+
+
+# if variables in custom thermo style (i.e. v_total_press), then
+# dump_modify thermo yes caused NetCDF module to throw segmentation fault
+{%- if thermo_to_netcdf is sameas true %}
+dump_modify dumpNetCDF thermo yes flush yes
+{%- else %}
+dump_modify dumpNetCDF flush yes
+{%- endif %}
+
+# The flush keyword determines whether a flush operation is invoked after a dump
+# snapshot is written to the dump file. A flush insures the output in that file
+# is current (no buffering by the OS), even if LAMMPS halts before the
+# simulation completes. Flushes cannot be performed with dump style xtc.
+
+# The thermo keyword only applies the dump netcdf style. It triggers writing of
+# thermo information to the dump file alongside per-atom data. The values
+# included in the dump file are identical to the values specified by
+# thermo_style.
+
+# What is the purpose of this line?
+# if "${store_forces} > 0" then "dump_modify dumpNetCDF append yes"
+# https://lammps.sandia.gov/doc/dump_modify.html
+# The append keyword applies to all dump styles except cfg and xtc and dcd. It
+# also applies only to text output files, not to binary or gzipped or
+# image/movie files. If specified as yes, then dump snapshots are appended to
+# the end of an existing dump file. If specified as no, then a new dump file
+# will be created which will overwrite an existing file with the same name.
+
+{%- if reinitialize_velocities is sameas true %}
+velocity pressured_group create ${initialT} ${random_seed} &
+  rot yes mom yes dist gaussian
+{%- endif %}
+
+{%- if write_groups_to_file is sameas true %}
+# groups immediately before run, for debugging
+group2ndx ${ndx_file}.transient
+{%- endif %}
+
+print "LAMMPS state before production:"
+info all
+# at 2 fs time step output every 2 ps
+run             ${production_steps} upto
+
+{%- if write_coeff_to_datafile is sameas true %}
+write_data ${base_name}.lammps
+{%- else %}
+write_data ${base_name}.lammps nocoeff
+{%- endif %}
