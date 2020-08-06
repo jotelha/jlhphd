@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Substrate fixed box minimization sub workflow."""
+"""Substrate relaxed box minimization sub workflow."""
 
 import datetime
 import glob
@@ -24,14 +24,15 @@ import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
 
-class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
+class LAMMPSRelaxedBoxMinimizationMain(SubWorkflowGenerator):
     """
-    Fixed box minimization with LAMMPS.
+    Relaxed box minimization with LAMMPS.
 
     inputs:
-    - metadata->step_specific->minimization->fixed_box->ftol
-    - metadata->step_specific->minimization->fixed_box->maxiter
-    - metadata->step_specific->minimization->fixed_box->maxeval
+    - metadata->step_specific->minimization->relaxed_box->ftol
+    - metadata->step_specific->minimization->relaxed_box->maxiter
+    - metadata->step_specific->minimization->relaxed_box->maxeval
+    - metadata->step_specific->minimization->relaxed_box->pressure
 
     - metadata->system->substrate->element
     - metadata->system->substrate->lmp->type
@@ -64,7 +65,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     """
 
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LAMMPSFixedBoxMinimizationMain'
+        sub_wf_name = 'LAMMPSRelaxedBoxMinimizationMain'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
@@ -243,7 +244,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             'coeff_infile':            'coeff.input',
             'data_file':                'datafile.lammps',
             'mpiio':                    False,
-            'relax_box':                False,
+            'relax_box':                True,
             'rigid_h_bonds':            False,
             'robust_minimization':      False,
             'store_forces':             False,
@@ -253,9 +254,11 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         }
 
         dynamic_template_context = {
-            'minimization_ftol': 'metadata->step_specific->minimization->fixed_box->ftol',
-            'minimization_maxiter': 'metadata->step_specific->minimization->fixed_box->maxiter',
-            'minimization_maxeval': 'metadata->step_specific->minimization->fixed_box->maxeval',
+            'minimization_ftol': 'metadata->step_specific->minimization->relaxed_box->ftol',
+            'minimization_maxiter': 'metadata->step_specific->minimization->relaxed_box->maxiter',
+            'minimization_maxeval': 'metadata->step_specific->minimization->relaxed_box->maxeval',
+
+            'pressureP': 'metadata->step_specific->minimization->relaxed_box->pressure',
 
             'substrate_element': 'metadata->system->substrate->element',
             'substrate_type': 'metadata->system->substrate->lmp->type',
@@ -340,17 +343,17 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
-class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
+class LAMMPSRelaxedBoxMinimizationSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LAMMPSFixedBoxMinimization'
+        sub_wf_name = 'LAMMPSRelaxedBoxMinimization'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
-            main_sub_wf=LAMMPSFixedBoxMinimizationMain(*args, **kwargs),
+            main_sub_wf=LAMMPSRelaxedBoxMinimizationMain(*args, **kwargs),
             analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
             *args, **kwargs)

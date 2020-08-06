@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Substrate fixed box minimization sub workflow."""
+"""Substrate NVT equilibration sub workflow."""
 
 import datetime
 import glob
@@ -24,14 +24,23 @@ import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
 
-class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
+class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
     """
-    Fixed box minimization with LAMMPS.
+    NVT equilibration with LAMMPS.
 
     inputs:
-    - metadata->step_specific->minimization->fixed_box->ftol
-    - metadata->step_specific->minimization->fixed_box->maxiter
-    - metadata->step_specific->minimization->fixed_box->maxeval
+    - metadata->step_specific->equilibration->nvt->temperature
+    - metadata->step_specific->equilibration->nvt->langevin_damping
+
+    - metadata->step_specific->equilibration->nvt->steps
+    - metadata->step_specific->equilibration->nvt->netcdf_frequency
+    - metadata->step_specific->equilibration->nvt->thermo_frequency
+    - metadata->step_specific->equilibration->nvt->thermo_average_frequency
+
+    - metadata->step_specific->equilibration->nvt->neigh_delay
+    - metadata->step_specific->equilibration->nvt->neigh_every
+    - metadata->step_specific->equilibration->nvt->neigh_check
+    - metadata->step_specific->equilibration->nvt->skin_distance
 
     - metadata->system->substrate->element
     - metadata->system->substrate->lmp->type
@@ -40,17 +49,15 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         only queried in pull stub, otherwise expected through data flow
 
     - data_file:       default.lammps
-        tagged as {'metadata->type': 'initial_config'}
 
     static infiles:
         always queried within main trunk
 
     - input_header_template: lmp_header.input.template
-    - input_body_template: lmp_minimization.input.template
+    - input_body_template: lmp_production.input.template
     - mass_file: mass.input
     - coeff_file: coeff.input
     - eam_file:   default.eam.alloy
-
 
     outfiles:
     - coeff_file:      coeff.input  # untouched
@@ -60,11 +67,12 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     - input_file:      default.input  # untouched
     - log_file:        log.lammps
     - mass_file:       mass.input  # untouched
+    - thermo_ave_file: thermo_ave.out
     - trajectory_file: default.nc
     """
 
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LAMMPSFixedBoxMinimizationMain'
+        sub_wf_name = 'LAMMPSEquilibrationNVTMain'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
@@ -94,7 +102,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_INPUT_TEMPLATE_SUBDIR,
-                file_config.LMP_MINIMIZATION_INPUT_TEMPLATE),
+                file_config.LMP_PRODUCTION_INPUT_TEMPLATE),
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_FF_SUBDIR,
@@ -154,7 +162,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         files_in = {}
         files_out = {
             'input_header_template': 'lmp_header.input.template',
-            'input_body_template':   'lmp_minimization.input.template',
+            'input_body_template':   'lmp_production.input.template',
             'mass_file':             'mass.input',
             'coeff_file':            'coeff.input',
             'eam_file':              'default.eam.alloy'
@@ -173,12 +181,12 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.LMP_MINIMIZATION_INPUT_TEMPLATE,
+                    'metadata->name':    file_config.LMP_PRODUCTION_INPUT_TEMPLATE,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['lmp_minimization.input.template']),
+                new_file_names=['lmp_production.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -241,21 +249,31 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         # Jinja2 context:
         static_template_context = {
             'coeff_infile':            'coeff.input',
+            'compute_group_properties': True,
             'data_file':                'datafile.lammps',
-            'mpiio':                    False,
-            'relax_box':                False,
+            'initialT':                 0.0,
+            'mpiio':                    True,
+            'reinitialize_velocities':  True,
             'rigid_h_bonds':            False,
-            'robust_minimization':      False,
             'store_forces':             False,
+            'temper_solid_only':        False,
+            'use_barostat':             False,
             'use_eam':                  True,
             'use_ewald':                False,
             'write_coeff_to_datafile':  False,
         }
 
         dynamic_template_context = {
-            'minimization_ftol': 'metadata->step_specific->minimization->fixed_box->ftol',
-            'minimization_maxiter': 'metadata->step_specific->minimization->fixed_box->maxiter',
-            'minimization_maxeval': 'metadata->step_specific->minimization->fixed_box->maxeval',
+            'temperatureT':     'metadata->step_specific->equilibration->nvt->temperature',
+            'langevin_damping': 'metadata->step_specific->equilibration->nvt->langevin_damping',
+            'production_steps': 'metadata->step_specific->equilibration->nvt->steps',
+            'netcdf_frequency': 'metadata->step_specific->equilibration->nvt->netcdf_frequency',
+            'thermo_frequency': 'metadata->step_specific->equilibration->nvt->thermo_frequency',
+            'thermo_average_frequency': 'metadata->step_specific->equilibration->nvt->thermo_average_frequency',
+            'neigh_delay':      'metadata->step_specific->equilibration->nvt->neigh_delay',
+            'neigh_every':      'metadata->step_specific->equilibration->nvt->neigh_every',
+            'neigh_check':      'metadata->step_specific->equilibration->nvt->neigh_check',
+            'skin_distance':    'metadata->step_specific->equilibration->nvt->skin_distance',
 
             'substrate_element': 'metadata->system->substrate->element',
             'substrate_type': 'metadata->system->substrate->lmp->type',
@@ -297,14 +315,15 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             'eam_file':   'default.eam.alloy',
         }
         files_out = {
-            'data_file':       'default.lammps',
-            'trajectory_file': 'default.nc',
-            'index_file':      'groups.ndx',  # generated
-            'input_file':      'default.input',  # untouched
-            'mass_file':       'mass.input',  # untouched
-            'log_file':        'log.lammps',
             'coeff_file':      'coeff.input',  # untouched
+            'data_file':       'default.lammps',
             'eam_file':        'default.eam.alloy',  # untouched
+            'index_file':      'groups.ndx',
+            'input_file':      'default.input',  # untouched
+            'log_file':        'log.lammps',
+            'mass_file':       'mass.input',  # untouched
+            'thermo_ave_file': 'thermo_ave.out',
+            'trajectory_file': 'default.nc',
         }
         fts_lmp_run = [CmdTask(
             cmd='lmp',
@@ -340,17 +359,17 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
-class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
+class LAMMPSEquilibrationNVTSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LAMMPSFixedBoxMinimization'
+        sub_wf_name = 'LAMMPSEquilibrationNVT'
         if 'wf_name_prefix' not in kwargs:
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
-            main_sub_wf=LAMMPSFixedBoxMinimizationMain(*args, **kwargs),
+            main_sub_wf=LAMMPSEquilibrationNVTMain(*args, **kwargs),
             analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
             *args, **kwargs)

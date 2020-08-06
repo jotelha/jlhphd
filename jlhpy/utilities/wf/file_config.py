@@ -21,11 +21,12 @@ LMP_INPUT_TEMPLATE_SUBDIR = os.path.join(LMP_INPUT_SUBDIR, 'template')
 LMP_CONVERT_XYZ_INPUT_TEMPLATE = 'lmp_convert_xyz.input.template'
 LMP_HEADER_INPUT_TEMPLATE = 'lmp_header.input.template'
 LMP_MINIMIZATION_INPUT_TEMPLATE = 'lmp_minimization.input.template'
-
+LMP_PRODUCTION_INPUT_TEMPLATE = 'lmp_production.input.template'
 
 LMP_FF_SUBDIR = 'ff'
 LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'
-LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
+LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN = '{name:s}_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh_nonbonded.input'
+# LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_EAM_ALLOY = 'Au-Grochola-JCP05-units-real.eam.alloy'
 
 PDB_SUBDIR     = 'pdb'

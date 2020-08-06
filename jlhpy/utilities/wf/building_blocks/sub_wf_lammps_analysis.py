@@ -21,24 +21,54 @@ class LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator
     analysis dynamic infiles:
         no pull stub implemented
 
-    - data_file:       default.lammps
-    - trajectory_file: default.nc
+        - data_file:       default.lammps
+        - trajectory_file: default.nc
 
-    Implementation must provide rmsd_list and rdf_list.
+    analysis outfiles:
+        - box_measures_file: box.txt
+        - rdf_file:          rdf.txt
+        - fcc_rdf_file:      fcc_rdf.txt
+
     """
-
-    @property
-    @abstractmethod
-    def rmsd_list(self) -> list:
-        ...
-
-    @property
-    @abstractmethod
-    def rdf_list(self) -> list:
-        ...
 
     def main(self, fws_root=[]):
         fw_list = []
+
+        # extract thermo
+        # --------------
+
+        step_label = self.get_step_label('extract_thermo')
+
+        files_in = {
+            'log_file': 'log.lammps',
+        }
+        files_out = {
+            'thermo_file': 'thermo.out',
+        }
+
+        fts_extract_thermo = [
+            CmdTask(
+                cmd="cat log.lammps | sed -n '/^Step/,/^Loop time/p' | sed '/^colvars:/d' | head -n-1 > thermo.out",
+                fizzle_bad_rc=True,
+                use_shell=True),
+             ]
+
+        fw_extract_thermo = Firework(fts_extract_thermo,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                     **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_extract_thermo)
 
         # compute rdf
         # -----------
@@ -65,7 +95,6 @@ class LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator
                      'default.lammps', 'rdf.txt', 'box.txt',
                     ],
                 env='python',
-                stdin_key='stdin',
                 stderr_file='extract_std_property.err',
                 stdout_file='extract_std_property.out',
                 stdlog_file='extract_std_property.log',
@@ -82,7 +111,6 @@ class LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator
                      'default.lammps', 'fcc_rdf.txt',
                     ],
                 env='python',
-                stdin_key='stdin',
                 stderr_file='extract_std_property.err',
                 stdout_file='extract_std_property.out',
                 stdlog_file='extract_std_property.log',
@@ -109,4 +137,4 @@ class LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator
 
         fw_list.append(fw_analysis)
 
-        return fw_list, [fw_analysis], [fw_analysis]
+        return fw_list, [fw_analysis, fw_extract_thermo], [fw_analysis, fw_extract_thermo]
