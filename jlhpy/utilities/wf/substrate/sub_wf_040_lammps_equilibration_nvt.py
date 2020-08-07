@@ -53,8 +53,7 @@ class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
     static infiles:
         always queried within main trunk
 
-    - input_header_template: lmp_header.input.template
-    - input_body_template: lmp_production.input.template
+    - input_template: lmp.input.template
     - mass_file: mass.input
     - coeff_file: coeff.input
     - eam_file:   default.eam.alloy
@@ -98,11 +97,7 @@ class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_INPUT_TEMPLATE_SUBDIR,
-                file_config.LMP_HEADER_INPUT_TEMPLATE),
-            os.path.join(
-                self.infile_prefix,
-                file_config.LMP_INPUT_TEMPLATE_SUBDIR,
-                file_config.LMP_PRODUCTION_INPUT_TEMPLATE),
+                file_config.LMP_INPUT_TEMPLATE),
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_FF_SUBDIR,
@@ -161,32 +156,22 @@ class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'input_header_template': 'lmp_header.input.template',
-            'input_body_template':   'lmp_production.input.template',
-            'mass_file':             'mass.input',
-            'coeff_file':            'coeff.input',
-            'eam_file':              'default.eam.alloy'
+            'input_template': 'lmp.input.template',
+            'mass_file':      'mass.input',
+            'coeff_file':     'coeff.input',
+            'eam_file':       'default.eam.alloy',
         }
 
         fts_pull = [
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.LMP_HEADER_INPUT_TEMPLATE,
+                    'metadata->name':    file_config.LMP_INPUT_TEMPLATE,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['lmp_header.input.template']),
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project': self.project_id,
-                    'metadata->name':    file_config.LMP_PRODUCTION_INPUT_TEMPLATE,
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['lmp_production.input.template']),
+                new_file_names=['lmp.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -238,8 +223,7 @@ class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
         step_label = self.get_step_label('fill_template')
 
         files_in = {
-            'input_header_template': 'lmp_header.input.template',
-            'input_body_template':   'default.input.template',
+            'input_template': 'default.input.template',
 
         }
         files_out = {
@@ -248,6 +232,7 @@ class LAMMPSEquilibrationNVTMain(SubWorkflowGenerator):
 
         # Jinja2 context:
         static_template_context = {
+            'mode':                    'production',
             'coeff_infile':            'coeff.input',
             'compute_group_properties': True,
             'data_file':                'datafile.lammps',

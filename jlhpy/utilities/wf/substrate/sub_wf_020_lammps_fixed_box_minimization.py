@@ -45,8 +45,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     static infiles:
         always queried within main trunk
 
-    - input_header_template: lmp_header.input.template
-    - input_body_template: lmp_minimization.input.template
+    - input_template: lmp.input.template
     - mass_file: mass.input
     - coeff_file: coeff.input
     - eam_file:   default.eam.alloy
@@ -90,11 +89,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_INPUT_TEMPLATE_SUBDIR,
-                file_config.LMP_HEADER_INPUT_TEMPLATE),
-            os.path.join(
-                self.infile_prefix,
-                file_config.LMP_INPUT_TEMPLATE_SUBDIR,
-                file_config.LMP_MINIMIZATION_INPUT_TEMPLATE),
+                file_config.LMP_INPUT_TEMPLATE),
             os.path.join(
                 self.infile_prefix,
                 file_config.LMP_FF_SUBDIR,
@@ -153,32 +148,22 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'input_header_template': 'lmp_header.input.template',
-            'input_body_template':   'lmp_minimization.input.template',
-            'mass_file':             'mass.input',
-            'coeff_file':            'coeff.input',
-            'eam_file':              'default.eam.alloy'
+            'input_template': 'lmp.input.template',
+            'mass_file':      'mass.input',
+            'coeff_file':     'coeff.input',
+            'eam_file':       'default.eam.alloy'
         }
 
         fts_pull = [
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.LMP_HEADER_INPUT_TEMPLATE,
+                    'metadata->name':    file_config.LMP_INPUT_TEMPLATE,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['lmp_header.input.template']),
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project': self.project_id,
-                    'metadata->name':    file_config.LMP_MINIMIZATION_INPUT_TEMPLATE,
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['lmp_minimization.input.template']),
+                new_file_names=['lmp.input.template']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -230,9 +215,7 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         step_label = self.get_step_label('fill_template')
 
         files_in = {
-            'input_header_template': 'lmp_header.input.template',
-            'input_body_template':   'default.input.template',
-
+            'input_template': 'default.input.template',
         }
         files_out = {
             'input_file': 'default.input',
@@ -240,7 +223,8 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
 
         # Jinja2 context:
         static_template_context = {
-            'coeff_infile':            'coeff.input',
+            'mode':                     'minimization',
+            'coeff_infile':             'coeff.input',
             'data_file':                'datafile.lammps',
             'mpiio':                    False,
             'relax_box':                False,
