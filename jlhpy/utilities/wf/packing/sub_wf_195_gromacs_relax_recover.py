@@ -27,7 +27,7 @@ from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 #             'trajectory_file': 'default.trr',
 #             # 'compressed_traj_file': 'default.xtc',
 #             'data_file':       'default.gro',
-#             'input_file':      'default.tpr',
+#             'run_file':      'default.tpr',
 #             'topology_file':   'default.top',
 #             'index_file':      'default.ndx',
 #         }
@@ -148,7 +148,7 @@ class GromacsRelaxationRecoverMain(SubWorkflowGenerator):
             'trajectory_file': 'default.trr',
             'compressed_traj_file': 'default.xtc',
             'data_file':       'default.gro',
-            'input_file':      'default.tpr',
+            'run_file':        'default.tpr',
             'topology_file':   'default.top',
             'index_file':      'default.ndx',
         }
@@ -206,7 +206,7 @@ class GromacsRelaxationRecoverMain(SubWorkflowGenerator):
             'compressed_traj_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',
-            'input_file':      'default.tpr',
+            'run_file':        'default.tpr',
             'index_file':      'default.ndx',
         }
 
