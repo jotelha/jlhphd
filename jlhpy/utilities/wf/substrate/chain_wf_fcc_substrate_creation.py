@@ -5,6 +5,7 @@ from jlhpy.utilities.wf.substrate.sub_wf_010_create_fcc_111_substrate import Cre
 from jlhpy.utilities.wf.substrate.sub_wf_020_lammps_fixed_box_minimization import LAMMPSFixedBoxMinimizationSubWorkflowGenerator
 from jlhpy.utilities.wf.substrate.sub_wf_030_lammps_relaxed_box_minimization import LAMMPSRelaxedBoxMinimizationSubWorkflowGenerator
 from jlhpy.utilities.wf.substrate.sub_wf_040_lammps_equilibration_nvt import LAMMPSEquilibrationNVTSubWorkflowGenerator
+from jlhpy.utilities.wf.substrate.sub_wf_050_lammps_equilibration_npt import LAMMPSEquilibrationNPTSubWorkflowGenerator
 
 class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
     """FCC substrate creation workflow.
@@ -14,6 +15,7 @@ class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
     - LAMMPSFixedBoxMinimizationSubWorkflowGenerator
     - LAMMPSRelaxedBoxMinimizationSubWorkflowGenerator
     - LAMMPSEquilibrationNVTSubWorkflowGenerator
+    - LAMMPSEquilibrationNPTSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
@@ -22,6 +24,7 @@ class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
             LAMMPSFixedBoxMinimizationSubWorkflowGenerator(*args, **kwargs),
             LAMMPSRelaxedBoxMinimizationSubWorkflowGenerator(*args, **kwargs),
             LAMMPSEquilibrationNVTSubWorkflowGenerator(*args, **kwargs),
+            LAMMPSEquilibrationNPTSubWorkflowGenerator(*args, **kwargs),
         ]
         sub_wf_name = 'FCCSubstrateCreation'
         if 'wf_name_prefix' not in kwargs:
