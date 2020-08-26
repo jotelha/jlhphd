@@ -35,8 +35,7 @@ def convert_lammps_data_to_pdb(
         lammps_style='full', lammps_units='real',
         lmp_ase_type_mapping={11: 'Au'},
         ase_pmd_type_mapping={'Au': 'AU'},
-        ase_pmd_residue_mapping={'Au': 'AUM'},
-        pmd_residue_numbering='per-atom'):
+        ase_pmd_residue_mapping={'Au': 'AUM'}):
     """Convert LAMMPS data format to PDB.
 
         ASE types can be specified as str (element name) or int (atomic number).

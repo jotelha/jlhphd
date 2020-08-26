@@ -22,10 +22,9 @@ class FlatSubstratePackingChainWorkflowGenerator(ChainWorkflowGenerator):
     """Flat substrate packing with PACKMOL sub workflow.
 
     Concatenates
-    - IndenterBoundingSphereSubWorkflowGenerator
     - SurfactantMoleculeMeasuresSubWorkflowGenerator
-    - PackingConstraintSpheresSubWorkflowGenerator
-    - SphericalSurfactantPackingSubWorkflowGenerator
+    - PackingConstraintPlanesSubWorkflowGenerator
+    - PlanarSurfactantPackingSubWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
