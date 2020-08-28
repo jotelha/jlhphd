@@ -22,9 +22,12 @@ Those three lists are to be extended accordingly eventually returned with
 
     return fw_list, fws_leaf_out, fws_root_out
 
+TODO: insert metdata from pulled object into workflow
+
 """
 import abc
 import datetime
+import logging
 import re
 import unicodedata
 
@@ -39,6 +42,7 @@ from imteksimfw.fireworks.user_objects.firetasks.dtool_tasks import (
     CreateDatasetTask, FreezeDatasetTask, CopyDatasetTask)
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import EvalPyEnvTask
 from imteksimfw.fireworks.user_objects.firetasks.ssh_tasks import SSHForwardTask
+from imteksimfw.fireworks.user_objects.firetasks.storage_tasks import GetObjectFromFilepadTask
 
 
 class PullMixinABC(abc.ABC):
@@ -82,15 +86,21 @@ class PullFromFilePadMixin(PushMixinABC):
         fts_pull = []
         for file in self.files_in_list:
             fts_pull.append(
-                GetFilesByQueryTask(
+                GetObjectFromFilepadTask(
                     query={
                         **query,
                         'metadata->type': file['file_label'],
                     },
                     sort_key='metadata.datetime',
                     sort_direction=pymongo.DESCENDING,
-                    limit=1,
-                    new_file_names=[file['file_name']])
+                    new_file_name=file['file_name'],
+                    metadata_fp_source_key='metadata',
+                    metadata_fw_dest_key='metadata',
+                    metadata_fw_source_key='metadata',
+                    fw_supersedes_fp=True,
+                    stdlog_file='std.log',
+                    loglevel=logging.DEBUG,
+                    propagate=True)
                 )
 
         fw_pull = Firework(fts_pull,
@@ -111,7 +121,6 @@ class PullFromFilePadMixin(PushMixinABC):
         fw_list.append(fw_pull)
 
         return fw_list, [fw_pull], [fw_pull]
-
 
 
 class PushToFilePadMixin(PushMixinABC):

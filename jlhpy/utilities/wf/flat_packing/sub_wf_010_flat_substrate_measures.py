@@ -21,13 +21,13 @@ class FlatSubstrateMeasuresMain(SubWorkflowGenerator):
     """Flat substrate measures sub workflow.
 
     dynamic infiles:
-    - substrate_file: default.pdb
+    - data_file: default.pdb
 
     outfiles:
-    - substrate_file: default.pdb (unchanged)
+    - data_file: default.pdb (unchanged)
 
     outputs:
-        - metadata->system->indenter->bounding_box ([[float]])
+        - metadata->system->substrate->bounding_box ([[float]])
     """
 
     def __init__(self, *args, **kwargs):
@@ -46,10 +46,10 @@ class FlatSubstrateMeasuresMain(SubWorkflowGenerator):
         step_label = self.get_step_label('bounding_box')
 
         files_in = {
-            'substrate_file':      'default.pdb',
+            'data_file':      'default.pdb',
         }
         files_out = {
-            'substrate_file':      'default.pdb',
+            'data_file':      'default.pdb',
         }
 
         func_str = serialize_module_obj(get_bounding_box_via_ase)
@@ -95,10 +95,10 @@ class FlatSubstrateMeasuresVis(
     """Flat substrate measures visualization sub workflow.
 
     inputs:
-    - metadata->system->indenter->bounding_box ([[float]])
+    - metadata->system->substrate->bounding_box ([[float]])
 
     dynamic infiles:
-    - substrate_file: default.pdb
+    - data_file: default.pdb
 
     outfiles:
     - png_file:     default.png
@@ -118,7 +118,7 @@ class FlatSubstrateMeasuresVis(
         step_label = self.get_step_label('vis')
 
         files_in = {
-            'substrate_file': 'default.pdb',
+            'data_file': 'default.pdb',
         }
         files_out = {
             'png_file': 'default.png'
@@ -130,7 +130,7 @@ class FlatSubstrateMeasuresVis(
             func=func_str,
             args=['default.pdb', 'default.png'],
             inputs=[
-                'metadata->system->indenter->bounding_box-',
+                'metadata->system->substrate->bounding_box',
             ],  # inputs appended to args
             env='imteksimpy',
             stderr_file='std.err',
@@ -143,7 +143,10 @@ class FlatSubstrateMeasuresVis(
         fw_vis = Firework(fts_vis,
             name=self.get_fw_label(step_label),
             spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_category': self.hpc_specs['fw_queue_category'],
+                '_queueadapter': {
+                    **self.hpc_specs['single_core_job_queueadapter_defaults'],
+                },
                 '_files_in':  files_in,
                 '_files_out': files_out,
                 'metadata': {
@@ -159,7 +162,7 @@ class FlatSubstrateMeasuresVis(
         return fw_list, [fw_vis], [fw_vis]
 
 
-class FlatSubstrateMeasuresSubWorkflowGnerator(
+class FlatSubstrateMeasuresSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
         ):

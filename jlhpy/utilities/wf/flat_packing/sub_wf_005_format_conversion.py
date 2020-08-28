@@ -23,10 +23,10 @@ class FormatConversionMain(SubWorkflowGenerator):
     - metadata->step_specific->conversion->element_to_pdb_residue_name_mapping
 
     dynamic infiles:
-    - substrate_file: default.lammps
+    - data_file: default.lammps
 
     outfiles:
-    - substrate_file: default.pdb
+    - data_file: default.pdb
 
     outputs:
 
@@ -48,10 +48,10 @@ class FormatConversionMain(SubWorkflowGenerator):
         step_label = self.get_step_label('convert')
 
         files_in = {
-            'substrate_file': 'default.lammps',
+            'data_file': 'default.lammps',
         }
         files_out = {
-            'substrate_file': 'default.pdb',
+            'data_file': 'default.pdb',
         }
 
         func_str = serialize_module_obj(convert_lammps_data_to_pdb)
@@ -108,4 +108,4 @@ class FormatConversionSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)

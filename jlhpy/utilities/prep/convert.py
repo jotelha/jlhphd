@@ -48,7 +48,7 @@ def convert_lammps_data_to_pdb(
         lmp_ase_type_mapping, lammps_units, lammps_style, infile))
 
     infile_type_mapping = {
-        k: ase.data.atomic_numbers[v] if isinstance(v, str) else v
+        int(k): ase.data.atomic_numbers[v] if isinstance(v, str) else v
         for k, v in lmp_ase_type_mapping.items()}
 
     print("LAMMPS to ASE type mapping converted to atomic numbers: {}.".format(infile_type_mapping))
