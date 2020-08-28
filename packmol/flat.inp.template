@@ -1,9 +1,11 @@
 # PACKMOL input Jinja2 template for packing surfactant aggregates on top
 # of flat substrate
-#
+
 # {{ system_name }}
 # {{ header }}
 
+# -1 to generate a seed automatically from the computer time
+seed {{ seed|default(-1,false)|int }}
 # Change the maximum number of optimization loops, default 20
 nloop {{ nloop|default(20,true)|int }}
 # Change the maximum number of Gencan iterations per loop. default 50
@@ -33,72 +35,72 @@ output {{ system_name }}_packmol.pdb
 restart_to {{ system_name }}_restart.pack
 {% endif %}
 
-# substrate
-structure {{ sb_name }}.pdb
+
+{% if static_components %}
+{% for static_component in static_components %}
+structure {{ static_component.name }}.pdb
   number 1
   resnumbers 2
-  #center 
-  fixed {{ "%.3f"|format(sb_pos[0]) }} {{ "%.3f"|format(sb_pos[1]) }} {{ "%.3f"|format(sb_pos[2]) }} 0. 0. 0.
+  fixed {{ "%.3f"|format(static_component.offset|default([0, 0, 0])|first) }} {{ "%.3f"|format((static_component.offset|default([0, 0, 0]))[1]) }} {{ "%.3f"|format(static_component.offset|default([0 ,0, 0])|last) }} 0. 0. 0.
 end structure
+{% endfor %}
+{% endif %}
 
-{% for monolayer in monolayers %} 
+{% for layer in layers %}
 
 # monolayer examples:
 
 # SDS monolayer: the polar head is oriented downwards, tail upwards.
-# {{ monolayer.N }} lipids are be placed within a monolayer bounding box.
-# Atom {{ monolayer.lower_atom_number }} of SDS .pdb file (e.g. sulfur, which belongs to 
-# polar head), will be constrained below plane z < {{ monolayer.lower_constraint_plane }}.
-# Atom {{ monolayer.upper_atom_number }}, (e.g. hydrophobic tail of the hydrocarbon chain), 
-# will be constrained above plane z > {{ monolayer.upper_constraint_plane }}. Therefore, 
-# all lipids will be like-oriented, distributed randomly and non-overlapping 
+# {{ layer.N }} lipids are be placed within a monolayer bounding box.
+# Atom {{ layer.lower_atom_number }} of SDS .pdb file (e.g. sulfur, which belongs to
+# polar head), will be constrained below plane z < {{ layer.lower_constraint_plane }}.
+# Atom {{ layer.upper_atom_number }}, (e.g. hydrophobic tail of the hydrocarbon chain),
+# will be constrained above plane z > {{ layer.upper_constraint_plane }}. Therefore,
+# all lipids will be like-oriented, distributed randomly and non-overlapping
 # within bounding box.
 
 # CTAB monolayer: the polar head is oriented downwards, tail upwards.
-# {{ monolayer.N }} lipids are be placed within a monolayer bounding box.
-# Atom {{ monolayer.lower_atom_number }} of CTAB .pdb file (e.g. nitrogen, which belongs to 
-# polar head), will be constrained below plane z < {{ monolayer.lower_constraint_plane }}.
-# Atom {{ monolayer.upper_atom_number }}, (e.g. hydrophobic tail of the hydrocarbon chain), 
-# will be constrained above plane z > {{ monolayer.upper_constraint_plane }}. Therefore, 
-# all lipids will be like-oriented, distributed randomly and non-overlapping 
+# {{ layer.N }} lipids are be placed within a monolayer bounding box.
+# Atom {{ layer.lower_atom_number }} of CTAB .pdb file (e.g. nitrogen, which belongs to
+# polar head), will be constrained below plane z < {{ layer.lower_constraint_plane }}.
+# Atom {{ layer.upper_atom_number }}, (e.g. hydrophobic tail of the hydrocarbon chain),
+# will be constrained above plane z > {{ layer.upper_constraint_plane }}. Therefore,
+# all lipids will be like-oriented, distributed randomly and non-overlapping
 # within bounding box.
-structure 1_{{ monolayer.surfactant }}.pdb 
+structure 1_{{ layer.surfactant }}.pdb
   chain A
   resnumbers 2
-  number {{ monolayer.N|int }}
-  inside box {{ "%.3f"|format(monolayer.bb_lower[0]) }} {{ "%.3f"|format(monolayer.bb_lower[1]) }} {{ "%.3f"|format(monolayer.bb_lower[2]) }}  {{ "%.3f"|format(monolayer.bb_upper[0]) }}  {{ "%.3f"|format(monolayer.bb_upper[1]) }} {{ "%.3f"|format(monolayer.bb_upper[2]) }}
-  atoms {{ monolayer.lower_atom_number|int }}
-    below plane 0. 0. 1. {{ "%.3f"|format(monolayer.lower_constraint_plane) }}
+  number {{ layer.N|int }}
+  inside box {{ "%.3f"|format(layer.bb_lower[0]) }} {{ "%.3f"|format(layer.bb_lower[1]) }} {{ "%.3f"|format(layer.bb_lower[2]) }}  {{ "%.3f"|format(layer.bb_upper[0]) }}  {{ "%.3f"|format(layer.bb_upper[1]) }} {{ "%.3f"|format(layer.bb_upper[2]) }}
+  atoms {{ layer.lower_atom_number|int }}
+    below plane 0. 0. 1. {{ "%.3f"|format(layer.lower_constraint_plane) }}
   end atoms
-  atoms {{ monolayer.upper_atom_number|int }}
-    over plane 0. 0. 1. {{ "%.3f"|format(monolayer.upper_constraint_plane) }}
+  atoms {{ layer.upper_atom_number|int }}
+    over plane 0. 0. 1. {{ "%.3f"|format(layer.upper_constraint_plane) }}
   end atoms
   {% if write_restart %}
-    restart_to {{ system_name }}_monolayer_{{ "%03d"|format(loop.index0) }}_restart.pack
+    restart_to {{ system_name }}_layer_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
 {% endfor %}
 
 {% for cylinder in cylinders %}
-structure 1_{{ cylinder.surfactant }}.pdb
-  nloop 200
-  chain A
+structure {{ cylinder.surfactant }}.pdb
   resnumbers 2
   number {{ cylinder.N|int }}
-  # along x axis
-  inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.radius) }} {{ "%.3f"|format(cylinder.length) }}
-
+  inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer) }} {{ "%.3f"|format(cylinder.length) }}
+  outside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner) }} {{ "%.3f"|format(cylinder.length) }}
   {% if cylinder.upper_hemi %}
   over plane 0. 0. 1. {{ "%.3f"|format(cylinder.base_center[2]) }}
   {% elif cylinder.lower_hemi %}
   below plane 0. 0. 1. {{ "%.3f"|format(cylinder.base_center[2]) }}
   {% endif %}
-  
-  atoms {{ cylinder.outer_atom_number|int }}
-    outside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.outer_constraint_radius) }} {{ "%.3f"|format(cylinder.length) }}
-  end atoms
+
   atoms {{ cylinder.inner_atom_number|int }}
-    inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.inner_constraint_radius) }} {{ "%.3f"|format(cylinder.length) }}
+    inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner_constraint) }} {{ "%.3f"|format(cylinder.length) }}
+  end atoms
+  atoms {{ cylinder.outer_atom_number|int }}
+    outside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer_constraint) }} {{ "%.3f"|format(cylinder.length) }}
   end atoms
   {% if write_restart %}
     restart_to {{ system_name }}_cylinder_{{ "%03d"|format(loop.index0) }}_restart.pack
@@ -106,9 +108,9 @@ structure 1_{{ cylinder.surfactant }}.pdb
 end structure
 {% endfor %}
 
-# point paricles, generally ions
+# point particles, generally ions
 {% for ionlayer in ionlayers %}
-structure 1_{{ ionlayer.ion }}.pdb 
+structure 1_{{ ionlayer.ion }}.pdb
   chain A
   resnumbers 2
   number {{ ionlayer.N|int }}
