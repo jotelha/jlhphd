@@ -31,15 +31,6 @@ class FormatConversionMain(SubWorkflowGenerator):
     outputs:
 
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'FormatConversionMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -102,10 +93,3 @@ class FormatConversionSubWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         FormatConversionMain,
         ):
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'FormatConversion'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)

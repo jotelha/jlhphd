@@ -35,15 +35,6 @@ class IndenterBoundingSphereMain(SubWorkflowGenerator):
         - metadata->system->indenter->bounding_sphere->center ([float])
         - metadata->system->indenter->bounding_sphere->radius (float)
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'IndenterBoundingSphereMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def push_infiles(self, fp):
         step_label = self.get_step_label('push_infiles')
         self.source_step = step_label  # NOTE: remove for reference to previous step
@@ -142,14 +133,6 @@ class IndenterBoundingSphereVis(
     outfiles:
     - png_file:     default.png
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'IndenterBoundingSphereVis'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
         # Plot sideviews

@@ -1,0 +1,1 @@
+^\s*def __init__\(self, \*args, \*\*kwargs\):\s+sub_wf_name = '[^']*'\s+if 'wf_name_prefix' not in kwargs:\s+kwargs\['wf_name_prefix'\] = sub_wf_name\s+else:\s+kwargs\['wf_name_prefix'\] = ':'\.join\(\(kwargs\['wf_name_prefix'\], sub_wf_name\)\)\s+super\(\)\.__init__\(\*args, \*\*kwargs\)\s*$

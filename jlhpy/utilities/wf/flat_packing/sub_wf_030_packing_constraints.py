@@ -41,14 +41,6 @@ class PackingConstraintsMain(SubWorkflowGenerator):
     Outputs:
     - metadata->step_specific->packing->surfactant_substrate->constraints (dict)
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'PackingConstraintsMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -105,55 +97,15 @@ class PackingConstraintsMain(SubWorkflowGenerator):
 class MonolayerPackingConstraintsMain(PackingConstraintsMain):
     """Monolayer packing constraint planes sub workflow. """
     func_str = serialize_module_obj(monolayer_above_substrate)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'MonolayerPackingConstrainstMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
 class BilayerPackingConstraintsMain(PackingConstraintsMain):
     """Bilayer packing constraint planes sub workflow. """
     func_str = serialize_module_obj(bilayer_above_substrate)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'MonolayerPackingConstrainstMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
 class CylindricalPackingConstraintsMain(PackingConstraintsMain):
     """Cylinder packing constraints sub workflow."""
     func_str = serialize_module_obj(cylinders_above_substrate)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'CylindricalPackingConstraintsMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
 class HemicylindricalPackingConstraintsMain(PackingConstraintsMain):
     """Cylinder packing constraints sub workflow."""
     func_str = serialize_module_obj(hemicylinders_above_substrate)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'HemicylindricalPackingConstraintsMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
 class LayeredPackingContextMain(SubWorkflowGenerator):
     """Layered packing template context sub workflow.
 
@@ -170,15 +122,6 @@ class LayeredPackingContextMain(SubWorkflowGenerator):
     Outputs:
     """
     func_str = serialize_module_obj(generate_pack_alternating_multilayer_packmol_template_context)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LayerdPackingContextMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -252,15 +195,6 @@ class CylindricalPackingContextMain(SubWorkflowGenerator):
     -
     """
     func_str = serialize_module_obj(generate_cylinders_packmol_template_context)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'CylindricalPackingContextMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -321,16 +255,6 @@ class HemicylindricalPackingContextMain(CylindricalPackingConstraintsMain):
     """Hemicylindrical packing template context sub workflow."""
 
     func_str = serialize_module_obj(generate_upper_hemicylinders_packmol_template_context)
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'HemicylindricalPackingContextMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
 class PackingMain(SubWorkflowGenerator):
     """Packmol packing."""
 
@@ -340,16 +264,6 @@ class PackingMain(SubWorkflowGenerator):
         'ionlayers': 'run->template->context->ionlayers',
         'movebadrandom': 'run->template->context->movebadrandom',
     }
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'PackingMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -530,15 +444,6 @@ class PackingMain(SubWorkflowGenerator):
 
 class LayeredPackingMain(PackingMain):
     """Layered packmol packing."""
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'PackingMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     context_inputs = {
         'tolerance': 'metadata->step_specific->packing->surfactant_substrate->tolerance',
         'layers': 'run->template->context->layers',
@@ -548,15 +453,6 @@ class LayeredPackingMain(PackingMain):
 
 class CylindricalPackingMain(PackingMain):
     """Cylindrical packmol packing."""
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'CylindricalPackingMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     context_inputs = {
         'tolerance': 'metadata->step_specific->packing->surfactant_substrate->tolerance',
         'cylinders': 'run->template->context->cylinders',

@@ -55,15 +55,6 @@ class GromacsNVTEquilibrationMain(SubWorkflowGenerator):
     - topology_file:   default.top
         pass through untouched
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsNVTEquilibrationMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def push_infiles(self, fp):
 
         # static infiles for main

@@ -29,15 +29,6 @@ class FlatSubstrateMeasuresMain(SubWorkflowGenerator):
     outputs:
         - metadata->system->substrate->bounding_box ([[float]])
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'FlatSubstrateMeasures'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -103,14 +94,6 @@ class FlatSubstrateMeasuresVis(
     outfiles:
     - png_file:     default.png
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'FlatSubstrateMeasuresVis'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
         # Plot sideviews

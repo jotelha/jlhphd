@@ -15,14 +15,6 @@ from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 class GromacsPrepMain(SubWorkflowGenerator):
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsPrepMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 

@@ -37,16 +37,6 @@ class GromacsSolvateMain(SubWorkflowGenerator):
     - topology_file: default.top
         tagged as {'metadata->type': 'solvate_top'}
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsSolvateMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
-
     def main(self, fws_root=[]):
         fw_list = []
 

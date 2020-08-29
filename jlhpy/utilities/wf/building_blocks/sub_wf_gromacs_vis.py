@@ -39,14 +39,6 @@ class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
     - mp4_file: default.mp4
         tagged as {'metadata->type': 'mp4_file'}
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsTrajectoryVisualization'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def push_infiles(self, fp):
         step_label = self.get_step_label('push_infiles')
 

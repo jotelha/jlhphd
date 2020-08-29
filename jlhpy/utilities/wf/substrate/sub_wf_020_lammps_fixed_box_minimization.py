@@ -61,15 +61,6 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
     - mass_file:       mass.input  # untouched
     - trajectory_file: default.nc
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'LAMMPSFixedBoxMinimizationMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def push_infiles(self, fp):
 
         # static infiles for main

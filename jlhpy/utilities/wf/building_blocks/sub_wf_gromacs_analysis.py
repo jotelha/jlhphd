@@ -189,14 +189,6 @@ class GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(
     - surfactant_tail_surfactant_tail_rdf: surfactant_tail_surfactant_tail_rdf.txt
         tagged as {'metadata->type': 'surfactant_tail_surfactant_tail_rdf'}
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsVacuumTrajectoryAnalysis'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     @property
     def rmsd_list(self):
         return [
@@ -349,14 +341,6 @@ class GromacsSolvatedTrajectoryAnalysisSubWorkflowGenerator(
     - surfactant_tail_surfactant_tail_rdf: surfactant_tail_surfactant_tail_rdf.txt
         tagged as {'metadata->type': 'surfactant_tail_surfactant_tail_rdf'}
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsSolvatedTrajectoryAnalysis'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     @property
     def rmsd_list(self):
         return [

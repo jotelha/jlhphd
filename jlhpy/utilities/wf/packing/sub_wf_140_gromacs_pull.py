@@ -81,15 +81,6 @@ class GromacsPullMain(SubWorkflowGenerator):
     - topology_file:  default.top
         passed through unmodified
     """
-
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsPullMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def push_infiles(self, fp):
         step_label = self.get_step_label('push_static_infiles')
 

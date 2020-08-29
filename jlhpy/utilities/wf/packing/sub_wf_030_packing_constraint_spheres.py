@@ -35,14 +35,6 @@ class PackingConstraintSpheresMain(SubWorkflowGenerator):
     - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer_constraint (float)
     - metadata->step_specific->packing->surfactant_indenter->constraints->R_outer (float)
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'PackingConstraintSpheresMain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -259,14 +251,6 @@ class PackingConstraintSpheresVis(
     outfiles:
     - png_file:     default.png
     """
-    def __init__(self, *args, **kwargs):
-        sub_wf_name = 'PackingConstraintSpheresVis'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        super().__init__(*args, **kwargs)
-
     def main(self, fws_root=[]):
         fw_list = []
 
