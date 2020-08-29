@@ -61,35 +61,13 @@ def cylinder(
     R_outer = R_inner + 2.*r + 2.*tol
 
     cylinder = {
-        'R_inner': R_inner,
-        'R_inner_constraint': R_inner_constraint,
-        'R_outer_constraint': R_outer_constraint,
-        'R_outer': R_outer
+        'r_inner': R_inner,
+        'r_inner_constraint': R_inner_constraint,
+        'r_outer_constraint': R_outer_constraint,
+        'r_outer': R_outer
     }
     logger.info("cylinder geometrical description: {}".format(cylinder))
     return cylinder
-
-
-# def monolayer_above_substrate(
-#         substrate_bounding_box,
-#         surfactant_bounding_sphere_radius,
-#         surfactant_head_group_diameter,
-#         tolerance=2.0):
-#     logger = logging.getLogger(__name__)
-#     r = surfactant_bounding_sphere_radius
-#     tol = tolerance
-#     d = surfactant_head_group_diameter
-#     bb = [
-#         [*substrate_bounding_box[0][0:2], substrate_bounding_box[1][2] + tol],
-#         [*substrate_bounding_box[1][0:2], substrate_bounding_box[1][2] + 2*r + 2*tol]
-#     ]
-#
-#     layers = [layer(bb, d, tol)]
-#     geometry = {
-#         'layers': layers
-#     }
-#     logger.info("monolayer geometrical description: {}".format(geometry))
-#     return geometry
 
 
 def multilayer_above_substrate(
@@ -133,7 +111,8 @@ def cylinders_above_substrate(
         substrate_bounding_box,
         surfactant_bounding_sphere_radius,
         surfactant_head_group_diameter,
-        tolerance=2.0):
+        tolerance=2.0,
+        vertical_offset=0):
     logger = logging.getLogger(__name__)
 
     r = surfactant_bounding_sphere_radius
@@ -146,12 +125,12 @@ def cylinders_above_substrate(
 
     cylinder_defaults = cylinder(r, d, tol)
     cylinder_defaults["length"] = length
-    R = cylinder_defaults["R_outer"]
+    R = cylinder_defaults["r_outer"]
 
     # number of cylinders to fit
     N = int(width/(2.*R))
     # list of base_center points, shape (N, dim)
-    base_center = [[bb[0][0]+(i+0.5)/N*width, bb[0][1], bb[1][2] + R + tol] for i in range(N)]
+    base_center = [[bb[0][0]+(i+0.5)/N*width, bb[0][1], bb[1][2] + R + vertical_offset + tol] for i in range(N)]
 
     geometry = {
         'cylinders': [{'base_center': bc, **cylinder_defaults} for bc in base_center],
@@ -179,7 +158,7 @@ def hemicylinders_above_substrate(
 
     hemicylinder_defaults = cylinder(r, d, tol)
     hemicylinder_defaults["length"] = length
-    R = hemicylinder_defaults["R_outer"]
+    R = hemicylinder_defaults["r_outer"]
 
     # number of cylinders to fit
     N = int(width/(2.*R))
