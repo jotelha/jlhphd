@@ -9,9 +9,9 @@ from fireworks import Firework, Workflow
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from imteksimfw.fireworks.user_objects.firetasks.recover_tasks import RecoverTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
-# class GromacsRestartMain(SubWorkflowGenerator):
+# class GromacsRestartMain(WorkflowGenerator):
 #
 #     def main(self, fws_root=[]):
 #         fw_list = []
@@ -75,9 +75,9 @@ from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 #         return fw_list, [fw_gmx_mdrun], [fw_gmx_mdrun]
 
 
-# class GromacsRestartSubWorkflowGenerator(
+# class GromacsRestartWorkflowGenerator(
 #         DefaultPullMixin, DefaultPushMixin,
-#         ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+#         ProcessAnalyzeAndVisualizeWorkflowGenerator,
 #         ):
 #     def __init__(self, *args, **kwargs):
 #         sub_wf_name = 'GromacsRestart'
@@ -85,14 +85,14 @@ from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
 #             kwargs['wf_name_prefix'] = sub_wf_name
 #         else:
 #             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-#         ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+#         ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
 #             main_sub_wf=GromacsRestartMain(*args, **kwargs),
-#             analysis_sub_wf=GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
-#             vis_sub_wf=GromacsTrajectoryVisualizationSubWorkflowGenerator(*args, **kwargs),
+#             analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
+#             vis_sub_wf=GromacsTrajectoryVisualizationWorkflowGenerator(*args, **kwargs),
 #             *args, **kwargs)
 
 
-class GromacsRelaxationRecoverMain(SubWorkflowGenerator):
+class GromacsRelaxationRecoverMain(WorkflowGenerator):
     """
     NPT relaxation with GROMACS without restraints on ions.
 

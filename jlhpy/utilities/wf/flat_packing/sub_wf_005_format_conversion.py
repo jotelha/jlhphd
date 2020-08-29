@@ -10,11 +10,11 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTa
 from jlhpy.utilities.prep.convert import convert_lammps_data_to_pdb
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin
 
 
-class FormatConversionMain(SubWorkflowGenerator):
+class FormatConversionMain(WorkflowGenerator):
     """Convert substrate file format.
 
     inputs:
@@ -89,7 +89,7 @@ class FormatConversionMain(SubWorkflowGenerator):
         return fw_list, [fw_conversion], [fw_conversion]
 
 
-class FormatConversionSubWorkflowGenerator(
+class FormatConversionWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
         FormatConversionMain,
         ):

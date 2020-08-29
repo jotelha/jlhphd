@@ -10,14 +10,14 @@ from fireworks.user_objects.firetasks.fileio_tasks import ArchiveDirTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.analysis.rdf import atom_atom_rdf
 from jlhpy.utilities.analysis.msd import atom_rmsd
 
 
-class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
+class GromacsTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
     """
     Abstract base class for partial analysis worklfow.
 
@@ -147,8 +147,8 @@ class GromacsTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
 
-class GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(
-        GromacsTrajectoryAnalysisSubWorkflowGenerator):
+class GromacsVacuumTrajectoryAnalysisWorkflowGenerator(
+        GromacsTrajectoryAnalysisWorkflowGenerator):
     """
     Implements partial analysis worklfow only.
 
@@ -287,8 +287,8 @@ class GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(
                 'atom_name_b': 'metadata->system->surfactant->tail_atom->name'},
         ]
 
-class GromacsSolvatedTrajectoryAnalysisSubWorkflowGenerator(
-        GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator):
+class GromacsSolvatedTrajectoryAnalysisWorkflowGenerator(
+        GromacsVacuumTrajectoryAnalysisWorkflowGenerator):
     """
     Implements partial analysis worklfow only.
 

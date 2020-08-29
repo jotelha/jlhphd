@@ -168,7 +168,7 @@ class FireWorksWorkflowGenerator:
                 creation_date + datetime.timedelta(days=DEFAULT_LIFESPAN))
 
 
-class SubWorkflowGenerator(FireWorksWorkflowGenerator):
+class WorkflowGenerator(FireWorksWorkflowGenerator):
     """A sub-workflow generator should implement three methods:
     pull, main and push. Each method returns three lists of FireWorks,
     - fws_list: all (readily interconnected) FireWorks of a sub-workflow
@@ -232,7 +232,7 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
 
     ### end of sample template ###
 
-    SubWorkflowGenerators should list dynamic infiles and outfiles in its
+    WorkflowGenerators should list dynamic infiles and outfiles in its
     attributes 'files_out_list' and 'files_in_list' of the format
 
     [ {'file_label' : 'label1', 'file_name': 'name1'}, {...}, {...} ]
@@ -439,7 +439,7 @@ class SubWorkflowGenerator(FireWorksWorkflowGenerator):
         ]
 
 
-class ProcessAnalyzeAndVisualizeSubWorkflowGenerator(SubWorkflowGenerator):
+class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
     """Merges three sub-workflows 'main', 'vis' and 'analysis' as shown below.
 
 
@@ -502,7 +502,7 @@ class ProcessAnalyzeAndVisualizeSubWorkflowGenerator(SubWorkflowGenerator):
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        SubWorkflowGenerator.__init__(self, *args, **kwargs)
+        WorkflowGenerator.__init__(self, *args, **kwargs)
 
     def push_infiles(self, fp):
         """fp: FilePad"""
@@ -544,7 +544,7 @@ class ProcessAnalyzeAndVisualizeSubWorkflowGenerator(SubWorkflowGenerator):
         return fw_list, fws_leaf, fws_main_root
 
 
-class ChainWorkflowGenerator(SubWorkflowGenerator):
+class ChainWorkflowGenerator(WorkflowGenerator):
     """Chains a set of sub-workflows."""
     def __init__(self, sub_wf_components, *args, **kwargs):
         """Takes list of instantiated sub-workflows."""
@@ -592,7 +592,7 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
         return self.sub_wf_components[-1].push(fws_root)
 
 
-# class BranchingWorkflowGenerator(SubWorkflowGenerator):
+# class BranchingWorkflowGenerator(WorkflowGenerator):
 #     """Assemble a set of sub-workflows in parallel."""
 #     def __init__(self, sub_wf_components, *args, **kwargs):
 #         """Takes list of instantiated sub-workflows."""
@@ -644,12 +644,12 @@ class ChainWorkflowGenerator(SubWorkflowGenerator):
 #         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
 
 
-class ParametricBranchingWorkflowGenerator(SubWorkflowGenerator):
+class ParametricBranchingWorkflowGenerator(WorkflowGenerator):
     """Parametric branching of workflow.
 
     args
     ----
-    - sub_wf: SubWorkflowGenerator
+    - sub_wf: WorkflowGenerator
     - parameter_values: [ { k: [v] } ]
         list of dict of parameter label: list of parameter values, i.e.
         [{'nmolecules': [100]}]

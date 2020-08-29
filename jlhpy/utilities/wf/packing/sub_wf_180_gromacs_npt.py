@@ -13,17 +13,17 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationSubWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationWorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
+class GromacsNPTEquilibrationMain(WorkflowGenerator):
     """
     NPT equilibration with GROMACS.
 
@@ -310,9 +310,9 @@ class GromacsNPTEquilibrationMain(SubWorkflowGenerator):
         return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
 
 
-class GromacsNPTEquilibrationSubWorkflowGenerator(
+class GromacsNPTEquilibrationWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'GromacsNPTEquilibration'
@@ -320,8 +320,8 @@ class GromacsNPTEquilibrationSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=GromacsNPTEquilibrationMain(*args, **kwargs),
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
-            vis_sub_wf=GromacsTrajectoryVisualizationSubWorkflowGenerator(*args, **kwargs),
+            analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
+            vis_sub_wf=GromacsTrajectoryVisualizationWorkflowGenerator(*args, **kwargs),
             *args, **kwargs)

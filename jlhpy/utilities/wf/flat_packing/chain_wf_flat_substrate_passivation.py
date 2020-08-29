@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator, ChainWorkflowGenerator
-from jlhpy.utilities.wf.flat_packing.sub_wf_005_format_conversion import FormatConversionSubWorkflowGenerator
-from jlhpy.utilities.wf.flat_packing.sub_wf_010_flat_substrate_measures import FlatSubstrateMeasuresSubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator, ChainWorkflowGenerator
+from jlhpy.utilities.wf.flat_packing.sub_wf_005_format_conversion import FormatConversionWorkflowGenerator
+from jlhpy.utilities.wf.flat_packing.sub_wf_010_flat_substrate_measures import FlatSubstrateMeasuresWorkflowGenerator
 
 
 class FlatSubstratePackingChainWorkflowGenerator(ChainWorkflowGenerator):
     """Flat substrate packing with PACKMOL sub workflow.
 
     Concatenates
-    - SurfactantMoleculeMeasuresSubWorkflowGenerator
+    - SurfactantMoleculeMeasuresWorkflowGenerator
     - FlatSubstrateMeasures
-    - PlanarSurfactantPackingSubWorkflowGenerator
+    - PlanarSurfactantPackingWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            FormatConversionSubWorkflowGenerator(*args, **kwargs),
-            FlatSubstrateMeasuresSubWorkflowGenerator(*args, **kwargs),
+            FormatConversionWorkflowGenerator(*args, **kwargs),
+            FlatSubstrateMeasuresWorkflowGenerator(*args, **kwargs),
         ]
         sub_wf_name = 'FlatSubstratePacking'
         if 'wf_name_prefix' not in kwargs:

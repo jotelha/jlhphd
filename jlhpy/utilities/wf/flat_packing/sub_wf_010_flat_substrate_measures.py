@@ -12,12 +12,12 @@ from jlhpy.utilities.vis.plot_side_views_with_boxes import plot_side_views_with_
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 
-class FlatSubstrateMeasuresMain(SubWorkflowGenerator):
+class FlatSubstrateMeasuresMain(WorkflowGenerator):
     """Flat substrate measures sub workflow.
 
     dynamic infiles:
@@ -82,7 +82,7 @@ class FlatSubstrateMeasuresMain(SubWorkflowGenerator):
 
 
 class FlatSubstrateMeasuresVis(
-        SubWorkflowGenerator):
+        WorkflowGenerator):
     """Flat substrate measures visualization sub workflow.
 
     inputs:
@@ -145,9 +145,9 @@ class FlatSubstrateMeasuresVis(
         return fw_list, [fw_vis], [fw_vis]
 
 
-class FlatSubstrateMeasuresSubWorkflowGenerator(
+class FlatSubstrateMeasuresWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'FlatSubstrateMeasures'
@@ -155,7 +155,7 @@ class FlatSubstrateMeasuresSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=FlatSubstrateMeasuresMain(*args, **kwargs),
             vis_sub_wf=FlatSubstrateMeasuresVis(*args, **kwargs),
             *args, **kwargs)

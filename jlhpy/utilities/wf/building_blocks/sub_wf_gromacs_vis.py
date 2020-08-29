@@ -14,12 +14,12 @@ from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsTrajectoryVisualizationSubWorkflowGenerator(SubWorkflowGenerator):
+class GromacsTrajectoryVisualizationWorkflowGenerator(WorkflowGenerator):
     """
     Visualize GROMACS trajectory with PyMol.
 

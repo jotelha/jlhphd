@@ -10,11 +10,11 @@ from fireworks.user_objects.firetasks.fileio_tasks import ArchiveDirTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
-from jlhpy.utilities.wf.workflow_generator import SubWorkflowGenerator
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 
-class LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(SubWorkflowGenerator):
+class LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
     """
     LAMMPS substrate trajectory partial analysis worklfow.
 

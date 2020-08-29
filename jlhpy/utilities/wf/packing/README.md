@@ -1,14 +1,14 @@
 Chained order:
 
 Packing
-- IndenterBoundingSphereSubWorkflowGenerator
-- SurfactantMoleculeMeasuresSubWorkflowGenerator
-- PackingConstraintSpheresSubWorkflowGenerator
-- SphericalSurfactantPackingSubWorkflowGenerator
+- IndenterBoundingSphereWorkflowGenerator
+- SurfactantMoleculeMeasuresWorkflowGenerator
+- PackingConstraintSpheresWorkflowGenerator
+- SphericalSurfactantPackingWorkflowGenerator
 
 Minimization
 -
 
 
 Chains
-- SphericalIndenterPassivationSubWorkflowGenerator
+- SphericalIndenterPassivationWorkflowGenerator

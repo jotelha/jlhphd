@@ -17,7 +17,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
@@ -29,7 +29,7 @@ import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
 # TODO: insert pull for indenter file again
-class SphericalSurfactantPackingMain(SubWorkflowGenerator):
+class SphericalSurfactantPackingMain(WorkflowGenerator):
     """Packing constraint spheres sub workflow.
 
     inputs:
@@ -390,7 +390,7 @@ class SphericalSurfactantPackingMain(SubWorkflowGenerator):
         return fw_list, [fw_pack], [fw_context_generator]
 
 
-class SphericalSurfactantPackingVis(SubWorkflowGenerator):
+class SphericalSurfactantPackingVis(WorkflowGenerator):
     """Spherical surfactant packing visualization sub workflow.
 
     dynamic infiles:
@@ -506,9 +506,9 @@ class SphericalSurfactantPackingVis(SubWorkflowGenerator):
         return fw_list, [fw_vis], [fw_join]
 
 
-class SphericalSurfactantPackingSubWorkflowGenerator(
+class SphericalSurfactantPackingWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'SphericalSurfactantPacking'
@@ -516,7 +516,7 @@ class SphericalSurfactantPackingSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=SphericalSurfactantPackingMain(*args, **kwargs),
             vis_sub_wf=SphericalSurfactantPackingVis(*args, **kwargs),
             *args, **kwargs)

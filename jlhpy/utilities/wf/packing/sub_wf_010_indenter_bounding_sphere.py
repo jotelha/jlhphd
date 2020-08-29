@@ -14,14 +14,14 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_wit
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class IndenterBoundingSphereMain(SubWorkflowGenerator):
+class IndenterBoundingSphereMain(WorkflowGenerator):
     """Indenter bounding sphere sub workflow.
 
     dynamic infiles:
@@ -120,7 +120,7 @@ class IndenterBoundingSphereMain(SubWorkflowGenerator):
 
 
 class IndenterBoundingSphereVis(
-        SubWorkflowGenerator):
+        WorkflowGenerator):
     """Indenter bounding sphere visualization sub workflow.
 
     dynamic infiles:
@@ -182,9 +182,9 @@ class IndenterBoundingSphereVis(
         return fw_list, [fw_vis], [fw_vis]
 
 
-class IndenterBoundingSphereSubWorkflowGenerator(
+class IndenterBoundingSphereWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'IndenterBoundingSphere'
@@ -192,7 +192,7 @@ class IndenterBoundingSphereSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=IndenterBoundingSphereMain(*args, **kwargs),
             vis_sub_wf=IndenterBoundingSphereVis(*args, **kwargs),
             *args, **kwargs)

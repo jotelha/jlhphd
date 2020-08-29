@@ -14,17 +14,17 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
 
-class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
+class LAMMPSFixedBoxMinimizationMain(WorkflowGenerator):
     """
     Fixed box minimization with LAMMPS.
 
@@ -315,9 +315,9 @@ class LAMMPSFixedBoxMinimizationMain(SubWorkflowGenerator):
         return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
-class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
+class LAMMPSFixedBoxMinimizationWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
         sub_wf_name = 'LAMMPSFixedBoxMinimization'
@@ -325,7 +325,7 @@ class LAMMPSFixedBoxMinimizationSubWorkflowGenerator(
             kwargs['wf_name_prefix'] = sub_wf_name
         else:
             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-        ProcessAnalyzeAndVisualizeSubWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=LAMMPSFixedBoxMinimizationMain(*args, **kwargs),
-            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisSubWorkflowGenerator(*args, **kwargs),
+            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
             *args, **kwargs)

@@ -24,12 +24,12 @@ from imteksimfw.fireworks.utilities.templates.cylindrical_packing import (
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj, serialize_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    SubWorkflowGenerator, ChainWorkflowGenerator, ProcessAnalyzeAndVisualizeSubWorkflowGenerator)
+    WorkflowGenerator, ChainWorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 
-class PackingConstraintsMain(SubWorkflowGenerator):
+class PackingConstraintsMain(WorkflowGenerator):
     """Packing constraints sub workflow ABC.
 
     Inputs:
@@ -106,7 +106,7 @@ class CylindricalPackingConstraintsMain(PackingConstraintsMain):
 class HemicylindricalPackingConstraintsMain(PackingConstraintsMain):
     """Cylinder packing constraints sub workflow."""
     func_str = serialize_module_obj(hemicylinders_above_substrate)
-class LayeredPackingContextMain(SubWorkflowGenerator):
+class LayeredPackingContextMain(WorkflowGenerator):
     """Layered packing template context sub workflow.
 
     Inputs:
@@ -178,7 +178,7 @@ class LayeredPackingContextMain(SubWorkflowGenerator):
         return fw_list, [fw_context], [fw_context]
 
 
-class CylindricalPackingContextMain(SubWorkflowGenerator):
+class CylindricalPackingContextMain(WorkflowGenerator):
     """Cylindrical packing template context sub workflow.
 
     Inputs:
@@ -255,7 +255,7 @@ class HemicylindricalPackingContextMain(CylindricalPackingConstraintsMain):
     """Hemicylindrical packing template context sub workflow."""
 
     func_str = serialize_module_obj(generate_upper_hemicylinders_packmol_template_context)
-class PackingMain(SubWorkflowGenerator):
+class PackingMain(WorkflowGenerator):
     """Packmol packing."""
 
     context_inputs = {
@@ -465,7 +465,7 @@ class HemicylindricalPackingMain(CylindricalPackingMain):
     pass
 
 
-class MonolayerPackingSubWorkflowGenerator(ChainWorkflowGenerator):
+class MonolayerPackingWorkflowGenerator(ChainWorkflowGenerator):
     """Pack a monolayer on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -488,7 +488,7 @@ class MonolayerPackingSubWorkflowGenerator(ChainWorkflowGenerator):
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
-class BilayerPackingSubWorkflowGenerator(ChainWorkflowGenerator):
+class BilayerPackingWorkflowGenerator(ChainWorkflowGenerator):
     """Pack a monolayer on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -511,7 +511,7 @@ class BilayerPackingSubWorkflowGenerator(ChainWorkflowGenerator):
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
-class CylindricalPackingSubWorkflowGenerator(ChainWorkflowGenerator):
+class CylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
     """Pack cylinders on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -534,7 +534,7 @@ class CylindricalPackingSubWorkflowGenerator(ChainWorkflowGenerator):
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
-class HemicylindricalPackingSubWorkflowGenerator(ChainWorkflowGenerator):
+class HemicylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
     """Pack cylinders on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -557,9 +557,9 @@ class HemicylindricalPackingSubWorkflowGenerator(ChainWorkflowGenerator):
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
-# class PackingConstraintSpheresSubWorkflowGenerator(
+# class PackingConstraintSpheresWorkflowGenerator(
 #         DefaultPullMixin, DefaultPushMixin,
-#         CylindricalPackingSubWorkflowGenerator,
+#         CylindricalPackingWorkflowGenerator,
 #         ):
 #     def __init__(self, *args, **kwargs):
 #         sub_wf_name = 'PackingConstraintSpheres'
