@@ -26,9 +26,4 @@ class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
             LAMMPSEquilibrationNVTWorkflowGenerator(*args, **kwargs),
             LAMMPSEquilibrationNPTWorkflowGenerator(*args, **kwargs),
         ]
-        sub_wf_name = 'FCCSubstrateCreation'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)

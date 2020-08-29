@@ -295,11 +295,6 @@ class GromacsEnergyMinimizationAfterSolvationWorkflowGenerator(
         ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsEnergyMinimizationAfterSolvation'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=GromacsEnergyMinimizationAfterSolvationMain(*args, **kwargs),
             analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),

@@ -181,11 +181,6 @@ class GromacsPrepWorkflowGenerator(
         ProcessAnalyzeAndVisualizeWorkflowGenerator,
         ):
     def __init__(self, *args, **kwargs):
-        sub_wf_name = 'GromacsPrep'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
             main_sub_wf=GromacsPrepMain(*args, **kwargs),
             *args, **kwargs)

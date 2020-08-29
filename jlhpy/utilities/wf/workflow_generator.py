@@ -497,11 +497,6 @@ class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
 
         self._vis_depends_on_analysis = vis_depends_on_analysis
 
-        sub_wf_name = 'ProcessAnalyzeAndVisualize'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         WorkflowGenerator.__init__(self, *args, **kwargs)
 
     def push_infiles(self, fp):
@@ -550,11 +545,6 @@ class ChainWorkflowGenerator(WorkflowGenerator):
         """Takes list of instantiated sub-workflows."""
         self.sub_wf_components = sub_wf_components
 
-        sub_wf_name = 'Chain'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
     def push_infiles(self, fp):

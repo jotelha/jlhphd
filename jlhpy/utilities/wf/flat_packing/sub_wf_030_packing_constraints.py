@@ -480,11 +480,6 @@ class MonolayerPackingWorkflowGenerator(ChainWorkflowGenerator):
             LayeredPackingContextMain(*args, **kwargs),
             LayeredPackingMain(*args, **kwargs),
         ]
-        sub_wf_name = 'MonolayerPacking'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
@@ -503,11 +498,6 @@ class BilayerPackingWorkflowGenerator(ChainWorkflowGenerator):
             LayeredPackingContextMain(*args, **kwargs),
             LayeredPackingMain(*args, **kwargs),
         ]
-        sub_wf_name = 'BilayerPacking'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
@@ -526,11 +516,6 @@ class CylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
             CylindricalPackingContextMain(*args, **kwargs),
             CylindricalPackingMain(*args, **kwargs),
         ]
-        sub_wf_name = 'CylindricalPacking'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
@@ -549,11 +534,6 @@ class HemicylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
             HemicylindricalPackingContextMain(*args, **kwargs),
             HemicylindricalPackingMain(*args, **kwargs),
         ]
-        sub_wf_name = 'HemicylindricalPacking'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 

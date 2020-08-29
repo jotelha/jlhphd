@@ -34,11 +34,6 @@ class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
             SurfactantMoleculeMeasuresWorkflowGenerator(*args, **kwargs),
             PackingConstraintSpheresWorkflowGenerator(*args, **kwargs),
         ]
-        sub_wf_name = 'SphericalSurfactantPacking'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
@@ -75,11 +70,6 @@ class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflo
             GromacsNPTEquilibrationWorkflowGenerator(*args, **kwargs),
             GromacsRelaxationWorkflowGenerator(*args, **kwargs),
         ]
-        sub_wf_name = 'GromacsPackingMinimizationEquilibration'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 
@@ -96,11 +86,6 @@ class IndenterPassivationChainWorkflowGenerator(ChainWorkflowGenerator):
             SphericalSurfactantPackingChainWorkflowGenerator(*args, **kwargs),
             GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(*args, **kwargs),
         ]
-        sub_wf_name = 'IndenterPassivation'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
 
 class IndenterPassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
@@ -118,9 +103,4 @@ class IndenterPassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
                 sub_wf=GromacsPackingMinimizationEquilibrationChainWorkflowGenerator,
                 *args, **kwargs)
         ]
-        sub_wf_name = 'IndenterPassivation'
-        if 'wf_name_prefix' not in kwargs:
-            kwargs['wf_name_prefix'] = sub_wf_name
-        else:
-            kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(sub_wf_components, *args, **kwargs)
