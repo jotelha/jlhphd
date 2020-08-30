@@ -15,8 +15,8 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisWorkflowGenerator
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysis
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
 
@@ -38,7 +38,6 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
 
     - parameter_file: default.mdp,
         queried by {'metadata->name': file_config.GMX_NVT_MDP}
-
 
     outfiles:
     - log_file:        default.log
@@ -89,7 +88,6 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
 
         return fp_files
 
-
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -111,20 +109,11 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
                 limit=1,
                 new_file_names=['default.mdp'])]
 
-        fw_pull_mdp = Firework(fts_pull_mdp,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull_mdp = self.build_fw(
+            fts_pull_mdp, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull_mdp)
 
@@ -152,21 +141,13 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
                 store_stdlog=True,
                 fizzle_bad_rc=True) ]
 
-        fw_gmx_make_ndx = Firework(fts_gmx_make_ndx,
-            name=self.get_fw_label(step_label),
-            spec = {
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'stdin':    'q\n',  # do nothing
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_gmx_make_ndx = self.build_fw(
+            fts_gmx_make_ndx, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'],
+            fw_spec={'stdin': 'q\n'}) # do nothing
 
         fw_list.append(fw_gmx_make_ndx)
 
@@ -190,13 +171,13 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
         fts_make_group = [CmdTask(
             cmd='gmx_tools',
             opt=['--verbose', '--log', 'default.log',
-                'ndx', 'invert',
-                '--topology-file', 'default.top',
-                '--coordinates-file', 'default.gro',
-                '--residue-name', {'key': 'metadata->system->substrate->name'},
-                '--group-name', 'non-Substrate',
-                '--',
-                'in.ndx', 'out.ndx'],
+                 'ndx', 'invert',
+                 '--topology-file', 'default.top',
+                 '--coordinates-file', 'default.gro',
+                 '--residue-name', {'key': 'metadata->system->substrate->name'},
+                 '--group-name', 'non-Substrate',
+                 '--',
+                 'in.ndx', 'out.ndx'],
             env='python',
             stderr_file='std.err',
             stdout_file='std.out',
@@ -206,23 +187,14 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
             store_stdlog=False,
             fizzle_bad_rc=True)]
 
-        fw_make_group = Firework(fts_make_group,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_gmx_make_ndx] )
+        fw_make_group = self.build_fw(
+            fts_make_group, step_label,
+            parents=[*fws_root, fw_gmx_make_ndx],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_make_group)
-
 
         # GMX grompp
         # ----------
@@ -251,7 +223,7 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
                  '-r', 'default.gro',
                  '-o', 'default.tpr',
                  '-p', 'default.top',
-                ],
+                 ],
             env='python',
             stderr_file='std.err',
             stdout_file='std.out',
@@ -260,23 +232,14 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_grompp = Firework(fts_gmx_grompp,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_pull_mdp, fw_make_group])
+        fw_gmx_grompp = self.build_fw(
+            fts_gmx_grompp, step_label,
+            parents=[*fws_root, fw_pull_mdp, fw_make_group],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_grompp)
-
 
         # GMX mdrun
         # ---------
@@ -308,67 +271,26 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_mdrun = Firework(fts_gmx_mdrun,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_node_job_queueadapter_defaults'],  # get 1 node
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs,
-                }
-            },
-            parents=[fw_gmx_grompp])
+        fw_gmx_mdrun = self.build_fw(
+            fts_gmx_mdrun, step_label,
+            parents=[fw_gmx_grompp],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_mdrun)
 
         return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
 
 
-    # @property
-    # def files_out_list(self):
-    #     return [
-    #         {
-    #             'file_label': 'log_file',
-    #             'file_name':  'default.log',
-    #             'type_label': 'nvt_log',
-    #         },
-    #         {
-    #             'file_label': 'energy_file',
-    #             'file_name':  'default.edr',
-    #             'type_label': 'nvt_edr',
-    #         },
-    #         {
-    #             'file_label': 'trajectory_file',
-    #             'file_name':  'default.trr',
-    #             'type_label': 'nvt_trr',
-    #         },
-    #         {
-    #             'file_label': 'data_file',
-    #             'file_name':  'default.gro',
-    #             'type_label': 'nvt_gro',
-    #         },
-    #         {
-    #             'file_label': 'index_file',
-    #             'file_name':  'default.ndx',
-    #             'type_label': 'nvt_ndx',
-    #         },
-    #     ]
-
-
-class GromacsNVTEquilibrationWorkflowGenerator(
+class GromacsNVTEquilibration(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsNVTEquilibrationMain(*args, **kwargs),
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
-            vis_sub_wf=GromacsTrajectoryVisualizationWorkflowGenerator(*args, **kwargs),
+        super().__init__(
+            main_sub_wf=GromacsNVTEquilibrationMain,
+            analysis_sub_wf=GromacsVacuumTrajectoryAnalysis,
+            vis_sub_wf=GromacsTrajectoryVisualization,
             *args, **kwargs)

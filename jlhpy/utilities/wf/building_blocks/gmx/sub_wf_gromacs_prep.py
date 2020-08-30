@@ -7,7 +7,7 @@ import pymongo
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, EvalPyEnvTask
 
 from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)
@@ -15,14 +15,63 @@ from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 class GromacsPrepMain(WorkflowGenerator):
+    """Prepare system for processing with GROMACS.
+
+    dynamic infiles:
+    - data_file:     in.pdb
+    - topology_file: default.top
+
+    outfiles:
+    - data_file:       default.gro
+    - topology_file:   default.top
+    - restraint_file:  default.posre.itp
+    """
+
     def main(self, fws_root=[]):
         fw_list = []
+
+        # box dimensions
+        # --------------
+        step_label = self.get_step_label('box_dim')
+
+        fts_box_dim = [
+            EvalPyEnvTask(
+                func='lambda v: v[0], v[1], v[2]',
+                inputs=[
+                    'metadata->system->substrate->measures',
+                ],
+                outputs=[
+                    'metadata->system->substrate->length',
+                    'metadata->system->substrate->width',
+                    'metadata->system->substrate->height',
+                ],
+                propagate=True,
+            ),
+            EvalPyEnvTask(
+                func='lambda v, h: v[0], v[1], v[2] + h',
+                inputs=[
+                    'metadata->system->substrate->measures',
+                    'metadata->system->solvent->height',
+                ],
+                outputs=[
+                    'metadata->system->box->length',
+                    'metadata->system->box->width',
+                    'metadata->system->box->height',
+                ],
+                propagate=True,
+            ),
+        ]
+
+        fw_box_dim = self.build_fw(
+            fts_box_dim, step_label,
+            parents=fws_root,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         # PDB chain
         # ---------
         step_label = self.get_step_label('pdb_chain')
 
-        files_in =  {'data_file': 'in.pdb' }
+        files_in =  {'data_file': 'in.pdb'}
         files_out = {'data_file': 'out.pdb'}
 
         fts_pdb_chain = [CmdTask(
@@ -34,20 +83,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=False,
             fizzle_bad_rc=True)]
 
-        fw_pdb_chain = Firework(fts_pdb_chain,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_pdb_chain = self.build_fw(
+            fts_pdb_chain, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pdb_chain)
 
@@ -55,7 +96,7 @@ class GromacsPrepMain(WorkflowGenerator):
         # --------
         step_label = self.get_step_label('pdb_tidy')
 
-        files_in =  {'data_file': 'in.pdb' }
+        files_in =  {'data_file': 'in.pdb'}
         files_out = {'data_file': 'out.pdb'}
 
         fts_pdb_tidy = [CmdTask(
@@ -67,20 +108,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=False,
             fizzle_bad_rc=True)]
 
-        fw_pdb_tidy = Firework(fts_pdb_tidy,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_pdb_chain])
+        fw_pdb_tidy = self.build_fw(
+            fts_pdb_tidy, step_label,
+            parents=[fw_pdb_chain],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pdb_tidy)
 
@@ -110,23 +143,14 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_pdb2gro = Firework(fts_gmx_pdb2gro,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_pdb_tidy])
+        fw_gmx_pdb2gro = self.build_fw(
+            fts_gmx_pdb2gro, step_label,
+            parents=[fw_pdb_tidy],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_pdb2gro)
-
 
         # GMX editconf
         # ------------
@@ -146,9 +170,12 @@ class GromacsPrepMain(WorkflowGenerator):
             opt=['editconf',
                  '-f', 'in.gro',
                  '-o', 'default.gro',
-                 '-d', 2.0,  # distance between content and box boundary in nm
-                 '-bt', 'cubic',  # box type
-                ],
+                 '-b',
+                 {'key': 'metadata->system->box->length'},
+                 {'key': 'metadata->system->box->width'},
+                 {'key': 'metadata->system->box->height'},
+                 '-bt', 'triclinic',  # box type
+                 ],
             env='python',
             stderr_file='std.err',
             stdout_file='std.out',
@@ -156,31 +183,18 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_editconf = Firework(fts_gmx_editconf,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs,
-                }
-            },
-            parents=[fw_gmx_pdb2gro])
+        fw_gmx_editconf = self.build_fw(
+            fts_gmx_editconf, step_label,
+            parents=[fw_gmx_pdb2gro, fw_box_dim],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_editconf)
 
-        return fw_list, [fw_gmx_editconf], [fw_pdb_chain]
+        return fw_list, [fw_gmx_editconf], [fw_pdb_chain, fw_box_dim]
 
 
-class GromacsPrepWorkflowGenerator(
-        DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualize,
-        ):
+class GromacsPrep(DefaultPullMixin, DefaultPushMixin, ProcessAnalyzeAndVisualize):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsPrepMain(*args, **kwargs),
-            *args, **kwargs)
+        super().__init__(main_sub_wf=GromacsPrepMain, *args, **kwargs)

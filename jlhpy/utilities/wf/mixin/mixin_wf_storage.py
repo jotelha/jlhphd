@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Storage mixins. All mixins are derived from PullMixinABC and PushMixinABC.
+"""Storage mixins. All mixins are derived from PullMixin and PushMixin.
 
 Each pull (or push) mixin must implement the method
 
@@ -21,9 +21,6 @@ initialy to allow for arbitrary combinations of storage mixins.
 Those three lists are to be extended accordingly eventually returned with
 
     return fw_list, fws_leaf_out, fws_root_out
-
-TODO: insert metdata from pulled object into workflow
-
 """
 import abc
 import datetime
@@ -45,21 +42,21 @@ from imteksimfw.fireworks.user_objects.firetasks.ssh_tasks import SSHForwardTask
 from imteksimfw.fireworks.user_objects.firetasks.storage_tasks import GetObjectFromFilepadTask
 
 
-class PullMixinABC(abc.ABC):
+class PullMixin():
     """Abstract base class for querying in files."""
 
     def pull(self, fws_root=[]):
         return [], [], []
 
 
-class PushMixinABC(abc.ABC):
+class PushMixin():
     """Abstract base class for storing out files."""
 
     def push(self, fws_root=[]):
         return [], [], []
 
 
-class PullFromFilePadMixin(PushMixinABC):
+class PullFromFilePadMixin(PushMixin):
     """Mixin for querying in files from file pad.
 
     Implementation shall provide 'source_project_id' and 'source_step'
@@ -67,7 +64,7 @@ class PullFromFilePadMixin(PushMixinABC):
     within the 'files_in_list' attribute."""
 
     def pull(self, fws_root=[]):
-        fw_list = []
+        fw_list, fws_root_out, fws_leaf_out = super().pull(fws_root)
 
         step_label = self.get_step_label('pull_filepad')
 
@@ -103,31 +100,34 @@ class PullFromFilePadMixin(PushMixinABC):
                     propagate=True)
                 )
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        if len(fts_pull) > 0:
+            fw_pull = Firework(fts_pull,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in':  files_in,
+                    '_files_out': files_out,
+                    'metadata': {
+                        'project':  self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':     step_label,
+                        **self.kwargs
+                    }
+                },
+                parents=fws_root)
 
-        fw_list.append(fw_pull)
+            fw_list.append(fw_pull)
+            fws_leaf_out.append(fw_pull)
+            fws_root_out.append(fw_pull)
 
-        return fw_list, [fw_pull], [fw_pull]
+        return fw_list, fws_leaf_out, fws_root_out
 
 
-class PushToFilePadMixin(PushMixinABC):
-    """Abstract base class for storing out files in file pad."""
+class PushToFilePadMixin(PushMixin):
+    """Mixing for storing out files in file pad."""
 
     def push(self, fws_root=[]):
-        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+        fw_list, fws_leaf_out, fws_root_out = super().push(fws_root)
 
         step_label = self.get_step_label('push_filepad')
 
@@ -149,34 +149,35 @@ class PushToFilePadMixin(PushMixinABC):
                 })
             )
 
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        if len(fts_push) > 0:
+            fw_push = Firework(fts_push,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in':  files_in,
+                    '_files_out': files_out,
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':    step_label,
+                        **self.kwargs
+                    }
+                },
+                parents=fws_root)
 
-        fw_list.append(fw_push)
-        fws_leaf_out.append(fw_push)
-        fws_root_out.append(fw_push)
+            fw_list.append(fw_push)
+            fws_leaf_out.append(fw_push)
+            fws_root_out.append(fw_push)
 
         return fw_list, fws_leaf_out, fws_root_out
 
 
 # TODO: add per item annotation for file label
-class PushToDtoolRepositoryMixin(PushMixinABC):
-    """Abstract base class for storing out files in dtool dataset."""
+class PushToDtoolRepositoryMixin(PushMixin):
+    """Mixing for storing out files in dtool dataset."""
 
     def push(self, fws_root=[]):
-        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+        fw_list, fws_leaf_out, fws_root_out = super().push(fws_root)
 
         step_label_suffix = 'push_dtool'
         step_label = self.get_step_label(step_label_suffix)
@@ -189,52 +190,53 @@ class PushToDtoolRepositoryMixin(PushMixinABC):
         # make step label a valid 80 char dataset name
         dataset_name = self.get_80_char_slug()
 
-        fts_push = [
-            CreateDatasetTask(
-                name=dataset_name,
-                metadata={'project': self.project_id},
-                metadata_key='metadata',
-                output='metadata->step_specific->dtool_push->local_proto_dataset',
-                propagate=True,
-            ),
-            FreezeDatasetTask(
-                uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
-                output='metadata->step_specific->dtool_push->local_frozen_dataset',
-                propagate=True,
-            ),
-            CopyDatasetTask(
-                source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
-                target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
-                dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
-                output='metadata->step_specific->dtool_push->remote_dataset',
-                propagate=True,
-            )
-        ]
+        if len(files_in) > 0:
+            fts_push = [
+                CreateDatasetTask(
+                    name=dataset_name,
+                    metadata={'project': self.project_id},
+                    metadata_key='metadata',
+                    output='metadata->step_specific->dtool_push->local_proto_dataset',
+                    propagate=True,
+                ),
+                FreezeDatasetTask(
+                    uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
+                    output='metadata->step_specific->dtool_push->local_frozen_dataset',
+                    propagate=True,
+                ),
+                CopyDatasetTask(
+                    source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
+                    target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
+                    dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
+                    output='metadata->step_specific->dtool_push->remote_dataset',
+                    propagate=True,
+                )
+            ]
 
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+            fw_push = Firework(fts_push,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in': files_in,
+                    '_files_out': files_out,
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':    step_label,
+                        **self.kwargs
+                    }
+                },
+                parents=fws_root)
 
-        fw_list.append(fw_push)
-        fws_leaf_out.append(fw_push)
-        fws_root_out.append(fw_push)
+            fw_list.append(fw_push)
+            fws_leaf_out.append(fw_push)
+            fws_root_out.append(fw_push)
 
         return fw_list, fws_leaf_out, fws_root_out
 
 
-class PushDerivedDatasetToDtoolRepositoryMixin(PushMixinABC):
-    """Abstract base class for storing derive out files in dtool dataset.
+class PushDerivedDatasetToDtoolRepositoryMixin(PushMixin):
+    """Mixing for storing derive out files in dtool dataset.
 
     If using this mixin, then make sure the workflow starts with
 
@@ -243,7 +245,7 @@ class PushDerivedDatasetToDtoolRepositoryMixin(PushMixinABC):
     set (to 'None' if there is no previous dataset)."""
 
     def push(self, fws_root=[]):
-        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+        fw_list, fws_leaf_out, fws_root_out = super().push(fws_root)
 
         step_label_suffix = 'push_dtool'
         step_label = self.get_step_label(step_label_suffix)
@@ -256,56 +258,57 @@ class PushDerivedDatasetToDtoolRepositoryMixin(PushMixinABC):
         # make step label a valid 80 char dataset name
         dataset_name = self.get_80_char_slug()
 
-        fts_push = [
-            CreateDatasetTask(
-                name=dataset_name,
-                metadata={'project': self.project_id},
-                metadata_key='metadata',
-                output='metadata->step_specific->dtool_push->local_proto_dataset',
-                source_dataset={'key': 'metadata->step_specific->dtool_push->remote_dataset'},  # distinguishes this class from above's PushToDtoolRepositoryMixin
-                propagate=True,
-            ),
-            FreezeDatasetTask(
-                uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
-                output='metadata->step_specific->dtool_push->local_frozen_dataset',
-                propagate=True,
-            ),
-            CopyDatasetTask(
-                source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
-                target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
-                dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
-                output='metadata->step_specific->dtool_push->remote_dataset',
-                propagate=True,
-            )
-        ]
+        if len(files_in) > 0:
+            fts_push = [
+                CreateDatasetTask(
+                    name=dataset_name,
+                    metadata={'project': self.project_id},
+                    metadata_key='metadata',
+                    output='metadata->step_specific->dtool_push->local_proto_dataset',
+                    source_dataset={'key': 'metadata->step_specific->dtool_push->remote_dataset'},  # distinguishes this class from above's PushToDtoolRepositoryMixin
+                    propagate=True,
+                ),
+                FreezeDatasetTask(
+                    uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
+                    output='metadata->step_specific->dtool_push->local_frozen_dataset',
+                    propagate=True,
+                ),
+                CopyDatasetTask(
+                    source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
+                    target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
+                    dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
+                    output='metadata->step_specific->dtool_push->remote_dataset',
+                    propagate=True,
+                )
+            ]
 
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+            fw_push = Firework(fts_push,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in': files_in,
+                    '_files_out': files_out,
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':    step_label,
+                        **self.kwargs
+                    }
+                },
+                parents=fws_root)
 
-        fw_list.append(fw_push)
-        fws_leaf_out.append(fw_push)
-        fws_root_out.append(fw_push)
+            fw_list.append(fw_push)
+            fws_leaf_out.append(fw_push)
+            fws_root_out.append(fw_push)
 
         return fw_list, fws_leaf_out, fws_root_out
 
 
-class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
-    """Abstract base class for storing out files in dtool dataset."""
+class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixin):
+    """Mixing for storing out files in dtool dataset."""
 
     def push(self, fws_root=[]):
-        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+        fw_list, fws_leaf_out, fws_root_out = super().push(fws_root)
 
         step_label_suffix = 'push_dtool'
         step_label = self.get_step_label(step_label_suffix)
@@ -315,102 +318,103 @@ class PushToDtoolRepositoryViaSSHJumpHostMixin(PushMixinABC):
             f['file_label']: f['file_name'] for f in self.files_out_list
         }
 
-        # background connectivity task
-        ft_ssh = SSHForwardTask(
-            port_file='.port',
-            remote_host={'key': 'metadata->step_specific->dtool_push->ssh_config->remote_host'},
-            remote_port={'key': 'metadata->step_specific->dtool_push->ssh_config->remote_port'},
-            ssh_host={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_host'},
-            ssh_user={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_user'},
-            ssh_keyfile={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_keyfile'},
-            #stdlog_file='bg_task.log',
-        )
-
-        bg_fts_push = [BackgroundTask(ft_ssh,
-            num_launches=1, run_on_finish=False, sleep_time=0)]
-
-        dataset_name = self.get_80_char_slug()
-
-        fts_push = [
-            CreateDatasetTask(
-                name=dataset_name,
-                metadata={'project': self.project_id},
-                metadata_key='metadata',
-                output='metadata->step_specific->dtool_push->local_proto_dataset',
-                propagate=True,
-            ),
-            FreezeDatasetTask(
-                uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
-                output='metadata->step_specific->dtool_push->local_frozen_dataset',
-                propagate=True,
-            ),
-            # hopefully enough time for the bg ssh tunnel to be established
-            # otherwise might need:
-            # ScriptTask
-            #   script: >-
-            #     counter=0;
-            #     while [ ! -f .port ]; do
-            #       sleep 1;
-            #       counter=$((counter + 1));
-            #       if [ $counter -ge 10 ]; then
-            #         echo "Timed out waiting for port!";
-            #         exit 126;
-            #       fi;
-            #     done
-            #   stderr_file:   wait.err
-            #   stdout_file:   wait.out
-            #   store_stdout:  true
-            #   store_stderr:  true
-            #   fizzle_bad_rc: true
-            #   use_shell:     true
-            #
-            # read port from socket:
-            EvalPyEnvTask(
-                func="lambda: int(open('.port','r').readlines()[0])",
-                outputs=[
-                    'metadata->step_specific->dtool_push->dtool_config->{}'
-                    .format(self.kwargs['dtool_port_config_key']),
-                ],
-                stderr_file='read_port.err',
-                stdout_file='read_port.out',
-                stdlog_file='read_port.log',
-                py_hist_file='read_port.py',
-                call_log_file='read_port.calls_trace',
-                vars_log_file='read_port.vars_trace',
-                store_stdout=True,
-                store_stderr=True,
-                store_stdlog=True,
-                fizzle_bad_rc=True,
-            ),
-
-            CopyDatasetTask(
-                source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
-                target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
-                dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
-                output='metadata->step_specific->dtool_push->remote_dataset',
-                propagate=True,
+        if len(files_in) > 0:
+            # background connectivity task
+            ft_ssh = SSHForwardTask(
+                port_file='.port',
+                remote_host={'key': 'metadata->step_specific->dtool_push->ssh_config->remote_host'},
+                remote_port={'key': 'metadata->step_specific->dtool_push->ssh_config->remote_port'},
+                ssh_host={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_host'},
+                ssh_user={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_user'},
+                ssh_keyfile={'key': 'metadata->step_specific->dtool_push->ssh_config->ssh_keyfile'},
+                #stdlog_file='bg_task.log',
             )
-        ]
 
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                '_background_tasks': bg_fts_push,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+            bg_fts_push = [BackgroundTask(ft_ssh,
+                num_launches=1, run_on_finish=False, sleep_time=0)]
 
-        fw_list.append(fw_push)
-        fws_leaf_out.append(fw_push)
-        fws_root_out.append(fw_push)
+            dataset_name = self.get_80_char_slug()
+
+            fts_push = [
+                CreateDatasetTask(
+                    name=dataset_name,
+                    metadata={'project': self.project_id},
+                    metadata_key='metadata',
+                    output='metadata->step_specific->dtool_push->local_proto_dataset',
+                    propagate=True,
+                ),
+                FreezeDatasetTask(
+                    uri={'key': 'metadata->step_specific->dtool_push->local_proto_dataset->uri'},
+                    output='metadata->step_specific->dtool_push->local_frozen_dataset',
+                    propagate=True,
+                ),
+                # hopefully enough time for the bg ssh tunnel to be established
+                # otherwise might need:
+                # ScriptTask
+                #   script: >-
+                #     counter=0;
+                #     while [ ! -f .port ]; do
+                #       sleep 1;
+                #       counter=$((counter + 1));
+                #       if [ $counter -ge 10 ]; then
+                #         echo "Timed out waiting for port!";
+                #         exit 126;
+                #       fi;
+                #     done
+                #   stderr_file:   wait.err
+                #   stdout_file:   wait.out
+                #   store_stdout:  true
+                #   store_stderr:  true
+                #   fizzle_bad_rc: true
+                #   use_shell:     true
+                #
+                # read port from socket:
+                EvalPyEnvTask(
+                    func="lambda: int(open('.port','r').readlines()[0])",
+                    outputs=[
+                        'metadata->step_specific->dtool_push->dtool_config->{}'
+                        .format(self.kwargs['dtool_port_config_key']),
+                    ],
+                    stderr_file='read_port.err',
+                    stdout_file='read_port.out',
+                    stdlog_file='read_port.log',
+                    py_hist_file='read_port.py',
+                    call_log_file='read_port.calls_trace',
+                    vars_log_file='read_port.vars_trace',
+                    store_stdout=True,
+                    store_stderr=True,
+                    store_stdlog=True,
+                    fizzle_bad_rc=True,
+                ),
+
+                CopyDatasetTask(
+                    source={'key': 'metadata->step_specific->dtool_push->local_frozen_dataset->uri'},
+                    target={'key': 'metadata->step_specific->dtool_push->dtool_target'},
+                    dtool_config_key='metadata->step_specific->dtool_push->dtool_config',
+                    output='metadata->step_specific->dtool_push->remote_dataset',
+                    propagate=True,
+                )
+            ]
+
+            fw_push = Firework(fts_push,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in': files_in,
+                    '_files_out': files_out,
+                    '_background_tasks': bg_fts_push,
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':    step_label,
+                        **self.kwargs
+                    }
+                },
+                parents=fws_root)
+
+            fw_list.append(fw_push)
+            fws_leaf_out.append(fw_push)
+            fws_root_out.append(fw_push)
 
         return fw_list, fws_leaf_out, fws_root_out
 
@@ -428,7 +432,7 @@ class PushToDtoolRepositoryAndFilePadMixin(
 class PushDerivedDatasetToDtoolRepositoryAndFilePadMixin(PushDerivedDatasetToDtoolRepositoryMixin):
     """Implements a FilePadMixin dependent on DtoolMixin"""
     def push(self, fws_root=[]):
-        fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
+        fw_list, fws_leaf_out, fws_root_out = super().push(fws_root)
 
         step_label = self.get_step_label('push_filepad')
 
@@ -450,26 +454,27 @@ class PushDerivedDatasetToDtoolRepositoryAndFilePadMixin(PushDerivedDatasetToDto
                 })
             )
 
-        fw_push = Firework(fts_push,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            # first difference to standatrd FilepadMixin: dependency on all super push Fireworks
-            parents=[*fws_root, *fws_leaf_out])
+        if len(fts_push) > 0:
+            fw_push = Firework(fts_push,
+                name=self.get_fw_label(step_label),
+                spec={
+                    '_category': self.hpc_specs['fw_noqueue_category'],
+                    '_files_in':  files_in,
+                    '_files_out': files_out,
+                    'metadata': {
+                        'project': self.project_id,
+                        'datetime': str(datetime.datetime.now()),
+                        'step':    step_label,
+                        **self.kwargs
+                    }
+                },
+                # first difference to standatrd FilepadMixin: dependency on all super push Fireworks
+                parents=[*fws_root, *fws_leaf_out])
 
-        fw_list.append(fw_push)
-        # second difference to standatrd FilepadMixin: FilePad push always as stub
-        # fws_leaf_out.append(fw_push)
-        fws_root_out.append(fw_push)
+            fw_list.append(fw_push)
+            # second difference to standard FilepadMixin: FilePad push always as stub
+            # fws_leaf_out.append(fw_push)
+            fws_root_out.append(fw_push)
 
         return fw_list, fws_leaf_out, fws_root_out
 

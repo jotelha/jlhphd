@@ -26,4 +26,4 @@ class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
             LAMMPSEquilibrationNVTWorkflowGenerator(*args, **kwargs),
             LAMMPSEquilibrationNPTWorkflowGenerator(*args, **kwargs),
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

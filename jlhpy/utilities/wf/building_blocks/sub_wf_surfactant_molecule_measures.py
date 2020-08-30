@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """Surfactant molecule mesasures sub workflow."""
 
-import datetime
 import glob
 import os
-import pymongo
 import warnings
+import pymongo
 
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
@@ -21,7 +20,7 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import \
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
@@ -109,20 +108,12 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
                 limit=1,
                 new_file_names=['default.pdb'])]
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            parents=fws_root,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -131,11 +122,9 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         step_label = self.get_step_label('bounding_sphere')
 
         files_in = {
-            'indenter_file':   'indenter.pdb',
             'surfactant_file': 'default.pdb',
         }
         files_out = {
-            'indenter_file':   'indenter.pdb',
             'surfactant_file': 'default.pdb',
         }
 
@@ -157,20 +146,12 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_bounding_sphere = Firework(fts_bounding_sphere,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_pull])
+        fw_bounding_sphere = self.build_fw(
+            fts_bounding_sphere, step_label,
+            parents=[fw_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_bounding_sphere)
 
@@ -204,20 +185,12 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_connector_atom_position = Firework(fts_connector_atom_position,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root,fw_pull])
+        fw_connector_atom_position = self.build_fw(
+            fts_connector_atom_position, step_label,
+            parents=[fw_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_connector_atom_position)
 
@@ -247,20 +220,12 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_radius_connector_atom = Firework(fts_radius_connector_atom,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_bounding_sphere, fw_connector_atom_position])
+        fw_radius_connector_atom = self.build_fw(
+            fts_radius_connector_atom, step_label,
+            parents=[fw_bounding_sphere, fw_connector_atom_position],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_radius_connector_atom)
 
@@ -268,12 +233,8 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         # -------------------
         step_label = self.get_step_label('head_group_diameter')
 
-        files_in = {
-            'indenter_file': 'indenter.pdb',
-        }
-        files_out = {
-            'indenter_file': 'indenter.pdb',
-        }
+        files_in = {}
+        files_out = {}
 
         # func_str = serialize_module_obj(get_distance)
 
@@ -294,27 +255,19 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_diameter_head_group = Firework(fts_diameter_head_group,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_radius_connector_atom])  # for data dependency fw_bounding_sphere
+        fw_diameter_head_group = self.build_fw(
+            fts_diameter_head_group, step_label,
+            parents=[fw_radius_connector_atom],  # for data dependency fw_bounding_sphere
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_diameter_head_group)
 
         return (
             fw_list,
             [fw_diameter_head_group],
-            [fw_bounding_sphere, fw_connector_atom_position])
+            [fw_pull])
 
 
 class SurfactantMoleculeMeasuresVis(WorkflowGenerator):
@@ -365,20 +318,12 @@ class SurfactantMoleculeMeasuresVis(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_vis = Firework(fts_vis,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_vis = self.build_fw(
+            fts_vis, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_vis)
 
@@ -388,12 +333,12 @@ class SurfactantMoleculeMeasuresVis(WorkflowGenerator):
             [fw_vis])
 
 
-class SurfactantMoleculeMeasuresWorkflowGenerator(
+class SurfactantMoleculeMeasures(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeWorkflowGenerator,
+        ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
-            main_sub_wf=SurfactantMoleculeMeasuresMain(*args, **kwargs),
-            vis_sub_wf=SurfactantMoleculeMeasuresVis(*args, **kwargs),
+        super().__init__(
+            main_sub_wf=SurfactantMoleculeMeasuresMain,
+            vis_sub_wf=SurfactantMoleculeMeasuresVis,
             *args, **kwargs)

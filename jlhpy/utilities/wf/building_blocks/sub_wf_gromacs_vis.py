@@ -19,7 +19,7 @@ from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 import jlhpy.utilities.wf.file_config as file_config
 
 
-class GromacsTrajectoryVisualizationWorkflowGenerator(WorkflowGenerator):
+class GromacsTrajectoryVisualization(WorkflowGenerator):
     """
     Visualize GROMACS trajectory with PyMol.
 
@@ -141,7 +141,7 @@ class GromacsTrajectoryVisualizationWorkflowGenerator(WorkflowGenerator):
         # -----------------------------
         step_label = self.get_step_label('vis_pymol_template')
 
-        files_in =  {'template_file': 'default.template'}
+        files_in = {'template_file': 'default.template'}
         files_out = {'input_file': 'default.pml'}
 
         # Jinja2 context:

@@ -34,7 +34,7 @@ class SphericalSurfactantPackingChainWorkflowGenerator(ChainWorkflowGenerator):
             SurfactantMoleculeMeasuresWorkflowGenerator(*args, **kwargs),
             PackingConstraintSpheresWorkflowGenerator(*args, **kwargs),
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
 class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflowGenerator):
@@ -70,7 +70,7 @@ class GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(ChainWorkflo
             GromacsNPTEquilibrationWorkflowGenerator(*args, **kwargs),
             GromacsRelaxationWorkflowGenerator(*args, **kwargs),
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
 class IndenterPassivationChainWorkflowGenerator(ChainWorkflowGenerator):
@@ -86,7 +86,8 @@ class IndenterPassivationChainWorkflowGenerator(ChainWorkflowGenerator):
             SphericalSurfactantPackingChainWorkflowGenerator(*args, **kwargs),
             GromacsPackingMinimizationEquilibrationChainWorkflowGenerator(*args, **kwargs),
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
 
 class IndenterPassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
@@ -103,4 +104,4 @@ class IndenterPassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
                 sub_wf=GromacsPackingMinimizationEquilibrationChainWorkflowGenerator,
                 *args, **kwargs)
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

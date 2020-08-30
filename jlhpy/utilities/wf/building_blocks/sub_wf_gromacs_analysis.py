@@ -17,7 +17,7 @@ from jlhpy.utilities.analysis.rdf import atom_atom_rdf
 from jlhpy.utilities.analysis.msd import atom_rmsd
 
 
-class GromacsTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
+class GromacsTrajectoryAnalysis(WorkflowGenerator):
     """
     Abstract base class for partial analysis worklfow.
 
@@ -147,8 +147,8 @@ class GromacsTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
 
-class GromacsVacuumTrajectoryAnalysisWorkflowGenerator(
-        GromacsTrajectoryAnalysisWorkflowGenerator):
+class GromacsVacuumTrajectoryAnalysis(
+        GromacsTrajectoryAnalysis):
     """
     Implements partial analysis worklfow only.
 
@@ -287,8 +287,8 @@ class GromacsVacuumTrajectoryAnalysisWorkflowGenerator(
                 'atom_name_b': 'metadata->system->surfactant->tail_atom->name'},
         ]
 
-class GromacsSolvatedTrajectoryAnalysisWorkflowGenerator(
-        GromacsVacuumTrajectoryAnalysisWorkflowGenerator):
+class GromacsSolvatedTrajectoryAnalysis(
+        GromacsVacuumTrajectoryAnalysis):
     """
     Implements partial analysis worklfow only.
 

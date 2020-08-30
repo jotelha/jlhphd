@@ -12,7 +12,7 @@ from jlhpy.utilities.vis.plot_side_views_with_boxes import plot_side_views_with_
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
@@ -61,28 +61,19 @@ class FlatSubstrateMeasuresMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_bounding_box = Firework(fts_bounding_box,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_bounding_box = self.build_fw(
+            fts_bounding_box, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_bounding_box)
 
         return fw_list, [fw_bounding_box], [fw_bounding_box]
 
 
-class FlatSubstrateMeasuresVis(
-        WorkflowGenerator):
+class FlatSubstrateMeasuresVis(WorkflowGenerator):
     """Flat substrate measures visualization sub workflow.
 
     inputs:
@@ -123,34 +114,27 @@ class FlatSubstrateMeasuresVis(
             propagate=True,
         )]
 
-        fw_vis = Firework(fts_vis,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_core_job_queueadapter_defaults'],
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root])
-
+        fw_vis = self.build_fw(
+            fts_vis, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults'])
         fw_list.append(fw_vis)
+
         return fw_list, [fw_vis], [fw_vis]
 
 
-class FlatSubstrateMeasuresWorkflowGenerator(
-        DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeWorkflowGenerator,
-        ):
+# class FlatSubstrateMeasures(
+#         DefaultPullMixin, DefaultPushMixin,
+#         ProcessAnalyzeAndVisualize,
+#         ):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(
+#             main_sub_wf=FlatSubstrateMeasuresMain,
+#             vis_sub_wf=FlatSubstrateMeasuresVis,
+#             *args, **kwargs)
+class FlatSubstrateMeasures(DefaultPullMixin, DefaultPushMixin, FlatSubstrateMeasuresMain):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
-            main_sub_wf=FlatSubstrateMeasuresMain(*args, **kwargs),
-            vis_sub_wf=FlatSubstrateMeasuresVis(*args, **kwargs),
-            *args, **kwargs)
+        super().__init__(*args, **kwargs)

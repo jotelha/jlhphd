@@ -17,7 +17,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
@@ -508,10 +508,10 @@ class SphericalSurfactantPackingVis(WorkflowGenerator):
 
 class SphericalSurfactantPackingWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeWorkflowGenerator,
+        ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualize.__init__(self,
             main_sub_wf=SphericalSurfactantPackingMain(*args, **kwargs),
             vis_sub_wf=SphericalSurfactantPackingVis(*args, **kwargs),
             *args, **kwargs)

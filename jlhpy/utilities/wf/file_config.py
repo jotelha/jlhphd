@@ -40,6 +40,8 @@ INDENTER_PDB    = 'AU_111_r_25.pdb'
 
 PACKMOL_SUBDIR  = 'packmol'
 PACKMOL_SPHERES_TEMPLATE = 'sphere.inp.template'
+PACKMOL_FLAT_TEMPLATE = 'flat.inp.template'
+
 
 # visualization-related
 

@@ -77,7 +77,7 @@ from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 # class GromacsRestartWorkflowGenerator(
 #         DefaultPullMixin, DefaultPushMixin,
-#         ProcessAnalyzeAndVisualizeWorkflowGenerator,
+#         ProcessAnalyzeAndVisualize,
 #         ):
 #     def __init__(self, *args, **kwargs):
 #         sub_wf_name = 'GromacsRestart'
@@ -85,7 +85,7 @@ from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 #             kwargs['wf_name_prefix'] = sub_wf_name
 #         else:
 #             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-#         ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
+#         ProcessAnalyzeAndVisualize.__init__(self,
 #             main_sub_wf=GromacsRestartMain(*args, **kwargs),
 #             analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
 #             vis_sub_wf=GromacsTrajectoryVisualizationWorkflowGenerator(*args, **kwargs),

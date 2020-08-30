@@ -1,32 +1,38 @@
 # -*- coding: utf-8 -*-
 """Packing constraints sub workflows."""
 
-import datetime
-import pymongo
+from abc import abstractmethod
 
-from fireworks import Firework
+import datetime
+import glob
+import os.path
+import warnings
+
 from fireworks.user_objects.firetasks.script_task import PyTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
+from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
+
 # from fireworks.user_objects.firetasks.dataflow_tasks import JoinListTask
+
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
     import CmdTask, EvalPyEnvTask, PickledPyEnvTask, PyEnvTask
+from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 
-from imteksimfw.fireworks.utilities.geometry.morphology import (
+from jlhpy.utilities.geometry.morphology import (
     monolayer_above_substrate, bilayer_above_substrate, cylinders_above_substrate, hemicylinders_above_substrate)
-
-
-from imteksimfw.fireworks.utilities.templates.flat_packing import (
+from jlhpy.utilities.templates.flat_packing import (
     generate_pack_alternating_multilayer_packmol_template_context)
+from jlhpy.utilities.templates.cylindrical_packing import (
+    generate_cylinders_packmol_template_context, generate_upper_hemicylinders_packmol_template_context)
 
-from imteksimfw.fireworks.utilities.templates.cylindrical_packing import (
-    generate_cylinders_packmol_template_context)
-
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj, serialize_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ChainWorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
+    WorkflowGenerator, ChainWorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
+
+import jlhpy.utilities.wf.file_config as file_config 
+import jlhpy.utilities.wf.file_config as phys_config
 
 
 class PackingConstraintsMain(WorkflowGenerator):
@@ -41,6 +47,12 @@ class PackingConstraintsMain(WorkflowGenerator):
     Outputs:
     - metadata->step_specific->packing->surfactant_substrate->constraints (dict)
     """
+
+    @property
+    @abstractmethod
+    def func_str(self):
+        pass
+
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -71,24 +83,14 @@ class PackingConstraintsMain(WorkflowGenerator):
                 stdout_file='std.out',
                 stdlog_file='std.log',
                 propagate=True,
-            )
-        ]
+            )]
 
-        fw_constraints = Firework(fts_constraints,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
+        fw_constraints = self.build_fw(
+            fts_constraints, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
         fw_list.append(fw_constraints)
 
         return fw_list, [fw_constraints], [fw_constraints]
@@ -96,23 +98,32 @@ class PackingConstraintsMain(WorkflowGenerator):
 
 class MonolayerPackingConstraintsMain(PackingConstraintsMain):
     """Monolayer packing constraint planes sub workflow. """
+
     func_str = serialize_module_obj(monolayer_above_substrate)
+
+
 class BilayerPackingConstraintsMain(PackingConstraintsMain):
     """Bilayer packing constraint planes sub workflow. """
+
     func_str = serialize_module_obj(bilayer_above_substrate)
+
+
 class CylindricalPackingConstraintsMain(PackingConstraintsMain):
     """Cylinder packing constraints sub workflow."""
+
     func_str = serialize_module_obj(cylinders_above_substrate)
+
+
 class HemicylindricalPackingConstraintsMain(PackingConstraintsMain):
     """Cylinder packing constraints sub workflow."""
+
     func_str = serialize_module_obj(hemicylinders_above_substrate)
-class LayeredPackingContextMain(WorkflowGenerator):
-    """Layered packing template context sub workflow.
+
+
+class PackingContextMain(WorkflowGenerator):
+    """Packing template context sub workflow.
 
     Inputs:
-    - metadata->step_specific->packing->surfactant_substrate->constraints->layers (list)
-    - metadata->step_specific->packing->surfactant_substrate->tolerance (float)
-
     - metadata->system->counterion->name (str)
     - metadata->system->surfactant->name (str)
     - metadata->system->surfactant->nmolecules (int)
@@ -120,8 +131,22 @@ class LayeredPackingContextMain(WorkflowGenerator):
     - metadata->system->surfactant->tail_atom->index (int)
 
     Outputs:
+    - run->template->context
     """
+
+    pass
+
+
+class LayeredPackingContextMain(PackingContextMain):
+    """Layered packing template context sub workflow.
+
+    Inputs:
+    - metadata->step_specific->packing->surfactant_substrate->constraints->layers (list)
+    - metadata->step_specific->packing->surfactant_substrate->tolerance (float)
+    """
+
     func_str = serialize_module_obj(generate_pack_alternating_multilayer_packmol_template_context)
+
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -158,21 +183,12 @@ class LayeredPackingContextMain(WorkflowGenerator):
             )
         ]
 
-        fw_context = Firework(fts_context,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
-
+        fw_context = self.build_fw(
+            fts_context, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
         fw_list.append(fw_context)
 
         return fw_list, [fw_context], [fw_context]
@@ -184,17 +200,10 @@ class CylindricalPackingContextMain(WorkflowGenerator):
     Inputs:
     - metadata->step_specific->packing->surfactant_substrate->constraints->cylinders (list)
     - metadata->step_specific->packing->surfactant_substrate->tolerance (float)
-
-    - metadata->system->counterion->name (str)
-    - metadata->system->surfactant->name (str)
-    - metadata->system->surfactant->nmolecules (int)
-    - metadata->system->surfactant->head_atom->index (int)
-    - metadata->system->surfactant->tail_atom->index (int)
-
-    Outputs:
-    -
     """
+
     func_str = serialize_module_obj(generate_cylinders_packmol_template_context)
+
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -231,20 +240,12 @@ class CylindricalPackingContextMain(WorkflowGenerator):
             )
         ]
 
-        fw_context = Firework(fts_context,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_context = self.build_fw(
+            fts_context, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_context)
 
@@ -255,6 +256,8 @@ class HemicylindricalPackingContextMain(CylindricalPackingConstraintsMain):
     """Hemicylindrical packing template context sub workflow."""
 
     func_str = serialize_module_obj(generate_upper_hemicylinders_packmol_template_context)
+
+
 class PackingMain(WorkflowGenerator):
     """Packmol packing."""
 
@@ -264,6 +267,109 @@ class PackingMain(WorkflowGenerator):
         'ionlayers': 'run->template->context->ionlayers',
         'movebadrandom': 'run->template->context->movebadrandom',
     }
+
+    def push_infiles(self, fp):
+        fp_files = []
+
+        step_label = self.get_step_label('push_infiles')
+
+        # input files
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PACKMOL_SUBDIR,
+            file_config.PACKMOL_FLAT_TEMPLATE)))
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'template',
+            'step': step_label,
+            'name': file_config.PACKMOL_FLAT_TEMPLATE
+        }
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # datafiles:
+
+        # try to get surfactant pdb file from kwargs
+        try:
+            surfactant = self.kwargs["system"]["surfactant"]["name"]
+        except:
+            surfactant = phys_config.DEFAULT_SURFACTANT
+            warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
+
+        surfactant_pdb = file_config.SURFACTANT_PDB_PATTERN.format(name=surfactant)
+
+        datafiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PDB_SUBDIR,
+            surfactant_pdb)))
+
+        files = {os.path.basename(f): f for f in datafiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'surfactant_file',
+            'step': step_label,
+            **self.kwargs
+        }
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # try to get counterion pdb file from kwargs
+        try:
+            counterion = self.kwargs["system"]["counterion"]["name"]
+        except:
+            counterion = phys_config.DEFAULT_COUNTERION
+            warnings.warn("No counterion specified, falling back to {:s}.".format(surfactant))
+
+        counterion_pdb = file_config.COUNTERION_PDB_PATTERN.format(name=counterion)
+
+        datafiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.PDB_SUBDIR,
+            counterion_pdb)))
+
+        files = {os.path.basename(f): f for f in datafiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'counterion_file',
+            'step': step_label,
+            **self.kwargs
+        }
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))
+            metadata["name"] = name
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        return fp_files
+
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -294,20 +400,11 @@ class PackingMain(WorkflowGenerator):
                 new_file_names=['counterion.pdb'])
         ]
 
-        fw_coordinates_pull = Firework(fts_coordinates_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                      'project': self.project_id,
-                      'datetime': str(datetime.datetime.now()),
-                      'step':    step_label
-                }
-            },
-            parents=None)
-
+        fw_coordinates_pull = self.build_fw(
+            fts_coordinates_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
         fw_list.append(fw_coordinates_pull)
 
         # input files pull
@@ -327,19 +424,11 @@ class PackingMain(WorkflowGenerator):
             limit=1,
             new_file_names=['input.template'])]
 
-        fw_inputs_pull = Firework(fts_inputs_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                      'project': self.project_id,
-                      'datetime': str(datetime.datetime.now()),
-                      'step':    step_label
-                }
-            },
-            parents=None)
+        fw_inputs_pull = self.build_fw(
+            fts_inputs_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_inputs_pull)
 
@@ -367,27 +456,19 @@ class PackingMain(WorkflowGenerator):
             ]
         }
 
-        ft_template = TemplateWriterTask({
+        fts_template = [TemplateWriterTask({
             'context': static_packmol_script_context,
             'context_inputs': self.context_inputs,
             'template_file': 'input.template',
             'template_dir': '.',
-            'output_file': 'input.inp'})
+            'output_file': 'input.inp'})]
 
-        fw_template = Firework([ft_template],
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fws_root, fw_inputs_pull])
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[*fws_root, fw_inputs_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_template)
 
@@ -409,38 +490,28 @@ class PackingMain(WorkflowGenerator):
             CmdTask(
                 cmd='packmol',
                 env='python',
-                stdin_file   = 'input.inp',
-                stderr_file  = 'std.err',
-                stdout_file  = 'std.out',
-                store_stdout = True,
-                store_stderr = True,
-                use_shell    = False,
-                fizzle_bad_rc= True),
+                stdin_file='input.inp',
+                stderr_file='std.err',
+                stdout_file='std.out',
+                store_stdout=True,
+                store_stderr=True,
+                use_shell=False,
+                fizzle_bad_rc=True),
             PyTask(  # check for output file and fizzle if not existant
                 func='open',
                 args=['default_packmol.pdb'])]
 
-        fw_pack = Firework(fts_pack,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_core_job_queueadapter_defaults'],  # packmol only serial
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'packmol',
-                    **self.kwargs
-                }
-            },
-            parents=[fw_coordinates_pull, fw_template])
-
+        fw_pack = self.build_fw(
+            fts_pack, step_label,
+            parents=[fw_coordinates_pull, fw_template],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults'])
         fw_list.append(fw_pack)
 
         return fw_list, [fw_pack], [fw_template, fw_pack]
+
 
 class LayeredPackingMain(PackingMain):
     """Layered packmol packing."""
@@ -465,7 +536,7 @@ class HemicylindricalPackingMain(CylindricalPackingMain):
     pass
 
 
-class MonolayerPackingWorkflowGenerator(ChainWorkflowGenerator):
+class MonolayerPacking(ChainWorkflowGenerator):
     """Pack a monolayer on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -476,14 +547,14 @@ class MonolayerPackingWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            MonolayerPackingConstraintsMain(*args, **kwargs),
-            LayeredPackingContextMain(*args, **kwargs),
-            LayeredPackingMain(*args, **kwargs),
+            MonolayerPackingConstraintsMain,
+            LayeredPackingContextMain,
+            LayeredPackingMain,
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class BilayerPackingWorkflowGenerator(ChainWorkflowGenerator):
+class BilayerPacking(ChainWorkflowGenerator):
     """Pack a monolayer on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -494,14 +565,14 @@ class BilayerPackingWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            BilayerPackingConstraintsMain(*args, **kwargs),
-            LayeredPackingContextMain(*args, **kwargs),
-            LayeredPackingMain(*args, **kwargs),
+            BilayerPackingConstraintsMain,
+            LayeredPackingContextMain,
+            LayeredPackingMain,
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class CylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
+class CylindricalPacking(ChainWorkflowGenerator):
     """Pack cylinders on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -512,14 +583,14 @@ class CylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            CylindricalPackingConstraintsMain(*args, **kwargs),
-            CylindricalPackingContextMain(*args, **kwargs),
-            CylindricalPackingMain(*args, **kwargs),
+            CylindricalPackingConstraintsMain,
+            CylindricalPackingContextMain,
+            CylindricalPackingMain,
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class HemicylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
+class HemicylindricalPacking(ChainWorkflowGenerator):
     """Pack cylinders on flat substrate with PACKMOL sub workflow.
 
     Concatenates
@@ -530,8 +601,8 @@ class HemicylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            HemicylindricalPackingConstraintsMain(*args, **kwargs),
-            HemicylindricalPackingContextMain(*args, **kwargs),
-            HemicylindricalPackingMain(*args, **kwargs),
+            HemicylindricalPackingConstraintsMain,
+            HemicylindricalPackingContextMain,
+            HemicylindricalPackingMain,
         ]
-        super().__init__(sub_wf_components, *args, **kwargs)
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

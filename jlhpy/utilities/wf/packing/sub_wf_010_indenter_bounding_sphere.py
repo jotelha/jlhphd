@@ -14,7 +14,7 @@ from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_wit
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ProcessAnalyzeAndVisualizeWorkflowGenerator)
+    WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
@@ -184,10 +184,10 @@ class IndenterBoundingSphereVis(
 
 class IndenterBoundingSphereWorkflowGenerator(
         DefaultPullMixin, DefaultPushMixin,
-        ProcessAnalyzeAndVisualizeWorkflowGenerator,
+        ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualizeWorkflowGenerator.__init__(self,
+        ProcessAnalyzeAndVisualize.__init__(self,
             main_sub_wf=IndenterBoundingSphereMain(*args, **kwargs),
             vis_sub_wf=IndenterBoundingSphereVis(*args, **kwargs),
             *args, **kwargs)

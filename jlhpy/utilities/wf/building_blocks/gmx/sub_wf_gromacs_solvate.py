@@ -2,9 +2,6 @@
 """Indenter bounding sphere sub workflow."""
 
 import datetime
-import glob
-import os
-import pymongo
 
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
@@ -24,19 +21,14 @@ class GromacsSolvateMain(WorkflowGenerator):
     Solvate in water via GROMACS.
 
     dynamic infiles:
-        only queried in pull stub, otherwise expected through data flow
-
     - data_file:     default.gro
-        queried by { 'metadata->type': 'pull_gro' }
     - topology_file: default.top
-        queried by { 'metadata->type': 'pull_top' }
 
     outfiles:
-    - data_file:       default.gro
-        tagged as {'metadata->type': 'solvate_gro'}
+    - data_file:     default.gro
     - topology_file: default.top
-        tagged as {'metadata->type': 'solvate_top'}
     """
+
     def main(self, fws_root=[]):
         fw_list = []
 
@@ -71,31 +63,24 @@ class GromacsSolvateMain(WorkflowGenerator):
             store_stdlog=False,
             fizzle_bad_rc=True)]
 
-        fw_gmx_solvate = Firework(fts_gmx_solvate,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root])
+        fw_gmx_solvate = self.build_fw(
+            fts_gmx_solvate, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+
 
         fw_list.append(fw_gmx_solvate)
 
         return fw_list, [fw_gmx_solvate], [fw_gmx_solvate]
 
 
-class GromacsSolvateWorkflowGenerator(
+class GromacsSolvate(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsSolvateMain(*args, **kwargs),
+            main_sub_wf=GromacsSolvateMain
             *args, **kwargs)

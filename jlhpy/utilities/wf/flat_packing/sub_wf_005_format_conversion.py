@@ -69,27 +69,19 @@ class FormatConversionMain(WorkflowGenerator):
             propagate=False,
         )]
 
-        fw_conversion = Firework(fts_conversion,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_conversion = self.build_fw(
+            fts_conversion, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_conversion)
 
         return fw_list, [fw_conversion], [fw_conversion]
 
 
-class FormatConversionWorkflowGenerator(
+class FormatConversion(
         DefaultPullMixin, DefaultPushMixin,
-        FormatConversionMain,
-        ):
+        FormatConversionMain):
+    pass

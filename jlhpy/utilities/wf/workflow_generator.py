@@ -2,6 +2,8 @@
 # 2020/07/02 remove all project_id, only project
 
 # system basics
+from abc import abstractmethod
+
 import copy
 import datetime
 import logging
@@ -97,10 +99,9 @@ class FireWorksWorkflowGenerator:
         else:
             self.hpc_specs = HPC_SPECS[self.machine]
 
+        self.wf_name_prefix = ':'.join(reversed([o.__name__ for i, o in enumerate(self.__class__.mro()) if getattr(o, 'opaque', False) or i == 0]))
         if wf_name_prefix:
-            self.wf_name_prefix = wf_name_prefix
-        else:
-            self.wf_name_prefix = type(self).__name__
+            self.wf_name_prefix = ':'.join((wf_name_prefix, self.wf_name_prefix))
 
         if 'wf_name' in self.kwargs:
             self.wf_name = self.kwargs['wf_name']
@@ -329,6 +330,39 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
     def get_wf_label(self):
         return self.wf_name
 
+    def build_fw(self, fts, step_label,
+                 parents=[], category=None, files_in={}, files_out={},
+                 queueadapter=None, fw_spec=None):
+        if category is None:
+            category = self.hpc_specs['fw_noqueue_category']
+        if queueadapter is None:
+            queueadapter = {}
+        else:
+            queueadapter = {
+                '_queueadapter': {
+                    **queueadapter
+                }
+            }
+        if fw_spec is None:
+            fw_spec = {}
+
+        return Firework(fts,
+                        name=self.get_fw_label(step_label),
+                        spec={
+                            '_category': category,
+                            '_files_in':  files_in,
+                            '_files_out': files_out,
+                            **queueadapter,
+                            **fw_spec,
+                            'metadata': {
+                                'project':  self.project_id,
+                                'datetime': str(datetime.datetime.now()),
+                                'step':     step_label,
+                                **self.kwargs
+                            }
+                        },
+                        parents=parents)
+
     def pull(self, fws_root=[]):
         """Generate FireWorks for querying input files."""
         return [], [], []
@@ -359,8 +393,7 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
         return fws_list, fws_leaf, fws_root
 
     def get_as_root(self, fws_root=[]):
-        """Return as root FireWorks list with pull stub, but no push stub.
-        """
+        """Return as root FireWorks list with pull stub, but no push stub."""
 
         # main processing branch
         fws_pull, fws_pull_leaf, _ = self.pull()
@@ -374,8 +407,7 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
         return fws_list, fws_main_leaf, fws_main_root
 
     def get_as_leaf(self, fws_root=[]):
-        """Return as leaf FireWorks list without pull stub, but with push stub.
-        """
+        """Return as leaf FireWorks list without pull stub, but with push stub."""
 
         fws_main, fws_main_leaf, fws_main_root = self.main(fws_root)
         fws_push, fws_push_leaf, _ = self.push(fws_main_leaf)
@@ -439,7 +471,7 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
         ]
 
 
-class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
+class ProcessAnalyzeAndVisualize(WorkflowGenerator):
     """Merges three sub-workflows 'main', 'vis' and 'analysis' as shown below.
 
 
@@ -485,19 +517,18 @@ class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
     - according pull and push stubs
     """
 
-    def __init__(self, main_sub_wf, analysis_sub_wf=None, vis_sub_wf=None,
-            vis_depends_on_analysis=False,
-            *args, **kwargs):
+    def __init__(self, *args, main_sub_wf=None, analysis_sub_wf=None, vis_sub_wf=None,
+                 vis_depends_on_analysis=False, **kwargs):
         """Takes list of instantiated sub-workflows."""
+        super().__init__(*args, **kwargs)
+        kwargs["wf_name_prefix"] = self.wf_name_prefix
         self.sub_wf_components = {
-            'main': main_sub_wf,
-            'analysis': analysis_sub_wf,
-            'vis': vis_sub_wf,
+            'main': main_sub_wf(*args, **kwargs) if main_sub_wf is not None else None,
+            'analysis': analysis_sub_wf(*args, **kwargs) if analysis_sub_wf is not None else None,
+            'vis': vis_sub_wf(*args, **kwargs) if vis_sub_wf is not None else None,
         }
-
         self._vis_depends_on_analysis = vis_depends_on_analysis
 
-        WorkflowGenerator.__init__(self, *args, **kwargs)
 
     def push_infiles(self, fp):
         """fp: FilePad"""
@@ -507,7 +538,12 @@ class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
 
     # chain sub-workflows
     def pull(self, fws_root=[]):
-        return self.sub_wf_components['main'].pull(fws_root)
+        fw_list_out, fws_leaf_out, fws_root_out = super().pull(fws_root)
+        fw_list_sub, fws_leaf_sub, fws_root_sub = self.sub_wf_components['main'].pull(fws_root)
+        fw_list_out.extend(fw_list_sub)
+        fws_leaf_out.extend(fws_leaf_sub)
+        fws_root_out.extend(fws_root_sub)
+        return fw_list_out, fws_leaf_out, fws_root_out
 
     def main(self, fws_root=[]):
         # fws_first_sub_wf_root = None
@@ -541,11 +577,11 @@ class ProcessAnalyzeAndVisualizeWorkflowGenerator(WorkflowGenerator):
 
 class ChainWorkflowGenerator(WorkflowGenerator):
     """Chains a set of sub-workflows."""
-    def __init__(self, sub_wf_components, *args, **kwargs):
+    def __init__(self, *args, sub_wf_components=[], **kwargs):
         """Takes list of instantiated sub-workflows."""
-        self.sub_wf_components = sub_wf_components
-
         super().__init__(*args, **kwargs)
+        kwargs["wf_name_prefix"] = self.wf_name_prefix
+        self.sub_wf_components = [sub_wf(*args, **kwargs) for sub_wf in sub_wf_components]
 
     def push_infiles(self, fp):
         """fp: FilePad"""
@@ -554,9 +590,14 @@ class ChainWorkflowGenerator(WorkflowGenerator):
                 sub_wf.push_infiles(fp)
 
     # chain sub-workflows
-    def pull(self, fws_root=[]):
-        """Returns the pull stub of first sub-workflow in chain."""
-        return self.sub_wf_components[0].pull(fws_root)
+    # def pull(self, fws_root=[]):
+    #     """Returns the pull stub of first sub-workflow in chain."""
+    #     fw_list_out, fws_leaf_out, fws_root_out = super().pull(fws_root)
+    #     fw_list_sub, fws_leaf_sub, fws_root_sub = self.sub_wf_components[0].pull(fws_root)
+    #     fw_list_out.extend(fw_list_sub)
+    #     fws_leaf_out.extend(fws_leaf_sub)
+    #     fws_root_out.extend(fws_root_sub)
+    #     return fw_list_out, fws_leaf_out, fws_root_out
 
     def main(self, fws_root=[]):
         fws_first_sub_wf_root = None
@@ -577,64 +618,194 @@ class ChainWorkflowGenerator(WorkflowGenerator):
 
         return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
 
-    def push(self, fws_root=[]):
-        """Returns the push stub of last sub-workflow in chain."""
-        return self.sub_wf_components[-1].push(fws_root)
+    # def push(self, fws_root=[]):
+    #     """Returns the push stub of last sub-workflow in chain."""
+    #     fw_list_out, fws_leaf_out, fws_root_out = super().push(fws_root)
+    #     fw_list_sub, fws_leaf_sub, fws_root_sub = self.sub_wf_components[-1].push(fws_root)
+    #     fw_list_out.extend(fw_list_sub)
+    #     fws_leaf_out.extend(fws_leaf_sub)
+    #     fws_root_out.extend(fws_root_sub)
+    #     return fw_list_out, fws_leaf_out, fws_root_out
+
+    def get_as_independent(self, fws_root=[]):
+        """Return a self-sufficient FireWorks list with pull and push stub."""
+        fws_first_sub_wf_root = None
+        fws_prev_sub_wf_leaf = fws_root
+        fw_list = []
+        for i, sub_wf in enumerate(self.sub_wf_components):
+            if i == 0:
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_independent(fws_prev_sub_wf_leaf)
+            else:
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_leaf(fws_prev_sub_wf_leaf)
+
+            fws_prev_sub_wf_leaf = fws_last_sub_wf_leaf
+            if not fws_first_sub_wf_root:
+                fws_first_sub_wf_root = fws_last_sub_wf_root
+            fw_list.extend(fws_last_sub_wf)
+
+        return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
+
+    def get_as_root(self, fws_root=[]):
+        """Return as root FireWorks list with pull stub, but no push stub."""
+        fws_first_sub_wf_root = None
+        fws_prev_sub_wf_leaf = fws_root
+        fw_list = []
+        for i, sub_wf in enumerate(self.sub_wf_components):
+            if i == 0:
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_independent(fws_prev_sub_wf_leaf)
+            elif i+1 < len(self.sub_wf_components):
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_leaf(fws_prev_sub_wf_leaf)
+            else:
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_embedded(fws_prev_sub_wf_leaf)
+
+            fws_prev_sub_wf_leaf = fws_last_sub_wf_leaf
+            if not fws_first_sub_wf_root:
+                fws_first_sub_wf_root = fws_last_sub_wf_root
+            fw_list.extend(fws_last_sub_wf)
+
+        return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
 
 
-# class BranchingWorkflowGenerator(WorkflowGenerator):
-#     """Assemble a set of sub-workflows in parallel."""
-#     def __init__(self, sub_wf_components, *args, **kwargs):
-#         """Takes list of instantiated sub-workflows."""
-#         self.sub_wf_components = sub_wf_components
-#
-#         sub_wf_name = 'branching workflow'
-#         if 'wf_name_prefix' not in kwargs:
-#             kwargs['wf_name_prefix'] = sub_wf_name
-#         else:
-#             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-#         super().__init__(*args, **kwargs)
-#
-#     def push_infiles(self, fp):
-#         """fp: FilePad"""
-#         for sub_wf in self.sub_wf_components:
-#             if hasattr(sub_wf, 'push_infiles'):
-#                 sub_wf.push_infiles(fp)
-#
-#     def pull(self, fws_root=[]):
-#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-#         for sub_wf in self.sub_wf_components:
-#             if hasattr(sub_wf, 'push_infiles'):
-#                 cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.pull(fws_root)
-#                 fws_list.extend(cur_fws_list)
-#                 fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-#                 fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-#
-#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
-#
-#     def main(self, fws_root=[]):
-#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-#         for sub_wf in self.sub_wf_components:
-#             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.main(fws_root)
-#             fws_list.extend(cur_fws_list)
-#             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-#             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-#
-#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
-#
-#     def push(self, fws_root=[]):
-#         fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-#         for sub_wf in self.sub_wf_components:
-#             if hasattr(sub_wf, 'pull'):
-#                 cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.push(fws_root)
-#                 fws_list.extend(cur_fws_list)
-#                 fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-#                 fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-#
-#         return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+    def get_as_leaf(self, fws_root=[]):
+        """Return as leaf FireWorks list without pull stub, but with push stub."""
+
+        fws_first_sub_wf_root = None
+        fws_prev_sub_wf_leaf = fws_root
+        fw_list = []
+        for i, sub_wf in enumerate(self.sub_wf_components):
+            fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                sub_wf.get_as_leaf(fws_prev_sub_wf_leaf)
+
+            fws_prev_sub_wf_leaf = fws_last_sub_wf_leaf
+            if not fws_first_sub_wf_root:
+                fws_first_sub_wf_root = fws_last_sub_wf_root
+            fw_list.extend(fws_last_sub_wf)
+
+        return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
+
+    def get_as_embedded(self, fws_root=[]):
+        """Return as embeded FireWorks list without pull and push stub."""
+        fws_first_sub_wf_root = None
+        fws_prev_sub_wf_leaf = fws_root
+        fw_list = []
+        for i, sub_wf in enumerate(self.sub_wf_components):
+            if i+1 < len(self.sub_wf_components):
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_leaf(fws_prev_sub_wf_leaf)
+            else:
+                fws_last_sub_wf, fws_last_sub_wf_leaf, fws_last_sub_wf_root = \
+                    sub_wf.get_as_embedded(fws_prev_sub_wf_leaf)
+
+            fws_prev_sub_wf_leaf = fws_last_sub_wf_leaf
+            if not fws_first_sub_wf_root:
+                fws_first_sub_wf_root = fws_last_sub_wf_root
+            fw_list.extend(fws_last_sub_wf)
+
+        return fw_list, fws_last_sub_wf_leaf, fws_first_sub_wf_root
 
 
-class ParametricBranchingWorkflowGenerator(WorkflowGenerator):
+class BranchingWorkflowGeneratorBlueprint(WorkflowGenerator):
+    """Common base for all branching workflows."""
+
+    @property
+    def sub_wf_components(self):
+        return self._sub_wf_components
+
+    @sub_wf_components.setter
+    def sub_wf_components(self, sub_wf_components):
+        self._sub_wf_components = sub_wf_components
+
+    @sub_wf_components.deleter
+    def sub_wf_components(self):
+        del self._sub_wf_components
+
+    def push_infiles(self, fp):
+        """fp: FilePad"""
+        for sub_wf in self.sub_wf_components:
+            if hasattr(sub_wf, 'push_infiles'):
+                sub_wf.push_infiles(fp)
+
+    def main(self, fws_root=[]):
+        fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
+        for sub_wf in self.sub_wf_components:
+            cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.main(fws_root)
+            fws_list.extend(cur_fws_list)
+            fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
+            fws_sub_wf_root.extend(cur_fws_sub_wf_root)
+        return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
+
+    def get_as_independent(self, fws_root=[]):
+        """Return a self-sufficient FireWorks list with pull and push stub."""
+
+        fws_list_out, fws_leaf_out, fws_root_out = [], [], []
+
+        for sub_wf in self.sub_wf_components:
+            cur_fw_list, cur_fws_leaf, cur_fws_root = sub_wf.get_as_independent(fws_root)
+
+            fws_list_out.extend(cur_fw_list)
+            fws_leaf_out.extend(cur_fws_leaf)
+            fws_root_out.extend(cur_fws_root)
+
+        return fws_list_out, fws_leaf_out, fws_root_out
+
+    def get_as_root(self, fws_root=[]):
+        """Return as root FireWorks list with pull stub, but no push stub."""
+
+        fws_list_out, fws_leaf_out, fws_root_out = [], [], []
+
+        for sub_wf in self.sub_wf_components:
+            cur_fw_list, cur_fws_leaf, cur_fws_root = sub_wf.get_as_root(fws_root)
+
+            fws_list_out.extend(cur_fw_list)
+            fws_leaf_out.extend(cur_fws_leaf)
+            fws_root_out.extend(cur_fws_root)
+
+        return fws_list_out, fws_leaf_out, fws_root_out
+
+    def get_as_leaf(self, fws_root=[]):
+        """Return as leaf FireWorks list without pull stub, but with push stub."""
+
+        fws_list_out, fws_leaf_out, fws_root_out = [], [], []
+
+        for sub_wf in self.sub_wf_components:
+            cur_fw_list, cur_fws_leaf, cur_fws_root = sub_wf.get_as_leaf(fws_root)
+
+            fws_list_out.extend(cur_fw_list)
+            fws_leaf_out.extend(cur_fws_leaf)
+            fws_root_out.extend(cur_fws_root)
+
+        return fws_list_out, fws_leaf_out, fws_root_out
+
+    def get_as_embedded(self, fws_root=[]):
+        """Return as embeded FireWorks list without pull and push stub."""
+        fws_list_out, fws_leaf_out, fws_root_out = [], [], []
+
+        for sub_wf in self.sub_wf_components:
+            cur_fw_list, cur_fws_leaf, cur_fws_root = sub_wf.get_as_embedded(fws_root)
+
+            fws_list_out.extend(cur_fw_list)
+            fws_leaf_out.extend(cur_fws_leaf)
+            fws_root_out.extend(cur_fws_root)
+
+        return fws_list_out, fws_leaf_out, fws_root_out
+
+
+class BranchingWorkflowGenerator(BranchingWorkflowGeneratorBlueprint):
+    """Assemble a set of sub-workflows in parallel."""
+
+    def __init__(self, *args, sub_wf_components=[], **kwargs):
+        """Takes list of sub-workflow classes."""
+        super().__init__(*args, **kwargs)
+        kwargs["wf_name_prefix"] = self.wf_name_prefix
+        self.sub_wf_components = [sub_wf(*args, **kwargs) for sub_wf in sub_wf_components]
+
+
+class ParametricBranchingWorkflowGenerator(BranchingWorkflowGeneratorBlueprint):
     """Parametric branching of workflow.
 
     args
@@ -666,14 +837,8 @@ class ParametricBranchingWorkflowGenerator(WorkflowGenerator):
     of ('nmolecules', temperature') parameter values
     """
 
-    def __init__(self, sub_wf, *args, **kwargs):
+    def __init__(self, *args, sub_wf=None, **kwargs):
         labeled_parameter_sets = []
-
-        # sub_wf_name = 'ParametricBranching'
-        # if 'wf_name_prefix' not in kwargs:
-        #     kwargs['wf_name_prefix'] = sub_wf_name
-        # else:
-        #     kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
         super().__init__(*args, **kwargs)
 
         # build atomic parameter sets from parameter_values
@@ -698,44 +863,6 @@ class ParametricBranchingWorkflowGenerator(WorkflowGenerator):
             sub_wf_components.append(sub_wf(*args, **cur_kwargs))
 
         self.sub_wf_components = sub_wf_components
-
-    def push_infiles(self, fp):
-        """fp: FilePad"""
-        for sub_wf in self.sub_wf_components:
-            if hasattr(sub_wf, 'push_infiles'):
-                sub_wf.push_infiles(fp)
-
-    # def pull(self, fws_root=[]):
-    #     fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-    #     for sub_wf in self.sub_wf_components:
-    #         if hasattr(sub_wf, 'push_infiles'):
-    #             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.pull(fws_root)
-    #             fws_list.extend(cur_fws_list)
-    #             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-    #             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-    #
-    #     return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
-
-    def main(self, fws_root=[]):
-        fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-        for sub_wf in self.sub_wf_components:
-            cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.get_as_leaf(fws_root)
-            fws_list.extend(cur_fws_list)
-            fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-            fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-
-        return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
-
-    # def push(self, fws_root=[]):
-    #     fws_list, fws_sub_wf_leaf, fws_sub_wf_root = [], [], []
-    #     for sub_wf in self.sub_wf_components:
-    #         if hasattr(sub_wf, 'pull'):
-    #             cur_fws_list, cur_fws_sub_wf_leaf, cur_fws_sub_wf_root = sub_wf.push(fws_root)
-    #             fws_list.extend(cur_fws_list)
-    #             fws_sub_wf_leaf.extend(cur_fws_sub_wf_leaf)
-    #             fws_sub_wf_root.extend(cur_fws_sub_wf_root)
-    #
-    #     return fws_list, fws_sub_wf_leaf, fws_sub_wf_root
 
 
 
