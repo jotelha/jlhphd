@@ -535,16 +535,3 @@ class HemicylindricalPackingWorkflowGenerator(ChainWorkflowGenerator):
             HemicylindricalPackingMain(*args, **kwargs),
         ]
         super().__init__(sub_wf_components, *args, **kwargs)
-
-
-# class PackingConstraintSpheresWorkflowGenerator(
-#         DefaultPullMixin, DefaultPushMixin,
-#         CylindricalPackingWorkflowGenerator,
-#         ):
-#     def __init__(self, *args, **kwargs):
-#         sub_wf_name = 'PackingConstraintSpheres'
-#         if 'wf_name_prefix' not in kwargs:
-#             kwargs['wf_name_prefix'] = sub_wf_name
-#         else:
-#             kwargs['wf_name_prefix'] = ':'.join((kwargs['wf_name_prefix'], sub_wf_name))
-#         super().__init__(*args, **kwargs)
