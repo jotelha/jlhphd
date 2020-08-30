@@ -80,6 +80,11 @@ class PullFromFilePadMixin(PushMixin):
         if hasattr(self, 'source_project_id'):
             query['metadata->project'] = self.source_project_id
 
+        # TODO: this must happen in a more elegant way
+        metadata_fp_source_key = self.kwargs.get('metadata_fp_source_key', 'metadata')
+        metadata_fw_dest_key = self.kwargs.get('metadata_fw_dest_key', 'metadata')
+        metadata_fw_source_key = self.kwargs.get('metadata_fw_source_key', 'metadata')
+
         fts_pull = []
         for file in self.files_in_list:
             fts_pull.append(
@@ -91,9 +96,9 @@ class PullFromFilePadMixin(PushMixin):
                     sort_key='metadata.datetime',
                     sort_direction=pymongo.DESCENDING,
                     new_file_name=file['file_name'],
-                    metadata_fp_source_key='metadata',
-                    metadata_fw_dest_key='metadata',
-                    metadata_fw_source_key='metadata',
+                    metadata_fp_source_key=metadata_fp_source_key,
+                    metadata_fw_dest_key=metadata_fw_dest_key,
+                    metadata_fw_source_key=metadata_fw_source_key,
                     fw_supersedes_fp=True,
                     stdlog_file='std.log',
                     loglevel=logging.DEBUG,

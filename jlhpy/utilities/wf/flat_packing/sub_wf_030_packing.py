@@ -31,7 +31,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-import jlhpy.utilities.wf.file_config as file_config 
+import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.file_config as phys_config
 
 
@@ -194,7 +194,7 @@ class LayeredPackingContextMain(PackingContextMain):
         return fw_list, [fw_context], [fw_context]
 
 
-class CylindricalPackingContextMain(WorkflowGenerator):
+class CylindricalPackingContextMain(PackingContextMain):
     """Cylindrical packing template context sub workflow.
 
     Inputs:
@@ -252,7 +252,7 @@ class CylindricalPackingContextMain(WorkflowGenerator):
         return fw_list, [fw_context], [fw_context]
 
 
-class HemicylindricalPackingContextMain(CylindricalPackingConstraintsMain):
+class HemicylindricalPackingContextMain(CylindricalPackingContextMain):
     """Hemicylindrical packing template context sub workflow."""
 
     func_str = serialize_module_obj(generate_upper_hemicylinders_packmol_template_context)

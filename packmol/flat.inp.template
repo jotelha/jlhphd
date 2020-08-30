@@ -67,7 +67,7 @@ end structure
 # will be constrained above plane z > {{ layer.upper_constraint_plane }}. Therefore,
 # all lipids will be like-oriented, distributed randomly and non-overlapping
 # within bounding box.
-structure 1_{{ layer.surfactant }}.pdb
+structure {{ layer.surfactant }}.pdb
   chain A
   resnumbers 2
   number {{ layer.N|int }}
@@ -110,7 +110,7 @@ end structure
 
 # point particles, generally ions
 {% for ionlayer in ionlayers %}
-structure 1_{{ ionlayer.ion }}.pdb
+structure {{ ionlayer.ion }}.pdb
   chain A
   resnumbers 2
   number {{ ionlayer.N|int }}
@@ -123,13 +123,13 @@ end structure
 
 # ions outside cylinder
 {% for ioncylinder in ioncylinders %}
-structure 1_{{ ioncylinder.ion }}.pdb
+structure {{ ioncylinder.ion }}.pdb
   chain A
   resnumbers 2
   number {{ ioncylinder.N|int }}
   # along x axis
-  inside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.outer_radius) }} {{ "%.3f"|format(ioncylinder.length) }}
-  outside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.inner_radius) }} {{ "%.3f"|format(ioncylinder.length) }}
+  inside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_outer) }} {{ "%.3f"|format(ioncylinder.length) }}
+  outside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_inner) }} {{ "%.3f"|format(ioncylinder.length) }}
   {% if ioncylinder.upper_hemi %}
   over plane 0. 0. 1. {{ "%.3f"|format(ioncylinder.base_center[2]) }}
   {% elif ioncylinder.lower_hemi %}

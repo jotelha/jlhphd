@@ -38,8 +38,8 @@ def layer(
 
     layer = {
         'bounding_box': bb,
-        'z_lower_constraint': bb[0][2] + d/2. + tol,
-        'z_upper_constraint': bb[1][2] - d/2. - tol,
+        'lower_constraint_plane': bb[0][2] + d/2. + tol,
+        'upper_constraint_plane': bb[1][2] - d/2. - tol,
     }
     logger.info("layer geometrical description: {}".format(layer))
     return layer
