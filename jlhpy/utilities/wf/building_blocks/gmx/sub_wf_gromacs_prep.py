@@ -2,20 +2,27 @@
 """Indenter bounding sphere sub workflow."""
 
 import datetime
+import glob
+import os
 import pymongo
 
-from fireworks import Firework
+from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, EvalPyEnvTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
-from jlhpy.utilities.wf.workflow_generator import (
-    WorkflowGenerator, ProcessAnalyzeAndVisualize)
-from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
-   DefaultPullMixin, DefaultPushMixin)
+from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator, ProcessAnalyzeAndVisualize
+from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin
+
+import jlhpy.utilities.wf.file_config as file_config
+
 
 class GromacsPrepMain(WorkflowGenerator):
     """Prepare system for processing with GROMACS.
+
+    inputs:
+    - metadata->system->box->length (float)
+    - metadata->system->box->width (float)
+    - metadata->system->box->height (float)
 
     dynamic infiles:
     - data_file:     in.pdb
@@ -27,107 +34,117 @@ class GromacsPrepMain(WorkflowGenerator):
     - restraint_file:  default.posre.itp
     """
 
+    def push_infiles(self, fp):
+        step_label = self.get_step_label('push_infiles')
+
+        # top template files
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.GMX_TOP_SUBDIR,
+            file_config.GMX_PULL_TOP_TEMPLATE)))
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        # metadata common to all these files
+        metadata = {
+            'project': self.project_id,
+            'type': 'input',
+            'name': file_config.GMX_PULL_TOP_TEMPLATE,
+            'step': step_label,
+        }
+
+        fp_files = []
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        return fp_files
+
     def main(self, fws_root=[]):
         fw_list = []
 
-        # box dimensions
-        # --------------
-        step_label = self.get_step_label('box_dim')
+        # query input files
+        # -----------------
+        step_label = self.get_step_label('input_files_pull')
 
-        fts_box_dim = [
-            EvalPyEnvTask(
-                func='lambda v: v[0], v[1], v[2]',
-                inputs=[
-                    'metadata->system->substrate->measures',
-                ],
-                outputs=[
-                    'metadata->system->substrate->length',
-                    'metadata->system->substrate->width',
-                    'metadata->system->substrate->height',
-                ],
-                propagate=True,
-            ),
-            EvalPyEnvTask(
-                func='lambda v, h: v[0], v[1], v[2] + h',
-                inputs=[
-                    'metadata->system->substrate->measures',
-                    'metadata->system->solvent->height',
-                ],
-                outputs=[
-                    'metadata->system->box->length',
-                    'metadata->system->box->width',
-                    'metadata->system->box->height',
-                ],
-                propagate=True,
-            ),
-        ]
+        files_in = {}
+        files_out = {
+            'template_file':  'sys.top.template',
+        }
 
-        fw_box_dim = self.build_fw(
-            fts_box_dim, step_label,
-            parents=fws_root,
-            category=self.hpc_specs['fw_noqueue_category'])
+        fts_pull = [
+            GetFilesByQueryTask(
+                query={
+                    'metadata->project': self.project_id,
+                    'metadata->name':    file_config.GMX_TOP_TEMPLATE,
+                },
+                sort_key='metadata.datetime',
+                sort_direction=pymongo.DESCENDING,
+                limit=1,
+                new_file_names=['sys.top.template'])]
 
-        fw_list.append(fw_box_dim)
-
-        # PDB chain
-        # ---------
-        step_label = self.get_step_label('pdb_chain')
-
-        files_in =  {'data_file': 'in.pdb'}
-        files_out = {'data_file': 'out.pdb'}
-
-        fts_pdb_chain = [CmdTask(
-            cmd='pdb_chain',
-            env='python',
-            stdin_file='in.pdb',
-            stdout_file='out.pdb',
-            store_stdout=False,
-            store_stderr=False,
-            fizzle_bad_rc=True)]
-
-        fw_pdb_chain = self.build_fw(
-            fts_pdb_chain, step_label,
-            parents=fws_root,
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
-        fw_list.append(fw_pdb_chain)
+        fw_list.append(fw_pull)
 
-        # PDB tidy
-        # --------
-        step_label = self.get_step_label('pdb_tidy')
+        # top template
+        # ------------
+        step_label = self.get_step_label('gmx_top_template')
 
-        files_in =  {'data_file': 'in.pdb'}
-        files_out = {'data_file': 'out.pdb'}
+        files_in = {'template_file': 'sys.top.template'}
+        files_out = {'topology_file': 'sys.top'}
 
-        fts_pdb_tidy = [CmdTask(
-            cmd='pdb_tidy',
-            env='python',
-            stdin_file='in.pdb',
-            stdout_file='out.pdb',
-            store_stdout=False,
-            store_stderr=False,
-            fizzle_bad_rc=True)]
+        # Jinja2 context:
+        static_template_context = {
+            'system_name':  'default',
+            'header':       ', '.join((
+                self.project_id,
+                self.get_fw_label(step_label),
+                str(datetime.datetime.now()))),
+        }
 
-        fw_pdb_tidy = self.build_fw(
-            fts_pdb_tidy, step_label,
-            parents=[fw_pdb_chain],
+        dynamic_template_context = {
+            'nsurfactant': 'metadata->system->surfactant->nmolecules',
+            'surfactant':  'metadata->system->surfactant->name',
+            'ncounterion': 'metadata->system->counterion->nmolecules',  # make system symmetric
+            'counterion':  'metadata->system->counterion->name',
+            'nsubstrate':  'metadata->system->substrate->natoms',
+            'substrate':   'metadata->system->substrate->name',
+        }
+
+        fts_template = [TemplateWriterTask({
+            'context': static_template_context,
+            'context_inputs': dynamic_template_context,
+            'template_file': 'sys.top.template',
+            'template_dir': '.',
+            'output_file': 'sys.top'})]
+
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[fw_pull, *fws_root],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
-        fw_list.append(fw_pdb_tidy)
+        fw_list.append(fw_template)
 
         # GMX pdb2gro
         # -----------
-        step_label = self.get_step_label('gmx_gmx2gro')
+        step_label = self.get_step_label('gmx_pdb2gro')
 
-        files_in =  {'data_file': 'in.pdb'}
-        files_out = {
-            'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp'}
+        files_in = {'data_file': 'in.pdb'}
+        files_out = {'data_file': 'default.gro'}
+        # 'topology_file':   'default.top',
+        # 'restraint_file':  'default.posre.itp'}
 
         fts_gmx_pdb2gro = [CmdTask(
             cmd='gmx',
@@ -147,7 +164,7 @@ class GromacsPrepMain(WorkflowGenerator):
 
         fw_gmx_pdb2gro = self.build_fw(
             fts_gmx_pdb2gro, step_label,
-            parents=[fw_pdb_tidy],
+            parents=fws_root,
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
@@ -164,15 +181,15 @@ class GromacsPrepMain(WorkflowGenerator):
             'restraint_file':  'default.posre.itp'}
         files_out = {
             'data_file': 'default.gro',
-            'topology_file':   'default.top',
-            'restraint_file':  'default.posre.itp'}
+            'topology_file':   'default.top'}
+            #'restraint_file':  'default.posre.itp'
 
         fts_gmx_editconf = [CmdTask(
             cmd='gmx',
             opt=['editconf',
                  '-f', 'in.gro',
                  '-o', 'default.gro',
-                 '-b',
+                 '-box',
                  {'key': 'metadata->system->box->length'},
                  {'key': 'metadata->system->box->width'},
                  {'key': 'metadata->system->box->height'},
@@ -187,14 +204,14 @@ class GromacsPrepMain(WorkflowGenerator):
 
         fw_gmx_editconf = self.build_fw(
             fts_gmx_editconf, step_label,
-            parents=[fw_gmx_pdb2gro, fw_box_dim],
+            parents=[fw_gmx_pdb2gro, fw_template],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_editconf)
 
-        return fw_list, [fw_gmx_editconf], [fw_pdb_chain, fw_box_dim]
+        return fw_list, [fw_gmx_editconf], [fw_gmx_pdb2gro, fw_template]
 
 
 class GromacsPrep(DefaultPullMixin, DefaultPushMixin, ProcessAnalyzeAndVisualize):

@@ -471,6 +471,50 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
         ]
 
 
+class EncapsulatingWorkflowGenerator(WorkflowGenerator):
+    """Common base for all branching workflows."""
+
+    @property
+    def sub_wf(self):
+        return self._sub_wf
+
+    @sub_wf.setter
+    def sub_wf(self, sub_wf):
+        self._sub_wf = sub_wf
+
+    @sub_wf.deleter
+    def sub_wf(self):
+        del self._sub_wf
+
+    def __init__(self, *args, sub_wf=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sub_wf = sub_wf(*args, **kwargs)
+
+    def push_infiles(self, fp):
+        """fp: FilePad"""
+        if hasattr(self.sub_wf, 'push_infiles'):
+            self.sub_wf.push_infiles(fp)
+
+    def main(self, fws_root=[]):
+        return self.sub_wf.main(fws_root)
+
+    def get_as_independent(self, fws_root=[]):
+        """Return a self-sufficient FireWorks list with pull and push stub."""
+        return self.sub_wf.get_as_independent(fws_root)
+
+    def get_as_root(self, fws_root=[]):
+        """Return as root FireWorks list with pull stub, but no push stub."""
+        return self.sub_wf.get_as_root(fws_root)
+
+    def get_as_leaf(self, fws_root=[]):
+        """Return as leaf FireWorks list without pull stub, but with push stub."""
+        return self.sub_wf.get_as_leaf(fws_root)
+
+    def get_as_embedded(self, fws_root=[]):
+        """Return as embeded FireWorks list without pull and push stub."""
+        return self.sub_wf.get_as_embedded(fws_root)
+
+
 class ProcessAnalyzeAndVisualize(WorkflowGenerator):
     """Merges three sub-workflows 'main', 'vis' and 'analysis' as shown below.
 
@@ -845,7 +889,8 @@ class ParametricBranchingWorkflowGenerator(BranchingWorkflowGeneratorBlueprint):
         for parameter_package in self.kwargs['parameter_values']:
             expanded_parameter_package = list(
                 itertools.product(
-                    *[p if isinstance(p, Iterable) else [p] for p in parameter_package.values()]
+                    *[p if (isinstance(p, Iterable) and not isinstance(p, str)) 
+                      else [p] for p in parameter_package.values()]
                 ))
             labeled_parameter_set = [{
                     k: v for k, v in zip(

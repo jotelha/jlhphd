@@ -113,6 +113,8 @@ def cylinders_above_substrate(
         surfactant_head_group_diameter,
         tolerance=2.0,
         vertical_offset=0):
+    """Maximum multiple of x-axis-aligned cylinders along y dimension."""
+
     logger = logging.getLogger(__name__)
 
     r = surfactant_bounding_sphere_radius
@@ -120,8 +122,8 @@ def cylinders_above_substrate(
     d = surfactant_head_group_diameter
     bb = substrate_bounding_box
 
-    length = bb[1][1] - bb[0][1]
-    width = bb[1][0] - bb[0][0]
+    length = bb[1][0] - bb[0][0]
+    width = bb[1][1] - bb[0][1]
 
     cylinder_defaults = cylinder(r, d, tol)
     cylinder_defaults["length"] = length
@@ -130,7 +132,7 @@ def cylinders_above_substrate(
     # number of cylinders to fit
     N = int(width/(2.*R))
     # list of base_center points, shape (N, dim)
-    base_center = [[bb[0][0]+(i+0.5)/N*width, bb[0][1], bb[1][2] + R + vertical_offset + tol] for i in range(N)]
+    base_center = [[bb[0][0], bb[0][1]+(i+0.5)/N*width, bb[1][2] + R + vertical_offset + tol] for i in range(N)]
 
     geometry = {
         'cylinders': [{'base_center': bc, **cylinder_defaults} for bc in base_center],
@@ -146,6 +148,8 @@ def hemicylinders_above_substrate(
         surfactant_bounding_sphere_radius,
         surfactant_head_group_diameter,
         tolerance=2.0):
+    """Maximum multiple of x-axis-aligned hemicylinders along y dimension."""
+
     logger = logging.getLogger(__name__)
 
     r = surfactant_bounding_sphere_radius
@@ -153,8 +157,8 @@ def hemicylinders_above_substrate(
     d = surfactant_head_group_diameter
     bb = substrate_bounding_box
 
-    length = bb[1][1] - bb[0][1]
-    width = bb[1][0] - bb[0][0]
+    length = bb[1][0] - bb[0][0]
+    width = bb[1][1] - bb[0][1]
 
     hemicylinder_defaults = cylinder(r, d, tol)
     hemicylinder_defaults["length"] = length
@@ -163,7 +167,7 @@ def hemicylinders_above_substrate(
     # number of cylinders to fit
     N = int(width/(2.*R))
     # list of base_center points, shape (N, dim)
-    base_center = [[bb[0][0]+(i+0.5)/N*width, bb[0][1], bb[1][2] + R/2. + tol] for i in range(N)]
+    base_center = [[bb[0][0], bb[0][1]+(i+0.5)/N*width, bb[1][2] + tol] for i in range(N)]
 
     geometry = {
         'cylinders': [{'base_center': bc, **hemicylinder_defaults} for bc in base_center],

@@ -13,6 +13,7 @@ GMX_NPT_MDP = 'npt.mdp'
 GMX_RELAX_MDP = 'relax.mdp'
 
 GMX_TOP_SUBDIR = os.path.join('gmx_input', 'top')
+GMX_TOP_TEMPLATE = 'sys.top.template'
 GMX_PULL_TOP_TEMPLATE = 'sys.top.template'
 
 # LAMMPS-related

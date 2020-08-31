@@ -17,6 +17,11 @@ from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
 
+def count_atoms(file):
+    import ase.io
+    return len(ase.io.read(file))
+
+
 class FlatSubstrateMeasuresMain(WorkflowGenerator):
     """Flat substrate measures sub workflow.
 
@@ -70,7 +75,38 @@ class FlatSubstrateMeasuresMain(WorkflowGenerator):
 
         fw_list.append(fw_bounding_box)
 
-        return fw_list, [fw_bounding_box], [fw_bounding_box]
+        # Substrate atom count
+        # --------------------
+        step_label = self.get_step_label('natoms')
+
+        func_str = serialize_module_obj(count_atoms)
+
+        fts_natoms = [PickledPyEnvTask(
+            func=func_str,
+            args=['default.pdb'],
+            outputs=[
+                'metadata->system->substrate->natoms',
+            ],
+            env='imteksimpy',
+            stderr_file='std.err',
+            stdout_file='std.out',
+            stdlog_file='std.log',
+            store_stdout=True,
+            store_stderr=True,
+            store_stdlog=True,
+            propagate=True,
+        )]
+
+        fw_natoms = self.build_fw(
+            fts_natoms, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+
+        fw_list.append(fw_natoms)
+
+        return fw_list, [fw_bounding_box, fw_natoms], [fw_bounding_box, fw_natoms]
 
 
 class FlatSubstrateMeasuresVis(WorkflowGenerator):
@@ -135,6 +171,7 @@ class FlatSubstrateMeasuresVis(WorkflowGenerator):
 #             main_sub_wf=FlatSubstrateMeasuresMain,
 #             vis_sub_wf=FlatSubstrateMeasuresVis,
 #             *args, **kwargs)
-class FlatSubstrateMeasures(DefaultPullMixin, DefaultPushMixin, FlatSubstrateMeasuresMain):
+
+class FlatSubstrateMeasures(DefaultPullMixin, FlatSubstrateMeasuresMain):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

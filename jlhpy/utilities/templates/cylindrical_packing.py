@@ -81,6 +81,7 @@ def generate_cylinders_packmol_template_context(
         'cylinders':     cylinders,
         'ioncylinders':  ioncylinders,
         'movebadrandom': True,
+        'nloop':         200,
     }
 
     return context

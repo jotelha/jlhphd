@@ -174,7 +174,8 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
             parents=[*fws_root, fw_pull_mdp],
             files_in=files_in,
             files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category'])
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_grompp)
 
