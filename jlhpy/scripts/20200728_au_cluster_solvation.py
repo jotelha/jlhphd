@@ -48,7 +48,7 @@ parameter_values = [{'n': n, 'm': n } for n in N]
 project_id = '2020-07-29-sds-on-au-111-indenter-passivation'
 
 # remove all project files from filepad:
-#     fp.delete_file_by_query({'metadata.project': parameter_values})
+#     fp.delete_file_by_query({'metadata.project': project_id})
 wfg = IndenterPassivationParametricWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,

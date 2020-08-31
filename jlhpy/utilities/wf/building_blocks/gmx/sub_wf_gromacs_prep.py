@@ -67,6 +67,8 @@ class GromacsPrepMain(WorkflowGenerator):
             parents=fws_root,
             category=self.hpc_specs['fw_noqueue_category'])
 
+        fw_list.append(fw_box_dim)
+
         # PDB chain
         # ---------
         step_label = self.get_step_label('pdb_chain')

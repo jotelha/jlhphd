@@ -13,6 +13,7 @@ from jlhpy.utilities.wf.flat_packing.sub_wf_030_packing import (
     CylindricalPacking,
     HemicylindricalPacking,)
 
+from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import GromacsMinimizationEquilibrationRelaxation
 
 class SubstratePreparation(ChainWorkflowGenerator):
     """Flat substrate format conversion and measures sub workflow.
@@ -45,22 +46,58 @@ class ComponentMeasures(BranchingWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class SurfactantPacking(BranchingWorkflowGenerator):
+class MonolayerPackingAndEquilibartion(ChainWorkflowGenerator):
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            MonolayerPacking,
+            GromacsMinimizationEquilibrationRelaxation,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class BilayerPackingAndEquilibartion(ChainWorkflowGenerator):
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            BilayerPacking,
+            GromacsMinimizationEquilibrationRelaxation,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class CylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            CylindricalPacking,
+            GromacsMinimizationEquilibrationRelaxation,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class HemicylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            HemicylindricalPacking,
+            GromacsMinimizationEquilibrationRelaxation,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class SurfactantPackingAndEquilibration(BranchingWorkflowGenerator):
     """Pack different film morphologies on flat substrate.
 
     Branches into
-    - MonolayerPacking
-    - BilayerPacking
-    - CylindricalPacking
-    - HemicylindricalPacking
+    - MonolayerPackingAndEquilibartion
+    - BilayerPackingAndEquilibartion
+    - CylindricalPackingAndEquilibartion
+    - HemicylindricalPackingAndEquilibartion
     """
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            MonolayerPacking,
-            BilayerPacking,
-            CylindricalPacking,
-            HemicylindricalPacking,
+            MonolayerPackingAndEquilibartion,
+            BilayerPackingAndEquilibartion,
+            CylindricalPackingAndEquilibartion,
+            HemicylindricalPackingAndEquilibartion,
 
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
@@ -82,12 +119,12 @@ class SurfactantPacking(BranchingWorkflowGenerator):
 #         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class SurfactantPackingParametricBranching(ParametricBranchingWorkflowGenerator):
+class SurfactantPackingAndEquilibrationParametricBranching(ParametricBranchingWorkflowGenerator):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, sub_wf=SurfactantPacking, **kwargs)
+        super().__init__(*args, sub_wf=SurfactantPackingAndEquilibration, **kwargs)
 
 
-class SubstratePassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
+class SubstratePassivation(ChainWorkflowGenerator):
     """Film packing on flat substrate with PACKMOL parametric workflow.
 
     Concatenates
@@ -98,6 +135,6 @@ class SubstratePassivationParametricWorkflowGenerator(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             ComponentMeasures,
-            SurfactantPackingParametricBranching
+            SurfactantPackingAndEquilibrationParametricBranching
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

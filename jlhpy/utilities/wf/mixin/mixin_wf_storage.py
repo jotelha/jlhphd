@@ -56,7 +56,7 @@ class PushMixin():
         return [], [], []
 
 
-class PullFromFilePadMixin(PushMixin):
+class PullFromFilePadMixin(PullMixin):
     """Mixin for querying in files from file pad.
 
     Implementation shall provide 'source_project_id' and 'source_step'

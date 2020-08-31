@@ -3,13 +3,13 @@
 import logging
 
 
-def generate_pack_alternating_multilayer_packmol_template_context(
+def generate_alternating_multilayer_packmol_template_context(
         layers,
         sfN,  # number  of surfactant molecules
         tail_atom_number,  # starts with this atom as lower atom
         head_atom_number,
-        surfactant='SDS',
-        counterion='NA',
+        surfactant='surfactant',
+        counterion='counterion',
         tolerance=2,
         ionlayer_above=True,
         ionlayer_within=True,
@@ -27,6 +27,7 @@ def generate_pack_alternating_multilayer_packmol_template_context(
 
     ionlayers = []
     for i, layer in enumerate(layers):
+        layer["surfactant"] = surfactant
         layer["lower_atom_number"] = tail_atom_number if i % 2 == 0 else head_atom_number
         layer["upper_atom_number"] = head_atom_number if i % 2 == 0 else tail_atom_number
 
@@ -78,3 +79,9 @@ def generate_pack_alternating_multilayer_packmol_template_context(
         'ionlayers':  ionlayers,
     }
     return context
+
+
+def generate_inverse_alternating_multilayer_packmol_template_context(
+        layers, sfN, tail_atom_number, head_atom_number, **kwargs):
+    return generate_alternating_multilayer_packmol_template_context(
+        layers, sfN, tail_atom_number, head_atom_number, **kwargs)

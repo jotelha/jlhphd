@@ -8,8 +8,8 @@ def generate_cylinders_packmol_template_context(
         sfN,  # number of surfactant molecules
         inner_atom_number,  # inner atom
         outer_atom_number,  # outer atom
-        surfactant='SDS',
-        counterion='NA',
+        surfactant='surfactant',
+        counterion='ion',
         tolerance=2,
         ioncylinder_outside=True,
         ioncylinder_within=True,
@@ -85,5 +85,5 @@ def generate_cylinders_packmol_template_context(
 
     return context
 
-def generate_upper_hemicylinders_packmol_template_context(*args,**kwargs):
+def generate_upper_hemicylinders_packmol_template_context(*args, **kwargs):
     return generate_cylinders_packmol_template_context(*args, hemi='upper', **kwargs)

@@ -3,6 +3,7 @@
 
 import datetime
 import glob
+import logging
 import os
 import pymongo
 
@@ -11,6 +12,7 @@ from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.recover_tasks import RecoverTask
 
 from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)

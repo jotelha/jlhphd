@@ -53,7 +53,7 @@ class GromacsSolvateMain(WorkflowGenerator):
                  '-cs', 'spc216.gro',  # water coordinates
                  '-p', 'default.top',  # in- and output topology file
                  '-o', 'solvate.gro',  # output coordinates file
-                ],
+                 ],
             env='python',
             stderr_file='std.err',
             stdout_file='std.out',
@@ -70,7 +70,6 @@ class GromacsSolvateMain(WorkflowGenerator):
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
-
         fw_list.append(fw_gmx_solvate)
 
         return fw_list, [fw_gmx_solvate], [fw_gmx_solvate]
@@ -82,5 +81,4 @@ class GromacsSolvate(
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsSolvateMain
-            *args, **kwargs)
+            main_sub_wf=GromacsSolvateMain, *args, **kwargs)

@@ -22,7 +22,8 @@ from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 from jlhpy.utilities.geometry.morphology import (
     monolayer_above_substrate, bilayer_above_substrate, cylinders_above_substrate, hemicylinders_above_substrate)
 from jlhpy.utilities.templates.flat_packing import (
-    generate_pack_alternating_multilayer_packmol_template_context)
+    generate_alternating_multilayer_packmol_template_context,
+    generate_inverse_alternating_multilayer_packmol_template_context)
 from jlhpy.utilities.templates.cylindrical_packing import (
     generate_cylinders_packmol_template_context, generate_upper_hemicylinders_packmol_template_context)
 
@@ -137,15 +138,18 @@ class PackingContextMain(WorkflowGenerator):
     pass
 
 
+# TODO: bilayer
 class LayeredPackingContextMain(PackingContextMain):
     """Layered packing template context sub workflow.
+
+    Head groups will face upwards in first layer.
 
     Inputs:
     - metadata->step_specific->packing->surfactant_substrate->constraints->layers (list)
     - metadata->step_specific->packing->surfactant_substrate->tolerance (float)
     """
 
-    func_str = serialize_module_obj(generate_pack_alternating_multilayer_packmol_template_context)
+    func_str = serialize_module_obj(generate_alternating_multilayer_packmol_template_context)
 
     def main(self, fws_root=[]):
         fw_list = []
@@ -164,15 +168,17 @@ class LayeredPackingContextMain(PackingContextMain):
         fts_context = [
             PickledPyEnvTask(
                 func=self.func_str,
-                inputs=[
-                    'metadata->step_specific->packing->surfactant_substrate->constraints->layers',
-                    'metadata->system->surfactant->nmolecules',
-                    'metadata->system->surfactant->head_atom->index',
-                    'metadata->system->surfactant->tail_atom->index',
-                    'metadata->system->surfactant->name',
-                    'metadata->system->counterion->name',
-                    'metadata->step_specific->packing->surfactant_substrate->tolerance',
-                ],
+                kwargs={
+                    'surfactant': 'surfactant',
+                    'counterion': 'counterion',
+                },
+                kwargs_inputs={
+                    'layers': 'metadata->step_specific->packing->surfactant_substrate->constraints->layers',
+                    'sfN': 'metadata->system->surfactant->nmolecules',
+                    'tail_atom_number': 'metadata->system->surfactant->tail_atom->index',
+                    'head_atom_number': 'metadata->system->surfactant->head_atom->index',
+                    'tolerance': 'metadata->step_specific->packing->surfactant_substrate->tolerance',
+                },
                 outputs=[
                     'run->template->context',
                 ],
@@ -192,6 +198,13 @@ class LayeredPackingContextMain(PackingContextMain):
         fw_list.append(fw_context)
 
         return fw_list, [fw_context], [fw_context]
+
+class InverseLayeredPackingContextMain(LayeredPackingContextMain):
+    """Layered packing template context sub workflow.
+
+    Head groups wil face downwards in first layer."""
+
+    func_str = serialize_module_obj(generate_inverse_alternating_multilayer_packmol_template_context)
 
 
 class CylindricalPackingContextMain(PackingContextMain):
@@ -221,15 +234,17 @@ class CylindricalPackingContextMain(PackingContextMain):
         fts_context = [
             PickledPyEnvTask(
                 func=self.func_str,
-                inputs=[
-                    'metadata->step_specific->packing->surfactant_substrate->constraints->cylinders',
-                    'metadata->system->surfactant->nmolecules',
-                    'metadata->system->surfactant->head_atom->index',
-                    'metadata->system->surfactant->tail_atom->index',
-                    'metadata->system->surfactant->name',
-                    'metadata->system->counterion->name',
-                    'metadata->step_specific->packing->surfactant_substrate->tolerance',
-                ],
+                kwargs={
+                    'surfactant': 'surfactant',
+                    'counterion': 'counterion',
+                },
+                kwargs_inputs={
+                    'cylinders': 'metadata->step_specific->packing->surfactant_substrate->constraints->cylinders',
+                    'sfN': 'metadata->system->surfactant->nmolecules',
+                    'inner_atom_number': 'metadata->system->surfactant->tail_atom->index',
+                    'outer_atom_number': 'metadata->system->surfactant->head_atom->index',
+                    'tolerance': 'metadata->step_specific->packing->surfactant_substrate->tolerance',
+                },
                 outputs=[
                     'run->template->context',
                 ],
@@ -258,7 +273,7 @@ class HemicylindricalPackingContextMain(CylindricalPackingContextMain):
     func_str = serialize_module_obj(generate_upper_hemicylinders_packmol_template_context)
 
 
-class PackingMain(WorkflowGenerator):
+class PackingMain(DefaultPushMixin, WorkflowGenerator):
     """Packmol packing."""
 
     context_inputs = {
@@ -566,7 +581,7 @@ class BilayerPacking(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             BilayerPackingConstraintsMain,
-            LayeredPackingContextMain,
+            InverseLayeredPackingContextMain,
             LayeredPackingMain,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
