@@ -18,7 +18,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysis
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsDefaultTrajectoryAnalysis
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
@@ -42,7 +42,7 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         always queried within main trunk
 
     - parameter_file: default.mdp,
-        queried by {'metadata->name': file_config.GMX_NPT_MDP}
+        queried by {'metadata->name': file_config.GMX_NPT_Z_ONLY_MDP}
 
     outfiles:
     - log_file:        default.log
@@ -68,7 +68,7 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.GMX_MDP_SUBDIR,
-            file_config.GMX_NPT_MDP)))
+            file_config.GMX_NPT_Z_ONLY_MDP)))
 
         files = {os.path.basename(f): f for f in infiles}
 
@@ -76,7 +76,7 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         metadata = {
             'project': self.project_id,
             'type': 'input',
-            'name': file_config.GMX_NPT_MDP,
+            'name': file_config.GMX_NPT_Z_ONLY_MDP,
             'step': step_label,
         }
 
@@ -107,7 +107,7 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.GMX_NPT_MDP,
+                    'metadata->name':    file_config.GMX_NPT_Z_ONLY_MDP,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -169,6 +169,11 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         #   You are using pressure coupling with absolute position restraints, this
         #   will give artifacts. Use the refcoord_scaling option.
 
+        # with anisotropic pressure coupling
+        # WARNING 1 [file default.mdp, line 141]:
+        #  All off-diagonal reference pressures are non-zero. Are you sure you want
+        #  to apply a threefold shear stress?
+
         fw_gmx_grompp = self.build_fw(
             fts_gmx_grompp, step_label,
             parents=[*fws_root, fw_pull_mdp],
@@ -229,6 +234,6 @@ class GromacsNPTEquilibration(
     def __init__(self, *args, **kwargs):
         super().__init__(
             main_sub_wf=GromacsNPTEquilibrationMain,
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysis,
+            analysis_sub_wf=GromacsDefaultTrajectoryAnalysis,
             vis_sub_wf=GromacsTrajectoryVisualization,
             *args, **kwargs)

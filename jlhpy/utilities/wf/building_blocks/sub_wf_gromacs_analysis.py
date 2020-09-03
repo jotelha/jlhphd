@@ -147,6 +147,137 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
 
+class GromacsMinimalTrajectoryAnalysis(
+        GromacsTrajectoryAnalysis):
+    """
+    Implements partial analysis worklfow only.
+
+    analysis dynamic infiles:
+    - data_file:       default.gro
+    - trajectory_file: default.trr
+
+    analysis fw_spec inputs:
+    - metadata->system->counterion->reference_atom->name
+    - metadata->system->substrate->reference_atom->name
+    - metadata->system->surfactant->head_atom->name
+    - metadata->system->surfactant->tail_atom->name
+
+    anaylsis outfiles:
+    - counterion_counterion_rdf: counterion_counterion_rdf.txt
+        tagged as {'metadata->type': 'counterion_counterion_rdf'}
+    - counterion_substrate_rdf: counterion_substrate_rdf.txt
+        tagged as {'metadata->type': 'counterion_substrate_rdf'}
+    - counterion_surfactant_head_rdf: counterion_surfactant_head_rdf.txt
+        tagged as {'metadata->type': 'counterion_surfactant_head_rdf'}
+    - counterion_surfactant_tail_rdf: counterion_surfactant_tail_rdf.txt
+        tagged as {'metadata->type': 'counterion_surfactant_tail_rdf'}
+
+    - substrate_surfactant_head_rdf: substrate_surfactant_head_rdf.txt
+        tagged as {'metadata->type': 'subtrate_surfactant_head_rdf'}
+    - substrate_surfactant_tail_rdf: substrate_surfactant_tail_rdf.txt
+        tagged as {'metadata->type': 'subtrate_surfactant_tail_rdf'}
+
+    - surfactant_head_surfactant_head_rdf: surfactant_head_surfactant_head_rdf.txt
+            tagged as {'metadata->type': 'surfactant_head_surfactant_head_rdf'}
+    - surfactant_head_surfactant_tail_rdf: surfactant_head_surfactant_tail_rdf.txt
+        tagged as {'metadata->type': 'surfactant_head_surfactant_tail_rdf'}
+
+    - surfactant_tail_surfactant_tail_rdf: surfactant_tail_surfactant_tail_rdf.txt
+        tagged as {'metadata->type': 'surfactant_tail_surfactant_tail_rdf'}
+    """
+    @property
+    def rmsd_list(self):
+        return [
+            {
+                'file_label': 'counterion_rmsd',
+                'file_name': 'counterion_rmsd.txt',
+                'type_label': 'counterion_rmsd',
+                'atom_name': 'metadata->system->counterion->reference_atom->name'},
+            {
+                'file_label': 'substrate_rmsd',
+                'file_name': 'substrate_rmsd.txt',
+                'type_label': 'substrate_rmsd',
+                'atom_name': 'metadata->system->substrate->reference_atom->name' },
+            {
+                'file_label': 'surfactant_head_rmsd',
+                'file_name': 'surfactant_head_rmsd.txt',
+                'type_label': 'surfactant_head_rmsd',
+                'atom_name': 'metadata->system->surfactant->head_atom->name' },
+            {
+                'file_label': 'surfactant_tail_rmsd',
+                'file_name': 'surfactant_tail_rmsd.txt',
+                'type_label': 'surfactant_tail_rmsd',
+                'atom_name': 'metadata->system->surfactant->tail_atom->name' },
+        ]
+
+    # use regex
+    #    - ([^\s:]+): ([^\s]+)\s+tagged as {'metadata->type': '([^\s']+)'}
+    # and reqplacement pattern
+    #    {'file_label': '$1', 'file_name': '$2', 'type_label': '$3', 'atom_name_a': a, 'atom_name_b': b},
+    # on help text
+    @property
+    def rdf_list(self):
+        return [
+            {
+                'file_label': 'counterion_counterion_rdf',
+                'file_name': 'counterion_counterion_rdf.txt',
+                'type_label': 'counterion_counterion_rdf',
+                'atom_name_a': 'metadata->system->counterion->reference_atom->name',
+                'atom_name_b': 'metadata->system->counterion->reference_atom->name'},
+            {
+                'file_label': 'counterion_substrate_rdf',
+                'file_name': 'counterion_substrate_rdf.txt',
+                'type_label': 'counterion_substrate_rdf',
+                'atom_name_a': 'metadata->system->counterion->reference_atom->name',
+                'atom_name_b': 'metadata->system->substrate->reference_atom->name' },
+            {
+                'file_label': 'counterion_surfactant_head_rdf',
+                'file_name': 'counterion_surfactant_head_rdf.txt',
+                'type_label': 'counterion_surfactant_head_rdf',
+                'atom_name_a': 'metadata->system->counterion->reference_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->head_atom->name' },
+            {
+                'file_label': 'counterion_surfactant_tail_rdf',
+                'file_name': 'counterion_surfactant_tail_rdf.txt',
+                'type_label': 'counterion_surfactant_tail_rdf',
+                'atom_name_a': 'metadata->system->counterion->reference_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->tail_atom->name' },
+
+            {
+                'file_label': 'substrate_surfactant_head_rdf',
+                'file_name': 'substrate_surfactant_head_rdf.txt',
+                'type_label': 'subtrate_surfactant_head_rdf',
+                'atom_name_a': 'metadata->system->substrate->reference_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->head_atom->name' },
+            {
+                'file_label': 'substrate_surfactant_tail_rdf',
+                'file_name': 'substrate_surfactant_tail_rdf.txt',
+                'type_label': 'subtrate_surfactant_tail_rdf',
+                'atom_name_a': 'metadata->system->substrate->reference_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->tail_atom->name' },
+
+            {
+                'file_label': 'surfactant_head_surfactant_head_rdf',
+                'file_name': 'surfactant_head_surfactant_head_rdf.txt',
+                'type_label': 'surfactant_head_surfactant_head_rdf',
+                'atom_name_a': 'metadata->system->surfactant->head_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->head_atom->name' },
+            {
+                'file_label': 'surfactant_head_surfactant_tail_rdf',
+                'file_name': 'surfactant_head_surfactant_tail_rdf.txt',
+                'type_label': 'surfactant_head_surfactant_tail_rdf',
+                'atom_name_a': 'metadata->system->surfactant->head_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->tail_atom->name' },
+
+            {
+                'file_label': 'surfactant_tail_surfactant_tail_rdf',
+                'file_name': 'surfactant_tail_surfactant_tail_rdf.txt',
+                'type_label': 'surfactant_tail_surfactant_tail_rdf',
+                'atom_name_a': 'metadata->system->surfactant->tail_atom->name',
+                'atom_name_b': 'metadata->system->surfactant->tail_atom->name'},
+        ]
+
+
 class GromacsVacuumTrajectoryAnalysis(
         GromacsTrajectoryAnalysis):
     """
@@ -394,3 +525,7 @@ class GromacsSolvatedTrajectoryAnalysis(
                 'atom_name_b': 'metadata->system->surfactant->tail_atom->name'
             }
         ]
+
+
+class GromacsDefaultTrajectoryAnalysis(GromacsMinimalTrajectoryAnalysis):
+    pass

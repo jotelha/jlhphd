@@ -22,14 +22,14 @@ HPC_SPECS = {
         'single_core_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '02:00:00',
-            'ntasks':   96,
-            'ntasks_per_node': 96,
+            'ntasks':   1,
+            'ntasks_per_node': 1,
         },
         'quick_single_core_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '00:30:00',
-            'ntasks':   96,
-            'ntasks_per_node': 96,
+            'ntasks':   1,
+            'ntasks_per_node': 1,
         },
         'single_node_job_queueadapter_defaults': {
             'queue':    'devel',
@@ -73,14 +73,14 @@ HPC_SPECS = {
         'single_core_job_queueadapter_defaults': {
             'queue':    'batch',
             'walltime': '06:00:00',
-            'ntasks':   96,
-            'ntasks_per_node': 96,
+            'ntasks':   1,
+            'ntasks_per_node': 1,
         },
         'quick_single_core_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '00:30:00',
-            'ntasks':   96,
-            'ntasks_per_node': 96,
+            'ntasks':   1,
+            'ntasks_per_node': 1,
         },
         'single_node_job_queueadapter_defaults': {
             'queue':    'batch',

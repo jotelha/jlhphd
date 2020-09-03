@@ -19,7 +19,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysis
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsDefaultTrajectoryAnalysis
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
@@ -69,7 +69,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.GMX_MDP_SUBDIR,
-            file_config.GMX_RELAX_MDP)))
+            file_config.GMX_RELAX_Z_ONLY_MDP)))
 
         files = {os.path.basename(f): f for f in infiles}
 
@@ -77,7 +77,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
         metadata = {
             'project': self.project_id,
             'type': 'input',
-            'name': file_config.GMX_RELAX_MDP,
+            'name': file_config.GMX_RELAX_Z_ONLY_MDP,
             'step': step_label,
         }
 
@@ -108,7 +108,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
-                    'metadata->name':    file_config.GMX_RELAX_MDP,
+                    'metadata->name':    file_config.GMX_RELAX_Z_ONLY_MDP,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -175,7 +175,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             parents=[*fws_root, fw_pull_mdp],
             files_in=files_in,
             files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category'],
+            category=self.hpc_specs['fw_queue_category'],
             queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_grompp)
@@ -334,6 +334,6 @@ class GromacsRelaxation(
     def __init__(self, *args, **kwargs):
         super().__init__(
             main_sub_wf=GromacsRelaxationMain,
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysis,
+            analysis_sub_wf=GromacsDefaultTrajectoryAnalysis,
             vis_sub_wf=GromacsTrajectoryVisualization,
             *args, **kwargs)

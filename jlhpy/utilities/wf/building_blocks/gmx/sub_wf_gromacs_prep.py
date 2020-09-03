@@ -8,7 +8,7 @@ import pymongo
 
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, EvalPyEnvTask
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator, ProcessAnalyzeAndVisualize
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin
@@ -167,9 +167,38 @@ class GromacsPrepMain(WorkflowGenerator):
             parents=fws_root,
             files_in=files_in,
             files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category'])
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_pdb2gro)
+
+        # box dimensions
+        # --------------
+        step_label = self.get_step_label('box_dim')
+
+        # GROMACS needs measures in nm, not Ang
+        fts_box_dim = [
+            EvalPyEnvTask(
+                func='lambda x,y,z: (x/10., y/10., z/10.)',
+                inputs=[
+                    'metadata->system->box->length',
+                    'metadata->system->box->width',
+                    'metadata->system->box->height',
+                ],
+                outputs=[
+                    'run->gromacs->box->length',
+                    'run->gromacs->box->width',
+                    'run->gromacs->box->height',
+                ],
+            ),
+        ]
+
+        fw_box_dim = self.build_fw(
+            fts_box_dim, step_label,
+            parents=fws_root,
+            category=self.hpc_specs['fw_noqueue_category'])
+
+        fw_list.append(fw_box_dim)
 
         # GMX editconf
         # ------------
@@ -182,7 +211,6 @@ class GromacsPrepMain(WorkflowGenerator):
         files_out = {
             'data_file': 'default.gro',
             'topology_file':   'default.top'}
-            #'restraint_file':  'default.posre.itp'
 
         fts_gmx_editconf = [CmdTask(
             cmd='gmx',
@@ -190,9 +218,9 @@ class GromacsPrepMain(WorkflowGenerator):
                  '-f', 'in.gro',
                  '-o', 'default.gro',
                  '-box',
-                 {'key': 'metadata->system->box->length'},
-                 {'key': 'metadata->system->box->width'},
-                 {'key': 'metadata->system->box->height'},
+                 {'key': 'run->gromacs->box->length'},
+                 {'key': 'run->gromacs->box->width'},
+                 {'key': 'run->gromacs->box->height'},
                  '-bt', 'triclinic',  # box type
                  ],
             env='python',
@@ -204,7 +232,7 @@ class GromacsPrepMain(WorkflowGenerator):
 
         fw_gmx_editconf = self.build_fw(
             fts_gmx_editconf, step_label,
-            parents=[fw_gmx_pdb2gro, fw_template],
+            parents=[fw_box_dim, fw_gmx_pdb2gro, fw_template],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])

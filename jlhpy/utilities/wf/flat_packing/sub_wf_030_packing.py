@@ -534,6 +534,8 @@ class LayeredPackingMain(PackingMain):
         'tolerance': 'metadata->step_specific->packing->surfactant_substrate->tolerance',
         'layers': 'run->template->context->layers',
         'ionlayers': 'run->template->context->ionlayers',
+        'nloop': 'run->template->context->nloop',
+        'maxit': 'run->template->context->maxit',
     }
 
 
@@ -544,6 +546,8 @@ class CylindricalPackingMain(PackingMain):
         'cylinders': 'run->template->context->cylinders',
         'ioncylinders': 'run->template->context->ioncylinders',
         'movebadrandom': 'run->template->context->movebadrandom',
+        'nloop': 'run->template->context->nloop',
+        'maxit': 'run->template->context->maxit',
     }
 
 

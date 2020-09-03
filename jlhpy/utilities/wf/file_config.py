@@ -10,7 +10,9 @@ GMX_PULL_MDP_TEMPLATE = 'pull.mdp.template'
 GMX_EM_SOLVATED_MDP = 'em_solvated.mdp'
 GMX_NVT_MDP = 'nvt.mdp'
 GMX_NPT_MDP = 'npt.mdp'
+GMX_NPT_Z_ONLY_MDP = 'npt_z_only.mdp'  # barostatting only in z direction
 GMX_RELAX_MDP = 'relax.mdp'
+GMX_RELAX_Z_ONLY_MDP = 'relax_z_only.mdp'
 
 GMX_TOP_SUBDIR = os.path.join('gmx_input', 'top')
 GMX_TOP_TEMPLATE = 'sys.top.template'

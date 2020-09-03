@@ -77,6 +77,8 @@ def generate_alternating_multilayer_packmol_template_context(
     context = {
         'layers':     layers,
         'ionlayers':  ionlayers,
+        'nloop':      200,
+        'maxit':      30,
     }
     return context
 

@@ -15,7 +15,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysis
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsDefaultTrajectoryAnalysis
 from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
@@ -292,6 +292,6 @@ class GromacsNVTEquilibration(
     def __init__(self, *args, **kwargs):
         super().__init__(
             main_sub_wf=GromacsNVTEquilibrationMain,
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysis,
+            analysis_sub_wf=GromacsDefaultTrajectoryAnalysis,
             vis_sub_wf=GromacsTrajectoryVisualization,
             *args, **kwargs)
