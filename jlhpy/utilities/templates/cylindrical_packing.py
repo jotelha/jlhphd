@@ -12,7 +12,7 @@ def generate_cylinders_packmol_template_context(
         counterion='ion',
         tolerance=2,
         ioncylinder_outside=True,
-        ioncylinder_within=True,
+        ioncylinder_within=False,
         hemi=None):
     """Creates context for filling Jinja2 PACKMOL input template in order to
     generate preassembled surfactant cylinders or hemicylinders with
@@ -82,6 +82,7 @@ def generate_cylinders_packmol_template_context(
         'ioncylinders':  ioncylinders,
         'movebadrandom': True,
         'nloop':         200,
+        'nloop0':        1000,  # undocumented keyword for initial packing loop
         'maxit':         30,
     }
 

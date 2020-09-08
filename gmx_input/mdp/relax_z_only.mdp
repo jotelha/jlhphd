@@ -61,8 +61,14 @@ ref_t   = 298.15 0.0 ; reference temperature, one for each group, in K
 
 ; Pressure coupling is on
 ; Parrinello-Rahman can lead to large oscillations in equilibration, thus use Berendsen here
-; see http://manual.gromacs.org/documentation/2018/user-guide/mdp-options.html#mdp-value-pcoupl=Parrinello-Rahman
-pcoupl              = Parrinello-Rahman     ; Pressure coupling on in NPT
+; see http://manual.gromacs.org/documentation/2018/user-guide/mdp-options.html#mdp-value-pcoupl=Parrinello-Rahman and
+; NOTE 2 [file default.top, line 32]:
+;  You are combining position restraints with Parrinello-Rahman pressure
+;  coupling, which can lead to instabilities. If you really want to combine
+;  position restraints with pressure coupling, we suggest to use Berendsen
+;  pressure coupling instead.
+; hence using Berendsen here
+pcoupl              = Berendsen             ; Pressure coupling on in NPT
 pcoupltype          = anisotropic           ; Same as before, but 6 values are needed for xx, yy, zz, xy/yx, xz/zx and
                                             ; yz/zy components, respectively. When the off-diagonal compressibilities
                                             ; are set to zero, a rectangular box will stay rectangular. Beware that

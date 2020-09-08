@@ -12,7 +12,7 @@ def generate_alternating_multilayer_packmol_template_context(
         counterion='counterion',
         tolerance=2,
         ionlayer_above=True,
-        ionlayer_within=True,
+        ionlayer_within=False,
         accumulative_ionlayer=False,  # put all ions in one concluding layer
         ):
     """Creates context for filling Jinja2 PACKMOL input template in order to
@@ -78,6 +78,7 @@ def generate_alternating_multilayer_packmol_template_context(
         'layers':     layers,
         'ionlayers':  ionlayers,
         'nloop':      200,
+        'nloop0':     1000,  # undocumented keyword for initial packing loop
         'maxit':      30,
     }
     return context

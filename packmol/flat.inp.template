@@ -8,6 +8,9 @@
 seed {{ seed|default(-1,false)|int }}
 # Change the maximum number of optimization loops, default 20
 nloop {{ nloop|default(20,true)|int }}
+#  Change the number of loops for the initial phase packing, default 80
+nloop0 {{ nloop0|default(80,true)|int }}
+
 # Change the maximum number of Gencan iterations per loop. default 50
 maxit {{ maxit|default(50,true)|int }}
 

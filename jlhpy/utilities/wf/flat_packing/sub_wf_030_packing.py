@@ -535,6 +535,7 @@ class LayeredPackingMain(PackingMain):
         'layers': 'run->template->context->layers',
         'ionlayers': 'run->template->context->ionlayers',
         'nloop': 'run->template->context->nloop',
+        'nloop0': 'run->template->context->nloop0',
         'maxit': 'run->template->context->maxit',
     }
 
@@ -547,6 +548,7 @@ class CylindricalPackingMain(PackingMain):
         'ioncylinders': 'run->template->context->ioncylinders',
         'movebadrandom': 'run->template->context->movebadrandom',
         'nloop': 'run->template->context->nloop',
+        'nloop0': 'run->template->context->nloop0',
         'maxit': 'run->template->context->maxit',
     }
 

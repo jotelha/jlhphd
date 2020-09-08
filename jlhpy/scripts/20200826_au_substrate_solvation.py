@@ -45,14 +45,15 @@ N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-08-31-sds-on-au-111-substrate-passivation-trial'
+project_id = '2020-09-08-sds-on-au-111-substrate-passivation-trial'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
 
 # parameter_values = [{'n': n, 'm': n } for n in N]
-parameter_values = [{'n': n, 'm': n } for n in [N[10]]]
+parameter_values = [{'n': n, 'm': n, 's': s } for n in [N[7]] for s in ['monolayer','bilayer','cylinders','hemicylinders']]
 
+# In[25]
 wfg = SubstratePassivation(
     project_id=project_id, 
     
@@ -75,7 +76,8 @@ wfg = SubstratePassivation(
     mode='trial',
     parameter_label_key_dict={
         'n': 'system->surfactant->nmolecules', 
-        'm': 'system->counterion->nmolecules'},
+        'm': 'system->counterion->nmolecules',
+        's': 'system->surfactant->aggregates->shape'},
     parameter_values=parameter_values,
     system = { 
         'counterion': {
@@ -100,8 +102,10 @@ wfg = SubstratePassivation(
             'tail_atom': {
                 'name': 'C12',
                 'index': SURFACTANTS["SDS"]["tail_atom_index"],
+            },
+            'aggregates': {
+                'shape': None,
             }
-        
         },
         'substrate': {
             'name': 'AUM',
@@ -116,6 +120,7 @@ wfg = SubstratePassivation(
             'reference_atom': {
                 'name': 'OW',
             },
+            'height': 180.0,
             # 'natoms':  # TODO: count automatically
         }
     },
@@ -133,7 +138,7 @@ wfg = SubstratePassivation(
         },
         'packing' : {
             'surfactant_substrate': {
-                'tolerance': TOLERANCE
+                'tolerance': 1.5
             },
         },
         'dtool_push': {
