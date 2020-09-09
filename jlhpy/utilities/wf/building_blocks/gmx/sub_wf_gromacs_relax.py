@@ -245,7 +245,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
 
         step_label = self.get_step_label('gmx_mdrun')
 
-        fts_gmx_mdrun = [CmdTask(
+        fts_gmx_mdrun_restart = [CmdTask(
             cmd='gmx',
             opt=['mdrun', '-v', '-deffnm', 'default', '-cpi', 'default'],
             env='python',
@@ -257,14 +257,14 @@ class GromacsRelaxationMain(WorkflowGenerator):
             fizzle_bad_rc=True)]
 
         # as many spec as possible derived from fizzled parent
-        fw_gmx_mdrun = Firework(fts_gmx_mdrun,
+        fw_gmx_mdrun_restart = Firework(fts_gmx_mdrun_restart,
                                 name=self.get_fw_label(step_label),
                                 spec={
                                     '_files_in':  files_in,
                                     '_files_out': files_out,
                                 })
 
-        restart_wf = Workflow([fw_gmx_mdrun])
+        restart_wf = Workflow([fw_gmx_mdrun_restart])
 
         # recovery
         # --------
@@ -317,7 +317,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
 
         fw_gmx_recovery = self.build_fw(
             fts_gmx_recovery, step_label,
-            parents=fws_root,
+            parents=[fw_gmx_mdrun],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'],

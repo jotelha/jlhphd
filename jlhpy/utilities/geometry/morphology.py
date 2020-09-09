@@ -56,8 +56,8 @@ def cylinder(
     d = surfactant_head_group_diameter
 
     R_inner = tol
-    R_inner_constraint = R_inner + d/2. + tol
-    R_outer_constraint = R_inner + 2.*r + tol
+    R_inner_constraint = R_inner + d/2. + tol/2. + tol
+    R_outer_constraint = R_inner + 2.*r - d/2. - tol/2. + tol
     R_outer = R_inner + 2.*r + 2.*tol
 
     cylinder = {

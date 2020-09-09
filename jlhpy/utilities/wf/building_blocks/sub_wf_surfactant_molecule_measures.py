@@ -197,6 +197,7 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         # Get head atom - center distance
         # -------------------------------
         step_label = self.get_step_label('head_atom_to_center_distance')
+        # TODO: some issue hera, actually connector atom is evaluated
 
         files_in = {}
         files_out = {}
