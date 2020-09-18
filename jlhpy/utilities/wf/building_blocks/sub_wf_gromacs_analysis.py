@@ -13,8 +13,10 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTa
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-from jlhpy.utilities.analysis.rdf import atom_atom_rdf
-from jlhpy.utilities.analysis.msd import atom_rmsd
+import jlhpy.utilities.analysis.rdf import as serial_rdf
+import jlhpy.utilities.analysis.mpi_rdf import as parallel_rdf
+import jlhpy.utilities.analysis.msd as serial_msd
+from jlhpy.utilities.analysis.mpi_msd import parallel_msd
 
 
 class GromacsTrajectoryAnalysis(WorkflowGenerator):
@@ -56,7 +58,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
             f['file_label']: f['file_name'] for f in self.rdf_list
         }
 
-        func_str = serialize_module_obj(atom_atom_rdf)
+        func_str = serialize_module_obj(serial_rdf.atom_atom_rdf)
 
         fts_rdf = []
         for rdf in self.rdf_list:
@@ -107,7 +109,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
             f['file_label']: f['file_name'] for f in self.rmsd_list
         }
 
-        func_str = serialize_module_obj(atom_rmsd)
+        func_str = serialize_module_obj(serial_msd.atom_rmsd)
 
         fts_rmsd = []
         for rmsd in self.rmsd_list:
@@ -147,8 +149,128 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
         return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
 
 
+class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
+    """
+    Abstract base class for parallel partial analysis worklfow.
+
+    analysis dynamic infiles:
+        no pull stub implemented
+
+    - data_file:       default.gro
+    - trajectory_file: default.trr
+
+    Implementation must provide rmsd_list and rdf_list.
+    """
+
+    def main(self, fws_root=[]):
+        fw_list = []
+
+        # compute rdf
+        # -----------
+
+        step_label = self.get_step_label('analysis_rdf')
+
+        files_in = {
+            'data_file': 'default.gro',
+            'trajectory_file': 'default.trr',
+        }
+        files_out = {
+            f['file_label']: f['file_name'] for f in self.rdf_list
+        }
+
+        func_str = serialize_module_obj(parallel_rdf.atom_atom_rdf)
+
+        fts_rdf = []
+        for rdf in self.rdf_list:
+            fts_rdf.append(PickledPyEnvTask(
+                func=func_str,
+                args=['default.gro', 'default.trr', rdf['file_name']],
+                kwargs_inputs={
+                    'atom_name_a': rdf['atom_name_a'],
+                    'atom_name_b': rdf['atom_name_b'],
+                },
+                env='mdanalysis',
+                stderr_file='std.err',
+                stdout_file='std.out',
+                store_stdout=True,
+                store_stderr=True,
+            ))
+
+        fw_rdf = Firework(fts_rdf,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_queue_category'],
+                '_queueadapter': {
+                    **self.hpc_specs['single_node_job_queueadapter_defaults']
+                },
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                     **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_rdf)
+
+        # compute rmsd
+        # ------------
+
+        step_label = self.get_step_label('analysis_rmsd')
+
+        files_in = {
+            'data_file': 'default.gro',
+            'trajectory_file': 'default.trr',
+        }
+        files_out = {
+            f['file_label']: f['file_name'] for f in self.rmsd_list
+        }
+
+        func_str = serialize_module_obj(parallel_msd.atom_rmsd)
+
+        fts_rmsd = []
+        for rmsd in self.rmsd_list:
+            fts_rmsd.append(PickledPyEnvTask(
+                func=func_str,
+                args=['default.gro', 'default.trr', rmsd['file_name']],
+                kwargs_inputs={
+                    'atom_name': rmsd['atom_name'],
+                },
+                env='mdanalysis',
+                stderr_file='std.err',
+                stdout_file='std.out',
+                store_stdout=True,
+                store_stderr=True,
+            ))
+
+        fw_rmsd = Firework(fts_rmsd,
+            name=self.get_fw_label(step_label),
+            spec={
+                '_category': self.hpc_specs['fw_queue_category'],
+                '_queueadapter': {
+                    **self.hpc_specs['single_node_job_queueadapter_defaults']
+                },
+                '_files_in':  files_in,
+                '_files_out': files_out,
+                'metadata': {
+                    'project':  self.project_id,
+                    'datetime': str(datetime.datetime.now()),
+                    'step':     step_label,
+                     **self.kwargs
+                }
+            },
+            parents=fws_root)
+
+        fw_list.append(fw_rmsd)
+
+        return fw_list, [fw_rdf, fw_rmsd], [fw_rdf, fw_rmsd]
+
+
 class GromacsMinimalTrajectoryAnalysis(
-        GromacsTrajectoryAnalysis):
+        GromacsParallelTrajectoryAnalysis):
     """
     Implements partial analysis worklfow only.
 
@@ -279,7 +401,7 @@ class GromacsMinimalTrajectoryAnalysis(
 
 
 class GromacsVacuumTrajectoryAnalysis(
-        GromacsTrajectoryAnalysis):
+        GromacsParallelTrajectoryAnalysis):
     """
     Implements partial analysis worklfow only.
 
