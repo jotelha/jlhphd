@@ -13,10 +13,10 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTa
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
-import jlhpy.utilities.analysis.rdf import as serial_rdf
-import jlhpy.utilities.analysis.mpi_rdf import as parallel_rdf
-import jlhpy.utilities.analysis.msd as serial_msd
-from jlhpy.utilities.analysis.mpi_msd import parallel_msd
+from jlhpy.utilities.analysis.rdf import atom_atom_rdf as serial_rdf
+from jlhpy.utilities.analysis.mpi_rdf import atom_atom_rdf as parallel_rdf
+from jlhpy.utilities.analysis.msd import atom_rmsd as serial_msd
+from jlhpy.utilities.analysis.mpi_msd import atom_rmsd as parallel_msd
 
 
 class GromacsTrajectoryAnalysis(WorkflowGenerator):

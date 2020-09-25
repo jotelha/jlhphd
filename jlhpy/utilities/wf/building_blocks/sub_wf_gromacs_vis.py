@@ -286,10 +286,12 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                 fizzle_bad_rc=True)
             ]
 
+        # pymol should make use of all CPU via multithreading
         fw_vis = Firework(fts_vis,
             name=self.get_fw_label(step_label),
             spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
+                '_category': self.hpc_specs['fw_queue_category'],
+                '_queueadapter': self.hpc_specs['single_task_job_queueadapter_defaults'],
                 '_files_in':  files_in,
                 '_files_out': files_out,
                 'metadata': {

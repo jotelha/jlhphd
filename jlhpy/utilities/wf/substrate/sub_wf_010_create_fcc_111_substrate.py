@@ -289,6 +289,4 @@ class CreateSubstrateWorkflowGenerator(
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=CreateSubstrateMain(*args, **kwargs),
-            *args, **kwargs)
+        super().__init__(main_sub_wf=CreateSubstrateMain, *args, **kwargs)

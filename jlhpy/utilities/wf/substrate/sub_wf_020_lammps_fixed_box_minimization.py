@@ -320,7 +320,7 @@ class LAMMPSFixedBoxMinimizationWorkflowGenerator(
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=LAMMPSFixedBoxMinimizationMain(*args, **kwargs),
-            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
+        super().__init__(
+            main_sub_wf=LAMMPSFixedBoxMinimizationMain,
+            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator,
             *args, **kwargs)

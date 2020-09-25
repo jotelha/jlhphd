@@ -30,7 +30,7 @@ fp = FilePad.auto_load()
 # In[25]:
 import numpy as np
 # R = 26.3906 # indenter radius
-a = 150.0 # approximate substrate measures
+a = 180.0 # approximate substrate measures
 
 A_Ang = a**2 # area in Ansgtrom
 A_nm = A_Ang / 10**2
@@ -45,26 +45,25 @@ N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-09-10-sds-on-au-111-substrate-passivation-trial'
+project_id = '2020-09-25-ctab-on-au-111-substrate-passivation'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
 
-# parameter_values = [{'n': n, 'm': n } for n in N]
-parameter_values = [{'n': n, 'm': n, 's': s } for n in [N[7]] for s in ['monolayer','bilayer', 'cylinders','hemicylinders']]
+parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['bilayer','cylinders']][6:8]
 
 # In[25]
 wfg = SubstratePassivation(
     project_id=project_id, 
     
-    source_project_id="2020-08-24-au-111-fcc-substrate-creation-trial",
+    source_project_id="2020-09-25-au-111-fcc-substrate-creation",
     source_step='LAMMPSEquilibrationNPT:ProcessAnalyzeAndVisualize:push_filepad',
     metadata_fp_source_key='metadata->system->substrate',
     metadata_fw_dest_key='metadata->system->substrate',
     metadata_fw_source_key='metadata->system->substrate',
     
     integrate_push=True,
-    description="Trial runs for SDS on Au(111) substrate passivation",
+    description="CTAB on Au(111) substrate passivation trial",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
@@ -81,27 +80,27 @@ wfg = SubstratePassivation(
     parameter_values=parameter_values,
     system = { 
         'counterion': {
-            'name': 'NA',
-            'resname': 'NA',
+            'name': 'BR',
+            'resname': 'BR',
             'nmolecules': None,
             'reference_atom': {
-                'name': 'NA',
+                'name': 'BR',
             },
         },
         'surfactant': {
-            'name': 'SDS',
-            'resname': 'SDS',
+            'name': 'CTAB',
+            'resname': 'CTAB',
             'nmolecules': None,
             'connector_atom': {
-                'index': int(SURFACTANTS["SDS"]["connector_atom_index"])
+                'index': 15,
             },
             'head_atom': {
-                'name': 'S',
-                'index': SURFACTANTS["SDS"]["head_atom_index"],
+                'name': 'N1',
+                'index': 17,
             },
             'tail_atom': {
-                'name': 'C12',
-                'index': SURFACTANTS["SDS"]["tail_atom_index"],
+                'name': 'C1',
+                'index': 1,
             },
             'aggregates': {
                 'shape': None,
@@ -152,8 +151,11 @@ fp_files = wfg.push_infiles(fp)
 
 wf = wfg.build_wf()
 
-# In[55]:
-    
-pf = PackingOnFlatSubstrate('bla')
+# In[999]:
 
-wf_pf = pf.build_wf()
+# core h estimate:
+hour_per_ns = 3.795
+ns = 3
+N_sim = 48
+cores_per_sim = 96
+costs = cores_per_sim*N_sim*ns*hour_per_ns

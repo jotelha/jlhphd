@@ -20,10 +20,10 @@ class FCCSubstrateCreationChainWorkflowGenerator(ChainWorkflowGenerator):
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            CreateSubstrateWorkflowGenerator(*args, **kwargs),
-            LAMMPSFixedBoxMinimizationWorkflowGenerator(*args, **kwargs),
-            LAMMPSRelaxedBoxMinimizationWorkflowGenerator(*args, **kwargs),
-            LAMMPSEquilibrationNVTWorkflowGenerator(*args, **kwargs),
-            LAMMPSEquilibrationNPTWorkflowGenerator(*args, **kwargs),
+            CreateSubstrateWorkflowGenerator,
+            LAMMPSFixedBoxMinimizationWorkflowGenerator,
+            LAMMPSRelaxedBoxMinimizationWorkflowGenerator,
+            LAMMPSEquilibrationNVTWorkflowGenerator,
+            LAMMPSEquilibrationNPTWorkflowGenerator,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

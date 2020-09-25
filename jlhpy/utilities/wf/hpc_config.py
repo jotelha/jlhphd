@@ -31,6 +31,18 @@ HPC_SPECS = {
             'ntasks':   1,
             'ntasks_per_node': 1,
         },
+        'single_task_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '02:00:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'quick_single_task_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
         'single_node_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '00:30:00',
@@ -82,6 +94,19 @@ HPC_SPECS = {
             'ntasks':   1,
             'ntasks_per_node': 1,
         },
+        'single_task_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+        'quick_task_core_job_queueadapter_defaults': {
+            'queue':    'devel',
+            'walltime': '00:30:00',
+            'ntasks':   1,
+            'ntasks_per_node': 1,
+        },
+
         'single_node_job_queueadapter_defaults': {
             'queue':    'batch',
             'walltime': '06:00:00',

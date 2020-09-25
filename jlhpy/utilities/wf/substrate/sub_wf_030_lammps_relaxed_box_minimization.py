@@ -323,7 +323,7 @@ class LAMMPSRelaxedBoxMinimizationWorkflowGenerator(
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
-        ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=LAMMPSRelaxedBoxMinimizationMain(*args, **kwargs),
-            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
+        super().__init__(
+            main_sub_wf=LAMMPSRelaxedBoxMinimizationMain,
+            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator,
             *args, **kwargs)
