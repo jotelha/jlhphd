@@ -45,7 +45,7 @@ N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-09-25-ctab-on-au-111-substrate-passivation'
+project_id = '2020-09-27-ctab-on-au-111-substrate-passivation-trial'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
@@ -56,8 +56,8 @@ parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['bilayer','cy
 wfg = SubstratePassivation(
     project_id=project_id, 
     
-    source_project_id="2020-09-25-au-111-fcc-substrate-creation",
-    source_step='LAMMPSEquilibrationNPT:ProcessAnalyzeAndVisualize:push_filepad',
+    source_project_id="2020-09-26-au-111-fcc-substrate-creation-trial",
+    source_step='FCCSubstrateCreationChainWorkflowGenerator:LAMMPSEquilibrationNPTWorkflowGenerator:push_filepad',
     metadata_fp_source_key='metadata->system->substrate',
     metadata_fw_dest_key='metadata->system->substrate',
     metadata_fw_source_key='metadata->system->substrate',
@@ -141,7 +141,7 @@ wfg = SubstratePassivation(
             },
         },
         'dtool_push': {
-            'dtool_target': '/p/project/chfr13/hoermann4/dtool/DATASETS',
+            'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
             'remote_dataset': None,
         }
     },

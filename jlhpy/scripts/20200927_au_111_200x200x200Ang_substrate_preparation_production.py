@@ -37,18 +37,18 @@ lp = LaunchPad.auto_load() #Define the server and database
 fp = FilePad.auto_load()
 
 # In[30]:
-    
+# adapt project_id, mode, description, dtool_target
 from jlhpy.utilities.wf.substrate.chain_wf_fcc_substrate_creation import FCCSubstrateCreationChainWorkflowGenerator
 # from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-09-25-au-111-fcc-substrate-creation'
+project_id = '2020-09-27-au-111-fcc-substrate-creation'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': parameter_values})
 wfg = FCCSubstrateCreationChainWorkflowGenerator(
     project_id=project_id, 
     integrate_push=True,
-    description="Au(111) 180x180x180 Ang FCC substrate creation",
+    description="Au(111) 200x200x200 Ang FCC substrate creation",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
@@ -62,7 +62,7 @@ wfg = FCCSubstrateCreationChainWorkflowGenerator(
         'substrate': {
             'element': 'Au',
             'lattice_constant': 4.075,
-            'approximate_measures': [180., 180., 180.],
+            'approximate_measures': [200., 200., 200.],
             'lmp': {  # LAMMPS-specific
                 'type': 11,
             }
