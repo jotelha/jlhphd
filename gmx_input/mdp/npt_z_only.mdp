@@ -69,7 +69,7 @@ pcoupltype          = anisotropic           ; Same as before, but 6 values are n
 nstpcouple          = 1                     ; The frequency for coupling the pressure. The default value of -1 sets
                                             ; nstpcouple equal to nstlist, unless nstlist <=0, then a value of 10 is
                                             ; used. For velocity Verlet integrators nstpcouple is set to 1.
-tau_p               = 2.0                   ; time constant, in ps
+tau_p               = 4.0                   ; time constant, in ps
 ref_p               = 1.013 1.013 1.013 0 0 0 ; reference pressure, in bar
 compressibility     = 0 0 4.5e-5 0 0 0        ; isothermal compressibility of water, bar^-1
 refcoord_scaling    = no
