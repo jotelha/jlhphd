@@ -36,12 +36,14 @@ HPC_SPECS = {
             'walltime': '02:00:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
+            'cpus_per_task': 96,
         },
         'quick_single_task_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '00:30:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
+            'cpus_per_task': 96,
         },
         'single_node_job_queueadapter_defaults': {
             'queue':    'devel',
@@ -99,12 +101,14 @@ HPC_SPECS = {
             'walltime': '06:00:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
+            'cpus_per_task': 96,
         },
         'quick_task_core_job_queueadapter_defaults': {
             'queue':    'devel',
             'walltime': '00:30:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
+            'cpus_per_task': 96,
         },
 
         'single_node_job_queueadapter_defaults': {

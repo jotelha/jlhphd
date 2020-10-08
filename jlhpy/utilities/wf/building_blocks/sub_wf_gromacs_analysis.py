@@ -8,15 +8,15 @@ from abc import ABC, abstractmethod
 from fireworks import Firework
 from fireworks.user_objects.firetasks.fileio_tasks import ArchiveDirTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, PickledPyEnvTask
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 import jlhpy.utilities.analysis.rdf as serial_rdf
-import jlhpy.utilities.analysis.mpi_rdf as parallel_rdf
+# import jlhpy.utilities.analysis.mpi_rdf as parallel_rdf
 import jlhpy.utilities.analysis.msd as serial_msd
-import jlhpy.utilities.analysis.mpi_msd as parallel_msd
+# import jlhpy.utilities.analysis.mpi_msd as parallel_msd
 
 
 class GromacsTrajectoryAnalysis(WorkflowGenerator):
@@ -70,7 +70,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
                     'atom_name_b': rdf['atom_name_b'],
                 },
                 env='mdanalysis',
-                stderr_file='std.err',
+                stderr_file='file.err',
                 stdout_file='std.out',
                 store_stdout=True,
                 store_stderr=True,
@@ -178,22 +178,27 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
             f['file_label']: f['file_name'] for f in self.rdf_list
         }
 
-        func_str = serialize_module_obj(parallel_rdf.atom_atom_rdf)
-
         fts_rdf = []
         for rdf in self.rdf_list:
-            fts_rdf.append(PickledPyEnvTask(
-                func=func_str,
-                args=['default.gro', 'default.trr', rdf['file_name']],
-                kwargs_inputs={
-                    'atom_name_a': rdf['atom_name_a'],
-                    'atom_name_b': rdf['atom_name_b'],
-                },
+            fts_rdf.append(CmdTask(
+                cmd='python',
+                opt=[
+                    '-m', 'mpi4py.futures',  # mpi4py.futures wrapper necessary for static process allocation
+                    '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
+                    'imteksimcs.GROMACS.gmx_mpi_rdf.atom_atom_rdf',
+                    'default.gro',
+                    'default.trr',
+                    rdf['file_name'],
+                    {'key': rdf['atom_name_a']},
+                    {'key': rdf['atom_name_b']},
+                ],
                 env='mdanalysis',
-                stderr_file='std.err',
-                stdout_file='std.out',
+                stderr_file=rdf['file_label'] + '.err',
+                stdout_file=rdf['file_label'] + '.out',
+                stdlog_file=rdf['file_label'] + '.log',
                 store_stdout=True,
                 store_stderr=True,
+                fizzle_bad_rc=True,
             ))
 
         fw_rdf = Firework(fts_rdf,
@@ -229,21 +234,26 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
             f['file_label']: f['file_name'] for f in self.rmsd_list
         }
 
-        func_str = serialize_module_obj(parallel_msd.atom_rmsd)
-
         fts_rmsd = []
         for rmsd in self.rmsd_list:
-            fts_rmsd.append(PickledPyEnvTask(
-                func=func_str,
-                args=['default.gro', 'default.trr', rmsd['file_name']],
-                kwargs_inputs={
-                    'atom_name': rmsd['atom_name'],
-                },
+            fts_rmsd.append(CmdTask(
+                cmd='python',
+                opt=[
+                    '-m', 'mpi4py.futures',  # mpi4py.futures wrapper necessary for static process allocation
+                    '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
+                    'imteksimcs.GROMACS.gmx_mpi_msd.atom_rmsd',
+                    'default.gro',
+                    'default.trr',
+                    rmsd['file_name'],
+                    {'key': rmsd['atom_name']},
+                ],
                 env='mdanalysis',
-                stderr_file='std.err',
-                stdout_file='std.out',
+                stderr_file=rmsd['file_label'] + '.err',
+                stdout_file=rmsd['file_label'] + '.out',
+                stdlog_file=rmsd['file_label'] + '.log',
                 store_stdout=True,
                 store_stderr=True,
+                fizzle_bad_rc=True,
             ))
 
         fw_rmsd = Firework(fts_rmsd,

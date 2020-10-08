@@ -10,7 +10,7 @@ from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
-    import PickledPyEnvTask, EvalPyEnvTask
+    import CmdTask, PickledPyEnvTask, EvalPyEnvTask
 
 from jlhpy.utilities.geometry.bounding_sphere import \
     get_bounding_sphere_via_parmed, \
@@ -100,7 +100,7 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         fts_pull = [
             GetFilesByQueryTask(
                 query={
-                    'metadata->project':    self.project_id, # earlier
+                    'metadata->project':    self.project_id,  # earlier
                     'metadata->type':       'surfactant_file',
                 },
                 sort_key='metadata.datetime',
@@ -124,9 +124,7 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         files_in = {
             'surfactant_file': 'default.pdb',
         }
-        files_out = {
-            'surfactant_file': 'default.pdb',
-        }
+        files_out = {}
 
         func_str = serialize_module_obj(get_bounding_sphere_via_parmed)
 
@@ -162,8 +160,7 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         files_in = {
             'surfactant_file':      'default.pdb',
         }
-        files_out = {
-        }
+        files_out = {}
 
         func_str = serialize_module_obj(get_atom_position_via_parmed)
 
@@ -267,7 +264,7 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
 
         return (
             fw_list,
-            [fw_diameter_head_group],
+            [fw_pull, fw_diameter_head_group],
             [fw_pull])
 
 
@@ -316,7 +313,7 @@ class SurfactantMoleculeMeasuresVis(WorkflowGenerator):
             stdout_file='std.out',
             store_stdout=True,
             store_stderr=True,
-            propagate=True,
+            propagate=False,
         )]
 
         fw_vis = self.build_fw(

@@ -57,16 +57,39 @@ class PackingConstraintsMain(WorkflowGenerator):
     def main(self, fws_root=[]):
         fw_list = []
 
+        # Do nothing fireworks (use as datafile pipeline)
+        # -------------------
+        step_label = self.get_step_label('do_nothing')
+
+        files_in = {
+            'data_file': 'default.pdb',
+        }
+        files_out = {
+            'data_file': 'default.pdb',
+        }
+
+        fts_do_nothing = [
+            CmdTask(
+                cmd='pwd',
+                store_stdout=False,
+                store_stderr=False,
+                fizzle_bad_rc=False)
+        ]
+
+        fw_do_nothing = self.build_fw(
+            fts_do_nothing, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+        fw_list.append(fw_do_nothing)
+
         # constraints
         # -----------
         step_label = self.get_step_label('constraints')
 
-        files_in = {
-            'data_file': 'default.pdb',  # pass through
-        }
-        files_out = {
-            'data_file': 'default.pdb',  # pass through
-        }
+        files_in = {}
+        files_out = {}
 
         fts_constraints = [
             PickledPyEnvTask(
@@ -94,7 +117,7 @@ class PackingConstraintsMain(WorkflowGenerator):
             category=self.hpc_specs['fw_noqueue_category'])
         fw_list.append(fw_constraints)
 
-        return fw_list, [fw_constraints], [fw_constraints]
+        return fw_list, [fw_do_nothing, fw_constraints], [fw_do_nothing, fw_constraints]
 
 
 class MonolayerPackingConstraintsMain(PackingConstraintsMain):
@@ -518,7 +541,7 @@ class PackingMain(DefaultPushMixin, WorkflowGenerator):
 
         fw_pack = self.build_fw(
             fts_pack, step_label,
-            parents=[fw_coordinates_pull, fw_template],
+            parents=[fw_coordinates_pull, fw_template, *fws_root],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_queue_category'],

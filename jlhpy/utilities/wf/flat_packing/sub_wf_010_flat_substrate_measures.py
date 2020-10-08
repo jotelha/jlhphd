@@ -5,6 +5,7 @@ import os
 import pymongo
 
 from fireworks import Firework
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
 
 from jlhpy.utilities.geometry.bounding_box import get_bounding_box_via_ase
@@ -37,6 +38,33 @@ class FlatSubstrateMeasuresMain(WorkflowGenerator):
     def main(self, fws_root=[]):
         fw_list = []
 
+        # Do nothing fireworks (use as datafile pipeline)
+        # -------------------
+        step_label = self.get_step_label('do_nothing')
+
+        files_in = {
+            'data_file': 'default.pdb',
+        }
+        files_out = {
+            'data_file': 'default.pdb',
+        }
+
+        fts_do_nothing = [
+            CmdTask(
+                cmd='pwd',
+                store_stdout=False,
+                store_stderr=False,
+                fizzle_bad_rc=False)
+        ]
+
+        fw_do_nothing = self.build_fw(
+            fts_do_nothing, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+        fw_list.append(fw_do_nothing)
+
         # Bounding box Fireworks
         # -------------------------
         step_label = self.get_step_label('bounding_box')
@@ -44,9 +72,7 @@ class FlatSubstrateMeasuresMain(WorkflowGenerator):
         files_in = {
             'data_file':      'default.pdb',
         }
-        files_out = {
-            'data_file':      'default.pdb',
-        }
+        files_out = {}
 
         func_str = serialize_module_obj(get_bounding_box_via_ase)
 
@@ -106,7 +132,7 @@ class FlatSubstrateMeasuresMain(WorkflowGenerator):
 
         fw_list.append(fw_natoms)
 
-        return fw_list, [fw_bounding_box, fw_natoms], [fw_bounding_box, fw_natoms]
+        return fw_list, [fw_do_nothing, fw_bounding_box, fw_natoms], [fw_do_nothing, fw_bounding_box, fw_natoms]
 
 
 class FlatSubstrateMeasuresVis(WorkflowGenerator):
@@ -147,7 +173,6 @@ class FlatSubstrateMeasuresVis(WorkflowGenerator):
             stdout_file='std.out',
             store_stdout=True,
             store_stderr=True,
-            propagate=True,
         )]
 
         fw_vis = self.build_fw(
