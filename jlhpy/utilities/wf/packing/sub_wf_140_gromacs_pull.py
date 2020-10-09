@@ -67,8 +67,8 @@ class GromacsPullMain(WorkflowGenerator):
         tagged as {'metadata->type': 'pull_log'}
     - energy_file:     default.edr
         tagged as {'metadata->type': 'pull_edr'}
-    - trajectory_file: default.trr
-        tagged as {'metadata->type': 'pull_trr'}
+    - trajectory_file: default.xtc
+        tagged as {'metadata->type': 'pull_xtc'}
     - compressed_trajectory_file: default.xtc
         tagged as {'metadata->type': 'pull_xtc'}
     - data_file:       default.gro
@@ -207,7 +207,7 @@ class GromacsPullMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'compressed_trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'pullf_file':      'default_pullf.xvg',

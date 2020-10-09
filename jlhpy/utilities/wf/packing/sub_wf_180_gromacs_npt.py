@@ -54,8 +54,8 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         tagged as {'metadata->type': 'npt_log'}
     - energy_file:     default.edr
         tagged as {'metadata->type': 'npt_edr'}
-    - trajectory_file: default.trr
-        tagged as {'metadata->type': 'npt_trr'}
+    - trajectory_file: default.xtc
+        tagged as {'metadata->type': 'npt_xtc'}
     - data_file:       default.gro
         tagged as {'metadata->type': 'npt_gro'}
 
@@ -269,7 +269,7 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched

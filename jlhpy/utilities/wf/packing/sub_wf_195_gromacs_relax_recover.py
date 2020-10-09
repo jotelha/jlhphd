@@ -24,8 +24,7 @@ from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 #             'checkpoint_file': 'default.cpt',
 #             'log_file':        'default.log',
 #             'energy_file':     'default.edr',
-#             'trajectory_file': 'default.trr',
-#             # 'compressed_traj_file': 'default.xtc',
+#             'trajectory_file': 'default.xtc',
 #             'data_file':       'default.gro',
 #             'run_file':      'default.tpr',
 #             'topology_file':   'default.top',
@@ -34,8 +33,7 @@ from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 #         files_out = {
 #             'log_file':        'default.log',
 #             'energy_file':     'default.edr',
-#             'trajectory_file': 'default.trr',
-#             # 'compressed_traj_file': 'default.xtc',
+#             'trajectory_file': 'default.xtc',
 #             'data_file':       'default.gro',
 #             'topology_file':   'default.top',  # pass through untouched
 #             'index_file':      'default.ndx',  # pass through untouched
@@ -101,8 +99,8 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
         tagged as {'metadata->type': 'relax_log'}
     - energy_file:     default.edr
         tagged as {'metadata->type': 'relax_edr'}
-    - trajectory_file: default.trr
-        tagged as {'metadata->type': 'relax_trr'}
+    - trajectory_file: default.xtc
+        tagged as {'metadata->type': 'relax_xtc'}
     - data_file:       default.gro
         tagged as {'metadata->type': 'relax_gro'}
 
@@ -116,8 +114,8 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
         tagged as {'metadata->type': 'relax_log'}
     - energy_file:     default.edr
         tagged as {'metadata->type': 'relax_edr'}
-    - trajectory_file: default.trr
-        tagged as {'metadata->type': 'relax_trr'}
+    - trajectory_file: default.xtc
+        tagged as {'metadata->type': 'relax_xtc'}
     - data_file:       default.gro
         tagged as {'metadata->type': 'relax_gro'}
 
@@ -136,8 +134,7 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
             'checkpoint_file': 'default.cpt',
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
-            'compressed_traj_file': 'default.xtc',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'run_file':        'default.tpr',
             'topology_file':   'default.top',
@@ -146,8 +143,7 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
-            'compressed_traj_file': 'default.xtc',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched
@@ -182,8 +178,7 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
         files_in = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
-            'compressed_traj_file': 'default.xtc',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',
             'index_file':      'default.ndx',
@@ -193,8 +188,7 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
             'checkpoint_file': 'default.cpt',
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
-            'compressed_traj_file': 'default.xtc',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',
             'run_file':        'default.tpr',
@@ -218,7 +212,6 @@ class GromacsRelaxationRecoverMain(WorkflowGenerator):
                 "default.xtc",
                 "default.log",
                 "default.top",
-                "default.trr",
             ],
             restart_counter='metadata->step_specific->gmx_relaxation->restart_count',
             store_stdlog=True,

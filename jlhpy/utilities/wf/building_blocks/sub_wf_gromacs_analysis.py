@@ -27,7 +27,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
         no pull stub implemented
 
     - data_file:       default.gro
-    - trajectory_file: default.trr
+    - trajectory_file: default.xtc
 
     Implementation must provide rmsd_list and rdf_list.
     """
@@ -52,7 +52,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
 
         files_in = {
             'data_file': 'default.gro',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
         }
         files_out = {
             f['file_label']: f['file_name'] for f in self.rdf_list
@@ -64,7 +64,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
         for rdf in self.rdf_list:
             fts_rdf.append(PickledPyEnvTask(
                 func=func_str,
-                args=['default.gro', 'default.trr', rdf['file_name']],
+                args=['default.gro', 'default.xtc', rdf['file_name']],
                 kwargs_inputs={
                     'atom_name_a': rdf['atom_name_a'],
                     'atom_name_b': rdf['atom_name_b'],
@@ -103,7 +103,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
 
         files_in = {
             'data_file': 'default.gro',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
         }
         files_out = {
             f['file_label']: f['file_name'] for f in self.rmsd_list
@@ -115,7 +115,7 @@ class GromacsTrajectoryAnalysis(WorkflowGenerator):
         for rmsd in self.rmsd_list:
             fts_rmsd.append(PickledPyEnvTask(
                 func=func_str,
-                args=['default.gro', 'default.trr', rmsd['file_name']],
+                args=['default.gro', 'default.xtc', rmsd['file_name']],
                 kwargs_inputs={
                     'atom_name': rmsd['atom_name'],
                 },
@@ -157,7 +157,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
         no pull stub implemented
 
     - data_file:       default.gro
-    - trajectory_file: default.trr
+    - trajectory_file: default.xtc
 
     Implementation must provide rmsd_list and rdf_list.
     """
@@ -172,7 +172,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
 
         files_in = {
             'data_file': 'default.gro',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
         }
         files_out = {
             f['file_label']: f['file_name'] for f in self.rdf_list
@@ -187,7 +187,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
                     '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
                     'imteksimcs.GROMACS.gmx_mpi_rdf.atom_atom_rdf',
                     'default.gro',
-                    'default.trr',
+                    'default.xtc',
                     rdf['file_name'],
                     {'key': rdf['atom_name_a']},
                     {'key': rdf['atom_name_b']},
@@ -228,7 +228,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
 
         files_in = {
             'data_file': 'default.gro',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
         }
         files_out = {
             f['file_label']: f['file_name'] for f in self.rmsd_list
@@ -243,7 +243,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
                     '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
                     'imteksimcs.GROMACS.gmx_mpi_msd.atom_rmsd',
                     'default.gro',
-                    'default.trr',
+                    'default.xtc',
                     rmsd['file_name'],
                     {'key': rmsd['atom_name']},
                 ],
@@ -286,7 +286,7 @@ class GromacsMinimalTrajectoryAnalysis(
 
     analysis dynamic infiles:
     - data_file:       default.gro
-    - trajectory_file: default.trr
+    - trajectory_file: default.xtc
 
     analysis fw_spec inputs:
     - metadata->system->counterion->reference_atom->name
@@ -419,7 +419,7 @@ class GromacsVacuumTrajectoryAnalysis(
         no pull stub implemented
 
     - data_file:       default.gro
-    - trajectory_file: default.trr
+    - trajectory_file: default.xtc
 
     analysis fw_spec inputs:
     - metadata->system->counterion->reference_atom->name
@@ -559,7 +559,7 @@ class GromacsSolvatedTrajectoryAnalysis(
         no pull stub implemented
 
     - data_file:       default.gro
-    - trajectory_file: default.trr
+    - trajectory_file: default.xtc
 
     analysis fw_spec inputs:
     - metadata->system->counterion->reference_atom->name

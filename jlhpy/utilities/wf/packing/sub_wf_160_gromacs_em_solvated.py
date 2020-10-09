@@ -53,8 +53,8 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         tagged as {'metadata->type': 'em_solvated_log'}
     - energy_file:     em.edr
         tagged as {'metadata->type': 'em_solvated_edr'}
-    - trajectory_file: em.trr
-        tagged as {'metadata->type': 'em_solvated_trr'}
+    - trajectory_file: em.xtc
+        tagged as {'metadata->type': 'em_solvated_xtc'}
     - data_file:       em.gro
         tagged as {'metadata->type': 'em_solvated_gro'}
 
@@ -250,7 +250,7 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # passed throught unmodified
         }

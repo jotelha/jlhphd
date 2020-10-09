@@ -54,8 +54,8 @@ class GromacsRelaxationMain(WorkflowGenerator):
         tagged as {'metadata->type': 'relax_log'}
     - energy_file:     default.edr
         tagged as {'metadata->type': 'relax_edr'}
-    - trajectory_file: default.trr
-        tagged as {'metadata->type': 'relax_trr'}
+    - trajectory_file: default.xtc
+        tagged as {'metadata->type': 'relax_xtc'}
     - data_file:       default.gro
         tagged as {'metadata->type': 'relax_gro'}
 
@@ -270,7 +270,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched

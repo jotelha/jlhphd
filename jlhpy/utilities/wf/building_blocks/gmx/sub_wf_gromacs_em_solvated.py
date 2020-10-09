@@ -32,9 +32,7 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         only queried in pull stub, otherwise expected through data flow
 
     - data_file:     default.gro
-        queried by { 'metadata->type': 'solvate_gro' }
     - topology_file: default.top
-        queried by { 'metadata->type': 'solvate_top' }
 
     static infiles:
         always queried within main trunk
@@ -50,13 +48,9 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
 
     outfiles:
     - log_file:        em.log
-        tagged as {'metadata->type': 'em_solvated_log'}
     - energy_file:     em.edr
-        tagged as {'metadata->type': 'em_solvated_edr'}
-    - trajectory_file: em.trr
-        tagged as {'metadata->type': 'em_solvated_trr'}
+    - trajectory_file: em.xtc
     - data_file:       em.gro
-        tagged as {'metadata->type': 'em_solvated_gro'}
 
     - topology_file:  default.top
         passed through unmodified
@@ -183,7 +177,7 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # passed throught unmodified
         }

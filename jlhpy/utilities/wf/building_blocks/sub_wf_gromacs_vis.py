@@ -227,7 +227,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
 
         files_in = {
             'data_file': 'default.gro',
-            'trajectory_file': 'default.trr',
+            'trajectory_file': 'default.xtc',
             'input_file': 'default.pml',
             'script_file': 'renumber_png.sh',
         }
@@ -240,7 +240,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                 cmd='pymol',
                 opt=['-c', 'default.pml', '--',
                      'default.gro',  # positional arguments to pml script
-                     'default.trr',
+                     'default.xtc',
                      'frame',  # prefix to png out files
                      1,  # starting frame
                     ],

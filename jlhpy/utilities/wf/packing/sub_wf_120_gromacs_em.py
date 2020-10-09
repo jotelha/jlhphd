@@ -47,8 +47,8 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
         tagged as {'metadata->type': 'em_log'}
     - energy_file:     em.edr
         tagged as {'metadata->type': 'em_edr'}
-    - trajectory_file: em.trr
-        tagged as {'metadata->type': 'em_trr'}
+    - trajectory_file: em.xtc
+        tagged as {'metadata->type': 'em_xtc'}
     - data_file:       em.gro
         tagged as {'metadata->type': 'em_gro'}
     """
@@ -181,7 +181,7 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'em.log',
             'energy_file':     'em.edr',
-            'trajectory_file': 'em.trr',
+            'trajectory_file': 'em.xtc',
             'data_file':       'em.gro'
         }
 

@@ -10,7 +10,7 @@ nsteps    = 1500000   ; 2 * 1500000 = 3 ns
 dt        = 0.002   ; 2 fs
 
 ; Output control
-nstxout   = 500   ; save coordinates every 1.0 ps
+nstxout   = 0     ; deactivate full-precision uncompressed trajectory
 nstvout   = 500   ; save velocities every 1.0 ps
 nstxout-compressed = 500
 nstfout   = 500
