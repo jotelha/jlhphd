@@ -194,6 +194,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'energy_file':     'default.edr',
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
+            'run_file':        'default.tpr',  # passed throught unmodified
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched
         }
@@ -237,6 +238,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'energy_file':     'default.edr',
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
+            'run_file':        'default.tpr',  # passed throught unmodified
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched
         }
@@ -272,6 +274,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'energy_file':     'default.edr',
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
+            'run_file':        'default.tpr',  # passed throught unmodified
             'topology_file':   'default.top',
             'index_file':      'default.ndx',
         }

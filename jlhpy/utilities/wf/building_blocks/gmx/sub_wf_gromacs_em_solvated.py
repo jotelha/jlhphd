@@ -180,6 +180,7 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # passed throught unmodified
+            'run_file':        'default.tpr',  # passed throught unmodified
         }
 
         fts_gmx_mdrun = [CmdTask(

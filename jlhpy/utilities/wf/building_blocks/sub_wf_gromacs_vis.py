@@ -6,18 +6,26 @@ import glob
 import os
 import pymongo
 
-from abc import ABC, abstractmethod
-
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, PickledPyEnvTask
+from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 import jlhpy.utilities.wf.file_config as file_config
 
+
+def count_files_by_glob_pattern(glob_pattern='*'):
+    import glob
+    return len(glob.glob(glob_pattern))
+
+
+def ffmpeg_frame_file_template_from_nframes(nframes):
+    import numpy as np
+    width = np.ceil(np.log10(nframes)).astype(int)
+    return 'default_%0{}d.png'.format(width)
 
 class GromacsTrajectoryVisualization(WorkflowGenerator):
     """
@@ -27,7 +35,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
     - script_file: renumber_png.sh,
         queried by {'metadata->name': file_config.BASH_RENUMBER_PNG}
     - template_file: default.pml.template,
-        queried by {'metadata->name': file_config.PML_MOVIE_TEMPLATE}
+        queried by {'metadata->name': file_config.PML_VIEW_TEMPLATE}
 
     vis fw_spec inputs:
     - metadata->system->counterion->resname
@@ -47,7 +55,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
         infiles = sorted(glob.glob(os.path.join(
             self.infile_prefix,
             file_config.PML_SUBDIR,
-            file_config.PML_MOVIE_TEMPLATE)))
+            file_config.PML_VIEW_TEMPLATE)))
 
         files = {os.path.basename(f): f for f in infiles}
 
@@ -55,7 +63,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
         metadata = {
             'project': self.project_id,
             'type': 'input',
-            'name': file_config.PML_MOVIE_TEMPLATE,
+            'name': file_config.PML_VIEW_TEMPLATE,
             'step': step_label,
         }
 
@@ -70,31 +78,6 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                     identifier=identifier,
                     metadata=metadata))
 
-        # static bash cript infile for vis
-        # --------------------------------
-        infiles = sorted(glob.glob(os.path.join(
-            self.infile_prefix,
-            file_config.BASH_SCRIPT_SUBDIR,
-            file_config.BASH_RENUMBER_PNG)))
-
-        files = {os.path.basename(f): f for f in infiles}
-
-        # metadata common to all these files
-        metadata = {
-            'project': self.project_id,
-            'type': 'input',
-            'name': file_config.BASH_RENUMBER_PNG,
-            'step': step_label,
-        }
-
-        # insert these input files into data base
-        for name, file_path in files.items():
-            identifier = '/'.join((self.project_id, name))
-            fp_files.append(
-                fp.add_file(
-                    file_path,
-                    identifier=identifier,
-                    metadata=metadata))
 
     def main(self, fws_root=[]):
         fw_list = []
@@ -113,7 +96,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
             GetFilesByQueryTask(
                 query={
                     'metadata->project':    self.project_id,
-                    'metadata->name':       file_config.PML_MOVIE_TEMPLATE,
+                    'metadata->name':       file_config.PML_VIEW_TEMPLATE,
                 },
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
@@ -183,68 +166,53 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
 
         fw_list.append(fw_template)
 
-        # pull renumber bash script
-        # -------------------------
-
-        step_label = self.get_step_label('vis_pull_renumber_bash_script')
-
-        files_in = {}
-        files_out = {
-            'script_file': 'renumber_png.sh',
-        }
-
-        fts_pull_renumber_bash_script = [
-            GetFilesByQueryTask(
-                query={
-                    'metadata->project':    self.project_id,
-                    'metadata->name':       file_config.BASH_RENUMBER_PNG,
-                },
-                sort_key='metadata.datetime',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                new_file_names=['renumber_png.sh'])]
-
-        fw_pull_renumber_bash_script = Firework(fts_pull_renumber_bash_script,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[])
-
-        fw_list.append(fw_pull_renumber_bash_script)
-
         # Render trajectory
         # ----------------
         step_label = self.get_step_label('vis_pymol')
 
         files_in = {
-            'data_file': 'default.gro',
+            'data_file':       'default.gro',
             'trajectory_file': 'default.xtc',
-            'input_file': 'default.pml',
-            'script_file': 'renumber_png.sh',
+            'run_file':        'default.tpr',
+            'input_file':      'default.pml',
         }
         files_out = {
             'mp4_file': 'default.mp4',
         }
 
         fts_vis = [
+            # split trajectory in chunks for parallel processing
             CmdTask(
-                cmd='pymol',
-                opt=['-c', 'default.pml', '--',
-                     'default.gro',  # positional arguments to pml script
-                     'default.xtc',
-                     'frame',  # prefix to png out files
-                     1,  # starting frame
+                cmd='python',
+                opt=[
+                    '-m', 'mpi4py.futures',  # mpi4py.futures wrapper necessary for static process allocation
+                    '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
+                    'imteksimcs.GROMACS.gmx_split_traj.split_traj_by_mpi_ranks',
+                    # {'key': 'metadata->step_specific->gromacs_vis->serial_chunks'},  # use default 4
                     ],
-                env='python',
+                env='mdanalysis',  # needs mdanalysis, gromacswrapper, mpi4py
+                stderr_file='split_std.err',
+                stdout_file='split_std.out',
+                stdlog_file='split_std.log',
+                store_stdout=True,
+                store_stderr=True,
+                fizzle_bad_rc=True
+            ),
+
+            # use default arguments of
+            #   render_chunks(struc_file='default.gro', chunk_file_glob_pattern='default_*.xtc',
+            #                 out_prefix="default_", pymol_func=run_pymol, **kwargs):
+            # and
+            #   run_pymol(pml, struc_file="default.gro", traj_file="default.xtc",
+            #             out_prefix="default_", pml_script="default.pml"):
+            CmdTask(
+                cmd='python',
+                opt=[
+                    '-m', 'mpi4py.futures',  # mpi4py.futures wrapper necessary for static process allocation
+                    '-m', 'imteksimcs.mpi4py.mpi_pool_executor',
+                    'imteksimcs.PyMOL.pymol_mpi.render_chunks',
+                    ],
+                env='pymol',  # needs mpi4py and pymol
                 stderr_file='pymol_std.err',
                 stdout_file='pymol_std.out',
                 stdlog_file='pymol_std.log',
@@ -252,18 +220,23 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                 store_stderr=True,
                 fizzle_bad_rc=True
             ),
-            CmdTask(
-                cmd='bash',
-                opt=['renumber_png.sh',
-                     'frame',
-                    ],
-                stderr_file='renumber_std.err',
-                stdout_file='renumber_std.out',
-                stdlog_file='renumber_std.log',
-                store_stdout=True,
-                store_stderr=True,
-                fizzle_bad_rc=True,
+
+            # count frames
+            PickledPyEnvTask(
+                func=serialize_module_obj(count_files_by_glob_pattern),
+                args=['*.png'],
+                env='imteksimpy',
+                outputs=['run->gromacs_vis->nframes'],
             ),
+
+            # construct frame file template
+            PickledPyEnvTask(
+                func=serialize_module_obj(ffmpeg_frame_file_template_from_nframes),
+                inputs=['run->gromacs_vis->nframes'],
+                env='imteksimpy',
+                outputs=['run->gromacs_vis->ffmpeg_frame_file_template'],
+            ),
+
             # standard format from https://github.com/pastewka/GroupWiki/wiki/Make-movies
             # ffmpeg -r 60 -f image2 -i frame%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p test.mp4
             CmdTask(
@@ -271,7 +244,7 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                 opt=[
                     '-r', 30,  # frame rate
                     '-f', 'image2',
-                    '-i', 'frame%06d.png',
+                    '-i', {'key': 'run->gromacs_vis->ffmpeg_frame_file_template'},
                     '-vcodec', 'libx264',
                     '-crf', 25,
                     '-pix_fmt', 'yuv420p',
@@ -291,7 +264,8 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': self.hpc_specs['single_task_job_queueadapter_defaults'],
+                # hera no_smt as PyMOL needs too much memory and will exceed its limit on JUWELS if using all cores
+                '_queueadapter': self.hpc_specs['no_smt_single_node_job_queueadapter_defaults'],
                 '_files_in':  files_in,
                 '_files_out': files_out,
                 'metadata': {
@@ -301,46 +275,9 @@ class GromacsTrajectoryVisualization(WorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=[*fws_root, fw_template, fw_pull_renumber_bash_script]
+            parents=[*fws_root, fw_template]
         )
 
         fw_list.append(fw_vis)
 
         return fw_list, [fw_vis], [fw_template, fw_vis]
-
-    # def push(self, fws_root=[]):
-    #     fw_list = []
-    #
-    #     step_label = self.get_step_label('vis_push')
-    #
-    #     files_in = {'mp4_file': 'default.mp4'}
-    #     files_out = {}
-    #
-    #     fts_push = [AddFilesTask({
-    #         'compress': True,
-    #         'paths': "default.mp4",
-    #         'metadata': {
-    #             'project': self.project_id,
-    #             'datetime': str(datetime.datetime.now()),
-    #             'type':    'mp4_file',
-    #         }
-    #     })]
-    #
-    #     fw_push = Firework(fts_push,
-    #         name=self.get_fw_label(step_label),
-    #         spec={
-    #             '_category': self.hpc_specs['fw_noqueue_category'],
-    #             '_files_in': files_in,
-    #             '_files_out': files_out,
-    #             'metadata': {
-    #                 'project': self.project_id,
-    #                 'datetime': str(datetime.datetime.now()),
-    #                 'step':    step_label,
-    #                  **self.kwargs
-    #             }
-    #         },
-    #         parents=fws_root)
-    #
-    #     fw_list.append(fw_push)
-    #
-    #     return fw_list, [fw_push], [fw_push]

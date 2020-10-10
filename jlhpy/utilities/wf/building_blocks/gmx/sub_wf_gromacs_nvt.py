@@ -258,6 +258,7 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # pass through untouched
             'index_file':      'default.ndx',  # pass through untouched
+            'run_file':        'default.tpr',  # passed throught unmodified
         }
 
         fts_gmx_mdrun = [CmdTask(

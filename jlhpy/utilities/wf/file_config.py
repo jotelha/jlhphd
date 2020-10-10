@@ -50,6 +50,7 @@ PACKMOL_FLAT_TEMPLATE = 'flat.inp.template'
 
 PML_SUBDIR = 'pymol'
 PML_MOVIE_TEMPLATE = 'movie.pml.template'
+PML_VIEW_TEMPLATE = 'view.pml.template'  # similar to PML_MOVIE_TEMPLATE, but only setting up the view, not rendering movie
 
 BASH_SCRIPT_SUBDIR = 'bash'
 BASH_RENUMBER_PNG = 'renumber_png.sh'
