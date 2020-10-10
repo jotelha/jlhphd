@@ -4,7 +4,7 @@ emtol      = 100.0   ; Stop minimization when the maximum force < 1000.0 kJ/mol/
 emstep     = 0.0001  ; Energy step size
 nsteps     = 10000   ; Maximum number of (minimization) steps to perform
 
-nstxout    = 0
+nstxout    = 100
 nstvout    = 100
 nstfout    = 100
 nstxout-compressed = 100
