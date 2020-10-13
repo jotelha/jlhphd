@@ -332,7 +332,7 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
 
     def build_fw(self, fts, step_label,
                  parents=[], category=None, files_in={}, files_out={},
-                 queueadapter=None, fw_spec=None):
+                 queueadapter=None, fw_spec=None, **kwargs):
         if category is None:
             category = self.hpc_specs['fw_noqueue_category']
         if queueadapter is None:
@@ -345,6 +345,8 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
             }
         if fw_spec is None:
             fw_spec = {}
+        if kwargs is not None:
+            fw_spec.update(kwargs)
 
         return Firework(fts,
                         name=self.get_fw_label(step_label),

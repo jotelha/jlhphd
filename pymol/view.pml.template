@@ -1,0 +1,33 @@
+# {{ header|default("--- header ---", True) }}
+
+select solvent, resn {{ solvent|default('SOL',true) }}
+select counterion, resn {{ counterion|default('NA',true) }}
+select substrate, resn {{ substrate|default('AUM',true) }}
+# select surfactant, not (solvent or counterion or substrate)
+select surfactant, resn {{ surfactant|default('SDS',true) }}
+select hydrogen, surfactant and elem H
+select shell, solvent within 3.5 of surfactant
+
+bg_color white
+hide everything, solvent
+hide dots, counterion
+hide dots, substrate
+hide lines, surfactant
+hide everything, solvent
+
+set_bond stick_radius, 0.1, surfactant
+alter counterion, vdw=0.5
+alter surfactant, vdw=0.4
+alter hydrogen, vdw=0.2
+show spheres, surfactant
+show spheres, surfactant
+show sticks, surfactant
+
+set matrix_mode, 1
+
+orient
+# have camera look at the substrate from an angle above
+turn z, -90
+turn x, 30
+turn y, 30
+center surfactant

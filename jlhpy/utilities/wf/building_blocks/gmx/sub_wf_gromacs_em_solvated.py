@@ -177,7 +177,7 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         files_out = {
             'log_file':        'default.log',
             'energy_file':     'default.edr',
-            'trajectory_file': 'default.xtc',
+            'uncompressed_trajectory_file': 'default.trr',
             'data_file':       'default.gro',
             'topology_file':   'default.top',  # passed throught unmodified
             'run_file':        'default.tpr',  # passed throught unmodified
@@ -205,7 +205,49 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
 
         fw_list.append(fw_gmx_mdrun)
 
-        return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
+
+        # for some mysterious reason, energy minimization won't write xtc directly
+
+        # GMX trjconv
+        # ---------
+        step_label = self.get_step_label('gmx_trjconv')
+
+        files_in = {
+            'run_file':    'default.tpr',
+            'uncompressed_trajectory_file': 'default.trr',
+        }
+        files_out = {
+            'trajectory_file': 'default.xtc',
+
+        }
+
+        fts_gmx_trjconv = [CmdTask(
+            cmd='gmx',
+            opt=['trjconv',
+                 '-f', 'default.trr',
+                 '-s', 'default.tpr',
+                 '-o', 'default.xtc'],
+            env='python',
+            stdin_key='stdin',
+            stderr_file='std.err',
+            stdout_file='std.out',
+            stdlog_file='std.log',
+            store_stdout=True,
+            store_stderr=True,
+            fizzle_bad_rc=True)]
+
+        fw_gmx_trjconv = self.build_fw(
+            fts_gmx_trjconv, step_label,
+            parents=[fw_gmx_mdrun],
+            files_in=files_in,
+            files_out=files_out,
+            stdin='0\n',  # select the whole system
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_task_job_queueadapter_defaults'])
+
+        fw_list.append(fw_gmx_trjconv)
+
+        return fw_list, [fw_gmx_mdrun, fw_gmx_trjconv], [fw_gmx_grompp]
 
 
 class GromacsEnergyMinimizationAfterSolvation(

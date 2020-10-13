@@ -227,6 +227,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'checkpoint_file': 'default.cpt',
             'log_file':        'default.log',
             'energy_file':     'default.edr',
+            'uncompressed_trajectory_file': 'default.trr',
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'run_file':        'default.tpr',
@@ -273,6 +274,8 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'log_file':        'default.log',
             'energy_file':     'default.edr',
             'trajectory_file': 'default.xtc',
+            # 'uncompressed_trajectory_file': 'default.trr',
+            # by not specifying the trr as an input, it is effectively filtered out
             'data_file':       'default.gro',
             'run_file':        'default.tpr',  # passed throught unmodified
             'topology_file':   'default.top',
@@ -283,6 +286,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             'checkpoint_file': 'default.cpt',
             'log_file':        'default.log',
             'energy_file':     'default.edr',
+            'uncompressed_trajectory_file': 'default.trr',   # restart needs trr, otherwise fails
             'trajectory_file': 'default.xtc',
             'data_file':       'default.gro',
             'topology_file':   'default.top',
@@ -304,6 +308,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
                 "default.edr",
                 "default.ndx",
                 "default.tpr",
+                "default.trr",
                 "default.xtc",
                 "default.log",
                 "default.top",
