@@ -41,7 +41,7 @@ fp = FilePad.auto_load()
 from jlhpy.utilities.wf.substrate.chain_wf_fcc_substrate_creation import FCCSubstrateCreationChainWorkflowGenerator
 # from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-09-26-au-111-fcc-substrate-creation-trial'
+project_id = '2020-09-30-au-111-fcc-substrate-creation-trial'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': parameter_values})
@@ -57,7 +57,7 @@ wfg = FCCSubstrateCreationChainWorkflowGenerator(
     }],
     infile_prefix=prefix,
     machine='juwels',
-    mode='production',
+    mode='trial',
     system = { 
         'substrate': {
             'element': 'Au',
