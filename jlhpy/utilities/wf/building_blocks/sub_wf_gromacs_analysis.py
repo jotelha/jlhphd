@@ -206,7 +206,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
                 '_queueadapter': {
-                    **self.hpc_specs['single_node_job_queueadapter_defaults']
+                    **self.hpc_specs['no_smt_single_node_job_queueadapter_defaults']  # no smt means only half the number of tasks, here due to memory limits
                 },
                 '_files_in':  files_in,
                 '_files_out': files_out,
@@ -261,7 +261,7 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
                 '_queueadapter': {
-                    **self.hpc_specs['single_node_job_queueadapter_defaults']
+                    **self.hpc_specs['no_smt_single_node_job_queueadapter_defaults']
                 },
                 '_files_in':  files_in,
                 '_files_out': files_out,

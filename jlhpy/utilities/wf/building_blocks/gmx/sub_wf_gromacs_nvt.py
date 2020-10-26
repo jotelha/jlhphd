@@ -279,7 +279,7 @@ class GromacsNVTEquilibrationMain(WorkflowGenerator):
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_queue_category'],
-            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults'])
+            queueadapter=self.hpc_specs['four_nodes_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_mdrun)
 

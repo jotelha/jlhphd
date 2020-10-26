@@ -139,6 +139,13 @@ HPC_SPECS = {
             'walltime': '06:00:00',
             'ntasks_per_node': 96,
         },
+
+        'four_nodes_job_queueadapter_defaults': {
+            'queue':    'batch',
+            'walltime': '06:00:00',
+            'ntasks':   384,
+            'ntasks_per_node': 96,
+        },
     },
     'ubuntu': {
         'fw_noqueue_category': 'ubuntu_noqueue',
