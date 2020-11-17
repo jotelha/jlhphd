@@ -30,7 +30,7 @@ fp = FilePad.auto_load()
 # In[25]:
 import numpy as np
 # R = 26.3906 # indenter radius
-a = 180.0 # approximate substrate measures
+a = 150.0 # approximate substrate measures
 
 A_Ang = a**2 # area in Ansgtrom
 A_nm = A_Ang / 10**2
@@ -45,26 +45,25 @@ N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-10-11-ctab-on-au-111-substrate-passivation-trial'
+project_id = '2020-10-26-sds-on-au-111-substrate-passivation-trial'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
-# remove only input files
-#     fp.delete_file_by_query({'metadata.project': project_id, 'metadata.type': 'input'})
-parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['bilayer','cylinders']][13:14]
+
+parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['monolayer','hemicylinders']][10:11]
 
 # In[25]
 wfg = SubstratePassivation(
     project_id=project_id,
 
-    source_project_id="2020-09-27-au-111-fcc-substrate-creation",
+    source_project_id="2020-10-24-au-111-150x150x150-fcc-substrate-creation",
     source_step='FCCSubstrateCreationChainWorkflowGenerator:LAMMPSEquilibrationNPTWorkflowGenerator:push_filepad',
     metadata_fp_source_key='metadata->system->substrate',
     metadata_fw_dest_key='metadata->system->substrate',
     metadata_fw_source_key='metadata->system->substrate',
 
     integrate_push=True,
-    description="CTAB on Au(111) substrate passivation trial",
+    description="SDS on Au(111) substrate passivation trial",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
@@ -81,27 +80,27 @@ wfg = SubstratePassivation(
     parameter_values=parameter_values,
     system = {
         'counterion': {
-            'name': 'BR',
-            'resname': 'BR',
+            'name': 'NA',
+            'resname': 'NA',
             'nmolecules': None,
             'reference_atom': {
-                'name': 'BR',
+                'name': 'NA',
             },
         },
         'surfactant': {
-            'name': 'CTAB',
-            'resname': 'CTAB',
+            'name': 'SDS',
+            'resname': 'SDS',
             'nmolecules': None,
             'connector_atom': {
-                'index': 15,
+                'index': 2,
             },
             'head_atom': {
-                'name': 'N1',
-                'index': 17,
+                'name': 'S',
+                'index': 1,
             },
             'tail_atom': {
-                'name': 'C1',
-                'index': 1,
+                'name': 'C12',
+                'index': 39,
             },
             'aggregates': {
                 'shape': None,

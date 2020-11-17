@@ -300,7 +300,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
             restart_wf=restart_wf.as_dict(),
             superpose_restart_on_parent_fw_spec=True,
             repeated_recover_fw_name=step_label,
-            max_restarts=5,
+            max_restarts=20,
             fizzle_on_no_restart_file=False,
             restart_file_glob_patterns='default.cpt',
             other_glob_patterns=[
