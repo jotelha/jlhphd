@@ -1,4 +1,5 @@
 # custom .gitignore entries:
+.idea
 
 # ignore all files in root
 *
