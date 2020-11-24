@@ -10,7 +10,7 @@ from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, PickledPyEnvTask
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 

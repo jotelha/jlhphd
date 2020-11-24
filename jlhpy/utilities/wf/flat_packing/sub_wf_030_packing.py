@@ -17,7 +17,7 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
     import CmdTask, EvalPyEnvTask, PickledPyEnvTask, PyEnvTask
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.geometry.morphology import (
     monolayer_above_substrate, bilayer_above_substrate, cylinders_above_substrate, hemicylinders_above_substrate)

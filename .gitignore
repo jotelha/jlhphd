@@ -1,5 +1,6 @@
 # custom .gitignore entries:
 .idea
+jlhpy/version.py
 
 # ignore all files in root
 *

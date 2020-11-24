@@ -13,7 +13,7 @@ from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterT
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator, ProcessAnalyzeAndVisualize
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin

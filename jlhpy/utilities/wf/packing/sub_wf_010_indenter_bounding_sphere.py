@@ -12,7 +12,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTa
 from jlhpy.utilities.geometry.bounding_sphere import get_bounding_sphere_via_ase
 from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_with_spheres_via_ase
 
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (

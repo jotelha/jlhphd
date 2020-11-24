@@ -12,7 +12,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 
 class LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
     """

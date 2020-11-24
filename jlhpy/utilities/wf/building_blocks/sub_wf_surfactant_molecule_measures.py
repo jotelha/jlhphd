@@ -18,7 +18,7 @@ from jlhpy.utilities.geometry.bounding_sphere import \
 from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (

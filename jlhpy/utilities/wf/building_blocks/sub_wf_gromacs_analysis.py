@@ -12,7 +12,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, Pickl
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
-from imteksimfw.fireworks.utilities.serialize import serialize_module_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 import jlhpy.utilities.analysis.rdf as serial_rdf
 # import jlhpy.utilities.analysis.mpi_rdf as parallel_rdf
 import jlhpy.utilities.analysis.msd as serial_msd
