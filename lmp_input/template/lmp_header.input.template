@@ -215,7 +215,7 @@ variable restrain_substrate_layer index  {{ restrain_substrate_layer }}    # if 
                                                 # the specified thickness is
                                                 # frozen at the bottom box
                                                 # boundary
-variable random_seed             index  {{ random_seed|default(range(0,1000000000)|random, false)|int }} # global random seed
+variable random_seed             index  {{ random_seed|default(range(0,100000)|random, false)|int }} # global random seed
 variable timestep                index  {{ timestep|default(2, false)|float }}       # fs
 # variable use_colvars             index  0
 
