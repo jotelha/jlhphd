@@ -3,7 +3,6 @@
 jlhpy/version.py
 
 # ignore all files in root
-*
 
 # except .py files
 !*.py
@@ -23,7 +22,6 @@ jlhpy/version.py
 !ff
 !fw
 !gmx_input
-#!ipynb
 !lmp_input
 !nco
 !packmol
@@ -42,7 +40,6 @@ jlhpy/version.py
 !ff/**/*
 !fw/**/*
 !gmx_input/**/*
-#!ipynb/**/*
 !lmp_input/**/*
 !nco/**/*
 !packmol/**/*
