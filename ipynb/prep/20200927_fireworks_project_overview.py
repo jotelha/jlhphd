@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+# %%
 
 # # Prepare AFM tip solvation
 
@@ -9,7 +10,7 @@
 
 # ### IPython magic
 
-# In[1]:
+# %%
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
@@ -18,7 +19,7 @@ get_ipython().run_line_magic('autoreload', '3')
 
 # ### Imports
 
-# In[2]:
+# %%
 
 
 import ase.io # here used for reading pdb files
@@ -95,7 +96,7 @@ import yaml
 
 # ### Logging
 
-# In[3]:
+# %%
 
 
 logging.basicConfig(level=logging.INFO)
@@ -108,7 +109,7 @@ logger.setLevel(logging.INFO)
 
 # ### Function definitions
 
-# In[4]:
+# %%
 
 
 def find_undeclared_variables(infile):
@@ -121,7 +122,7 @@ def find_undeclared_variables(infile):
     return undefined
 
 
-# In[5]:
+# %%
 
 
 def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None):
@@ -223,7 +224,7 @@ def plot_side_views_with_spheres(atoms, cc, R, figsize=(12,4), fig=None, ax=None
     return fig, ax
 
 
-# In[6]:
+# %%
 
 
 def pack_sphere(C,
@@ -292,7 +293,7 @@ def pack_sphere(C,
     return context
 
 
-# In[7]:
+# %%
 
 
 def memuse():
@@ -307,32 +308,32 @@ def memuse():
 
 # ### Global settings
 
-# In[8]:
+# %%
 
 
 os.environ['GMXLIB']
 
 
-# In[9]:
+# %%
 
 
 pmd.gromacs.GROMACS_TOPDIR = os.environ['GMXLIB']
 
 
-# In[10]:
+# %%
 
 
 # prefix = '/mnt/dat/work/testuser/indenter/sandbox/20191110_packmol'
 prefix = '/home/jotelha/git/N_surfactant_on_substrate_template'
 
 
-# In[11]:
+# %%
 
 
 work_prefix = '/home/jotelha/tmp/20200329_fw/'
 
 
-# In[11]:
+# %%
 
 
 os.chdir(work_prefix)
@@ -340,7 +341,7 @@ os.chdir(work_prefix)
 
 # ### HPC-related settings
 
-# In[ ]:
+# %%
 
 
 hpc_max_specs = {
@@ -374,7 +375,7 @@ hpc_max_specs = {
 }
 
 
-# In[ ]:
+# %%
 
 
 std_exports = {
@@ -393,14 +394,14 @@ std_exports = {
 
 # ### FireWorks LaunchPad and FilePad
 
-# In[ ]:
+# %%
 
 
 # the FireWorks LaunchPad
 lp = LaunchPad.auto_load() #Define the server and database
 
 
-# In[ ]:
+# %%
 
 
 # FilePad behaves analogous to LaunchPad
@@ -409,7 +410,7 @@ fp = FilePad.auto_load()
 
 # #### Sub-WF: PACKMOL
 
-# In[27]:
+# %%
 
 
 def sub_wf_pack(d, fws_root):    
@@ -550,7 +551,7 @@ def sub_wf_pack_push(d, fws_root):
 
 # #### Sub-WF: GMX prep
 
-# In[28]:
+# %%
 
 
 def sub_wf_gmx_prep_pull(d, fws_root):
@@ -802,7 +803,7 @@ def sub_wf_gmx_prep_push(d, fws_root):
 
 # #### Sub-WF: GMX EM
 
-# In[221]:
+# %%
 
 
 def sub_wf_gmx_em_pull(d, fws_root):
@@ -1029,7 +1030,7 @@ def sub_wf_gmx_em_push(d, fws_root):
 
 # #### Sub-WF: pulling preparations
 
-# In[235]:
+# %%
 
 
 def sub_wf_pull_prep_pull(d, fws_root):
@@ -1282,7 +1283,7 @@ def sub_wf_pull_prep_push(d, fws_root):
 
 # #### Sub-WF: GMX pull
 
-# In[271]:
+# %%
 
 
 def sub_wf_gmx_pull_pull(d, fws_root):
@@ -1589,25 +1590,25 @@ def sub_wf_gmx_pull_push(d, fws_root):
 
 # ### Read pdb
 
-# In[17]:
+# %%
 
 
 ls $prefix
 
 
-# In[18]:
+# %%
 
 
 infile = os.path.join(prefix,'dat','indenter','AU_111_r_25.pdb')
 
 
-# In[19]:
+# %%
 
 
 atoms = ase.io.read(infile,format='proteindatabank')
 
 
-# In[20]:
+# %%
 
 
 atoms
@@ -1615,7 +1616,7 @@ atoms
 
 # ### Display with ASE view
 
-# In[21]:
+# %%
 
 
 v = view(atoms,viewer='ngl')
@@ -1627,7 +1628,7 @@ v
 
 # ### Get the bounding sphere around point set
 
-# In[25]:
+# %%
 
 
 S = atoms.get_positions()
@@ -1639,19 +1640,19 @@ xmin = atoms.get_positions().min(axis=0)
 xmax = atoms.get_positions().max(axis=0)
 
 
-# In[26]:
+# %%
 
 
 C # sphere center
 
 
-# In[27]:
+# %%
 
 
 R # sphere radius
 
 
-# In[28]:
+# %%
 
 
 xmin
@@ -1660,7 +1661,7 @@ xmin
 # 
 # ### Derive surfactant numbers from sphere dimensions
 
-# In[29]:
+# %%
 
 
 A_Ang = 4*np.pi*R**2 # area in Ansgtrom
@@ -1669,13 +1670,13 @@ n_per_nm_sq = np.array([0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0]) # mo
 N = np.round(A_nm*n_per_nm_sq).astype(int)
 
 
-# In[30]:
+# %%
 
 
 A_nm
 
 
-# In[31]:
+# %%
 
 
 N # molecule numbers corresponding to surface concentrations
@@ -1683,7 +1684,7 @@ N # molecule numbers corresponding to surface concentrations
 
 # ### Plot 2d projections of point set and bounding sphere
 
-# In[32]:
+# %%
 
 
 # plot side views with sphere projections
@@ -1692,7 +1693,7 @@ plot_side_views_with_spheres(atoms,C,R)
 
 # ### Plot 3d point set and bounding sphere
 
-# In[44]:
+# %%
 
 
 # bounding sphere surface
@@ -1705,7 +1706,7 @@ us = np.array([
 bs = C + R*us.T
 
 
-# In[45]:
+# %%
 
 
 fig = plt.figure(figsize=(10,10))
@@ -1721,7 +1722,7 @@ plt.show()
 
 # ## Measure surfactant molecule
 
-# In[46]:
+# %%
 
 
 tol = 2 # Ang
@@ -1731,19 +1732,19 @@ tol = 2 # Ang
 
 # Utilize parmed to read pbd files ASE has difficulties to decipher.
 
-# In[168]:
+# %%
 
 
 infile = os.path.join(prefix,'1_SDS.pdb')
 
 
-# In[169]:
+# %%
 
 
 surfactant_pmd = pmd.load_file(infile)
 
 
-# In[170]:
+# %%
 
 
 surfactant_pmd.atoms[-1].atomic_number
@@ -1751,7 +1752,7 @@ surfactant_pmd.atoms[-1].atomic_number
 
 # ### Convert ParmEd structure to ASE atoms
 
-# In[171]:
+# %%
 
 
 surfactant_ase = ase.Atoms(
@@ -1761,37 +1762,37 @@ surfactant_ase = ase.Atoms(
 
 # ### Get bounding sphere of single surfactant molecule
 
-# In[172]:
+# %%
 
 
 C_surfactant, R_sq_surfactant = miniball.get_bounding_ball(surfactant_ase.get_positions())
 
 
-# In[173]:
+# %%
 
 
 C_surfactant
 
 
-# In[174]:
+# %%
 
 
 R_surfactant = np.sqrt(R_sq_surfactant)
 
 
-# In[175]:
+# %%
 
 
 R_surfactant
 
 
-# In[176]:
+# %%
 
 
 C_surfactant
 
 
-# In[177]:
+# %%
 
 
 surfactant_ase[:5][1]
@@ -1799,55 +1800,55 @@ surfactant_ase[:5][1]
 
 # ### Estimate constraint sphere radii
 
-# In[178]:
+# %%
 
 
 R_OSL = np.linalg.norm(C_surfactant - surfactant_ase[1].position)
 
 
-# In[179]:
+# %%
 
 
 R_OSL
 
 
-# In[180]:
+# %%
 
 
 d_head = R_surfactant - R_OSL # roughly: diameter of head group
 
 
-# In[181]:
+# %%
 
 
 R_inner = R + tol # place surfactant molecules outside of this sphere
 
 
-# In[182]:
+# %%
 
 
 R_inner_constraint = R + tol + d_head # place surfactant tail hydrocarbon within this sphere
 
 
-# In[183]:
+# %%
 
 
 R_outer_constraint = R + 2*R_surfactant + tol # place head group sulfur outside this sphere
 
 
-# In[184]:
+# %%
 
 
 R_outer = R + 2*R_surfactant + 2*tol # place suractant molecules within this sphere
 
 
-# In[185]:
+# %%
 
 
 rr = [R,R_inner,R_inner_constraint,R_outer_constraint,R_outer]
 
 
-# In[186]:
+# %%
 
 
 cc = [C]*5
@@ -1855,7 +1856,7 @@ cc = [C]*5
 
 # ### Show 2d projections of geometrical constraints around AFM tip model
 
-# In[187]:
+# %%
 
 
 plot_side_views_with_spheres(atoms,cc,rr,figsize=(20,8))
@@ -1864,7 +1865,7 @@ plt.show()
 
 # ## Packing the surfactant film
 
-# In[188]:
+# %%
 
 
 infile_prefix = os.path.join(prefix,'packmol_infiles')
@@ -1874,27 +1875,27 @@ infile_prefix = os.path.join(prefix,'packmol_infiles')
 
 # The template looks like this:
 
-# In[189]:
+# %%
 
 
 with open(os.path.join(infile_prefix,'surfactants_on_sphere.inp'),'r') as f:
     print(f.read())
 
 
-# In[190]:
+# %%
 
 
 # get all placholders in template
 template_file = os.path.join(infile_prefix,'surfactants_on_sphere.inp')
 
 
-# In[191]:
+# %%
 
 
 v = find_undeclared_variables(template_file)
 
 
-# In[192]:
+# %%
 
 
 v # we want to fill in these placeholder variables
@@ -1902,7 +1903,7 @@ v # we want to fill in these placeholder variables
 
 # ### System and constraint parameters
 
-# In[193]:
+# %%
 
 
 surfactant = 'SDS'
@@ -1911,39 +1912,39 @@ tolerance = 2 # Ang
 sfN = 200
 
 
-# In[194]:
+# %%
 
 
 l_surfactant = 2*R_surfactant
 
 
-# In[195]:
+# %%
 
 
 # head atom to be geometrically constrained
 surfactant_head_bool_ndx = np.array([ a.name == 'S' for a in surfactant_pmd.atoms ],dtype=bool)
 
 
-# In[196]:
+# %%
 
 
 # tail atom to be geometrically constrained
 surfactant_tail_bool_ndx = np.array([ a.name == 'C12' for a in surfactant_pmd.atoms ],dtype=bool)
 
 
-# In[197]:
+# %%
 
 
 head_atom_number = surfactant_head_ndx = np.argwhere(surfactant_head_bool_ndx)[0,0]
 
 
-# In[198]:
+# %%
 
 
 tail_atom_number = surfactant_tail_ndx = np.argwhere(surfactant_tail_bool_ndx)[0,0]
 
 
-# In[199]:
+# %%
 
 
 # settings can be overridden
@@ -1967,7 +1968,7 @@ packmol_script_context.update(
         tail_atom_number+1, head_atom_number+1, surfactant, counterion, tolerance))
 
 
-# In[200]:
+# %%
 
 
 packmol_script_context # context generated from system and constraint settings
@@ -1975,31 +1976,31 @@ packmol_script_context # context generated from system and constraint settings
 
 # ### Fill a packmol input script template with jinja2
 
-# In[201]:
+# %%
 
 
 env = jinja2.Environment()
 
 
-# In[202]:
+# %%
 
 
 template = jinja2.Template(open(template_file).read())
 
 
-# In[203]:
+# %%
 
 
 rendered = template.render(**packmol_script_context)
 
 
-# In[204]:
+# %%
 
 
 rendered_file = os.path.join(prefix,'rendered.inp')
 
 
-# In[205]:
+# %%
 
 
 with open(rendered_file,'w') as f:
@@ -2008,7 +2009,7 @@ with open(rendered_file,'w') as f:
 
 # That's the rendered packmol input file:
 
-# In[206]:
+# %%
 
 
 print(rendered)
@@ -2016,7 +2017,7 @@ print(rendered)
 
 # ### Fail running packmol once
 
-# In[207]:
+# %%
 
 
 packmol = subprocess.Popen(['packmol'],
@@ -2024,13 +2025,13 @@ packmol = subprocess.Popen(['packmol'],
         cwd=prefix, encoding='utf-8')
 
 
-# In[208]:
+# %%
 
 
 outs, errs = packmol.communicate(input=rendered)
 
 
-# In[209]:
+# %%
 
 
 print(errs) # error with input from PIPE
@@ -2038,7 +2039,7 @@ print(errs) # error with input from PIPE
 
 # ### Read packmol input from file to avoid obscure Fortran error
 
-# In[210]:
+# %%
 
 
 packmol = subprocess.Popen(['packmol'],
@@ -2046,19 +2047,19 @@ packmol = subprocess.Popen(['packmol'],
         cwd=prefix, encoding='utf-8')
 
 
-# In[211]:
+# %%
 
 
 outs, errs = packmol.communicate(input=rendered)
 
 
-# In[212]:
+# %%
 
 
 print(outs)
 
 
-# In[213]:
+# %%
 
 
 with open('packmol.log','w') as f:
@@ -2067,25 +2068,25 @@ with open('packmol.log','w') as f:
 
 # ### Inspect packed systems
 
-# In[214]:
+# %%
 
 
 packmol_pdb = '200_SDS_on_50_Ang_AFM_tip_model_packmol.pdb'
 
 
-# In[215]:
+# %%
 
 
 infile = os.path.join(prefix, packmol_pdb)
 
 
-# In[216]:
+# %%
 
 
 surfactant_shell_pmd = pmd.load_file(infile)
 
 
-# In[217]:
+# %%
 
 
 # with ParmEd and nglview we get automatic bond guessing
@@ -2096,7 +2097,7 @@ pmd_view.add_representation('ball+stick')
 pmd_view
 
 
-# In[218]:
+# %%
 
 
 surfactant_shell_ase = ase.Atoms(
@@ -2104,7 +2105,7 @@ surfactant_shell_ase = ase.Atoms(
     positions=surfactant_shell_pmd.get_coordinates(0))
 
 
-# In[219]:
+# %%
 
 
 # with ASE, we get no bonds at all
@@ -2117,37 +2118,37 @@ ase_view
 
 # Get bounding sphere again and display AFM tip bounding spphere as well as surfactant layer bounding sphere
 
-# In[220]:
+# %%
 
 
 C_shell, R_sq_shell = miniball.get_bounding_ball(surfactant_shell_ase.get_positions())
 
 
-# In[221]:
+# %%
 
 
 C_shell
 
 
-# In[222]:
+# %%
 
 
 R_shell = np.sqrt(R_sq_shell)
 
 
-# In[223]:
+# %%
 
 
 R_shell
 
 
-# In[224]:
+# %%
 
 
 plot_side_views_with_spheres(surfactant_shell_ase,[C,C_shell],[R,R_shell])
 
 
-# In[342]:
+# %%
 
 
 surfactant_shell_pmd
@@ -2157,13 +2158,13 @@ surfactant_shell_pmd
 
 # #### Provide PACKMOL template 
 
-# In[54]:
+# %%
 
 
 project_id = 'juwels-packmol-2020-03-09'
 
 
-# In[17]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -2172,14 +2173,14 @@ query = {
 }
 
 
-# In[18]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[160]:
+# %%
 
 
 infiles = sorted(glob.glob(os.path.join(infile_prefix,'*.inp')))
@@ -2201,7 +2202,7 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[224]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -2214,13 +2215,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[171]:
+# %%
 
 
 print(identifier)
 
 
-# In[172]:
+# %%
 
 
 # on a lower level, each object has a unique "GridFS id":
@@ -2229,13 +2230,13 @@ pprint(fp_files) # underlying GridFS id and readable identifiers
 
 # #### Provide data files
 
-# In[272]:
+# %%
 
 
 data_prefix = os.path.join(prefix,'packmol_datafiles')
 
 
-# In[273]:
+# %%
 
 
 datafiles = sorted(glob.glob(os.path.join(data_prefix,'*')))
@@ -2257,7 +2258,7 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[274]:
+# %%
 
 
 fp_files
@@ -2265,26 +2266,26 @@ fp_files
 
 # #### Span parameter sets
 
-# In[485]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[480]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[481]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[458]:
+# %%
 
 
 # for testing
@@ -2292,7 +2293,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[0]] } ]
 
 
-# In[482]:
+# %%
 
 
 parameter_sets = list( 
@@ -2303,7 +2304,7 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[486]:
+# %%
 
 
 wf_name = 'PACKMOL {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -2500,13 +2501,13 @@ wf = Workflow(fw_list,
     })
 
 
-# In[488]:
+# %%
 
 
 wf.to_file('packing.json')
 
 
-# In[489]:
+# %%
 
 
 lp.add_wf(wf)
@@ -2514,7 +2515,7 @@ lp.add_wf(wf)
 
 # #### Inspect sweep results
 
-# In[31]:
+# %%
 
 
 query = { 
@@ -2523,7 +2524,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[32]:
+# %%
 
 
 query = { 
@@ -2533,13 +2534,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[33]:
+# %%
 
 
 parameter_names = ['nmolecules']
 
 
-# In[34]:
+# %%
 
 
 surfactant_shell_pmd_list = []
@@ -2573,7 +2574,7 @@ print('')
     
 
 
-# In[80]:
+# %%
 
 
 system_selection = surfactant_shell_pmd_list
@@ -2606,7 +2607,7 @@ for i,system in enumerate(system_selection):
     gc.collect()
 
 
-# In[108]:
+# %%
 
 
 del fig
@@ -2615,38 +2616,38 @@ del axes
 
 # ## Prepare a Gromacs-processible system
 
-# In[740]:
+# %%
 
 
 gromacs.config.logfilename
 
 
-# In[741]:
+# %%
 
 
 gromacs.environment.flags
 
 
-# In[742]:
+# %%
 
 
 # if true, then stdout and stderr are returned as strings by gromacs wrapper commands
 gromacs.environment.flags['capture_output'] = False
 
 
-# In[84]:
+# %%
 
 
 print(gromacs.release())
 
 
-# In[85]:
+# %%
 
 
 prefix
 
 
-# In[539]:
+# %%
 
 
 system = '200_SDS_on_50_Ang_AFM_tip_model'
@@ -2658,7 +2659,7 @@ posre = system + '.posre.itp'
 
 # ### Tidy up packmol's non-standard pdb
 
-# In[540]:
+# %%
 
 
 # Remove any chain ID from pdb and tidy up
@@ -2672,7 +2673,7 @@ pdb_tidy = subprocess.Popen(['pdb_tidy',],
 
 # ### Generate Gromacs .gro and .top
 
-# In[541]:
+# %%
 
 
 rc,out,err=gromacs.pdb2gmx(
@@ -2680,7 +2681,7 @@ rc,out,err=gromacs.pdb2gmx(
     stdout=False,stderr=False)
 
 
-# In[542]:
+# %%
 
 
 print(out)
@@ -2688,13 +2689,13 @@ print(out)
 
 # ### Set simulation box size around system
 
-# In[543]:
+# %%
 
 
 gro_boxed = system + '_boxed.gro'
 
 
-# In[544]:
+# %%
 
 
 rc,out,err=gromacs.editconf(
@@ -2702,7 +2703,7 @@ rc,out,err=gromacs.editconf(
     stdout=False,stderr=False)
 
 
-# In[545]:
+# %%
 
 
 print(out)
@@ -2712,26 +2713,26 @@ print(out)
 
 # #### Buld workflow
 
-# In[43]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[44]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[45]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[263]:
+# %%
 
 
 # for testing
@@ -2739,7 +2740,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[0]] } ]
 
 
-# In[264]:
+# %%
 
 
 parameter_sets = list( 
@@ -2750,14 +2751,14 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[265]:
+# %%
 
 
 source_project_id = 'juwels-packmol-2020-03-09'
 project_id = 'juwels-gromacs-prep-2020-03-11'
 
 
-# In[266]:
+# %%
 
 
 wf_name = 'GROMACS preparations {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -3039,19 +3040,19 @@ wf = Workflow(fw_list,
     })
 
 
-# In[267]:
+# %%
 
 
 wf.as_dict()
 
 
-# In[268]:
+# %%
 
 
 lp.add_wf(wf)
 
 
-# In[269]:
+# %%
 
 
 wf.to_file('wf-{:s}.yaml'.format(project_id))
@@ -3059,7 +3060,7 @@ wf.to_file('wf-{:s}.yaml'.format(project_id))
 
 # #### Inspect sweep results
 
-# In[93]:
+# %%
 
 
 query = { 
@@ -3068,7 +3069,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[94]:
+# %%
 
 
 query = { 
@@ -3078,13 +3079,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[95]:
+# %%
 
 
 parameter_names = ['nmolecules']
 
 
-# In[96]:
+# %%
 
 
 gro_list = []
@@ -3118,13 +3119,13 @@ print('')
     
 
 
-# In[99]:
+# %%
 
 
 gro_list
 
 
-# In[100]:
+# %%
 
 
 # with ParmEd and nglview we get automatic bond guessing
@@ -3141,13 +3142,13 @@ pmd_view
 
 # ### Compile system
 
-# In[546]:
+# %%
 
 
 os.getcwd()
 
 
-# In[547]:
+# %%
 
 
 em_mdp = gromacs.fileformats.MDP('em.mdp.template')
@@ -3155,7 +3156,7 @@ em_mdp = gromacs.fileformats.MDP('em.mdp.template')
 em_mdp.write('em.mdp')
 
 
-# In[548]:
+# %%
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -3166,13 +3167,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[549]:
+# %%
 
 
 print(err)
 
 
-# In[551]:
+# %%
 
 
 print(out)
@@ -3180,7 +3181,7 @@ print(out)
 
 # ### Run energy minimization
 
-# In[552]:
+# %%
 
 
 gmx_mdrun = gromacs.mdrun.Popen(
@@ -3188,27 +3189,27 @@ gmx_mdrun = gromacs.mdrun.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[553]:
+# %%
 
 
 for line in gmx_mdrun.stdout: 
     print(line.decode(), end='')
 
 
-# In[ ]:
+# %%
 
 
 out = gmx_mdrun.stdout.read()
 err = gmx_mdrun.stderr.read()
 
 
-# In[ ]:
+# %%
 
 
 print(err)
 
 
-# In[ ]:
+# %%
 
 
 print(out)
@@ -3216,25 +3217,25 @@ print(out)
 
 # ### Energy minimization analysis
 
-# In[319]:
+# %%
 
 
 em_file = 'em.edr'
 
 
-# In[320]:
+# %%
 
 
 em_df = panedr.edr_to_df(em_file)
 
 
-# In[554]:
+# %%
 
 
 em_df.columns
 
 
-# In[322]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -3247,7 +3248,7 @@ em_df.plot('Time','Coulomb (SR)',ax=ax[2,0])
 em_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 
-# In[233]:
+# %%
 
 
 mda_trr = mda.Universe(gro,'em.trr')
@@ -3264,26 +3265,26 @@ mda_view
 
 # #### Build workflow: em
 
-# In[42]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[52]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[53]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[273]:
+# %%
 
 
 # for testing
@@ -3291,7 +3292,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[0]] } ]
 
 
-# In[274]:
+# %%
 
 
 parameter_sets = list( 
@@ -3302,7 +3303,7 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[275]:
+# %%
 
 
 source_project_id = 'juwels-gromacs-prep-2020-03-11'
@@ -3310,7 +3311,7 @@ project_id = 'juwels-gromacs-em-2020-03-12'
 infile_prefix = 'gmx_em_infiles'
 
 
-# In[276]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -3319,14 +3320,14 @@ query = {
 }
 
 
-# In[277]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[278]:
+# %%
 
 
 infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
@@ -3348,7 +3349,7 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[291]:
+# %%
 
 
 wf_name = 'GROMACS energy minimization {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -3591,13 +3592,13 @@ wf = Workflow(fw_list,
     })
 
 
-# In[292]:
+# %%
 
 
 wf.to_file('wf-{:s}.yaml'.format(project_id))
 
 
-# In[294]:
+# %%
 
 
 lp.add_wf(wf)
@@ -3605,26 +3606,26 @@ lp.add_wf(wf)
 
 # #### Build workflow: prep & em
 
-# In[450]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[451]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[452]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[453]:
+# %%
 
 
 # for testing
@@ -3632,7 +3633,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[0]] } ]
 
 
-# In[454]:
+# %%
 
 
 parameter_sets = list( 
@@ -3643,7 +3644,7 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[411]:
+# %%
 
 
 source_project_id = 'juwels-packmol-2020-03-09'
@@ -3651,7 +3652,7 @@ project_id = 'juwels-gromacs-em-2020-03-12'
 infile_prefix = 'gmx_em_infiles'
 
 
-# In[412]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -3660,14 +3661,14 @@ query = {
 }
 
 
-# In[413]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[414]:
+# %%
 
 
 infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
@@ -3689,7 +3690,7 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[415]:
+# %%
 
 
 wf_name = 'GROMACS preparations & energy minimization, {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -3778,44 +3779,44 @@ wf = Workflow(fw_list,
     })
 
 
-# In[440]:
+# %%
 
 
 fw_list_tmp, fw_gmx_mdrun_push = sub_wf_gmx_em_push(d, None)
 #fw_list.extend(fw_list_tmp)
 
 
-# In[441]:
+# %%
 
 
 len(fw_list_tmp)
 
 
-# In[442]:
+# %%
 
 
 sub_wf = Workflow(fw_list_tmp)
 
 
-# In[449]:
+# %%
 
 
 lp.append_wf(sub_wf,[24198])
 
 
-# In[447]:
+# %%
 
 
 wf.as_dict()
 
 
-# In[417]:
+# %%
 
 
 wf.to_file('wf-{:s}.yaml'.format(project_id))
 
 
-# In[418]:
+# %%
 
 
 lp.add_wf(wf)
@@ -3823,7 +3824,7 @@ lp.add_wf(wf)
 
 # #### Inspect sweep results
 
-# In[461]:
+# %%
 
 
 query = { 
@@ -3833,13 +3834,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[462]:
+# %%
 
 
 parameter_names = ['nmolecules']
 
 
-# In[532]:
+# %%
 
 
 em_list = []
@@ -3878,7 +3879,7 @@ print('')
 em_df = pd.concat(em_list)
 
 
-# In[537]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -3891,7 +3892,7 @@ em_df.plot('Time','Coulomb (SR)',ax=ax[2,0])
 em_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 
-# In[559]:
+# %%
 
 
 query = { 
@@ -3901,7 +3902,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[731]:
+# %%
 
 
 # Building a rather sophisticated aggregation pipeline
@@ -3988,7 +3989,7 @@ aggregation_pipeline.append({
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[732]:
+# %%
 
 
 mda_trr_list = []
@@ -4009,7 +4010,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[733]:
+# %%
 
 
 mda_trr = mda_trr_list[0]
@@ -4024,32 +4025,32 @@ mda_view
 
 # ### Batch processing: packing, prep & em
 
-# In[785]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[786]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[787]:
+# %%
 
 
 N
 
 
-# In[788]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[789]:
+# %%
 
 
 # for testing
@@ -4057,7 +4058,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[-1]] } ]
 
 
-# In[790]:
+# %%
 
 
 parameter_sets = list( 
@@ -4068,7 +4069,7 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[791]:
+# %%
 
 
 # source_project_id = 'juwels-packmol-2020-03-09'
@@ -4076,7 +4077,7 @@ project_id = 'juwels-afm-probe-solvation-trial-a-2020-03-13'
 # infile_prefix = 'gmx_em_infiles'
 
 
-# In[792]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -4085,7 +4086,7 @@ query = {
 }
 
 
-# In[793]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
@@ -4094,7 +4095,7 @@ fp.filepad.count_documents(query)
 
 # #### Provide PACKMOL template 
 
-# In[794]:
+# %%
 
 
 infile_prefix = os.path.join(prefix,'packmol_infiles')
@@ -4118,7 +4119,7 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[795]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -4131,13 +4132,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[796]:
+# %%
 
 
 print(identifier)
 
 
-# In[797]:
+# %%
 
 
 # on a lower level, each object has a unique "GridFS id":
@@ -4146,13 +4147,13 @@ pprint(fp_files) # underlying GridFS id and readable identifiers
 
 # #### Provide data files
 
-# In[798]:
+# %%
 
 
 data_prefix = os.path.join(prefix,'packmol_datafiles')
 
 
-# In[799]:
+# %%
 
 
 datafiles = sorted(glob.glob(os.path.join(data_prefix,'*')))
@@ -4176,7 +4177,7 @@ for name, file_path in files.items():
 
 # #### Provide energy minimization input files
 
-# In[800]:
+# %%
 
 
 infile_prefix = 'gmx_em_infiles'
@@ -4202,7 +4203,7 @@ for name, file_path in files.items():
 
 # #### Build workflow
 
-# In[809]:
+# %%
 
 
 wf_name = 'pack, preparations & energy minimization, {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -4355,13 +4356,13 @@ wf = Workflow(fw_list,
     })
 
 
-# In[812]:
+# %%
 
 
 wf.to_file('wf-{:s}.json'.format(project_id))
 
 
-# In[813]:
+# %%
 
 
 lp.add_wf(wf)
@@ -4373,7 +4374,7 @@ lp.add_wf(wf)
 
 # ### Create index groups for pulling
 
-# In[37]:
+# %%
 
 
 #pdb = '200_SDS_on_50_Ang_AFM_tip_model.pdb'
@@ -4382,7 +4383,7 @@ top = 'sys.top'
 ndx = 'standard.ndx'
 
 
-# In[743]:
+# %%
 
 
 import parmed as pmd
@@ -4398,7 +4399,7 @@ pmd_top_gro.positions = pmd_gro.positions
 #pmd_top_pdb.positions = pmd_pdb.positions
 
 
-# In[327]:
+# %%
 
 
 tail_atom_ndx = np.array([
@@ -4406,7 +4407,7 @@ tail_atom_ndx = np.array([
 # gromacs ndx starts at 1
 
 
-# In[814]:
+# %%
 
 
 tail_atom_ndx
@@ -4414,7 +4415,7 @@ tail_atom_ndx
 
 # ### Generate standard index file for system
 
-# In[823]:
+# %%
 
 
 gmx_make_ndx = gromacs.make_ndx.Popen(
@@ -4423,19 +4424,19 @@ gmx_make_ndx = gromacs.make_ndx.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[824]:
+# %%
 
 
 out_str, err_str = gmx_make_ndx.communicate()
 
 
-# In[825]:
+# %%
 
 
 print(out_str)
 
 
-# In[826]:
+# %%
 
 
 print(err_str)
@@ -4443,19 +4444,19 @@ print(err_str)
 
 # ### Enhance standard index file by pulling groups
 
-# In[333]:
+# %%
 
 
 pull_groups_ndx_in = gromacs.fileformats.NDX(ndx)
 
 
-# In[334]:
+# %%
 
 
 pull_groups_ndx_out = gromacs.fileformats.NDX()
 
 
-# In[335]:
+# %%
 
 
 for i, a in enumerate(tail_atom_ndx):
@@ -4463,13 +4464,13 @@ for i, a in enumerate(tail_atom_ndx):
     pull_groups_ndx_out[pull_group_name] = a
 
 
-# In[336]:
+# %%
 
 
 pull_groups_ndx_in.update(pull_groups_ndx_out)
 
 
-# In[337]:
+# %%
 
 
 pull_groups_ndx_in.write('pull_groups.ndx')
@@ -4477,7 +4478,7 @@ pull_groups_ndx_in.write('pull_groups.ndx')
 
 # ### Create mdp input file with pulling groups and coordinates
 
-# In[445]:
+# %%
 
 
 # gromacs wrapper parses mdp files
@@ -4506,7 +4507,7 @@ pull_mdp.write('pull.mdp')
 
 # ### Compile system
 
-# In[446]:
+# %%
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -4518,13 +4519,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[447]:
+# %%
 
 
 print(err)
 
 
-# In[448]:
+# %%
 
 
 print(out)
@@ -4532,7 +4533,7 @@ print(out)
 
 # ### Run pulling simulation
 
-# In[449]:
+# %%
 
 
 gmx_mdrun = gromacs.mdrun.Popen(
@@ -4540,20 +4541,20 @@ gmx_mdrun = gromacs.mdrun.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[450]:
+# %%
 
 
 out = gmx_mdrun.stdout.read()
 err = gmx_mdrun.stderr.read()
 
 
-# In[451]:
+# %%
 
 
 print(err)
 
 
-# In[779]:
+# %%
 
 
 print(out)
@@ -4561,7 +4562,7 @@ print(out)
 
 # ### Batch processing
 
-# In[59]:
+# %%
 
 
 # cast into parameters
@@ -4574,26 +4575,26 @@ nsubstrate = 3873
 
 # #### Build workflow: pull
 
-# In[190]:
+# %%
 
 
 machine = 'juwels_devel'
 
 
-# In[191]:
+# %%
 
 
 parametric_dimension_labels = ['nmolecules']
 
 
-# In[192]:
+# %%
 
 
 parametric_dimensions = [ {
     'nmolecules': N } ]
 
 
-# In[240]:
+# %%
 
 
 # for testing
@@ -4601,7 +4602,7 @@ parametric_dimensions = [ {
     'nmolecules': [N[1]] } ]
 
 
-# In[243]:
+# %%
 
 
 parameter_sets = list( 
@@ -4612,7 +4613,7 @@ parameter_sets = list(
 parameter_dict_sets = [ dict(zip(parametric_dimension_labels,s)) for s in parameter_sets ]
 
 
-# In[244]:
+# %%
 
 
 source_project_id = 'juwels-gromacs-prep-2020-03-11'
@@ -4620,7 +4621,7 @@ project_id = 'juwels-pull-2020-03-17'
 infile_prefix = 'gmx_infiles'
 
 
-# In[245]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -4629,14 +4630,14 @@ query = {
 }
 
 
-# In[246]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[247]:
+# %%
 
 
 infiles = sorted(glob.glob(os.path.join(infile_prefix,'*')))
@@ -4658,13 +4659,13 @@ for name, file_path in files.items():
     fp_files.append( fp.add_file(file_path,identifier=identifier,metadata = metadata) )
 
 
-# In[248]:
+# %%
 
 
 fp_files
 
 
-# In[272]:
+# %%
 
 
 wf_name = 'GROMACS surfactant pulling {machine:}, {id:}'.format(machine=machine,id=project_id)
@@ -4742,13 +4743,13 @@ wf = Workflow(fw_list,
     })
 
 
-# In[273]:
+# %%
 
 
 wf.to_file('wf-{:s}.yaml'.format(project_id))
 
 
-# In[274]:
+# %%
 
 
 lp.add_wf(wf)
@@ -4779,7 +4780,7 @@ lp.add_wf(wf)
 #  
 #      '$2': $1,\n
 
-# In[420]:
+# %%
 
 
 gmx_energy_dict = {
@@ -4822,7 +4823,7 @@ gmx_energy_dict = {
 }
 
 
-# In[429]:
+# %%
 
 
 query = { 
@@ -4834,13 +4835,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[430]:
+# %%
 
 
 parameter_names = ['nmolecules']
 
 
-# In[431]:
+# %%
 
 
 gmx_energy_selection = [
@@ -4856,7 +4857,7 @@ gmx_energy_selection = [
 ]
 
 
-# In[508]:
+# %%
 
 
 res_list = []
@@ -4924,7 +4925,7 @@ print('')
 #res_df = pd.concat(res_list)
 
 
-# In[538]:
+# %%
 
 
 res_df = None
@@ -4941,13 +4942,13 @@ for r in res_list:
 res_df_mi = res_df.set_index(['nmolecules','time'])
 
 
-# In[539]:
+# %%
 
 
 res_df
 
 
-# In[544]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -4962,7 +4963,7 @@ res_df.plot('time','COM-Pull-En.',ax=ax[2,0])
 
 # ### Pulling forces
 
-# In[567]:
+# %%
 
 
 res_list = []
@@ -5021,13 +5022,13 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[568]:
+# %%
 
 
 res_list
 
 
-# In[581]:
+# %%
 
 
 res_df = None
@@ -5041,19 +5042,19 @@ for r in res_list:
 res_df_mi = res_df.set_index(['nmolecules','time'])
 
 
-# In[583]:
+# %%
 
 
 res_df_mi
 
 
-# In[590]:
+# %%
 
 
 res_df_mi.plot(legend=False)
 
 
-# In[591]:
+# %%
 
 
 res_df_mi.mean(axis=1).plot()
@@ -5061,7 +5062,7 @@ res_df_mi.mean(axis=1).plot()
 
 # ### Pulling groups movement
 
-# In[733]:
+# %%
 
 
 res_list = []
@@ -5132,13 +5133,13 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[734]:
+# %%
 
 
 res_list
 
 
-# In[743]:
+# %%
 
 
 res_df = None
@@ -5153,31 +5154,31 @@ res_df_mi = res_df.set_index(['nmolecules','time'])
 res_df_mi.columns = pd.MultiIndex.from_tuples(res_df_mi.columns, names=['nmolecule', 'coord'])
 
 
-# In[750]:
+# %%
 
 
 res_df_mi.groupby(axis=1,level='coord').mean()
 
 
-# In[780]:
+# %%
 
 
 res_df_mi[0,'1'].plot()
 
 
-# In[781]:
+# %%
 
 
 res_df_mi.groupby(axis=1,level='coord').mean()['1'].plot()
 
 
-# In[782]:
+# %%
 
 
 res_df_mi.groupby(axis=1,level='coord').mean()['1 ref'].plot()
 
 
-# In[472]:
+# %%
 
 
 # sqrt(dx^2+dy^2+dz^2), the distance between pulling groups (i.e. one surfactant tail atom and the Au COM)
@@ -5187,7 +5188,7 @@ for i in range(0,150,30):
 plt.legend()
 
 
-# In[473]:
+# %%
 
 
 pull_x_xvg.plot(columns=[0,12])
@@ -5195,7 +5196,7 @@ pull_x_xvg.plot(columns=[0,12])
 
 # ### Visualize trajectory
 
-# In[795]:
+# %%
 
 
 # Building a rather sophisticated aggregation pipeline
@@ -5282,7 +5283,7 @@ aggregation_pipeline.append({
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[797]:
+# %%
 
 
 failed_list
@@ -5302,13 +5303,13 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[798]:
+# %%
 
 
 failed_list
 
 
-# In[799]:
+# %%
 
 
 mda_trr = mda_trr_list[0]
@@ -5323,63 +5324,63 @@ mda_view
 
 # ### MSD
 
-# In[476]:
+# %%
 
 
 substrate = mda_trr.atoms[mda_trr.atoms.names == 'AU']
 
 
-# In[477]:
+# %%
 
 
 surfactant_head = mda_trr.atoms[mda_trr.atoms.names == 'S']
 
 
-# In[478]:
+# %%
 
 
 rms_substrate = mda_rms.RMSD(substrate,ref_frame=0)
 
 
-# In[479]:
+# %%
 
 
 rms_substrate.run()
 
 
-# In[480]:
+# %%
 
 
 rmsd = rms_substrate.rmsd.T   # transpose makes it easier for plotting
 time = rmsd[1]
 
 
-# In[481]:
+# %%
 
 
 plt.plot(time,rmsd[2])
 
 
-# In[482]:
+# %%
 
 
 rms_surfactant_head = mda_rms.RMSD(surfactant_head,ref_frame=0)
 
 
-# In[483]:
+# %%
 
 
 rms_surfactant_head.run()
 
 
-# In[484]:
+# %%
 
 
 rmsd = rms_surfactant_head.rmsd.T   # transpose makes it easier for plotting
 time = rmsd[1]
 
 
-# In[485]:
+# %%
 
 
 plt.plot(time,rmsd[2])
@@ -5387,20 +5388,20 @@ plt.plot(time,rmsd[2])
 
 # ### Au-S (substrate - head group )RDF
 
-# In[486]:
+# %%
 
 
 len(mda_trr.trajectory)
 
 
-# In[487]:
+# %%
 
 
 rdf_substrate_headgroup = mda_rdf.InterRDF(
     substrate,surfactant_head,range=(0.0,80.0),verbose=True)
 
 
-# In[488]:
+# %%
 
 
 bins = []
@@ -5415,7 +5416,7 @@ bins = np.array(bins)
 rdf = np.array(rdf)
 
 
-# In[489]:
+# %%
 
 
 # indicates desired approach towards substrate
@@ -5427,25 +5428,25 @@ plt.legend()
 
 # ### Single system global observables
 
-# In[457]:
+# %%
 
 
 edr_file = 'pull.edr'
 
 
-# In[458]:
+# %%
 
 
 edr_df = panedr.edr_to_df(edr_file)
 
 
-# In[459]:
+# %%
 
 
 edr_df.columns
 
 
-# In[460]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -5460,7 +5461,7 @@ edr_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 # ### Pulling forces
 
-# In[461]:
+# %%
 
 
 # read xvg file
@@ -5470,7 +5471,7 @@ pull_f_t = pull_f_xvg.read_all_times()
 pull_f = np.array([ f.data[1:] for f in pull_f_xvg ])
 
 
-# In[462]:
+# %%
 
 
 for i in range(0,199,50):
@@ -5479,51 +5480,51 @@ for i in range(0,199,50):
 
 # ### Pulling groups movement
 
-# In[463]:
+# %%
 
 
 pull_x_xvg = gromacs.fileformats.XVG('pull_pullx.xvg',)
 
 
-# In[464]:
+# %%
 
 
 pull_x_xvg.array
 
 
-# In[465]:
+# %%
 
 
 len(pull_x_xvg.names)
 
 
-# In[466]:
+# %%
 
 
 # that many columns perr pull coordinate
 N_cols_per_coord = int(len(pull_x_xvg.names) / N_pull_coords)
 
 
-# In[467]:
+# %%
 
 
 # with content
 legend = pull_x_xvg.names[:11]
 
 
-# In[468]:
+# %%
 
 
 legend
 
 
-# In[469]:
+# %%
 
 
 pull_x_xvg.names[-3:]
 
 
-# In[470]:
+# %%
 
 
 for i in range(11):
@@ -5531,7 +5532,7 @@ for i in range(11):
 plt.legend()
 
 
-# In[471]:
+# %%
 
 
 for i in range(11):
@@ -5539,7 +5540,7 @@ for i in range(11):
 plt.legend()
 
 
-# In[472]:
+# %%
 
 
 # sqrt(dx^2+dy^2+dz^2), the distance between pulling groups (i.e. one surfactant tail atom and the Au COM)
@@ -5549,7 +5550,7 @@ for i in range(0,150,30):
 plt.legend()
 
 
-# In[473]:
+# %%
 
 
 pull_x_xvg.plot(columns=[0,12])
@@ -5557,13 +5558,13 @@ pull_x_xvg.plot(columns=[0,12])
 
 # ### Visualize trajectory
 
-# In[272]:
+# %%
 
 
 gro_em = 'pull.gro'
 
 
-# In[273]:
+# %%
 
 
 mda_trr = mda.Universe('em.gro','pull.trr')
@@ -5576,7 +5577,7 @@ mda_view.add_representation('ball+stick')
 mda_view
 
 
-# In[536]:
+# %%
 
 
 mda_xtc = mda.Universe(gro,'pull.xtc')
@@ -5589,63 +5590,63 @@ mda_view
 
 # ### MSD
 
-# In[476]:
+# %%
 
 
 substrate = mda_trr.atoms[mda_trr.atoms.names == 'AU']
 
 
-# In[477]:
+# %%
 
 
 surfactant_head = mda_trr.atoms[mda_trr.atoms.names == 'S']
 
 
-# In[478]:
+# %%
 
 
 rms_substrate = mda_rms.RMSD(substrate,ref_frame=0)
 
 
-# In[479]:
+# %%
 
 
 rms_substrate.run()
 
 
-# In[480]:
+# %%
 
 
 rmsd = rms_substrate.rmsd.T   # transpose makes it easier for plotting
 time = rmsd[1]
 
 
-# In[481]:
+# %%
 
 
 plt.plot(time,rmsd[2])
 
 
-# In[482]:
+# %%
 
 
 rms_surfactant_head = mda_rms.RMSD(surfactant_head,ref_frame=0)
 
 
-# In[483]:
+# %%
 
 
 rms_surfactant_head.run()
 
 
-# In[484]:
+# %%
 
 
 rmsd = rms_surfactant_head.rmsd.T   # transpose makes it easier for plotting
 time = rmsd[1]
 
 
-# In[485]:
+# %%
 
 
 plt.plot(time,rmsd[2])
@@ -5653,20 +5654,20 @@ plt.plot(time,rmsd[2])
 
 # ### Au-S (substrate - head group )RDF
 
-# In[486]:
+# %%
 
 
 len(mda_trr.trajectory)
 
 
-# In[487]:
+# %%
 
 
 rdf_substrate_headgroup = mda_rdf.InterRDF(
     substrate,surfactant_head,range=(0.0,80.0),verbose=True)
 
 
-# In[488]:
+# %%
 
 
 bins = []
@@ -5681,7 +5682,7 @@ bins = np.array(bins)
 rdf = np.array(rdf)
 
 
-# In[489]:
+# %%
 
 
 # indicates desired approach towards substrate
@@ -5695,13 +5696,13 @@ plt.legend()
 
 # Now, fill the box with water.
 
-# In[560]:
+# %%
 
 
 gro = 'pull.gro'
 
 
-# In[561]:
+# %%
 
 
 # use -scale 0.5 -maxsol N for non-standard conditions
@@ -5713,13 +5714,13 @@ out = gmx_solvate.stdout.read()
 err = gmx_solvate.stderr.read()
 
 
-# In[562]:
+# %%
 
 
 print(out)
 
 
-# In[563]:
+# %%
 
 
 print(err)
@@ -5731,7 +5732,7 @@ print(err)
 
 # ### Execute trial task via Fireworks on remote resource
 
-# In[20]:
+# %%
 
 
 lpad = LaunchPad.auto_load()
@@ -5739,7 +5740,7 @@ lpad = LaunchPad.auto_load()
 
 # A trial task sent to FORHLR2:
 
-# In[71]:
+# %%
 
 
 gmx_test_task = CmdTask(
@@ -5750,7 +5751,7 @@ gmx_test_task = CmdTask(
     use_shell = True)
 
 
-# In[72]:
+# %%
 
 
 gmx_test_fw = Firework(
@@ -5764,19 +5765,19 @@ gmx_test_fw = Firework(
         } )
 
 
-# In[73]:
+# %%
 
 
 fw_ids = lpad.add_wf(gmx_test_fw)
 
 
-# In[74]:
+# %%
 
 
 fw_ids
 
 
-# In[86]:
+# %%
 
 
 # lpad.delete_wf(INSERT_ID,delete_launch_dirs=True)
@@ -5784,19 +5785,19 @@ fw_ids
 
 # ### Compile system
 
-# In[237]:
+# %%
 
 
 top = 'sys.top'
 
 
-# In[238]:
+# %%
 
 
 gro = 'solvated.gro'
 
 
-# In[137]:
+# %%
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -5807,13 +5808,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[138]:
+# %%
 
 
 print(err)
 
 
-# In[139]:
+# %%
 
 
 print(out)
@@ -5823,85 +5824,85 @@ print(out)
 
 # Utilize fabric to transfer files files to remote resource conveniently:
 
-# In[30]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[31]:
+# %%
 
 
 res = c.run('ws_find fw') # get remote directory of Fireworks workspace
 
 
-# In[32]:
+# %%
 
 
 res.command
 
 
-# In[144]:
+# %%
 
 
 now = datetime.now().isoformat()
 
 
-# In[145]:
+# %%
 
 
 remote_path = os.path.sep.join((res.stdout.strip(),'file_transfer',now))
 
 
-# In[194]:
+# %%
 
 
 remote_path
 
 
-# In[147]:
+# %%
 
 
 res = c.run(' '.join(['mkdir','-p',remote_path]))
 
 
-# In[148]:
+# %%
 
 
 file_name = 'em_solvated.tpr'
 
 
-# In[188]:
+# %%
 
 
 local_file = os.path.sep.join((prefix,file_name))
 
 
-# In[189]:
+# %%
 
 
 remote_file = os.path.sep.join((remote_path,file_name))
 
 
-# In[198]:
+# %%
 
 
 res = c.put(local_file,remote_file)
 
 
-# In[200]:
+# %%
 
 
 res.local
 
 
-# In[193]:
+# %%
 
 
 # FileTransferTask does not work anymore
 
 
-# In[191]:
+# %%
 
 
 #ft = FileTransferTask(
@@ -5911,7 +5912,7 @@ res.local
 #    user   = c.user )
 
 
-# In[192]:
+# %%
 
 
 #fw = Firework(
@@ -5922,7 +5923,7 @@ res.local
 #        } )
 
 
-# In[174]:
+# %%
 
 
 fw_ids = lpad.add_wf(fw)
@@ -5930,7 +5931,7 @@ fw_ids = lpad.add_wf(fw)
 
 # ### Run energy minimization
 
-# In[239]:
+# %%
 
 
 ft = FileTransferTask(
@@ -5938,7 +5939,7 @@ ft = FileTransferTask(
     files  = [ {'src':remote_file, 'dest':os.path.curdir} ] )
 
 
-# In[240]:
+# %%
 
 
 gmx_mdrun_task = CmdTask(
@@ -5949,13 +5950,13 @@ gmx_mdrun_task = CmdTask(
     use_shell = True)
 
 
-# In[241]:
+# %%
 
 
 gmx_log_tracker = Tracker('em_solvated.log')
 
 
-# In[242]:
+# %%
 
 
 gmx_mdrun_fw = Firework(
@@ -5979,19 +5980,19 @@ gmx_mdrun_fw = Firework(
         } )
 
 
-# In[243]:
+# %%
 
 
 pprint(gmx_mdrun_fw.as_dict())
 
 
-# In[244]:
+# %%
 
 
 fw_ids = lpad.add_wf(gmx_mdrun_fw)
 
 
-# In[315]:
+# %%
 
 
 fw_id = list(fw_ids.values())[0]
@@ -6001,19 +6002,19 @@ fw_id = list(fw_ids.values())[0]
 
 # instead of relying on the returned fw_id, we can also query the Firework added latest
 
-# In[23]:
+# %%
 
 
 fw_ids = lpad.get_fw_ids(sort=[('created_on',pymongo.DESCENDING)],limit=1)
 
 
-# In[25]:
+# %%
 
 
 fw_id = fw_ids[0]
 
 
-# In[34]:
+# %%
 
 
 fw_id
@@ -6021,49 +6022,49 @@ fw_id
 
 # We query the remote directory our FireWork ran in
 
-# In[28]:
+# %%
 
 
 launch_dir = lpad.get_launchdir(fw_id)
 
 
-# In[35]:
+# %%
 
 
 launch_dir
 
 
-# In[30]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[36]:
+# %%
 
 
 res = c.run('ls -lht {}'.format(launch_dir)) # look at remote directory contents
 
 
-# In[39]:
+# %%
 
 
 glob_pattern = os.path.join(launch_dir,'em_solvated.*')
 
 
-# In[49]:
+# %%
 
 
 res = c.run('ls {}'.format(glob_pattern))
 
 
-# In[53]:
+# %%
 
 
 res.stdout
 
 
-# In[57]:
+# %%
 
 
 for f in res.stdout.splitlines():
@@ -6072,25 +6073,25 @@ for f in res.stdout.splitlines():
 
 # ### Energy minimization analysis
 
-# In[97]:
+# %%
 
 
 em_file = 'em_solvated.edr'
 
 
-# In[98]:
+# %%
 
 
 em_df = panedr.edr_to_df(em_file)
 
 
-# In[99]:
+# %%
 
 
 em_df.columns
 
 
-# In[100]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -6103,7 +6104,7 @@ em_df.plot('Time','Coulomb (SR)',ax=ax[2,0])
 em_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 
-# In[173]:
+# %%
 
 
 try:
@@ -6114,26 +6115,26 @@ except:
 
 # ### Visualize trajectory
 
-# In[102]:
+# %%
 
 
 mda_trr = mda.Universe('solvated.gro','em_solvated.trr')
 
 
-# In[103]:
+# %%
 
 
 # check unique resiude names in system
 resnames = np.unique([ r.resname for r in mda_trr.residues ])
 
 
-# In[104]:
+# %%
 
 
 resnames
 
 
-# In[117]:
+# %%
 
 
 mda_view = nglview.show_mdanalysis(mda_trr)
@@ -6145,13 +6146,13 @@ mda_view.add_representation(repr_type='spacefill',selection='AUM',color='yellow'
 mda_view.center()
 
 
-# In[118]:
+# %%
 
 
 mda_view
 
 
-# In[159]:
+# %%
 
 
 try:
@@ -6166,7 +6167,7 @@ except:
 
 # ## NVT equilibration
 
-# In[134]:
+# %%
 
 
 top = 'sys.top'
@@ -6174,7 +6175,7 @@ gro = 'em_solvated.gro'
 ndx = 'nvt.ndx'
 
 
-# In[133]:
+# %%
 
 
 lpad = LaunchPad.auto_load()
@@ -6182,7 +6183,7 @@ lpad = LaunchPad.auto_load()
 
 # ### Generate non-substrate index group
 
-# In[141]:
+# %%
 
 
 pmd_top_gro = pmd.gromacs.GromacsTopologyFile(top)
@@ -6192,7 +6193,7 @@ pmd_top_gro.box = pmd_gro.box
 pmd_top_gro.positions = pmd_gro.positions
 
 
-# In[142]:
+# %%
 
 
 non_substrate_ndx = np.array([
@@ -6202,19 +6203,19 @@ non_substrate_ndx = np.array([
 
 # len(pmd_top_gro.atoms)
 
-# In[144]:
+# %%
 
 
 len(non_substrate_ndx)
 
 
-# In[147]:
+# %%
 
 
 len(pmd_top_gro.atoms) - len(non_substrate_ndx) # double-check non-substrate and substrate atom numbers
 
 
-# In[160]:
+# %%
 
 
 try:
@@ -6229,7 +6230,7 @@ except:
 
 # ### Generate standard index file for system
 
-# In[135]:
+# %%
 
 
 gmx_make_ndx = gromacs.make_ndx.Popen(
@@ -6238,19 +6239,19 @@ gmx_make_ndx = gromacs.make_ndx.Popen(
     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
-# In[136]:
+# %%
 
 
 out_str, err_str = gmx_make_ndx.communicate()
 
 
-# In[137]:
+# %%
 
 
 print(out_str)
 
 
-# In[138]:
+# %%
 
 
 print(err_str)
@@ -6258,25 +6259,25 @@ print(err_str)
 
 # ### Enhance standard index file by pulling groups
 
-# In[150]:
+# %%
 
 
 ndx_in = gromacs.fileformats.NDX(ndx)
 
 
-# In[152]:
+# %%
 
 
 ndx_in['non-Substrate'] = non_substrate_ndx
 
 
-# In[155]:
+# %%
 
 
 ndx_in.write(ndx)
 
 
-# In[175]:
+# %%
 
 
 try:
@@ -6291,7 +6292,7 @@ except:
 
 # ### Compile system
 
-# In[183]:
+# %%
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -6302,13 +6303,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[184]:
+# %%
 
 
 print(err)
 
 
-# In[185]:
+# %%
 
 
 print(out)
@@ -6318,73 +6319,73 @@ print(out)
 
 # Utilize fabric to transfer files files to remote resource conveniently:
 
-# In[279]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[280]:
+# %%
 
 
 res = c.run('ws_find fw') # get remote directory of Fireworks workspace
 
 
-# In[281]:
+# %%
 
 
 res.command
 
 
-# In[282]:
+# %%
 
 
 now = datetime.now().isoformat()
 
 
-# In[283]:
+# %%
 
 
 remote_path = os.path.sep.join((res.stdout.strip(),'file_transfer',now))
 
 
-# In[191]:
+# %%
 
 
 remote_path
 
 
-# In[192]:
+# %%
 
 
 res = c.run(' '.join(['mkdir','-p',remote_path]))
 
 
-# In[193]:
+# %%
 
 
 file_name = 'nvt.tpr'
 
 
-# In[194]:
+# %%
 
 
 local_file = os.path.sep.join((prefix,file_name))
 
 
-# In[195]:
+# %%
 
 
 remote_file = os.path.sep.join((remote_path,file_name))
 
 
-# In[196]:
+# %%
 
 
 res = c.put(local_file,remote_file)
 
 
-# In[197]:
+# %%
 
 
 res.local
@@ -6392,7 +6393,7 @@ res.local
 
 # ### Execute trial task via Fireworks on remote resource queue
 
-# In[317]:
+# %%
 
 
 ft = FileTransferTask(
@@ -6400,7 +6401,7 @@ ft = FileTransferTask(
     files  = [ {'src':remote_file, 'dest':os.path.curdir} ] )
 
 
-# In[318]:
+# %%
 
 
 gmx_mdrun_task = CmdTask(
@@ -6411,13 +6412,13 @@ gmx_mdrun_task = CmdTask(
     use_shell = True)
 
 
-# In[319]:
+# %%
 
 
 gmx_log_tracker = Tracker('nvt.log')
 
 
-# In[320]:
+# %%
 
 
 gmx_mdrun_fw = Firework(
@@ -6441,25 +6442,25 @@ gmx_mdrun_fw = Firework(
         } )
 
 
-# In[321]:
+# %%
 
 
 pprint(gmx_mdrun_fw.as_dict())
 
 
-# In[322]:
+# %%
 
 
 fw_ids = lpad.add_wf(gmx_mdrun_fw)
 
 
-# In[332]:
+# %%
 
 
 fw_ids = lpad.get_fw_ids(query={'name':'FORHLR2 GMX mdrun nvt','spec._queueadapter.queue':'develop'})
 
 
-# In[333]:
+# %%
 
 
 for fw_id in fw_ids:
@@ -6473,7 +6474,7 @@ for fw_id in fw_ids:
 
 # ### Run NVT equilibration
 
-# In[198]:
+# %%
 
 
 ft = FileTransferTask(
@@ -6481,7 +6482,7 @@ ft = FileTransferTask(
     files  = [ {'src':remote_file, 'dest':os.path.curdir} ] )
 
 
-# In[199]:
+# %%
 
 
 gmx_mdrun_task = CmdTask(
@@ -6492,13 +6493,13 @@ gmx_mdrun_task = CmdTask(
     use_shell = True)
 
 
-# In[200]:
+# %%
 
 
 gmx_log_tracker = Tracker('nvt.log')
 
 
-# In[201]:
+# %%
 
 
 gmx_mdrun_fw = Firework(
@@ -6522,19 +6523,19 @@ gmx_mdrun_fw = Firework(
         } )
 
 
-# In[202]:
+# %%
 
 
 pprint(gmx_mdrun_fw.as_dict())
 
 
-# In[203]:
+# %%
 
 
 fw_ids = lpad.add_wf(gmx_mdrun_fw)
 
 
-# In[204]:
+# %%
 
 
 fw_id = list(fw_ids.values())[0]
@@ -6544,19 +6545,19 @@ fw_id = list(fw_ids.values())[0]
 
 # instead of relying on the returned fw_id, we can also query the Firework added latest
 
-# In[205]:
+# %%
 
 
 fw_ids = lpad.get_fw_ids(sort=[('created_on',pymongo.DESCENDING)],limit=1)
 
 
-# In[206]:
+# %%
 
 
 fw_id = fw_ids[0]
 
 
-# In[207]:
+# %%
 
 
 fw_id
@@ -6564,43 +6565,43 @@ fw_id
 
 # We query the remote directory our FireWork ran in
 
-# In[208]:
+# %%
 
 
 launch_dir = lpad.get_launchdir(fw_id)
 
 
-# In[209]:
+# %%
 
 
 launch_dir
 
 
-# In[210]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[211]:
+# %%
 
 
 res = c.run('ls -lht {}'.format(launch_dir)) # look at remote directory contents
 
 
-# In[213]:
+# %%
 
 
 glob_pattern = os.path.join(launch_dir,'nvt.*')
 
 
-# In[214]:
+# %%
 
 
 res = c.run('ls {}'.format(glob_pattern))
 
 
-# In[215]:
+# %%
 
 
 for f in res.stdout.splitlines():
@@ -6609,25 +6610,25 @@ for f in res.stdout.splitlines():
 
 # ### Analysis
 
-# In[242]:
+# %%
 
 
 edr_file = 'nvt.edr'
 
 
-# In[243]:
+# %%
 
 
 edr_df = panedr.edr_to_df(edr_file)
 
 
-# In[244]:
+# %%
 
 
 edr_df.columns
 
 
-# In[248]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -6643,26 +6644,26 @@ edr_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 # ### Visualize trajectory
 
-# In[102]:
+# %%
 
 
 mda_trr = mda.Universe('solvated.gro','em_solvated.trr')
 
 
-# In[103]:
+# %%
 
 
 # check unique resiude names in system
 resnames = np.unique([ r.resname for r in mda_trr.residues ])
 
 
-# In[104]:
+# %%
 
 
 resnames
 
 
-# In[117]:
+# %%
 
 
 mda_view = nglview.show_mdanalysis(mda_trr)
@@ -6674,13 +6675,13 @@ mda_view.add_representation(repr_type='spacefill',selection='AUM',color='yellow'
 mda_view.center()
 
 
-# In[118]:
+# %%
 
 
 mda_view
 
 
-# In[119]:
+# %%
 
 
 try:
@@ -6695,7 +6696,7 @@ except:
 
 # ## NPT equilibration
 
-# In[110]:
+# %%
 
 
 top = 'sys.top'
@@ -6703,7 +6704,7 @@ gro = 'nvt.gro'
 ndx = 'nvt.ndx'
 
 
-# In[111]:
+# %%
 
 
 lpad = LaunchPad.auto_load()
@@ -6711,7 +6712,7 @@ lpad = LaunchPad.auto_load()
 
 # ### Compile system
 
-# In[117]:
+# %%
 
 
 gmx_grompp = gromacs.grompp.Popen(
@@ -6722,13 +6723,13 @@ out = gmx_grompp.stdout.read()
 err = gmx_grompp.stderr.read()
 
 
-# In[118]:
+# %%
 
 
 print(err)
 
 
-# In[119]:
+# %%
 
 
 print(out)
@@ -6738,67 +6739,67 @@ print(out)
 
 # Utilize fabric to transfer files files to remote resource conveniently:
 
-# In[120]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[121]:
+# %%
 
 
 res = c.run('ws_find fw') # get remote directory of Fireworks workspace
 
 
-# In[122]:
+# %%
 
 
 res.command
 
 
-# In[123]:
+# %%
 
 
 now = datetime.now().isoformat()
 
 
-# In[124]:
+# %%
 
 
 remote_path = os.path.sep.join((res.stdout.strip(),'file_transfer',now))
 
 
-# In[125]:
+# %%
 
 
 remote_path
 
 
-# In[126]:
+# %%
 
 
 res = c.run(' '.join(['mkdir','-p',remote_path]))
 
 
-# In[127]:
+# %%
 
 
 file_name = 'npt.tpr'
 
 
-# In[128]:
+# %%
 
 
 local_file = os.path.sep.join((prefix,file_name))
 
 
-# In[129]:
+# %%
 
 
 remote_file = os.path.sep.join((remote_path,file_name))
 
 
-# In[130]:
+# %%
 
 
 res = c.put(local_file,remote_file)
@@ -6806,7 +6807,7 @@ res = c.put(local_file,remote_file)
 
 # ### Run NPT equilibration
 
-# In[131]:
+# %%
 
 
 ft = FileTransferTask(
@@ -6814,7 +6815,7 @@ ft = FileTransferTask(
     files  = [ {'src':remote_file, 'dest':os.path.curdir} ] )
 
 
-# In[132]:
+# %%
 
 
 gmx_mdrun_task = CmdTask(
@@ -6825,13 +6826,13 @@ gmx_mdrun_task = CmdTask(
     use_shell = True)
 
 
-# In[133]:
+# %%
 
 
 gmx_log_tracker = Tracker('npt.log')
 
 
-# In[134]:
+# %%
 
 
 gmx_mdrun_fw = Firework(
@@ -6855,19 +6856,19 @@ gmx_mdrun_fw = Firework(
         } )
 
 
-# In[135]:
+# %%
 
 
 fw_ids = lpad.add_wf(gmx_mdrun_fw)
 
 
-# In[136]:
+# %%
 
 
 fw_id = list(fw_ids.values())[0]
 
 
-# In[137]:
+# %%
 
 
 fw_id
@@ -6877,19 +6878,19 @@ fw_id
 
 # instead of relying on the returned fw_id, we can also query the Firework added latest
 
-# In[47]:
+# %%
 
 
 fw_ids = lpad.get_fw_ids(sort=[('created_on',pymongo.DESCENDING)],limit=1)
 
 
-# In[48]:
+# %%
 
 
 fw_id = fw_ids[0]
 
 
-# In[49]:
+# %%
 
 
 fw_id
@@ -6897,43 +6898,43 @@ fw_id
 
 # We query the remote directory our FireWork ran in
 
-# In[50]:
+# %%
 
 
 launch_dir = lpad.get_launchdir(fw_id)
 
 
-# In[51]:
+# %%
 
 
 launch_dir
 
 
-# In[52]:
+# %%
 
 
 c = fabric.Connection('forhlr2') # host defined in ssh config
 
 
-# In[53]:
+# %%
 
 
 res = c.run('ls -lht {}'.format(launch_dir)) # look at remote directory contents
 
 
-# In[54]:
+# %%
 
 
 glob_pattern = os.path.join(launch_dir,'npt.*')
 
 
-# In[55]:
+# %%
 
 
 res = c.run('ls {}'.format(glob_pattern))
 
 
-# In[56]:
+# %%
 
 
 for f in res.stdout.splitlines():
@@ -6942,25 +6943,25 @@ for f in res.stdout.splitlines():
 
 # ### Analysis
 
-# In[57]:
+# %%
 
 
 edr_file = 'npt.edr'
 
 
-# In[58]:
+# %%
 
 
 edr_df = panedr.edr_to_df(edr_file)
 
 
-# In[59]:
+# %%
 
 
 edr_df.columns
 
 
-# In[60]:
+# %%
 
 
 fig, ax = plt.subplots(3,2,figsize=(10,12))
@@ -6976,26 +6977,26 @@ edr_df.plot('Time','Coul. recip.',ax=ax[2,1])
 
 # ### Visualize trajectory
 
-# In[61]:
+# %%
 
 
 mda_trr = mda.Universe('nvt.gro','npt.trr')
 
 
-# In[62]:
+# %%
 
 
 # check unique resiude names in system
 resnames = np.unique([ r.resname for r in mda_trr.residues ])
 
 
-# In[63]:
+# %%
 
 
 resnames
 
 
-# In[64]:
+# %%
 
 
 mda_view = nglview.show_mdanalysis(mda_trr)
@@ -7007,37 +7008,37 @@ mda_view.add_representation(repr_type='spacefill',selection='AUM',color='yellow'
 mda_view.center()
 
 
-# In[65]:
+# %%
 
 
 mda_view
 
 
-# In[67]:
+# %%
 
 
 substrate = mda_trr.select_atoms('resname AUM')
 
 
-# In[103]:
+# %%
 
 
 substrate.masses= ase.data.atomic_masses[ase.data.atomic_numbers['Au']]
 
 
-# In[105]:
+# %%
 
 
 substrtate_com_traj = np.array([substrate.center_of_mass() for ts in mda_trr.trajectory ])
 
 
-# In[106]:
+# %%
 
 
 substrtate_rgyr_traj = np.array([substrate.radius_of_gyration() for ts in mda_trr.trajectory ])
 
 
-# In[107]:
+# %%
 
 
 fig = plt.figure(figsize=(12,10))
@@ -7047,13 +7048,13 @@ ax.scatter(*substrtate_com_traj[0,:],color='green')
 ax.scatter(*substrtate_com_traj[-1,:],color='red')
 
 
-# In[109]:
+# %%
 
 
 plt.plot(substrtate_rgyr_traj)
 
 
-# In[119]:
+# %%
 
 
 try:

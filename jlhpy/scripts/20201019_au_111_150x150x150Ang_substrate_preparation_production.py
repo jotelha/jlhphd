@@ -41,7 +41,7 @@ fp = FilePad.auto_load()
 from jlhpy.utilities.wf.substrate.chain_wf_fcc_substrate_creation import FCCSubstrateCreationChainWorkflowGenerator
 # from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-11-24-au-111-150x150x150-fcc-substrate-creation'
+project_id = '2020-11-25-au-111-150x150x150-fcc-substrate-creation'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': parameter_values})

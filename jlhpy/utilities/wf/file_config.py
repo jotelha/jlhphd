@@ -45,6 +45,8 @@ PACKMOL_SUBDIR  = 'packmol'
 PACKMOL_SPHERES_TEMPLATE = 'sphere.inp.template'
 PACKMOL_FLAT_TEMPLATE = 'flat.inp.template'
 
+VMD_SUBDIR  = 'vmd'
+VMD_MERGE_TEMPLATE = 'merge.tcl.template'
 
 # visualization-related
 

@@ -186,109 +186,117 @@ class PullFromDtoolRepositoryMixin(PullMixin):
     def pull(self, fws_root=[]):
         fw_list, fws_root_out, fws_leaf_out = super().pull(fws_root)
 
-        if len(self.files_in_list) == 0:
-            return fw_list, fws_root_out, fws_leaf_out
-
-        # query
-        step_label = self.get_step_label('pull_dtool_query')
-
-        files_in = {}
-        files_out = {}
-
-        # build default query
-        # TODO: offer a flexible way to build query
-        query = {}
-        if hasattr(self, 'source_step'):
-            query['readme.step'] = self.source_step
-
-        if hasattr(self, 'source_project_id'):
-            query['readme.project'] = self.source_project_id
-
-        fts_query = [
-            QueryDtoolTask(
-                query=json.dumps(query),
-                sort_key='frozen_at',
-                sort_direction=pymongo.DESCENDING,
-                limit=1,
-                expand=True,
-                output='run->query_dtool_task',
-                loglevel=logging.DEBUG,
-                propagate=True),
-        ]
-
-        fw_query = self.build_fw(
-            fts_query, step_label,
-            parents=fws_root,
-            files_in=files_in,
-            files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category']
-        )
-
-        fw_list.append(fw_query)
-
-        # readme
-
-        step_label = self.get_step_label('pull_dtool_readme')
-
-        files_in = {}
-        files_out = {}
-
-        # TODO: this must happen in a more elegant way
-        metadata_dtool_source_key = self.kwargs.get('metadata_dtool_source_key', None)
-        metadata_fw_dest_key = self.kwargs.get('metadata_fw_dest_key', 'metadata')
-        metadata_fw_source_key = self.kwargs.get('metadata_fw_source_key', 'metadata')
-
-        fts_readme = [
-            ReadmeDtoolTask(
-                uri={'key': 'run->query_dtool_task->uri'},
-                output=metadata_fw_dest_key,
-                metadata_dtool_source_key=metadata_dtool_source_key,
-                metadata_fw_source_key=metadata_fw_source_key,
-                fw_supersedes_dtool=True,
-                loglevel=logging.DEBUG,
-                propagate=True,
-            )
-        ]
-
-        fw_readme = self.build_fw(
-            fts_readme, step_label,
-            parents=[fw_query],
-            files_in=files_in,
-            files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category']
-        )
-
-        fw_list.append(fw_readme)
-
-        # manifest
-
-        step_label = self.get_step_label('pull_dtool_manifest')
-
-        files_in = {}
-        files_out = {}
-
-        fts_manifest = [
-            ManifestDtoolTask(
-                uri={'key': 'run->query_dtool_task->uri'},
-                output='run->manifest_dtool_task',
-                propagate=False,
-            )
-        ]
-
-        fw_manifest = self.build_fw(
-            fts_manifest, step_label,
-            parents=[fw_readme],
-            files_in=files_in,
-            files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category']
-        )
-
-        fw_list.append(fw_manifest)
+        logger = logging.getLogger(__name__)
+        # if len(self.files_in_list) == 0:
+        #    return fw_list, fws_root_out, fws_leaf_out
 
         # fetch items
-
         # TODO: for now, files must be named within the dataset as in the workflow
         for file in self.files_in_list:
+            if (not hasattr(self, 'files_in_info')) or (file['file_label'] not in self.files_in_info):
+                logger.warning("No info on how to get infile '%s'" % file['file_label'])
+                continue
+
+            # query
+            step_label = self.get_step_label('pull_dtool_query')
+
+            files_in = {}
+            files_out = {}
+
+            query = self.files_in_info[file['file_label']]['query']
+            #if hasattr(self, 'source_step'):
+            #    query['readme.step'] = self.source_step
+
+            #if hasattr(self, 'source_project_id'):
+            #    query['readme.project'] = self.source_project_id
+
+            fts_query = [
+                QueryDtoolTask(
+                    query=json.dumps(query),
+                    sort_key='frozen_at',
+                    sort_direction=pymongo.DESCENDING,
+                    limit=1,
+                    expand=True,
+                    output='run->query_dtool_task',
+                    loglevel=logging.DEBUG,
+                    propagate=True),
+            ]
+
+            fw_query = self.build_fw(
+                fts_query, step_label,
+                parents=fws_root,
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_query)
+            fws_root_out.append(fw_query)
+
+            # readme
+
+            step_label = self.get_step_label('pull_dtool_readme')
+
+            files_in = {}
+            files_out = {}
+
+            # TODO: this must happen in a more elegant way
+            metadata_dtool_source_key = getattr(self.files_in_info[file['file_label']],
+                                                'metadata_dtool_source_key',
+                                                self.kwargs.get('metadata_dtool_source_key', None))
+            metadata_fw_dest_key = getattr(self.files_in_info[file['file_label']],
+                                           'metadata_fw_dest_key',
+                                           self.kwargs.get('metadata_fw_dest_key', 'metadata'))
+            metadata_fw_source_key = getattr(self.files_in_info[file['file_label']],
+                                             'metadata_fw_source_key',
+                                             self.kwargs.get('metadata_fw_source_key', 'metadata'))
+
+            fts_readme = [
+                ReadmeDtoolTask(
+                    uri={'key': 'run->query_dtool_task->uri'},
+                    output=metadata_fw_dest_key,
+                    metadata_dtool_source_key=metadata_dtool_source_key,
+                    metadata_fw_source_key=metadata_fw_source_key,
+                    fw_supersedes_dtool=True,
+                    loglevel=logging.DEBUG,
+                    propagate=True,
+                )
+            ]
+
+            fw_readme = self.build_fw(
+                fts_readme, step_label,
+                parents=[fw_query],
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_readme)
+
+            # manifest
+
+            step_label = self.get_step_label('pull_dtool_manifest')
+
+            files_in = {}
+            files_out = {}
+
+            fts_manifest = [
+                ManifestDtoolTask(
+                    uri={'key': 'run->query_dtool_task->uri'},
+                    output='run->manifest_dtool_task',
+                    propagate=False,
+                )
+            ]
+
+            fw_manifest = self.build_fw(
+                fts_manifest, step_label,
+                parents=[fw_readme],
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_manifest)
 
             # search item_id by filename
 
@@ -297,10 +305,12 @@ class PullFromDtoolRepositoryMixin(PullMixin):
 
             step_label = self.get_step_label('pull_dtool_search_item')
 
+            file_name = getattr(self.files_in_info[file['file_label']], 'file_name', file['file_name'])
+
             fts_search_item = [
                 SearchDictTask(
                     input_key='run->manifest_dtool_task->items',
-                    search={'relpath': file['file_name']},  # no considering the in- and out labels
+                    search={'relpath': file_name},
                     marker={'relpath': True},
                     output_key='run->search_dict_task',
                     limit=1,
@@ -345,8 +355,6 @@ class PullFromDtoolRepositoryMixin(PullMixin):
 
             fws_leaf_out.append(fw_fetch_item)
             fw_list.append(fw_fetch_item)
-
-        fws_root_out.append(fw_query)
 
         return fw_list, fws_leaf_out, fws_root_out
 

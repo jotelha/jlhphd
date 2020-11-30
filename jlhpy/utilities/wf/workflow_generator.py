@@ -160,6 +160,10 @@ class FireWorksWorkflowGenerator:
         if 'source_step' in self.kwargs:
             self.source_step = self.kwargs['source_step']
 
+        # this adresses above issue
+        if 'files_in_info' in self.kwargs:
+            self.files_in_info = self.kwargs['files_in_info']
+
         creation_date = datetime.datetime.now()
         if 'creation_date' not in self.kwargs:
             self.kwargs['creation_date'] = str(creation_date)

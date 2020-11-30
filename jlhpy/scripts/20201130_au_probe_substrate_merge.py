@@ -63,28 +63,45 @@ N = np.round(A_nm*n_per_nm_sq).astype(int).tolist()
 # In[20]:
 
 # SDS on Au(111)
-from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
+from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrate
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-11-29-sds-on-au-111-substrate-passivation-trial'
+project_id = '2020-11-30-sds-on-au-111-probe-and-substrate'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
 
-parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['monolayer','hemicylinders']][10:11]
+# parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['monolayer','hemicylinders']][10:11]
 
 # In[25]
-wfg = SubstratePassivation(
+wfg = MergeSubstrateAndProbeSystems(
     project_id=project_id,
-
-    source_project_id="2020-11-25-au-111-150x150x150-fcc-substrate-creation",
-    source_step='FCCSubstrateCreationChainWorkflowGenerator:LAMMPSEquilibrationNPTWorkflowGenerator:push_dtool',
-    metadata_dtool_source_key='system->substrate',
-    metadata_fw_dest_key='metadata->system->substrate',
-    metadata_fw_source_key='metadata->system->substrate',
+    
+    files_in_info={
+        'substrate_data_file': {
+            'query': {'uuid': '6d5fe574-3359-4580-ae2d-eeda9ec5b926'},
+            'file_name': 'default.gro',
+            'metadata_dtool_source_key': 'system->substrate',
+            'metadata_fw_dest_key': 'metadata->system->substrate',
+            'metadata_fw_source_key': 'metadata->system->substrate',
+        },
+        'probe_data_file': {
+            'query': {'uuid': '1bc8bb4a-f4cf-4e4f-96ee-208b01bc3d02'},
+            'file_name': 'default.gro',
+            'metadata_dtool_source_key': 'system->indenter',
+            'metadata_fw_dest_key': 'metadata->system->indenter',
+            'metadata_fw_source_key': 'metadata->system->indenter',
+        }
+    },
+    #source_project_id="2020-11-25-au-111-150x150x150-fcc-substrate-creation",
+    #source_step='FCCSubstrateCreationChainWorkflowGenerator:LAMMPSEquilibrationNPTWorkflowGenerator:push_dtool',
+    #metadata_dtool_source_key='system->substrate',
+    #metadata_fw_dest_key='metadata->system->substrate',
+    #metadata_fw_source_key='metadata->system->substrate',
 
     integrate_push=True,
-    description="SDS on Au(111) substrate passivation trial",
+    description="SDS on Au(111) substrate and probe trial",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
@@ -94,11 +111,11 @@ wfg = SubstratePassivation(
     infile_prefix=prefix,
     machine='juwels',
     mode='trial',
-    parameter_label_key_dict={
-        'n': 'system->surfactant->nmolecules',
-        'm': 'system->counterion->nmolecules',
-        's': 'system->surfactant->aggregates->shape'},
-    parameter_values=parameter_values,
+    #parameter_label_key_dict={
+    #    'n': 'system->surfactant->nmolecules',
+    #    'm': 'system->counterion->nmolecules',
+    #    's': 'system->surfactant->aggregates->shape'},
+    #parameter_values=parameter_values,
     system = {
         'counterion': {
             'name': 'NA',
@@ -145,21 +162,11 @@ wfg = SubstratePassivation(
         }
     },
     step_specific={
-        'conversion': {
-            'lmp_type_to_element_mapping': {
-                '11': 'Au',
-            },
-            'element_to_pdb_atom_name_mapping': {
-                'Au': 'AU',
-            },
-            'element_to_pdb_residue_name_mapping': {
-                'Au': 'AUM',
-            },
-        },
-        'packing' : {
-            'surfactant_substrate': {
-                'tolerance': 1.5
-            },
+        'merge': {
+            'tol': 2.0,
+            'z_dist': 50.0,
+            'x_shift': 15.0,
+            'y_shift': 0.0,
         },
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
