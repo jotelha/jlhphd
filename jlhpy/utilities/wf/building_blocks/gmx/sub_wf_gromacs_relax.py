@@ -43,7 +43,7 @@ class GromacsRelaxationMain(WorkflowGenerator):
         always queried within main trunk
 
     - parameter_file: default.mdp,
-        queried by {'metadata->name': file_config.GMX_RLEAX_MDP}
+        queried by {'metadata->name': file_config.GMX_RELAX_Z_ONLY_MDP}
 
     outfiles:
     - log_file:        default.log

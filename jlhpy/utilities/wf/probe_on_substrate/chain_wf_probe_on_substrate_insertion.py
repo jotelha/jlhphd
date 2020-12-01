@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import GromacsMinimizationEquilibrationRelaxation
-from jlhpy.utilities.wf.building_blocks.sub_wf_surfactant_molecule_measures import SurfactantMoleculeMeasures
-from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
-from jlhpy.utilities.wf.utils import get_nested_dict_value
+
 from jlhpy.utilities.wf.workflow_generator import (EncapsulatingWorkflowGenerator,
                                                    ChainWorkflowGenerator, BranchingWorkflowGenerator,
                                                    ParametricBranchingWorkflowGenerator)
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
+from jlhpy.utilities.wf.building_blocks.sub_wf_vmd_pdb_cleanup import PDBCleanup
+from jlhpy.utilities.wf.building_blocks.sub_wf_count_components import CountComponents
+from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import GromacsMinimizationEquilibrationRelaxationWoBoxDimensions as GromacsMinimizationEquilibrationRelaxation
 
 
 class ProbeOnSubstrate(ChainWorkflowGenerator):
@@ -19,5 +20,8 @@ class ProbeOnSubstrate(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             MergeSubstrateAndProbeSystems,
+            PDBCleanup,  # clean up dirty VMD pdb
+            CountComponents,  # count atoms and molecules (i.e. residues) in system
+            GromacsMinimizationEquilibrationRelaxation,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

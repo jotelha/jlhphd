@@ -180,7 +180,9 @@ class PullFromDtoolRepositoryMixin(PullMixin):
     """Mixin for querying files from dtool lookup server and copying subsequently.
 
     Implementation shall provide 'source_project_id' and 'source_step'
-    attributes. These may be provided file-wise by according per-file keys
+    attributes.
+
+    TODO: These may be provided file-wise by according per-file keys
     within the 'files_in_list' attribute."""
 
     def pull(self, fws_root=[]):
@@ -193,9 +195,12 @@ class PullFromDtoolRepositoryMixin(PullMixin):
         # fetch items
         # TODO: for now, files must be named within the dataset as in the workflow
         for file in self.files_in_list:
-            if (not hasattr(self, 'files_in_info')) or (file['file_label'] not in self.files_in_info):
+            file_label = file['file_label']
+            if (not hasattr(self, 'files_in_info')) or (file_label not in self.files_in_info):
                 logger.warning("No info on how to get infile '%s'" % file['file_label'])
                 continue
+            file_info = self.files_in_info[file_label]
+
 
             # query
             step_label = self.get_step_label('pull_dtool_query')
@@ -203,12 +208,7 @@ class PullFromDtoolRepositoryMixin(PullMixin):
             files_in = {}
             files_out = {}
 
-            query = self.files_in_info[file['file_label']]['query']
-            #if hasattr(self, 'source_step'):
-            #    query['readme.step'] = self.source_step
-
-            #if hasattr(self, 'source_project_id'):
-            #    query['readme.project'] = self.source_project_id
+            query = file_info['query']
 
             fts_query = [
                 QueryDtoolTask(
@@ -241,16 +241,12 @@ class PullFromDtoolRepositoryMixin(PullMixin):
             files_out = {}
 
             # TODO: this must happen in a more elegant way
-            metadata_dtool_source_key = getattr(self.files_in_info[file['file_label']],
-                                                'metadata_dtool_source_key',
-                                                self.kwargs.get('metadata_dtool_source_key', None))
-            metadata_fw_dest_key = getattr(self.files_in_info[file['file_label']],
-                                           'metadata_fw_dest_key',
-                                           self.kwargs.get('metadata_fw_dest_key', 'metadata'))
-            metadata_fw_source_key = getattr(self.files_in_info[file['file_label']],
-                                             'metadata_fw_source_key',
-                                             self.kwargs.get('metadata_fw_source_key', 'metadata'))
-
+            metadata_dtool_source_key = file_info.get('metadata_dtool_source_key',
+                                                      self.kwargs.get('metadata_dtool_source_key', None))
+            metadata_fw_dest_key = file_info.get('metadata_fw_dest_key',
+                                                 self.kwargs.get('metadata_fw_dest_key', 'metadata'))
+            metadata_fw_source_key = file_info.get('metadata_fw_source_key',
+                                                   self.kwargs.get('metadata_fw_source_key', 'metadata'))
             fts_readme = [
                 ReadmeDtoolTask(
                     uri={'key': 'run->query_dtool_task->uri'},
@@ -305,7 +301,7 @@ class PullFromDtoolRepositoryMixin(PullMixin):
 
             step_label = self.get_step_label('pull_dtool_search_item')
 
-            file_name = getattr(self.files_in_info[file['file_label']], 'file_name', file['file_name'])
+            file_name = file_info.get('file_name', file['file_name'])
 
             fts_search_item = [
                 SearchDictTask(

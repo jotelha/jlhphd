@@ -562,11 +562,13 @@ res_pivot.style.apply(highlight_bool)
 # %%
 query = {
     'readme.project': project_id,
+    #'readme.step': {'$regex': 'GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'},
     **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
 }
 
 # %%
 doc_id = {
+    'step': '$readme.step',
     'length': '$readme.system.box.length',
     'width': '$readme.system.box.width',
     **{label: '${}'.format(key) for label, key in parameters.items()},
@@ -609,7 +611,19 @@ res_df = pd.DataFrame(res)
 res_df['surfc'] = res_df['nmolecules']/(res_df['length']*res_df['width'])
 
 # %%
-substrate_hemicylinders_res_df = res_df.copy()
+res_df
+
+# %%
+doc_id
+
+# %%
+res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
+
+# %%
+res_pivot
+
+# %%
+substrate_hemicylinders_res_df = res_pivot.copy()
 
 # %% [markdown]
 # ### Refined aggregation for monolayer systems
@@ -670,7 +684,7 @@ res_pivot = res_df.pivot_table(values='object_count', index=['step'], columns=li
 res_pivot.style.apply(highlight_bool)
 
 # %% [markdown]
-# #### Concentrations
+# #### Concentrations (at final step)
 
 # %%
 query = {
@@ -680,6 +694,7 @@ query = {
 
 # %%
 doc_id = {
+    'step': '$readme.step',
     'length': '$readme.system.box.length',
     'width': '$readme.system.box.width',
     **{label: '${}'.format(key) for label, key in parameters.items()},
@@ -722,7 +737,13 @@ res_df = pd.DataFrame(res)
 res_df['surfc'] = res_df['nmolecules']/(res_df['length']*res_df['width'])
 
 # %%
-substrate_monolayer_res_df = res_df.copy()
+res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
+
+# %%
+res_pivot
+
+# %%
+substrate_monolayer_res_df = res_pivot.copy()
 
 # %% [markdown]
 # ### Overview on UUIDs
@@ -1024,11 +1045,13 @@ res_pivot.style.apply(highlight_nan)
 # %%
 query = {
     'readme.project': project_id,
+    #'readme.step': 'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool',
     **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
 }
 
 # %%
 doc_id = {
+    'step': '$readme.step',
     'radius': '$readme.system.indenter.bounding_sphere.radius',
     **{label: '${}'.format(key) for label, key in parameters.items()},
 }
@@ -1070,7 +1093,13 @@ res_df = pd.DataFrame(res)
 res_df['surfc'] = res_df['nmolecules']/(4.0*np.pi*np.square(res_df['radius']))
 
 # %%
-probe_res_df = res_df.copy()
+res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
+
+# %%
+res_pivot
+
+# %%
+probe_res_df = res_pivot.copy()
 
 # %% [markdown]
 # ## Match concentrations
@@ -1091,7 +1120,52 @@ substrate_monolayer_res_df
 probe_res_df
 
 # %%
-substrate_monolayer_res_df[['surfc','nmolecules']]
+substrate_monolayer_res_df['SubstratePassivation:MonolayerPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool']
+
+# %%
+substrate_hemicylinders_res_df['SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool']
+
+# %%
+probe_res_df['GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool']
+
+# %%
+
+# %%
+probe_on_monolayer_matches = pd.concat([
+    substrate_monolayer_res_df['SubstratePassivation:MonolayerPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'].reset_index(),
+    #substrate_hemicylinders_res_df['SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'].reset_index(),
+    probe_res_df['GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool'].reset_index()
+], axis=1)
+
+# %%
+probe_on_monolayer_matches
+
+# %%
+probe_on_monolayer_tuples = probe_on_monolayer_matches[['surfc',
+    'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool',
+    'SubstratePassivation:MonolayerPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool',
+]].dropna()
+
+# %%
+[ tuple(c[0] if isinstance(c, list) else c for c in r) for r in probe_on_monolayer_tuples.values.tolist() ]
+
+# %%
+probe_on_hemicylinders_matches = pd.concat([
+    substrate_hemicylinders_res_df['SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'].reset_index(),
+    probe_res_df['GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool'].reset_index()
+], axis=1)
+
+# %%
+probe_on_hemicylinders_filtered = probe_on_hemicylinders_matches[['surfc',
+    'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool',
+    'SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'
+]].dropna()
+
+# %%
+probe_on_hemicylinders_tuples = [ tuple(c[0] if isinstance(c, list) else c for c in r) for r in probe_on_hemicylinders_filtered.values.tolist() ]
+
+# %%
+probe_on_hemicylinders_tuples
 
 # %%
 probe_res_df[['surfc','nmolecules']]

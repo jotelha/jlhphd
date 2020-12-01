@@ -124,10 +124,10 @@ class MergeSubstrateAndProbeSystemsMain(WorkflowGenerator):
             'substrate': 'metadata->system->substrate->resname',
             'surfactant': 'metadata->system->surfactant->resname',
 
-            'tol': 'step_specific->merge->tol',
-            'z_dist': 'step_specific->merge->z_dist',
-            'x_shift': 'step_specific->merge->x_shift',
-            'y_shift': 'step_specific->merge->y_shift',
+            'tol': 'metadata->step_specific->merge->tol',
+            'z_dist': 'metadata->step_specific->merge->z_dist',
+            'x_shift': 'metadata->step_specific->merge->x_shift',
+            'y_shift': 'metadata->step_specific->merge->y_shift',
         }
 
         fts_template = [
@@ -183,57 +183,57 @@ class MergeSubstrateAndProbeSystemsMain(WorkflowGenerator):
 
         fw_list.append(fw_vmd_run)
 
-        # PDB chain
-        # ---------
-        step_label = self.get_step_label('pdb_chain')
+        # # PDB chain
+        # # ---------
+        # step_label = self.get_step_label('pdb_chain')
+        #
+        # files_in = {'data_file': 'in.pdb'}
+        # files_out = {'data_file': 'out.pdb'}
+        #
+        # fts_pdb_chain = [CmdTask(
+        #     cmd='pdb_chain',
+        #     env='python',
+        #     stdin_file='in.pdb',
+        #     stdout_file='out.pdb',
+        #     store_stdout=False,
+        #     store_stderr=False,
+        #     fizzle_bad_rc=True)]
+        #
+        # fw_pdb_chain = self.build_fw(
+        #     fts_pdb_chain, step_label,
+        #     parents=[fw_vmd_run],
+        #     files_in=files_in,
+        #     files_out=files_out,
+        #     category=self.hpc_specs['fw_noqueue_category'])
+        #
+        # fw_list.append(fw_pdb_chain)
+        #
+        # # PDB tidy
+        # # --------
+        # step_label = self.get_step_label('pdb_tidy')
+        #
+        # files_in = {'data_file': 'in.pdb'}
+        # files_out = {'data_file': 'default.pdb'}
+        #
+        # fts_pdb_tidy = [CmdTask(
+        #     cmd='pdb_tidy',
+        #     env='python',
+        #     stdin_file='in.pdb',
+        #     stdout_file='default.pdb',
+        #     store_stdout=False,
+        #     store_stderr=False,
+        #     fizzle_bad_rc=True)]
+        #
+        # fw_pdb_tidy = fw_pdb_chain = self.build_fw(
+        #     fts_pdb_tidy, step_label,
+        #     parents=[fw_pdb_chain],
+        #     files_in=files_in,
+        #     files_out=files_out,
+        #     category=self.hpc_specs['fw_noqueue_category'])
+        #
+        # fw_list.append(fw_pdb_tidy)
 
-        files_in = {'data_file': 'in.pdb'}
-        files_out = {'data_file': 'out.pdb'}
-
-        fts_pdb_chain = [CmdTask(
-            cmd='pdb_chain',
-            env='python',
-            stdin_file='in.pdb',
-            stdout_file='out.pdb',
-            store_stdout=False,
-            store_stderr=False,
-            fizzle_bad_rc=True)]
-
-        fw_pdb_chain = self.build_fw(
-            fts_pdb_chain, step_label,
-            parents=[fw_vmd_run],
-            files_in=files_in,
-            files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category'])
-
-        fw_list.append(fw_pdb_chain)
-
-        # PDB tidy
-        # --------
-        step_label = self.get_step_label('pdb_tidy')
-
-        files_in = {'data_file': 'in.pdb'}
-        files_out = {'data_file': 'default.pdb'}
-
-        fts_pdb_tidy = [CmdTask(
-            cmd='pdb_tidy',
-            env='python',
-            stdin_file='in.pdb',
-            stdout_file='default.pdb',
-            store_stdout=False,
-            store_stderr=False,
-            fizzle_bad_rc=True)]
-
-        fw_pdb_tidy = fw_pdb_chain = self.build_fw(
-            fts_pdb_tidy, step_label,
-            parents=[fw_pdb_chain],
-            files_in=files_in,
-            files_out=files_out,
-            category=self.hpc_specs['fw_noqueue_category'])
-
-        fw_list.append(fw_pdb_tidy)
-
-        return fw_list, [fw_pdb_tidy], [fw_vmd_run]
+        return fw_list, [fw_vmd_run], [fw_vmd_run]
 
 
 class MergeSubstrateAndProbeSystems(

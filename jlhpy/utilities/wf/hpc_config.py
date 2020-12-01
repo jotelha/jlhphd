@@ -75,6 +75,13 @@ HPC_SPECS = {
             # 'ntasks': 96,
             'ntasks_per_node': 96,
         },
+
+        'four_nodes_job_queueadapter_defaults': {  # mock four nodes, only 2 in devel queue
+            'queue':    'devel',
+            'walltime': '02:00:00',
+            'ntasks':   192,
+            'ntasks_per_node': 96,
+        },
     },
     'juwels': {
         'fw_queue_category':   'juwels_queue',
