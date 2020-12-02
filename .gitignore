@@ -1,70 +1,7 @@
 # custom .gitignore entries:
 .idea
 jlhpy/version.py
-
-# ignore all files in root
-
-# except .py files
-!*.py
-!*.ipynb
-!*.sh
-!.gitignore
-!.gitattributes
-!MANIFEST.in
-!README.md
-!sample_commands.sh
-
-# but not subfolder fw
-!bash
-!bramos
-!dat
-!doc
-!ff
-!fw
-!gmx_input
-!lmp_input
-!nco
-!packmol
-!pdb
-!py
-!pymol
-!jlhpy
-!ref
-!regex
-!vmd
-
-!bash/**/*
-!bramos/**/*
-!dat/**/*
-!doc/**/*
-!ff/**/*
-!fw/**/*
-!gmx_input/**/*
-!lmp_input/**/*
-!nco/**/*
-!packmol/**/*
-!pdb/**/*
-!py/**/*
-!pymol/**/*
-!jlhpy/**/*
-!ref/**/*
-!regex/**/*
-!vmd/**/*
-
-# except fireworks related
-!*.yaml
-!*.template
-
-# except lammps-related
-!*.input
-!*.data
-#!*.lammps
-#!*.out
-
-log.lammps
-
-# except vmd-related
-!*.tcl
+*.ipynb
 
 # standard github .gitignore template for Python:
 
