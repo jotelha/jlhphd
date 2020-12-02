@@ -169,7 +169,7 @@ wfg = ProbeOnSubstrate(
         'orcid': '0000-0001-5867-695X'
     }],
     infile_prefix=prefix,
-    machine='juwels_devel',
+    machine='juwels',
     mode='trial',
     #parameter_label_key_dict={
     #    'n': 'system->surfactant->nmolecules',

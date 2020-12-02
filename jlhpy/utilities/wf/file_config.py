@@ -33,6 +33,11 @@ LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN = '{name:s}_in_H2O_on_AU_coeff
 # LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_EAM_ALLOY = 'Au-Grochola-JCP05-units-real.eam.alloy'
 
+# CHARMM-related
+CHARMM_FF_SUBDIR = 'ff'
+CHARMM36_PRM = 'par_all36_lipid_extended_stripped.prm',
+CHARMM36_RTF = 'top_all36_lipid_extended_stripped.rtf',
+
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB_PATTERN = '1_{name:s}.pdb'
 COUNTERION_PDB_PATTERN = '1_{name:s}.pdb'
@@ -56,3 +61,4 @@ PML_VIEW_TEMPLATE = 'view.pml.template'  # similar to PML_MOVIE_TEMPLATE, but on
 
 BASH_SCRIPT_SUBDIR = 'bash'
 BASH_RENUMBER_PNG = 'renumber_png.sh'
+BASH_GMX2PDB_TEMPLATE = 'gmx2pdb.sh.template'

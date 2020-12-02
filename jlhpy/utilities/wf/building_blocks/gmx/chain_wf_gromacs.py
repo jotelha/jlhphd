@@ -35,12 +35,13 @@ class GromacsMinimizationEquilibrationRelaxation(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class GromacsMinimizationEquilibrationRelaxationWoBoxDimensions(ChainWorkflowGenerator):
+class GromacsMinimizationEquilibrationRelaxationNoSolvation(ChainWorkflowGenerator):
     """Minimization, equilibration and relaxation with GROMACS chain workflow.
+
+    Without adjusing box size and without solvation.
 
     Concatenates
     - GromacsPrepWoBoxDimensions
-    - GromacsSolvate
     - GromacsEnergyMinimizationAfterSolvation
     - GromacsNVTEquilibration
     - GromacsNPTEquilibration
@@ -50,7 +51,6 @@ class GromacsMinimizationEquilibrationRelaxationWoBoxDimensions(ChainWorkflowGen
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             GromacsPrepWoBoxDimensions,
-            GromacsSolvate,
             GromacsEnergyMinimizationAfterSolvation,
             GromacsNVTEquilibration,
             GromacsNPTEquilibration,

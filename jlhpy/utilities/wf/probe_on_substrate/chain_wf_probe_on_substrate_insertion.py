@@ -7,7 +7,8 @@ from jlhpy.utilities.wf.workflow_generator import (EncapsulatingWorkflowGenerato
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
 from jlhpy.utilities.wf.building_blocks.sub_wf_vmd_pdb_cleanup import PDBCleanup
 from jlhpy.utilities.wf.building_blocks.sub_wf_count_components import CountComponents
-from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import GromacsMinimizationEquilibrationRelaxationWoBoxDimensions as GromacsMinimizationEquilibrationRelaxation
+from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import \
+    GromacsMinimizationEquilibrationRelaxationNoSolvation as GromacsMinimizationEquilibrationRelaxation
 
 
 class ProbeOnSubstrate(ChainWorkflowGenerator):

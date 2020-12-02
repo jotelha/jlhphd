@@ -6,7 +6,7 @@
 #include "{{ force_field|default('charmm36', true) }}.ff/{{ surfactant|default('SDS',true) }}.itp"
 ; Include topology for ions
 ; #include "{{ force_field|default('charmm36', true) }}.ff/ions.itp"
-# include "{{ force_field|default('charmm36', true) }}.ff/{{ counterion|default('NA',true) }}.itp"
+#include "{{ force_field|default('charmm36', true) }}.ff/{{ counterion|default('NA',true) }}.itp"
 
 ; Include water topology
 #include "{{ force_field|default('charmm36', true) }}.ff/tip3p.itp"

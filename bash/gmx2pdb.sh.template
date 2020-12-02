@@ -1,0 +1,56 @@
+#!/bin/bash -x
+# {{ header }}
+{% for component in components %}
+gmx select -s default.gro -on "{{ component.name }}.ndx" \
+  -select 'resname {{ component.resname }}'
+{% endfor %}
+
+# convert .gro to .pdb chunks with max 9999 residues each  
+# for component in ${components[@]}; do
+{% for component in components %}
+echo "Processing component {{component.name}}..."
+
+# Create separate .gro and begin residue numbers at 1 within each:
+gmx editconf -f "default.gro" -n "{{ component.name }}.ndx" \
+  -o "{{ component.name }}_000.gro" -resnr 1
+      
+# maximum number of chunks, not very important as long as large enough
+for (( num=0; num<=999; num++ )); do
+  numstr=$(printf "%03d" $num);
+  nextnumstr=$(printf "%03d" $((num+1)));
+
+  # ATTENTION: gmx select offers two different keywords, 'resid' / 'residue'
+  # While 'resid' can occur multiple times, 'residue' is a continuous id for
+  # all residues in system.
+
+  # create selection with first 9999 residues
+  gmx select -s "${{ component.name }}_${numstr}.gro" \
+    -on "{{ component.name }}_${numstr}.ndx" -select 'residue < 10000'
+
+  # write nth 9999 residue .pdb package
+  gmx editconf -f "{{ component.name }}_${numstr}.gro" \
+    -n "{{ component.name }}_${numstr}.ndx" \
+    -o "{{ component.name }}_${numstr}_gmx.pdb" -resnr 1
+
+  # use vmd to get numbering right
+  vmdcmd="mol load pdb \"{{ component.name }}_${numstr}_gmx.pdb\"; "
+  vmdcmd="${vmdcmd} set sel [atomselect top \"all\"]; \$sel writepdb "
+  vmdcmd="${vmdcmd} \"{{ component.name }}_${numstr}.pdb\"; exit"
+
+  echo "${vmdcmd}" | vmd -eofexit
+
+  # create selection with remaining residues
+  gmx select -s "{{ component.name }}_${numstr}.gro" \
+    -on "{{ component.name }}_remainder.ndx" -select 'not (residue < 10000)'
+
+  if [ $? -ne 0 ] ; then
+    echo "No more {{ component.name }} residues left. Wrote $((num+1)) .pdb"
+    break
+  fi
+
+  # renumber remaining residues in new .gro file
+  gmx editconf -f "{{ component.name }}_${numstr}.gro" \
+    -n "{{ component.name }}_remainder.ndx" \
+    -o "{{ component.name }}_${nextnumstr}.gro" -resnr 1
+done
+{% endfor %}

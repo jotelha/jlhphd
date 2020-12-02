@@ -17,7 +17,17 @@ import jlhpy.utilities.wf.file_config as file_config
 
 
 class GromacsPrepMain(WorkflowGenerator):
-    """Prepare system for processing with GROMACS.
+    """Prepare system for processing with GROMACS. Assume solvent already present.
+
+    inputs:
+    - metadata->system->surfactant->nmolecules
+    - metadata->system->surfactant->name
+    - metadata->system->counterion->nmolecules
+    - metadata->system->counterion->name
+    - metadata->system->substrate->natoms
+    - metadata->system->substrate->name
+    - metadata->system->solvent->nmolecules
+    - metadata->system->solvent->name
 
     static infiles:
     - template_file: sys.top.template
@@ -118,6 +128,8 @@ class GromacsPrepMain(WorkflowGenerator):
             'counterion':  'metadata->system->counterion->name',
             'nsubstrate':  'metadata->system->substrate->natoms',
             'substrate':   'metadata->system->substrate->name',
+            'nsolvent':    'metadata->system->solvent->nmolecules',
+            'solvent':     'metadata->system->solvent->name',
         }
 
         fts_template = [TemplateWriterTask({
@@ -171,7 +183,7 @@ class GromacsPrepMain(WorkflowGenerator):
 
         fw_list.append(fw_gmx_pdb2gro)
 
-        return fw_list, [fw_gmx_pdb2gro], [fw_gmx_pdb2gro, fw_template]
+        return fw_list, [fw_gmx_pdb2gro, fw_template], [fw_gmx_pdb2gro]
 
 
 class GromacsPrep(DefaultPullMixin, DefaultPushMixin, ProcessAnalyzeAndVisualize):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, EvalPyEnvTask
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
@@ -33,10 +33,52 @@ class PDBCleanupMain(WorkflowGenerator):
         # VMD outputs non-standard PDB (atom ids can be hex),
         # we convert that to some other non-standard PDB format that works with GROMACS.
 
+        # make sure all residues of the same name are listed together
+
         # pdb_reatom_99999 in.pdb > reatom.pdb
         # pdb_reres_9999 -0 reatom.pdb > reres.pdb
 
+        components = [
+            'substrate',
+            'surfactant',
+            'counterion',
+            'solvent'
+        ]
+
+        resname_inputs = ['metadata->system->{}->resname'.format(c) for c in components]
+        opt_keys = ['run->pdb_selresname->{}'.format(c) for c in components]
+        pdb_names = ['{}.pdb'.format(c) for c in components]
+
+        fts_prep_opt = [
+            EvalPyEnvTask(
+                func='lambda s: "-{}".format(s)',
+                inputs=[input],
+                outputs=[output],
+                propagate=False,
+            ) for input, output in zip(resname_inputs, opt_keys)]
+
+        fts_pdb_selresname = [
+            CmdTask(
+                cmd='pdb_selresname',
+                opt=[{'key': input_key}],
+                env='python',
+                stdin_file='in.pdb',
+                stdout_file=pdb_output,
+                store_stdout=False,
+                store_stderr=False
+            ) for input_key, pdb_output in zip(opt_keys, pdb_names)
+        ]
+
         fts_pdb_cleanup = [
+            *fts_prep_opt,
+            *fts_pdb_selresname,
+            CmdTask(
+                cmd='pdb_merge',
+                opt=[pdb_input for pdb_input in pdb_names],
+                env='python',
+                stdout_file='reatom.pdb',
+                store_stdout=False,
+                store_stderr=False),
             CmdTask(
                 cmd='pdb_reatom_99999',
                 opt=['-0'],  # start numbering at atomid 0
