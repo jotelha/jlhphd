@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
+import glob
+import os
 import pymongo
 
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
@@ -10,6 +12,8 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTa
 from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.prep.segids import make_seg_id_seg_pdb_dict
+from jlhpy.utilities.geometry.simulation_box import get_gro_box
+
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import DefaultPullMixin, DefaultPushMixin
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
@@ -44,15 +48,152 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
     - ctrl_pdb: default_ctrl.pdb
     - ctrl_psf: default_ctrl.psf
     """
+
+    def push_infiles(self, fp):
+        fp_files = []
+
+        step_label = self.get_step_label('push_infiles')
+
+        # gmx2pdb template file
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.BASH_SCRIPT_SUBDIR,
+            file_config.BASH_GMX2PDB_TEMPLATE)))
+
+        metadata = {
+            'project': self.project_id,
+            'type': 'template',
+            'step': step_label,
+            'name': file_config.BASH_GMX2PDB_TEMPLATE
+        }
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))   # identifier is like a path on a file system
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+
+        # vmd psfgen tcl template
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.VMD_SUBDIR,
+            file_config.VMD_PSFGEN_TEMPLATE)))
+
+        metadata = {
+            'project': self.project_id,
+            'type': 'template',
+            'step': step_label,
+            'name': file_config.VMD_PSFGEN_TEMPLATE
+        }
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # charmm36 prm parameter file
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.CHARMM_FF_SUBDIR,
+            file_config.CHARMM36_PRM)))
+
+        metadata = {
+            'project': self.project_id,
+            'type': 'input',
+            'step': step_label,
+            'name': file_config.CHARMM36_PRM
+        }
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        # insert these input files into data base
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        # charmm36 rtf topology file
+        infiles = sorted(glob.glob(os.path.join(
+            self.infile_prefix,
+            file_config.CHARMM_FF_SUBDIR,
+            file_config.CHARMM36_RTF)))
+
+        metadata = {
+            'project': self.project_id,
+            'type': 'input',
+            'step': step_label,
+            'name': file_config.CHARMM36_RTF
+        }
+
+        files = {os.path.basename(f): f for f in infiles}
+
+        for name, file_path in files.items():
+            identifier = '/'.join((self.project_id, name))  # identifier is like a path on a file system
+            fp_files.append(
+                fp.add_file(
+                    file_path,
+                    identifier=identifier,
+                    metadata=metadata))
+
+        return fp_files
+
     def main(self, fws_root=[]):
         fw_list = []
 
+        # TODO: order migh be important, not sure
         components = [
             'substrate',
             'surfactant',
             'counterion',
             'solvent'
         ]
+
+        # conserve gro simulation box measures to begin with
+
+        step_label = self.get_step_label('box_measures')
+
+        files_in = {
+            'data_file': 'default.gro'
+        }
+        files_out = {}
+
+        func_str = serialize_module_obj(get_gro_box)
+
+        fts_gro_box = [
+            PickledPyEnvTask(
+                func=func_str,
+                args=['default.gro'],
+                outputs=[
+                    'metadata->system->box->length',
+                    'metadata->system->box->width',
+                    'metadata->system->box->height',
+                ],
+                env='mdanalysis',
+                propagate=True,
+            )
+        ]
+
+        fw_gro_box = self.build_fw(
+            fts_gro_box, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+
+        fw_list.append(fw_gro_box)
 
         ### GMX2PDB
         
@@ -109,7 +250,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         fts_gmx2pdb_template = [
             EvalPyEnvTask(
-                func='lambda **kwargs: [{"name": k, "resname": v for k,v in kwargs.items()}]',
+                func='lambda **kwargs: [{"name": k, "resname": v} for k,v in kwargs.items()]',
                 kwargs_inputs={component: resname_key for component, resname_key in zip(components, resname_inputs)},
                 outputs=['run->template_writer->context->components'],
                 propagate=False,
@@ -263,8 +404,25 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
             'pdb_file': 'default.pdb',
             'psf_file': 'default.psf',
         }
+
+        # PickledPyEnvTask
         func_str = serialize_module_obj(make_seg_id_seg_pdb_dict)
 
+        # TemplateWriterTask
+        static_context = {
+            'header': ', '.join((
+                self.project_id,
+                self.get_fw_label(step_label),
+                str(datetime.datetime.now()))),
+            'rtf_in': 'default.rtf',
+            'pdb_out': 'default.pdb',
+            'psf_out': 'default.psf',
+        }
+
+        dynamic_context = {
+            'residues': 'metadata->step_specific->psfgen->residues',
+            'segments': 'run->psfgen->segments'
+        }
 
         fts_psfgen = [
             ScriptTask.from_str('tar -xf default.tar.gz',
@@ -275,12 +433,13 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
             PickledPyEnvTask(
                 func=func_str,
                 args=[pdb_segment_chunk_glob_pattern],
-                outputs=['run->context->segments'],
+                outputs=['run->psfgen->segments'],
                 env='imteksimpy',
                 propagate=False,
             ),
             TemplateWriterTask({  # TODO: more context
-                'context_inputs': 'run->context',
+                'context': static_context,
+                'context_inputs': dynamic_context,
                 'template_file': 'default.template',
                 'template_dir': '.',
                 'output_file': 'default.tcl'}
@@ -342,7 +501,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
-        fw_list.append(fw_pull_prm_rtf)
+        fw_list.append(fw_pull_prm_rtf_again)
 
         # run ch2lmp
         # ----------
@@ -382,12 +541,14 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         fw_ch2lmp = self.build_fw(
             fts_ch2lmp, step_label,
-            parents=[fw_pull_prm_rtf_again, fw_psfgen],
+            parents=[fw_pull_prm_rtf_again, fw_gro_box, fw_psfgen],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
 
-        return fw_list, [fw_psfgen, fw_ch2lmp], [fw_gmx2pdb_template, fw_gmx2pdb]
+        fw_list.append(fw_ch2lmp)
+
+        return fw_list, [fw_psfgen, fw_ch2lmp], [fw_gmx2pdb_template, fw_gro_box, fw_gmx2pdb]
 
 
 class CHARMM36GMX2LMP(

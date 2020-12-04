@@ -69,21 +69,53 @@ class PDBCleanupMain(WorkflowGenerator):
             ) for input_key, pdb_output in zip(opt_keys, pdb_names)
         ]
 
+        # Remove header and footer where necessary:
+        # pdbs are expected to start like ...
+        #   CRYST1  149.836  149.725  319.939  90.00  90.00  90.00 P 1           1
+        #   ATOM      0  AU  AUM     0       1.470   0.560 149.290  0.00  0.00
+        #   ATOM      1  AU  AUM     1       4.360   0.560 149.310  0.00  0.00
+        # ... and end like ...
+        #   ATOM  83274  HW1 SOL  9376     111.823  25.402 231.790  0.00  0.00
+        #   ATOM  83275  HW2 SOL  9376     111.493  26.372 232.910  0.00  0.00
+        #   END
+        # ... thus when concatenating (pdb_merge) pdb files, we wand to remove
+        # such headers and footers except the header of the first and the footer of
+        # the last file.
+
+        fts_prep_for_merge = [
+            CmdTask(
+                cmd='sed',
+                opt=['-nE', '/^END/!p', '-i', pdb_names[0]],
+                env='python',
+            ),
+            *[CmdTask(
+                cmd='sed',
+                opt=['-nE', '/^(CRYST|END)/!p', '-i', pdb_name],
+                env='python',
+            ) for pdb_name in pdb_names[1:-1]],
+            CmdTask(
+                cmd='sed',
+                opt=['-nE', '/^CRYST/!p', '-i', pdb_names[-1]],
+                env='python',
+            )
+        ]
+
         fts_pdb_cleanup = [
             *fts_prep_opt,
             *fts_pdb_selresname,
+            *fts_prep_for_merge,
             CmdTask(
                 cmd='pdb_merge',
                 opt=[pdb_input for pdb_input in pdb_names],
                 env='python',
-                stdout_file='reatom.pdb',
+                stdout_file='merged.pdb',
                 store_stdout=False,
                 store_stderr=False),
             CmdTask(
                 cmd='pdb_reatom_99999',
                 opt=['-0'],  # start numbering at atomid 0
                 env='python',
-                stdin_file='in.pdb',
+                stdin_file='merged.pdb',
                 stdout_file='reatom.pdb',
                 store_stdout=False,
                 store_stderr=False),

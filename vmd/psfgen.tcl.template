@@ -1,29 +1,36 @@
-# {{header}}
-# on NEMO, execute with
-# module load vmd/1.9.3-text
-# vmd -e {{system_name}}.pgn
+# {{ header }}
 
 package require psfgen
-topology top_all36_lipid_extended_stripped.rtf
+topology {{ rtf_in|default("top_all36_lipid_extended_stripped.rtf", true) }}
 # SDS residue descrition from ...detergent.str has been added to the .rtf file
 # CTAB residue descrition has been constructed from LPPC head and DSPE hydro-
 # carbon chain. Horinek 2009 BR parametrization and TIP3P water included.
 # Atom type entries with MASS keywords have been numbered consecutively.
 
 # map gromacs residue and atom names names to sepcific CHARMM36 names:
-pdbalias residue SOL TIP3
-pdbalias residue NA SOD
-pdbalias residue SURF AUM
+{% for residue in residues %}
+pdbalias residue {{ residue.in }} {{ residue.out }}
+{% endfor %}
+# i.e.
+# pdbalias residue SOL TIP3
+# pdbalias residue NA SOD
+# pdbalias residue SURF AUM
 
-pdbalias atom TIP3 OW OH2
-pdbalias atom TIP3 HW1 H1
-pdbalias atom TIP3 HW2 H2
-pdbalias atom SOD NA SOD
-pdbalias atom SURF Au AU
+{% for residue in residues %}
+{% for atom in residues.atoms %}
+pdbalias atom {{ residue.out }} {{ atom.in }} {{ atom.out }}
+{% endfor %}
+{% endfor %}
+# i.e.
+# pdbalias atom TIP3 OW OH2
+# pdbalias atom TIP3 HW1 H1
+# pdbalias atom TIP3 HW2 H2
+# pdbalias atom SOD NA SOD
+# pdbalias atom SURF Au AU
 
 {% for segment_id, segment_pdb in segments.items() %} 
-segment {{segment_id}} { pdb {{segment_pdb}} }
-coordpdb {{segment_pdb}} {{segment_id}}
+segment {{ segment_id }} { pdb {{ segment_pdb }} }
+coordpdb {{ segment_pdb }} {{ segment_id }}
 {% endfor %}
 
 # guesscoord
@@ -38,6 +45,6 @@ regenerate angles dihedrals
 #            dihedrals: Enable generation of dihedrals from angles.
 # Context: After one or more segments have been built.
 
-writepdb {{system_name}}_psfgen.pdb
-writepsf charmm {{system_name}}_psfgen.psf
+writepdb {{ pdb_out|default("default.pdb", true) }}
+writepsf charmm {{ psf_out|default("default.psf", true) }}
 exit

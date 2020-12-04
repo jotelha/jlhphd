@@ -24,7 +24,7 @@ for (( num=0; num<=999; num++ )); do
   # all residues in system.
 
   # create selection with first 9999 residues
-  gmx select -s "${{ component.name }}_${numstr}.gro" \
+  gmx select -s "{{ component.name }}_${numstr}.gro" \
     -on "{{ component.name }}_${numstr}.ndx" -select 'residue < 10000'
 
   # write nth 9999 residue .pdb package

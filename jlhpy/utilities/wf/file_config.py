@@ -30,13 +30,15 @@ LMP_PRODUCTION_INPUT_TEMPLATE = 'lmp_production.input.template'
 LMP_FF_SUBDIR = 'ff'
 LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN = '{name:s}_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_charmmfsh_nonbonded.input'
+LMP_COEFF_HYBRID_INPUT_PATTERN = '{name:s}_in_H2O_on_AU_coeff_hybrid_lj_charmmfsw_coul_long.input'
+
 # LMP_COEFF_INPUT = 'SDS_in_H2O_on_AU_masses.input'
 LMP_EAM_ALLOY = 'Au-Grochola-JCP05-units-real.eam.alloy'
 
 # CHARMM-related
 CHARMM_FF_SUBDIR = 'ff'
-CHARMM36_PRM = 'par_all36_lipid_extended_stripped.prm',
-CHARMM36_RTF = 'top_all36_lipid_extended_stripped.rtf',
+CHARMM36_PRM = 'par_all36_lipid_extended_stripped.prm'
+CHARMM36_RTF = 'top_all36_lipid_extended_stripped.rtf'
 
 PDB_SUBDIR     = 'pdb'
 SURFACTANT_PDB_PATTERN = '1_{name:s}.pdb'
@@ -52,6 +54,7 @@ PACKMOL_FLAT_TEMPLATE = 'flat.inp.template'
 
 VMD_SUBDIR  = 'vmd'
 VMD_MERGE_TEMPLATE = 'merge.tcl.template'
+VMD_PSFGEN_TEMPLATE = 'psfgen.tcl.template'
 
 # visualization-related
 
