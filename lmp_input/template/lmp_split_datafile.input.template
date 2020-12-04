@@ -1,0 +1,7 @@
+# split a data file into force field parameters and data file with topology information
+# does not work properly for style 'hybrid'
+variable coeff_outfile index {{ coeff_outfile|default("coeff.input",true) }}
+variable data_outfile index  {{ coeff_outfile|default("data.lammps",true) }}
+include                 lmp_header.input
+write_coeff ${coeff_outfile}
+write_data ${data_outfile} nocoeff

@@ -11,9 +11,14 @@ gmx select -s default.gro -on "{{ component.name }}.ndx" \
 echo "Processing component {{component.name}}..."
 
 # Create separate .gro and begin residue numbers at 1 within each:
+# There seems to be an issue (at least for gmx 2019.1 and .3 with residue naming
+# when directly subsetting .gro to .gro via index file, thus we convert to an
+# intermediate pdb format and back to .gro, as selection on residue ide seems to
+# work properly only for the .gro format, not for .pdb
 gmx editconf -f "default.gro" -n "{{ component.name }}.ndx" \
-  -o "{{ component.name }}_000.gro" -resnr 1
-      
+  -o "{{ component.name }}_000_tmp.pdb" -resnr 1
+gmx editconf -f "{{ component.name }}_000_tmp.pdb" -o "{{ component.name }}_000.gro"
+
 # maximum number of chunks, not very important as long as large enough
 for (( num=0; num<=999; num++ )); do
   numstr=$(printf "%03d" $num);
@@ -48,9 +53,12 @@ for (( num=0; num<=999; num++ )); do
     break
   fi
 
-  # renumber remaining residues in new .gro file
+  # renumber remaining residues in new .gro file.
+  # Same as above, go detour via .pdb back to .gro
   gmx editconf -f "{{ component.name }}_${numstr}.gro" \
     -n "{{ component.name }}_remainder.ndx" \
-    -o "{{ component.name }}_${nextnumstr}.gro" -resnr 1
+    -o "{{ component.name }}_${nextnumstr}_tmp.pdb" -resnr 1
+  gmx editconf -f "{{ component.name }}_${nextnumstr}_tmp.pdb" \
+    -o "{{ component.name }}_${nextnumstr}.gro"
 done
 {% endfor %}

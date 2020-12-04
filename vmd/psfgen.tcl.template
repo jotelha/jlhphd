@@ -17,7 +17,7 @@ pdbalias residue {{ residue.in }} {{ residue.out }}
 # pdbalias residue SURF AUM
 
 {% for residue in residues %}
-{% for atom in residues.atoms %}
+{% for atom in residue.atoms %}
 pdbalias atom {{ residue.out }} {{ atom.in }} {{ atom.out }}
 {% endfor %}
 {% endfor %}

@@ -293,9 +293,9 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 cmd='bash',
                 opt=['default.sh'],
                 env='gmx_and_vmd',
-                stderr_file='std.err',
-                stdout_file='std.out',
-                stdlog_file='std.log',
+                stderr_file='gxm2pdb.err',
+                stdout_file='gxm2pdb.out',
+                stdlog_file='gxm2pdb.log',
                 store_stdout=True,
                 store_stderr=True,
             ),
@@ -355,8 +355,8 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         files_in = {}
         files_out = {
-            'prm_file': 'default.prm',
-            'rtf_file': 'default.rtf',
+            'prm_file': 'par_default.prm',
+            'rtf_file': 'top_default.rtf',
         }
 
         fts_pull_prm_rtf = [
@@ -368,7 +368,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['default.prm']),
+                new_file_names=['par_default.prm']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -377,7 +377,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['default.rtf'])
+                new_file_names=['top_default.rtf'])
         ]
 
         fw_pull_prm_rtf = self.build_fw(
@@ -396,8 +396,8 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
         files_in = {
             'tar_file': 'default.tar.gz',
             'template_file': 'default.template',
-            'prm_file': 'default.prm',
-            'rtf_file': 'default.rtf',
+            'prm_file': 'par_default.prm',
+            'rtf_file': 'top_default.rtf',
         }
         files_out = {
             'tcl_file': 'default.tcl',  # for archiving
@@ -414,7 +414,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 self.project_id,
                 self.get_fw_label(step_label),
                 str(datetime.datetime.now()))),
-            'rtf_in': 'default.rtf',
+            'rtf_in': 'top_default.rtf',
             'pdb_out': 'default.pdb',
             'psf_out': 'default.psf',
         }
@@ -483,7 +483,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['default.prm']),
+                new_file_names=['par_default.prm']),
             GetFilesByQueryTask(
                 query={
                     'metadata->project': self.project_id,
@@ -492,7 +492,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 sort_key='metadata.datetime',
                 sort_direction=pymongo.DESCENDING,
                 limit=1,
-                new_file_names=['default.rtf'])
+                new_file_names=['top_default.rtf'])
         ]
 
         fw_pull_prm_rtf_again = self.build_fw(
@@ -524,14 +524,32 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
         }
 
         fts_ch2lmp = [
+            EvalPyEnvTask(
+                func='lambda border, lx, ly, lz: ["-border={:f}".format(border), "-lx={:f}".format(lx), "-ly={:f}".format(ly), "-lz={:f}".format(lz)]',
+                args = [0.0],  # border
+                inputs = [
+                    'metadata->system->box->length',
+                    'metadata->system->box->width',
+                    'metadata->system->box->height',
+                ],
+                outputs=[
+                    'run->charmm2lammps->opts->border',
+                    'run->charmm2lammps->opts->lx',
+                    'run->charmm2lammps->opts->ly',
+                    'run->charmm2lammps->opts->lz',
+                ],
+                propagate=False,
+            ),
             CmdTask(  # run charm2lammps
                 cmd='charmm2lammps.pl',
                 # TODO: adapt box measures
                 # first is for 'par_default.prm' and 'top_default.rtf', second is for 'default.pdb'
-                opt=['default', 'default',  '-border', '0',
-                     '-lx', {'key': 'metadata->system->box->length'},
-                     '-ly', {'key': 'metadata->system->box->width'},
-                     '-lz', {'key': 'metadata->system->box->height'}],
+                opt=['default', 'default',
+                    {'key': 'run->charmm2lammps->opts->border'},
+                    {'key': 'run->charmm2lammps->opts->lx'},
+                    {'key': 'run->charmm2lammps->opts->ly'},
+                    {'key': 'run->charmm2lammps->opts->lz'},
+                ],
                 env='python',
                 fizzle_bad_rc=True)
         ]
