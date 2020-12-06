@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Substrate fixed box minimization sub workflow."""
+"""Substrate NVT equilibration sub workflow."""
 
 import datetime
 import glob
@@ -18,20 +18,31 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSTrajectoryAnalysis
 
 import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
 
-class LAMMPSMinimizationMain(WorkflowGenerator):
+class LAMMPSEquilibrationNVTMain(WorkflowGenerator):
     """
-    Fixed box minimization with LAMMPS.
+    NVT equilibration with LAMMPS.
 
     inputs:
-    - metadata->step_specific->minimization->fixed_box->ftol
-    - metadata->step_specific->minimization->fixed_box->maxiter
-    - metadata->step_specific->minimization->fixed_box->maxeval
+    - metadata->step_specific->equilibration->nvt->temperature
+    - metadata->step_specific->equilibration->nvt->langevin_damping
+
+    - metadata->step_specific->equilibration->nvt->steps
+    - metadata->step_specific->equilibration->nvt->netcdf_frequency
+    - metadata->step_specific->equilibration->nvt->thermo_frequency
+    - metadata->step_specific->equilibration->nvt->thermo_average_frequency
+
+    - metadata->step_specific->equilibration->nvt->ewald_accuracy
+    - metadata->step_specific->equilibration->nvt->coulomb_cutoff
+    - metadata->step_specific->equilibration->nvt->neigh_delay
+    - metadata->step_specific->equilibration->nvt->neigh_every
+    - metadata->step_specific->equilibration->nvt->neigh_check
+    - metadata->step_specific->equilibration->nvt->skin_distance
 
     - metadata->system->substrate->element
     - metadata->system->substrate->lmp->type
@@ -40,16 +51,14 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
         only queried in pull stub, otherwise expected through data flow
 
     - data_file:       default.lammps
-        tagged as {'metadata->type': 'initial_config'}
 
     static infiles:
         always queried within main trunk
 
     - input_template: lmp.input.template
-    - mass_file:  mass.input
+    - mass_file: mass.input
     - coeff_file: coeff.input
     - eam_file:   default.eam.alloy
-
 
     outfiles:
     - coeff_file:      coeff.input  # untouched
@@ -59,6 +68,7 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
     - input_file:      default.input  # untouched
     - log_file:        log.lammps
     - mass_file:       mass.input  # untouched
+    - thermo_ave_file: thermo_ave.out
     - trajectory_file: default.nc
     """
     def push_infiles(self, fp):
@@ -129,7 +139,7 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
             surfactant = phys_config.DEFAULT_SURFACTANT
             warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
 
-        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN.format(name=surfactant)
+        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_INPUT_PATTERN.format(name=surfactant)
 
         fw_list = []
 
@@ -142,7 +152,7 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
             'input_template': 'lmp.input.template',
             'mass_file':      'mass.input',
             'coeff_file':     'coeff.input',
-            'eam_file':       'default.eam.alloy'
+            'eam_file':       'default.eam.alloy',
         }
 
         fts_pull = [
@@ -184,20 +194,11 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
                 new_file_names=['default.eam.alloy']),
         ]
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -207,6 +208,7 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
 
         files_in = {
             'input_template': 'default.input.template',
+
         }
         files_out = {
             'input_file': 'default.input',
@@ -214,26 +216,40 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
 
         # Jinja2 context:
         static_template_context = {
-            'mode':                     'minimization',
-            'coeff_infile':             'coeff.input',
+            'mode':                    'production',
+            'coeff_infile':            'coeff.input',
+            'compute_group_properties': True,
             'data_file':                'datafile.lammps',
-            'freeze_substrate':         True,
             'has_indenter':             True,
             'mpiio':                    True,
-            'relax_box':                False,
-            'rigid_h_bonds':            False,
-            'robust_minimization':      False,
+            'restrained_indenter':      True,
+            'reinitialize_velocities':  True,
+            'rigid_h_bonds':            True,
+            'rigid_indenter':           True,
             'store_forces':             False,
+            'temper_solid_only':        False,
+            'use_barostat':             False,
             'use_eam':                  True,
-            'use_ewald':                False,
+            'use_ewald':                True,
             'write_coeff_to_datafile':  False,
         }
 
         dynamic_template_context = {
-            'freeze_substrate_layer': 14.0,
-            'minimization_ftol': 'metadata->step_specific->minimization->fixed_box->ftol',
-            'minimization_maxiter': 'metadata->step_specific->minimization->fixed_box->maxiter',
-            'minimization_maxeval': 'metadata->step_specific->minimization->fixed_box->maxeval',
+            'initialT':         'metadata->step_specific->equilibration->nvt->initial_temperature',
+            'temperatureT':     'metadata->step_specific->equilibration->nvt->temperature',
+            'langevin_damping': 'metadata->step_specific->equilibration->nvt->langevin_damping',
+
+            'production_steps': 'metadata->step_specific->equilibration->nvt->steps',
+            'netcdf_frequency': 'metadata->step_specific->equilibration->nvt->netcdf_frequency',
+            'thermo_frequency': 'metadata->step_specific->equilibration->nvt->thermo_frequency',
+            'thermo_average_frequency': 'metadata->step_specific->equilibration->nvt->thermo_average_frequency',
+
+            'ewald_accuracy':   'metadata->step_specific->equilibration->nvt->ewald_accuracy',
+            'coulomb_cutoff':   'metadata->step_specific->equilibration->nvt->coulomb_cutoff',
+            'neigh_delay':      'metadata->step_specific->equilibration->nvt->neigh_delay',
+            'neigh_every':      'metadata->step_specific->equilibration->nvt->neigh_every',
+            'neigh_check':      'metadata->step_specific->equilibration->nvt->neigh_check',
+            'skin_distance':    'metadata->step_specific->equilibration->nvt->skin_distance',
 
             'substrate_element': 'metadata->system->substrate->element',
             'substrate_type': 'metadata->system->substrate->lmp->type',
@@ -246,20 +262,12 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
             'template_dir': '.',
             'output_file': 'default.input'})]
 
-        fw_template = Firework(fts_template,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_pull, *fws_root])
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[fw_pull, *fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_template)
 
@@ -275,14 +283,15 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
             'eam_file':   'default.eam.alloy',
         }
         files_out = {
-            'data_file':       'default.lammps',
-            'trajectory_file': 'default.nc',
-            'index_file':      'groups.ndx',  # generated
-            'input_file':      'default.input',  # untouched
-            'mass_file':       'mass.input',  # untouched
-            'log_file':        'log.lammps',
             'coeff_file':      'coeff.input',  # untouched
+            'data_file':       'default.lammps',
             'eam_file':        'default.eam.alloy',  # untouched
+            'index_file':      'groups.ndx',
+            'conserved_input_file': 'default.input',  # untouched
+            'log_file':        'log.lammps',
+            'mass_file':       'mass.input',  # untouched
+            'thermo_ave_file': 'thermo_ave.out',
+            'trajectory_file': 'default.nc',
         }
         fts_lmp_run = [CmdTask(
             cmd='lmp',
@@ -295,35 +304,26 @@ class LAMMPSMinimizationMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_lmp_run = Firework(fts_lmp_run,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_node_job_queueadapter_defaults'],  # get 1 node
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_template, fw_pull, *fws_root])
+        fw_lmp_run = self.build_fw(
+            fts_lmp_run, step_label,
+            parents=[fw_template, fw_pull, *fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults']
+        )
 
         fw_list.append(fw_lmp_run)
 
         return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
-class LAMMPSFixedBoxMinimizationWorkflowGenerator(
+class LAMMPSEquilibrationNVT(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         super().__init__(
-            main_sub_wf=LAMMPSFixedBoxMinimizationMain,
-            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator,
+            main_sub_wf=LAMMPSEquilibrationNVTMain,
+            analysis_sub_wf=LAMMPSTrajectoryAnalysis,
             *args, **kwargs)

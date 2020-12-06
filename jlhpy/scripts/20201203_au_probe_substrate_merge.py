@@ -1,9 +1,8 @@
 # In[20]:
-import os, os.path
+import os.path
 import datetime
 # FireWorks functionality
-from fireworks.utilities.dagflow import DAGFlow, plot_wf
-from fireworks import Firework, LaunchPad, Workflow
+from fireworks import LaunchPad
 from fireworks.utilities.filepad import FilePad
 
 
@@ -123,14 +122,6 @@ probe_on_hemicylinders_input_datasets = [
 # SDS on Au(111)
 from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateTest
 
-from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrate
-from jlhpy.utilities.wf.building_blocks.sub_wf_count_components import CountComponents
-
-from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
-from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
-
-project_id = '2020-12-02-sds-on-au-111-probe-and-substrate'
-
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
 
@@ -139,6 +130,7 @@ project_id = '2020-12-02-sds-on-au-111-probe-and-substrate'
 # ProbeOnSubstrate:MergeSubstrateAndProbeSystems:push_dtool
 # e02653cb-9dbc-4959-a840-3420a68253a6
 # In[25]
+project_id = '2020-12-04-sds-on-au-111-probe-and-substrate-test'
 wfg = ProbeOnSubstrateTest(
     project_id=project_id,
     
@@ -240,29 +232,27 @@ wf = wfg.build_wf()
 # ProbeOnSubstrate:GromacsMinimizationEquilibrationRelaxationNoSolvation:GromacsNPTEquilibration:push_dtool
 # smb://jh1130/c1a640be-694c-4fcb-b5f8-b998c229f7e8
 
-project_id = '2020-12-03-sds-on-au-111-probe-and-substrate-conversion-test'
+# ProbeOnSubstrateTest:GromacsMinimizationEquilibrationRelaxationNoSolvation:GromacsRelaxation:push_dtool
+# 4544749c-c7d6-417c-b3ca-71143c62250c
+
+project_id = '2020-12-05-sds-on-au-111-probe-and-substrate-conversion-test'
 
 
-from jlhpy.utilities.wf.building_blocks.lmp.sub_wf_gmx2lmp import CHARMM36GMX2LMP
+from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateConversion
 from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
 
-wfg = CHARMM36GMX2LMP(
+wfg = ProbeOnSubstrateConversion(
     project_id=project_id,
     
     files_in_info={
-        'data_file': {  #  506 SDS
-            'query': {'uuid': 'c1a640be-694c-4fcb-b5f8-b998c229f7e8'},
+        'data_file': {
+            'query': {'uuid': '4544749c-c7d6-417c-b3ca-71143c62250c'},
             'file_name': 'default.gro',
             'metadata_dtool_source_key': 'system',
             'metadata_fw_dest_key': 'metadata->system',
             'metadata_fw_source_key': 'metadata->system',
         },
     },
-    #source_project_id="2020-11-25-au-111-150x150x150-fcc-substrate-creation",
-    #source_step='FCCSubstrateCreationChainWorkflowGenerator:LAMMPSEquilibrationNPTWorkflowGenerator:push_dtool',
-    #metadata_dtool_source_key='system->substrate',
-    #metadata_fw_dest_key='metadata->system->substrate',
-    #metadata_fw_source_key='metadata->system->substrate',
 
     integrate_push=True,
     description="SDS on Au(111) substrate and probe trial",
@@ -275,62 +265,6 @@ wfg = CHARMM36GMX2LMP(
     infile_prefix=prefix,
     machine='juwels_devel',
     mode='trial',
-    #parameter_label_key_dict={
-    #    'n': 'system->surfactant->nmolecules',
-    #    'm': 'system->counterion->nmolecules',
-    #    's': 'system->surfactant->aggregates->shape'},
-    #parameter_values=parameter_values,
-    system = {
-        'counterion': {
-            'name': 'NA',
-            'resname': 'NA',
-            'nmolecules': None,
-            'reference_atom': {
-                'name': 'NA',
-            },
-        },
-        'surfactant': {
-            'name': 'SDS',
-            'resname': 'SDS',
-            'nmolecules': None,
-            'connector_atom': {
-                'index': 2,
-            },
-            'head_atom': {
-                'name': 'S',
-                'index': 1,
-            },
-            'tail_atom': {
-                'name': 'C12',
-                'index': 39,
-            },
-            'aggregates': {
-                'shape': None,
-            }
-        },
-        'indenter': {
-            'name': 'AUM',
-            'resname': 'AUM',
-            'reference_atom': {
-                'name': 'AU',
-            },
-        },
-        'substrate': {
-            'name': 'AUM',
-            'resname': 'AUM',
-            'reference_atom': {
-                'name': 'AU',
-            },
-        },
-        'solvent': {
-            'name': 'H2O',
-            'resname': 'SOL',
-            'reference_atom': {
-                'name': 'OW',
-            },
-            'height': 180.0,
-        }
-    },
     step_specific={
         'psfgen': psfgen_mappings_template_context,
         'dtool_push': {

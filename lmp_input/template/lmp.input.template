@@ -24,6 +24,7 @@
 {%- set neigh_check=neigh_check|default(true) %}
 {%- set exclude_frozen_interactions=exclude_frozen_interactions|default(false) %} {# do not compute interactions between frozen atoms #}
 {%- set rigid_h_bonds=rigid_h_bonds|default(true) %} {# apply SHAPE or RATTLE to H #}
+{%- set shift_system_with_box=shift_system_with_box|default(false) %} {# if box shift desired, then shift atoms together with box #}
 {%- set use_eam=use_eam|default(false) %} {# use pairstyle eam for solid #}
 {%- set use_ewald=use_ewald|default(true) %} {# switch ewald sum (kspace solver) #}
 
@@ -70,6 +71,7 @@
 {%- set box_shift_z=box_shift_z|default(0.0) %}
 {%- set freeze_substrate_layer=freeze_substrate_layer|default(0.0) %}
 {%- set restrain_substrate_layer=restrain_substrate_layer|default(0.0) %}
+{%- set rigid_indenter_core_radius=rigid_indenter_core_radius|default(0.0) %}
 {%- set thermo_frequency=thermo_frequency|default(1000) %}
 {%- set thermo_average_frequency=thermo_average_frequency|default(thermo_frequency) %}
 
@@ -96,6 +98,7 @@
 #     neigh_check = {{ neigh_check }}
 #     exclude_frozen_interactions = {{ exclude_frozen_interactions }}
 #     rigid_h_bonds = {{ rigid_h_bonds }}
+#     shift_system_with_box = {{ shift_system_with_box }}
 #     use_eam = {{ use_eam }}
 #     use_ewald = {{ use_ewald }}
 #
@@ -136,6 +139,7 @@
 #     box_shift_z = {{ box_shift_z }}
 #     freeze_substrate_layer = {{ freeze_substrate_layer }}
 #     restrain_substrate_layer = {{ restrain_substrate_layer }}
+#     rigid_indenter_core_radius = {{ rigid_indenter_core_radius }}
 #     thermo_frequency = {{ thermo_frequency }}
 #     thermo_average_frequency = {{ thermo_average_frequency }}
 #
@@ -264,13 +268,13 @@ variable timestep                index  {{ timestep|default(2, false)|float }}  
 # system settings
 # variable surfactant_name         index  SDS     # SDS or CTAB
 variable temperatureT            index  {{ temperatureT|default(298, false)|float }}     # K
-variable initialT                index  ${temperatureT}  # for ramped temp.
+variable initialT                index  {{ initialT|default(temperatureT, false)|default(298, false)|float }}  # for ramped temp.
 variable pressureP               index  {{ pressureP|default(1, false)|float }}       # atm
 
 variable production_steps         index  {{ production_steps|default(5000000, false)|int }} #  10 ns
 
 # AFM-tip-related settings:
-variable rigid_indenter_core_radius index {{ rigid_indenter_core_radius|default(0.0, false)|float }}   # treat indenter core around COM
+variable rigid_indenter_core_radius index {{ rigid_indenter_core_radius }}   # treat indenter core around COM
                                                 # of this radius as rigid
 variable constant_indenter_velocity index {{ constant_indenter_velocity|default(0.0, false)|float }}   # for approach towards substrate
 variable direction_of_linear_movement index {{ direction_of_linear_movement|default(2, false)|int }}   # 0,1,2 for x,y,z of ind. mov.
@@ -622,11 +626,13 @@ change_box all z final $(zlo) $(zhi+v_add_vacuum) units box
 # A combination of displace_atoms and change_box with remapping achieves
 # the preservation of atom coordinates and setting of image flags if crossing
 # a periodic boundary during the box shift.
-{%- if box_shift_z > 0.0 %}
+{%- if box_shift_z != 0.0 %}
 variable desired_zlo equal $(zlo-v_box_shift_z)
 variable desired_zhi equal $(zhi-v_box_shift_z)
 print "Box current z range [$(zlo),$(zhi)], desired z range [${desired_zlo},${desired_zhi}]"
+{%- if shift_system_with_box is sameas false %}
 displace_atoms all move 0.0 0.0 ${box_shift_z} units box
+{%- endif %}
 change_box all set z final ${desired_zlo} ${desired_zhi} remap units box
 {%- endif %}
 
@@ -760,7 +766,7 @@ write_coeff ${coeff_outfile}
 ###############################################################################
 ### region definitions
 
-# determine center
+# determine center # OBSOLETE, 2020/12/05
 variable x_center equal $(( xlo + xhi ) / 2.0)
 variable y_center equal $(( ylo + yhi ) / 2.0)
 variable z_center equal $(( zlo + zhi ) / 2.0)
@@ -785,13 +791,6 @@ region indenter_region plane 0  0  ${region_tolerance} 0 0 1 side in units box
 {%- endif %}
 
 # 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
-{%- if (not is_restart is sameas true) %}
-region central_column cylinder z ${x_center} ${y_center} 2.0 ${region_tolerance} $((zhi)) side in
-#                              ^cylinder axis
-#                                ^cylinder coordinates in x,y dim
-#                                                        ^cylinder radius
-#                                                            ^lower and ^upper point
-{%- endif %}
 
 {%- if (not is_restart is sameas true) %}
 special_bonds charmm
@@ -870,9 +869,17 @@ group nonsolid   subtract all solid
 # correct if indenter is present
 {%- if (not is_restart is sameas true) and (has_indenter is sameas true) %}
 group atoms_in_indenter_region region indenter_region
-group atoms_in_central_column  region central_column
 group substrate      subtract  solid atoms_in_indenter_region
 group indenter       subtract  solid substrate
+variable indenterComX equal xcm(indenter,x)
+variable indenterComY equal xcm(indenter,y)
+variable indenterComZ equal xcm(indenter,z)
+region central_column cylinder z ${indenterComX} ${indenterComY} 2.0 ${region_tolerance} $((zhi)) side in
+#                              ^cylinder axis
+#                                ^cylinder coordinates in x,y dim
+#                                                        ^cylinder radius
+#                                                            ^lower and ^upper point
+group atoms_in_central_column  region central_column
 group indenter_apex  intersect indenter atoms_in_central_column
 group nonindenter    subtract all indenter
 group nonsubstrate   subtract all substrate
@@ -885,9 +892,6 @@ group nonsubstrate   subtract all substrate
 # freeze indenter if explicitly specified
 group frozen union frozen indenter
 {%- elif (not is_restart is sameas true) and (has_indenter is sameas true) and (rigid_indenter_core_radius > 0.0) %}
-variable indenterComX equal xcm(indenter,x)
-variable indenterComY equal xcm(indenter,y)
-variable indenterComZ equal xcm(indenter,z)
 region rigid_indenter_core_region sphere ${indenterComX} ${indenterComY} &
         ${indenterComZ} ${rigid_indenter_core_radius}
 group rigid_indenter_core  region  rigid_indenter_core_region
@@ -1516,8 +1520,20 @@ info variables out log
 ### end lmp_header.input
 ###############################################################################
 
+{%- if mode == "split_datafile" %}
+###############################################################################
+### lmp_split_datafile.input
+###############################################################################
+# split a data file into force field parameters and data file with topology information
+# does not work properly for style 'hybrid'
+# force field parameters written above already above
+{%- if write_coeff_to_datafile is sameas true %}
+write_data ${base_name}.lammps
+{%- else %}
+write_data ${base_name}.lammps nocoeff
+{%- endif %}
 
-{%- if mode == "minimization" %}
+{%- elif mode == "minimization" %}
 ###############################################################################
 ### lmp_minimizatin.input
 ###############################################################################

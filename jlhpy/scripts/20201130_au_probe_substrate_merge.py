@@ -121,13 +121,15 @@ probe_on_hemicylinders_input_datasets = [
 # In[20]:
 
 # SDS on Au(111)
-from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrate
+from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateMergeEquilibrationAndConversion
 from jlhpy.utilities.wf.building_blocks.sub_wf_count_components import CountComponents
 
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_010_merge import MergeSubstrateAndProbeSystems
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-12-01-sds-on-au-111-probe-and-substrate'
+from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
+
+project_id = '2020-12-04-sds-on-au-111-probe-and-substrate'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
@@ -135,7 +137,7 @@ project_id = '2020-12-01-sds-on-au-111-probe-and-substrate'
 # parameter_values = [{'n': n, 'm': n, 's': s } for n in N for s in ['monolayer','hemicylinders']][10:11]
 
 # In[25]
-wfg = ProbeOnSubstrate(
+wfg = ProbeOnSubstrateMergeEquilibrationAndConversion(
     project_id=project_id,
     
     files_in_info={
@@ -231,9 +233,10 @@ wfg = ProbeOnSubstrate(
         'merge': {
             'tol': 2.0,
             'z_dist': 50.0,
-            'x_shift': 15.0,
+            'x_shift': 0.0,
             'y_shift': 0.0,
         },
+        'psfgen': psfgen_mappings_template_context,
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
             'remote_dataset': None,
@@ -245,92 +248,6 @@ fp_files = wfg.push_infiles(fp)
 
 wf = wfg.build_wf()
 
-# In[25]
-
-project_id = '2020-12-01-count-components-trial'
-
-wfg = CountComponents(
-    project_id=project_id,
-    
-    files_in_info={
-        'data_file': {  # 2020-10-13-ctab-on-au-111-substrate-passivation
-            'query': {'uuid': '91a835f3-5b81-4bfa-bc16-c125fc905a8b'},
-            'file_name': 'out.pdb',
-        },
-    },
-
-    integrate_push=True,
-    description="SDS on Au(111) substrate and probe count components trial",
-    owners=[{
-        'name': 'Johannes Laurin Hörmann',
-        'email': 'johannes.hoermann@imtek.uni-freiburg.de',
-        'username': 'fr_jh1130',
-        'orcid': '0000-0001-5867-695X'
-    }],
-    infile_prefix=prefix,
-    machine='juwels_devel',
-    mode='trial',
-    system = {
-        'counterion': {
-            'name': 'NA',
-            'resname': 'NA',
-            'nmolecules': None,
-            'reference_atom': {
-                'name': 'NA',
-            },
-        },
-        'surfactant': {
-            'name': 'SDS',
-            'resname': 'SDS',
-            'nmolecules': None,
-            'connector_atom': {
-                'index': 2,
-            },
-            'head_atom': {
-                'name': 'S',
-                'index': 1,
-            },
-            'tail_atom': {
-                'name': 'C12',
-                'index': 39,
-            },
-            'aggregates': {
-                'shape': None,
-            }
-        },
-        'indenter': {
-            'name': 'AUM',
-            'resname': 'AUM',
-            'reference_atom': {
-                'name': 'AU',
-            },
-        },
-        'substrate': {
-            'name': 'AUM',
-            'resname': 'AUM',
-            'reference_atom': {
-                'name': 'AU',
-            },
-        },
-        'solvent': {
-            'name': 'H2O',
-            'resname': 'SOL',
-            'reference_atom': {
-                'name': 'OW',
-            },
-            'height': 180.0,
-            # 'natoms':  # TODO: count automatically
-        }
-    },
-    step_specific={
-        'dtool_push': {
-            'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
-            'remote_dataset': None,
-        }
-    },
-)
-
-wf = wfg.build_wf()
 
 # In[25]
 wf_list = []

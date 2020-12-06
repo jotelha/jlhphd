@@ -26,6 +26,8 @@ LMP_INPUT_TEMPLATE = 'lmp.input.template'
 LMP_HEADER_INPUT_TEMPLATE = 'lmp_header.input.template'
 LMP_MINIMIZATION_INPUT_TEMPLATE = 'lmp_minimization.input.template'
 LMP_PRODUCTION_INPUT_TEMPLATE = 'lmp_production.input.template'
+LMP_SPLIT_DATAFILE_INPUT_TEMPLATE = 'lmp.input.template'
+
 
 LMP_FF_SUBDIR = 'ff'
 LMP_MASS_INPUT = 'SDS_in_H2O_on_AU_masses.input'

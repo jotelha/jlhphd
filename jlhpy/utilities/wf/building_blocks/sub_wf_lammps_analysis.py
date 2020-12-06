@@ -13,6 +13,54 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
 
 from imteksimfw.utils.serialize import serialize_module_obj
+class LAMMPSTrajectoryAnalysis(WorkflowGenerator):
+    """
+    General LAMMPS trajectory partial analysis worklfow.
+
+    analysis dynamic infiles:
+        no pull stub implemented
+
+        - log_file:         log.lammps
+        # - data_file:       default.lammps
+        # - trajectory_file: default.nc
+
+    analysis outfiles:
+        - thermo_file:       thermo.out
+    """
+
+    def main(self, fws_root=[]):
+        fw_list = []
+
+        # extract thermo
+        # --------------
+
+        step_label = self.get_step_label('extract_thermo')
+
+        files_in = {
+            'log_file': 'log.lammps',
+        }
+        files_out = {
+            'thermo_file': 'thermo.out',
+        }
+
+        fts_extract_thermo = [
+            CmdTask(
+                cmd="cat log.lammps | sed -n '/^Step/,/^Loop time/p' | sed '/^colvars:/d' | head -n-1 > thermo.out",
+                fizzle_bad_rc=True,
+                use_shell=True),
+             ]
+
+        fw_extract_thermo = self.build_fw(
+            fts_extract_thermo, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+
+        fw_list.append(fw_extract_thermo)
+
+        return fw_list, [fw_extract_thermo], [fw_extract_thermo]
+
 
 class LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator(WorkflowGenerator):
     """

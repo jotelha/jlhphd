@@ -18,7 +18,7 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSTrajectoryAnalysis
 
 import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
@@ -30,6 +30,7 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
 
     inputs:
     - metadata->step_specific->equilibration->npt->pressure
+    - metadata->step_specific->equilibration->npt->barostat_damping
     - metadata->step_specific->equilibration->npt->temperature
     - metadata->step_specific->equilibration->npt->langevin_damping
 
@@ -38,6 +39,8 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
     - metadata->step_specific->equilibration->npt->thermo_frequency
     - metadata->step_specific->equilibration->npt->thermo_average_frequency
 
+    - metadata->step_specific->equilibration->npt->ewald_accuracy
+    - metadata->step_specific->equilibration->npt->coulomb_cutoff
     - metadata->step_specific->equilibration->npt->neigh_delay
     - metadata->step_specific->equilibration->npt->neigh_every
     - metadata->step_specific->equilibration->npt->neigh_check
@@ -83,7 +86,7 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             surfactant = phys_config.DEFAULT_SURFACTANT
             warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
 
-        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN.format(name=surfactant)
+        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_INPUT_PATTERN.format(name=surfactant)
 
         glob_patterns = [
             os.path.join(
@@ -138,7 +141,7 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             surfactant = phys_config.DEFAULT_SURFACTANT
             warnings.warn("No surfactant specified, falling back to {:s}.".format(surfactant))
 
-        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_NONEWALD_NONBONDED_INPUT_PATTERN.format(name=surfactant)
+        lmp_coeff_input = file_config.LMP_COEFF_HYBRID_INPUT_PATTERN.format(name=surfactant)
 
         fw_list = []
 
@@ -193,20 +196,11 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
                 new_file_names=['default.eam.alloy']),
         ]
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -228,26 +222,35 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             'coeff_infile':            'coeff.input',
             'compute_group_properties': True,
             'data_file':                'datafile.lammps',
-            'dilate_solution_only':     False,
+            'dilate_solution_only':     True,
+            'has_indenter':             True,
             'mpiio':                    True,
-            'reinitialize_velocities':  False,
-            'rigid_h_bonds':            False,
+            'pressurize_z_only':        True,
+            'restrained_indenter':      True,
+            'rigid_h_bonds':            True,
             'store_forces':             False,
             'temper_solid_only':        False,
             'use_barostat':             True,
+            'use_berendsen_bstat':      False,
+            'use_dpd_tstat':            False,
             'use_eam':                  True,
-            'use_ewald':                False,
+            'use_ewald':                True,
             'write_coeff_to_datafile':  False,
         }
 
         dynamic_template_context = {
             'pressureP':        'metadata->step_specific->equilibration->npt->pressure',
             'temperatureT':     'metadata->step_specific->equilibration->npt->temperature',
+            'barostat_damping': 'metadata->step_specific->equilibration->npt->barostat_damping',
             'langevin_damping': 'metadata->step_specific->equilibration->npt->langevin_damping',
+
             'production_steps': 'metadata->step_specific->equilibration->npt->steps',
             'netcdf_frequency': 'metadata->step_specific->equilibration->npt->netcdf_frequency',
             'thermo_frequency': 'metadata->step_specific->equilibration->npt->thermo_frequency',
             'thermo_average_frequency': 'metadata->step_specific->equilibration->npt->thermo_average_frequency',
+
+            'ewald_accuracy':   'metadata->step_specific->equilibration->npt->ewald_accuracy',
+            'coulomb_cutoff':   'metadata->step_specific->equilibration->npt->coulomb_cutoff',
             'neigh_delay':      'metadata->step_specific->equilibration->npt->neigh_delay',
             'neigh_every':      'metadata->step_specific->equilibration->npt->neigh_every',
             'neigh_check':      'metadata->step_specific->equilibration->npt->neigh_check',
@@ -264,20 +267,12 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             'template_dir': '.',
             'output_file': 'default.input'})]
 
-        fw_template = Firework(fts_template,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_pull, *fws_root])
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[fw_pull, *fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_template)
 
@@ -297,7 +292,7 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             'data_file':       'default.lammps',
             'eam_file':        'default.eam.alloy',  # untouched
             'index_file':      'groups.ndx',
-            'input_file':      'default.input',  # untouched
+            'conserved_input_file': 'default.input',  # untouched
             'log_file':        'log.lammps',
             'mass_file':       'mass.input',  # untouched
             'thermo_ave_file': 'thermo_ave.out',
@@ -314,35 +309,26 @@ class LAMMPSEquilibrationNPTMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_lmp_run = Firework(fts_lmp_run,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_node_job_queueadapter_defaults'],  # get 1 node
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_template, fw_pull, *fws_root])
+        fw_lmp_run = self.build_fw(
+            fts_lmp_run, step_label,
+            parents=[fw_template, fw_pull, *fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults']
+        )
 
         fw_list.append(fw_lmp_run)
 
         return fw_list, [fw_lmp_run], [fw_lmp_run, fw_template]
 
 
-class LAMMPSEquilibrationNPTWorkflowGenerator(
+class LAMMPSEquilibrationNPT(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         super().__init__(
             main_sub_wf=LAMMPSEquilibrationNPTMain,
-            analysis_sub_wf=LAMMPSSubstrateTrajectoryAnalysisWorkflowGenerator,
+            analysis_sub_wf=LAMMPSTrajectoryAnalysis,
             *args, **kwargs)
