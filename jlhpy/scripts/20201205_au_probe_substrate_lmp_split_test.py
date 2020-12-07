@@ -358,7 +358,7 @@ from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
 
 # 
 
-project_id = '2020-12-06-sds-on-au-111-probe-and-substrate-conversion-minimization-equilibration-test'
+project_id = '2020-12-07-sds-on-au-111-probe-and-substrate-conversion-minimization-equilibration-test'
 
 wfg = ProbeOnSubstrateConversionMinimizationAndEquilibration(
     project_id=project_id,
@@ -420,15 +420,13 @@ wfg = ProbeOnSubstrateConversionMinimizationAndEquilibration(
         },
         'equilibration': {
             'nvt': {
-                #'freeze_substrate_layer': 14.0,
-                #'rigid_indenter_core_radius': 12.0,
                 'initial_temperature': 1.0,
                 'temperature': 298.0,
                 'langevin_damping': 1000,
                 'steps': 10000,
-                'netcdf_frequency': 10,
-                'thermo_frequency': 10,
-                'thermo_average_frequency': 10,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
             
                 'ewald_accuracy': 1.0e-4,
                 'coulomb_cutoff': 8.0,
@@ -443,9 +441,9 @@ wfg = ProbeOnSubstrateConversionMinimizationAndEquilibration(
                 'barostat_damping': 10000,
                 'langevin_damping': 1000,
                 'steps': 250000,
-                'netcdf_frequency': 10,
-                'thermo_frequency': 10,
-                'thermo_average_frequency': 10,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
                 
                 'ewald_accuracy': 1.0e-4,
                 'coulomb_cutoff': 8.0,
@@ -455,11 +453,13 @@ wfg = ProbeOnSubstrateConversionMinimizationAndEquilibration(
                 'skin_distance': 3.0
             },
             'dpd': {
+                'freeze_substrate_layer': 14.0,  # freeze that slab at the substrate's bottom
+                'rigid_indenter_core_radius': 12.0,  # freeze that sphere at the ore of the indenter
                 'temperature': 298.0,
                 'steps': 250000,
-                'netcdf_frequency': 10,
-                'thermo_frequency': 10,
-                'thermo_average_frequency': 10,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
                 
                 'ewald_accuracy': 1.0e-4,
                 'coulomb_cutoff': 8.0,

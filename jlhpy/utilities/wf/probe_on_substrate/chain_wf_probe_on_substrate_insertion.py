@@ -32,7 +32,7 @@ class ProbeOnSubstrateTest(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class ProbeOnSubstrateMergeAndEqulibration(ChainWorkflowGenerator):
+class ProbeOnSubstrateMergeAndGROMACSEqulibration(ChainWorkflowGenerator):
     """Merge, minimize and equilibrate substrate and probe.
 
     Concatenates
@@ -53,8 +53,9 @@ class ProbeOnSubstrateMergeAndEqulibration(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class ProbeOnSubstrateConversion(ChainWorkflowGenerator):
-    """Convert GROMACS system to LAMMPS system using CHARMM36 force field.
+class ProbeOnSubstrateGMX2LMPConversion(ChainWorkflowGenerator):
+    """Convert GROMACS system to LAMMPS system using CHARMM36 force field and
+    splits output into coordinates and topology datafile and parameters input file.
 
     Concatenates
     - CHARMM36GMX2LMP
@@ -98,7 +99,27 @@ class ProbeOnSubstrateConversionMinimizationAndEquilibration(ChainWorkflowGenera
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            ProbeOnSubstrateConversion,
+            ProbeOnSubstrateGMX2LMPConversion,
+            ProbeOnSubstrateMinimizationAndEquilibration,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class ProbeOnSubstrateMergeConversionMinimizationAndEquilibration(ChainWorkflowGenerator):
+    """Merge probe and substrate component, minimize and equilibrate with GROMACS,
+    convert GROMACS system to LAMMPS system using CHARMM36 force field,
+    then minimize and equilibrate substrate and probe with LAMMPS.
+
+    Concatenates
+    - LAMMPSMinimization
+    - ProbeOnSubstrateConversion
+    - ProbeOnSubstrateConversionMinizationAndEquilibration
+    """
+
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            ProbeOnSubstrateMergeAndGROMACSEqulibration,
+            ProbeOnSubstrateGMX2LMPConversion,
             ProbeOnSubstrateMinimizationAndEquilibration,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

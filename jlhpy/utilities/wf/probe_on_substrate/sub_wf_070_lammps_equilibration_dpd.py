@@ -29,6 +29,8 @@ class LAMMPSEquilibrationDPDMain(WorkflowGenerator):
     NVT equilibration with DPD thermostat in LAMMPS.
 
     inputs:
+    - metadata->step_specific->equilibration->dpd->freeze_substrate_layer
+    - metadata->step_specific->equilibration->dpd->rigid_indenter_core_radius
     - metadata->step_specific->equilibration->dpd->temperature
 
     - metadata->step_specific->equilibration->dpd->steps
@@ -235,7 +237,9 @@ class LAMMPSEquilibrationDPDMain(WorkflowGenerator):
         }
 
         dynamic_template_context = {
-            'temperatureT':     'metadata->step_specific->equilibration->dpd->temperature',
+            'freeze_substrate_layer':     'metadata->step_specific->equilibration->dpd->freeze_substrate_layer',
+            'rigid_indenter_core_radius': 'metadata->step_specific->equilibration->dpd->rigid_indenter_core_radius',
+            'temperatureT':               'metadata->step_specific->equilibration->dpd->temperature',
 
             'production_steps': 'metadata->step_specific->equilibration->dpd->steps',
             'netcdf_frequency': 'metadata->step_specific->equilibration->dpd->netcdf_frequency',
@@ -308,7 +312,7 @@ class LAMMPSEquilibrationDPDMain(WorkflowGenerator):
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_queue_category'],
-            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults']
+            queueadapter=self.hpc_specs['four_nodes_job_queueadapter_defaults']
         )
 
         fw_list.append(fw_lmp_run)
