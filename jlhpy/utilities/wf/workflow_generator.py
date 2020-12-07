@@ -1,5 +1,6 @@
 # TODO:
 # 2020/07/02 remove all project_id, only project
+# 2020/12/06 merge labels on infiles lists
 
 # system basics
 from abc import abstractmethod

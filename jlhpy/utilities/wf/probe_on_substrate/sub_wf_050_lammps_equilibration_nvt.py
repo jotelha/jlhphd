@@ -235,6 +235,8 @@ class LAMMPSEquilibrationNVTMain(WorkflowGenerator):
         }
 
         dynamic_template_context = {
+            #'freeze_substrate_layer':     'metadata->step_specific->equilibration->nvt->rigid_indenter_core_radius',
+            #'rigid_indenter_core_radius': 'metadata->step_specific->equilibration->nvt->rigid_indenter_core_radius',
             'initialT':         'metadata->step_specific->equilibration->nvt->initial_temperature',
             'temperatureT':     'metadata->step_specific->equilibration->nvt->temperature',
             'langevin_damping': 'metadata->step_specific->equilibration->nvt->langevin_damping',

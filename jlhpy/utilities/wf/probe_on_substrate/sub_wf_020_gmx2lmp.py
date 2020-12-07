@@ -37,6 +37,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
     dynamic infiles:
     - data_file: default.gro
+    - tpr_file: default.tpr
 
     outfiles:
     - data_file: default.data
@@ -195,6 +196,44 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         fw_list.append(fw_gro_box)
 
+        # make residues whole
+        # -------------------
+
+        step_label = self.get_step_label('gmx_trjconv')
+
+        files_in = {
+            'data_file': 'in.gro',
+            'tpr_file':  'in.tpr',
+        }
+        files_out = {
+            'data_file': 'out.gro',
+        }
+
+        fts_gmx_trjconv = [
+            CmdTask(
+                cmd='gmx',
+                opt=['trjconv',
+                     '-f', 'in.gro',
+                     '-s', 'in.tpr',
+                     '-o', 'out.gro',
+                     '-pbc', 'res'],
+                env='python',
+                stdin_key='stdin',
+                store_stdout=True,
+                store_stderr=True,
+            ),
+        ]
+
+        fw_gmx_trjconv = self.build_fw(
+            fts_gmx_trjconv, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            stdin='0\n',  # select the whole system
+            category=self.hpc_specs['fw_noqueue_category'])
+
+        fw_list.append(fw_gmx_trjconv)
+
         ### GMX2PDB
         
         # pull gmx2pdb bash script template
@@ -310,7 +349,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         fw_gmx2pdb = self.build_fw(
             fts_gmx2pdb, step_label,
-            parents=[fw_gmx2pdb_template, *fws_root],
+            parents=[fw_gmx2pdb_template, fw_gmx_trjconv],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'])
@@ -566,7 +605,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         fw_list.append(fw_ch2lmp)
 
-        return fw_list, [fw_psfgen, fw_ch2lmp], [fw_gmx2pdb_template, fw_gro_box, fw_gmx2pdb]
+        return fw_list, [fw_psfgen, fw_ch2lmp], [fw_gmx2pdb_template, fw_gro_box, fw_gmx_trjconv]
 
 
 class CHARMM36GMX2LMP(

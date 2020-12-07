@@ -193,7 +193,6 @@ class PullFromDtoolRepositoryMixin(PullMixin):
         #    return fw_list, fws_root_out, fws_leaf_out
 
         # fetch items
-        # TODO: for now, files must be named within the dataset as in the workflow
         for file in self.files_in_list:
             file_label = file['file_label']
             if (not hasattr(self, 'files_in_info')) or (file_label not in self.files_in_info):

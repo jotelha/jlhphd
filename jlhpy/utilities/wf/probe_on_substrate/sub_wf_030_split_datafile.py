@@ -174,7 +174,7 @@ class SplitDatafileMain(WorkflowGenerator):
             'input_file': 'default.input',
         }
         files_out = {
-            'coeff_file': 'coeff.input',  # untouched
+            'conserved_coeff_file': 'coeff.input',
             'data_file': 'default.lammps',
             'index_file': 'default.ndx',
             'conserved_input_file': 'default.input',  # untouched

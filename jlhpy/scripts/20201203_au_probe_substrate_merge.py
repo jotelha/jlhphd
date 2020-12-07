@@ -5,6 +5,8 @@ import datetime
 from fireworks import LaunchPad
 from fireworks.utilities.filepad import FilePad
 
+from fireworks.utilities.dagflow import DAGFlow, plot_wf
+
 
 timestamp = datetime.datetime.now()
 yyyymmdd = timestamp.strftime('%Y%m%d')
@@ -233,9 +235,9 @@ wf = wfg.build_wf()
 # smb://jh1130/c1a640be-694c-4fcb-b5f8-b998c229f7e8
 
 # ProbeOnSubstrateTest:GromacsMinimizationEquilibrationRelaxationNoSolvation:GromacsRelaxation:push_dtool
-# 4544749c-c7d6-417c-b3ca-71143c62250c
+# 4544749c-c7d6-417c-b3ca-71143c62250c, not done copying (?)
 
-project_id = '2020-12-05-sds-on-au-111-probe-and-substrate-conversion-test'
+project_id = '2020-12-06-sds-on-au-111-probe-and-substrate-conversion-test'
 
 
 from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateConversion
@@ -246,8 +248,15 @@ wfg = ProbeOnSubstrateConversion(
     
     files_in_info={
         'data_file': {
-            'query': {'uuid': '4544749c-c7d6-417c-b3ca-71143c62250c'},
+            'query': {'uuid': 'c1a640be-694c-4fcb-b5f8-b998c229f7e8'},
             'file_name': 'default.gro',
+            'metadata_dtool_source_key': 'system',
+            'metadata_fw_dest_key': 'metadata->system',
+            'metadata_fw_source_key': 'metadata->system',
+        },
+        'tpr_file': {
+            'query': {'uuid': 'c1a640be-694c-4fcb-b5f8-b998c229f7e8'},
+            'file_name': 'default.tpr',
             'metadata_dtool_source_key': 'system',
             'metadata_fw_dest_key': 'metadata->system',
             'metadata_fw_source_key': 'metadata->system',
@@ -265,8 +274,19 @@ wfg = ProbeOnSubstrateConversion(
     infile_prefix=prefix,
     machine='juwels_devel',
     mode='trial',
+    system={}, # needs empty placeholder 
     step_specific={
+        'merge': {
+                'tol': 2.0,
+                'z_dist': 50.0,
+                'x_shift': 0.0,
+                'y_shift': 0.0,
+        },
         'psfgen': psfgen_mappings_template_context,
+        'split_datafile': {
+            'region_tolerance': 5.0,
+            'shift_tolerance': 2.0,
+        },
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
             'remote_dataset': None,

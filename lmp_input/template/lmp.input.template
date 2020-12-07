@@ -68,11 +68,12 @@
 
 {#- non-boolean #}
 {%- set mode=mode|default("production") %}
-{%- set box_shift_z=box_shift_z|default(0.0) %}
-{%- set freeze_substrate_layer=freeze_substrate_layer|default(0.0) %}
-{%- set restrain_substrate_layer=restrain_substrate_layer|default(0.0) %}
-{%- set rigid_indenter_core_radius=rigid_indenter_core_radius|default(0.0) %}
-{%- set thermo_frequency=thermo_frequency|default(1000) %}
+{%- set box_shift_z=box_shift_z|default(0.0, false)|float %}
+{%- set comm_cutoff=comm_cutoff|default(0.0, false)|float %} {# if 0.0, then not specified in input script #}
+{%- set freeze_substrate_layer=freeze_substrate_layer|default(0.0, false)|float %}
+{%- set restrain_substrate_layer=restrain_substrate_layer|default(0.0, false)|float %}
+{%- set rigid_indenter_core_radius=rigid_indenter_core_radius|default(0.0, false)|float %}
+{%- set thermo_frequency=thermo_frequency|default(1000, false)|int %}
 {%- set thermo_average_frequency=thermo_average_frequency|default(thermo_frequency) %}
 
 {%- set solvent_types=solvent_types|default([8,9]) %}
@@ -219,6 +220,7 @@ variable neigh_delay             index  {{ neigh_delay|default(2, false)|int }}
 variable neigh_every             index  {{ neigh_every|default(1, false)|int }}
 variable neigh_page              index  {{ neigh_page|default(100000, false)|int }}
 variable neigh_one               index  {{ neigh_one|default(2000, false)|int }}
+variable comm_cutoff             index  {{ comm_cutoff|default(0.0, false)|float }}
 
 # force field settings
 
@@ -301,18 +303,6 @@ variable substrate_type index {{ substrate_type }}
 ### system intialization
 {%- if (not is_restart is sameas true) and (pbc2d is sameas true) %}
 boundary p p f
-{%- endif %}
-
-{%- if use_dpd_tstat is sameas true %}
-comm_modify vel yes
-# https://lammps.sandia.gov/doc/comm_modify.html
-# The vel keyword enables velocity information to be communicated with ghost
-# particles. Depending on the atom_style, velocity info includes the
-# translational velocity, angular velocity, and angular momentum of a particle.
-# If the vel option is set to yes, then ghost atoms store these quantities; if
-# no then they do not. The yes setting is needed by some pair styles which
-# require the velocity state of both the I and J particles to compute a
-# pairwise I,J interaction, as well as by some compute and fix commands.
 {%- endif %}
 
 {%- if (not is_restart is sameas true) %}
@@ -762,6 +752,30 @@ write_coeff ${coeff_outfile}
 # The write_coeff command is not yet fully implemented as some pair styles do
 # not output their coefficient information. This means you will need to add/copy
 # this information manually.
+
+###############################################################################
+### communication settings (after pair styles definitions)
+
+{%- if (comm_cutoff > 0.0) and (use_dpd_tstat is sameas true) %}
+# explicitly specify single communication cutoff for all atoms, otherwise LAMMMPS warns about
+#   WARNING: Communication cutoff 0.0 is shorter than a bond length based estimate ...
+# although "cutoff default of 0.0 means that ghost cutoff = neighbor cutoff = pairwise force cutoff + neighbor skin.",
+# according to https://lammps.sandia.gov/doc/comm_modify.html. See also discussion at
+# https://lammps.sandia.gov/threads/msg87835.html.
+comm_modify mode single cutoff ${comm_cutoff} vel yes
+{%- elif use_dpd_tstat is sameas true %}
+comm_modify mode single cutoff ${comm_cutoff}
+{%- elif comm_cutoff > 0.0 %}
+comm_modify vel yes
+# https://lammps.sandia.gov/doc/comm_modify.html
+# The vel keyword enables velocity information to be communicated with ghost
+# particles. Depending on the atom_style, velocity info includes the
+# translational velocity, angular velocity, and angular momentum of a particle.
+# If the vel option is set to yes, then ghost atoms store these quantities; if
+# no then they do not. The yes setting is needed by some pair styles which
+# require the velocity state of both the I and J particles to compute a
+# pairwise I,J interaction, as well as by some compute and fix commands.
+{%- endif %}
 
 ###############################################################################
 ### region definitions
