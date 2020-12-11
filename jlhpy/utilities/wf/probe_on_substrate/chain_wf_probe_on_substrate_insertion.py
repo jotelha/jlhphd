@@ -14,6 +14,7 @@ from jlhpy.utilities.wf.probe_on_substrate.sub_wf_040_lammps_minimization import
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_050_lammps_equilibration_nvt import LAMMPSEquilibrationNVT
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_060_lammps_equilibration_npt import LAMMPSEquilibrationNPT
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_070_lammps_equilibration_dpd import LAMMPSEquilibrationDPD
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_110_lammps_probe_normal_approach import LAMMPSProbeNormalApproch
 
 
 class ProbeOnSubstrateTest(ChainWorkflowGenerator):
@@ -123,3 +124,23 @@ class ProbeOnSubstrateMergeConversionMinimizationAndEquilibration(ChainWorkflowG
             ProbeOnSubstrateMinimizationAndEquilibration,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class ProbeOnSubstrateMinimizationEquilibrationAndNormalApproach(ChainWorkflowGenerator):
+    """Minimize and equilibrate substrate and probe with LAMMPS.
+
+    Concatenates
+    - MergeSubstrateAndProbeSystems
+    """
+
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            LAMMPSMinimization,
+            LAMMPSEquilibrationNVT,
+            LAMMPSEquilibrationNPT,
+            LAMMPSEquilibrationDPD,
+            LAMMPSProbeNormalApproch
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+

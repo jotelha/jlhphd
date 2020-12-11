@@ -637,7 +637,7 @@ wfg = LAMMPSEquilibrationNPT(
         'orcid': '0000-0001-5867-695X'
     }],
     infile_prefix=prefix,
-    machine='juwels',
+    machine='juwels_devel',
     mode='trial',
     system={
         'counterion': {
@@ -787,7 +787,7 @@ wf = wfg.build_wf()
 # 9d2fcef6-d943-498b-8d0f-1264f068c094
 
 
-from jlhpy.utilities.wf.probe_on_substrate.sub_wf_060_lammps_equilibration_npt import LAMMPSEquilibrationDPD
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_070_lammps_equilibration_dpd import LAMMPSEquilibrationDPD
 from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
 
 
@@ -814,7 +814,7 @@ wfg = LAMMPSEquilibrationDPD(
         'orcid': '0000-0001-5867-695X'
     }],
     infile_prefix=prefix,
-    machine='juwels',
+    machine='juwels_devel',
     mode='trial',
     system={
         'counterion': {
@@ -946,6 +946,398 @@ wfg = LAMMPSEquilibrationDPD(
                 'neigh_check': 1,
                 'skin_distance': 3.0
             }
+        },
+        'dtool_push': {
+            'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
+            'remote_dataset': None,
+        }
+    },
+ )
+
+fp_files = wfg.push_infiles(fp)
+
+wf = wfg.build_wf()
+
+
+# In[060]
+
+# NVT equlibrated
+# 9d2fcef6-d943-498b-8d0f-1264f068c094
+
+
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_110_lammps_probe_normal_approach import LAMMPSProbeNormalApproch
+from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
+
+
+project_id = '2020-12-07-sds-on-au-111-probe-and-substrate-approach-on-nvt-test'
+
+wfg = LAMMPSProbeNormalApproch(
+    project_id=project_id,
+    files_in_info={
+        'data_file': { 
+            'query': {'uuid': '9d2fcef6-d943-498b-8d0f-1264f068c094'},
+            'file_name': 'default.lammps',
+            'metadata_dtool_source_key': 'system',
+            'metadata_fw_dest_key': 'metadata->system',
+            'metadata_fw_source_key': 'metadata->system',
+        },
+
+    },
+    integrate_push=True,
+    description="SDS on Au(111) substrate and probe trial",
+    owners=[{
+        'name': 'Johannes Laurin Hörmann',
+        'email': 'johannes.hoermann@imtek.uni-freiburg.de',
+        'username': 'fr_jh1130',
+        'orcid': '0000-0001-5867-695X'
+    }],
+    infile_prefix=prefix,
+    machine='juwels_devel',
+    mode='trial',
+    system={
+        'counterion': {
+            'name': 'NA',
+            'resname': 'NA',
+            'nmolecules': None,
+            'reference_atom': {
+                'name': 'NA',
+            },
+        },
+        'surfactant': {
+            'name': 'SDS',
+            'resname': 'SDS',
+            'nmolecules': None,
+            'connector_atom': {
+                'index': 2,
+            },
+            'head_atom': {
+                'name': 'S',
+                'index': 1,
+            },
+            'tail_atom': {
+                'name': 'C12',
+                'index': 39,
+            },
+            'aggregates': {
+                'shape': None,
+            }
+        },
+        'indenter': {
+            'name': 'AUM',
+            'resname': 'AUM',
+            'reference_atom': {
+                'name': 'AU',
+            },
+        },
+        'substrate': {
+            'name': 'AUM',
+            'resname': 'AUM',
+            'reference_atom': {
+                'name': 'AU',
+            },
+            'element': 'Au',
+            'lmp': {
+                'type': 11,
+            }
+      
+        },
+        'solvent': {
+            'name': 'H2O',
+            'resname': 'SOL',
+            'reference_atom': {
+                'name': 'OW',
+            },
+            'height': 180.0,
+        }
+    },
+    step_specific={
+        'merge': {
+            'tol': 2.0,
+            'z_dist': 50.0,
+            'x_shift': 0.0,
+            'y_shift': 0.0,
+        },
+        'psfgen': psfgen_mappings_template_context,
+        'split_datafile': {
+            'region_tolerance': 5.0,
+            'shift_tolerance': 2.0,
+        },
+        'minimization': {
+            'ftol': 1.0e-6,
+            'maxiter': 10000,
+            'maxeval': 10000,
+            
+            'ewald_accuracy': 1.0e-4,
+            'coulomb_cutoff': 8.0,
+            'neigh_delay': 2,
+            'neigh_every': 1,
+            'neigh_check': True,
+            'skin_distance': 3.0,
+        },
+        'equilibration': {
+            'nvt': {
+                'initial_temperature': 1.0,
+                'temperature': 298.0,
+                'langevin_damping': 1000,
+                'steps': 10000,
+                'netcdf_frequency': 1000,
+                'thermo_frequency': 1000,
+                'thermo_average_frequency': 1000,
+            
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0,
+            },
+            'npt': {
+                'pressure': 1.0,
+                'temperature': 298.0,
+                'barostat_damping': 10000,
+                'langevin_damping': 1000,
+                'steps': 250000,
+                'netcdf_frequency': 1000,
+                'thermo_frequency': 1000,
+                'thermo_average_frequency': 1000,
+                
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0
+            },
+            'dpd': {
+                'freeze_substrate_layer': 14.0,  # freeze that slab at the substrate's bottom
+                'rigid_indenter_core_radius': 12.0,  # freeze that sphere at the ore of the indenter
+                'temperature': 298.0,
+                'steps': 250000,
+                'netcdf_frequency': 1000,
+                'thermo_frequency': 1000,
+                'thermo_average_frequency': 1000,
+                
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0
+            },
+        },
+        'probe_normal_approach': {
+            'constant_indenter_velocity': -1.0e-5,
+            'freeze_substrate_layer': 14.0,  # freeze that slab at the substrate's bottom
+            'rigid_indenter_core_radius': 12.0,  # freeze that sphere at the ore of the indenter
+            'temperature': 298.0,
+            'steps': 1750000,
+            'netcdf_frequency': 1000,
+            'thermo_frequency': 1000,
+            'thermo_average_frequency': 1000,
+            'restart_frequency': 1000,
+            
+            'ewald_accuracy': 1.0e-4,
+            'coulomb_cutoff': 8.0,
+            'neigh_delay': 2,
+            'neigh_every': 1,
+            'neigh_check': True,
+            'skin_distance': 3.0
+        },
+        'dtool_push': {
+            'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
+            'remote_dataset': None,
+        }
+    },
+ )
+
+fp_files = wfg.push_infiles(fp)
+
+wf = wfg.build_wf()
+
+
+# In[070]
+
+# NVT equlibrated
+# 9d2fcef6-d943-498b-8d0f-1264f068c094
+
+
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_110_lammps_probe_normal_approach import LAMMPSProbeNormalApproch
+from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
+
+
+project_id = '2020-12-07-sds-on-au-111-probe-and-substrate-approach-on-nvt-quick-test'
+
+wfg = LAMMPSProbeNormalApproch(
+    project_id=project_id,
+    files_in_info={
+        'data_file': { 
+            'query': {'uuid': '9d2fcef6-d943-498b-8d0f-1264f068c094'},
+            'file_name': 'default.lammps',
+            'metadata_dtool_source_key': 'system',
+            'metadata_fw_dest_key': 'metadata->system',
+            'metadata_fw_source_key': 'metadata->system',
+        },
+
+    },
+    integrate_push=True,
+    description="SDS on Au(111) substrate and probe trial",
+    owners=[{
+        'name': 'Johannes Laurin Hörmann',
+        'email': 'johannes.hoermann@imtek.uni-freiburg.de',
+        'username': 'fr_jh1130',
+        'orcid': '0000-0001-5867-695X'
+    }],
+    infile_prefix=prefix,
+    machine='juwels_devel',
+    mode='trial',
+    system={
+        'counterion': {
+            'name': 'NA',
+            'resname': 'NA',
+            'nmolecules': None,
+            'reference_atom': {
+                'name': 'NA',
+            },
+        },
+        'surfactant': {
+            'name': 'SDS',
+            'resname': 'SDS',
+            'nmolecules': None,
+            'connector_atom': {
+                'index': 2,
+            },
+            'head_atom': {
+                'name': 'S',
+                'index': 1,
+            },
+            'tail_atom': {
+                'name': 'C12',
+                'index': 39,
+            },
+            'aggregates': {
+                'shape': None,
+            }
+        },
+        'indenter': {
+            'name': 'AUM',
+            'resname': 'AUM',
+            'reference_atom': {
+                'name': 'AU',
+            },
+        },
+        'substrate': {
+            'name': 'AUM',
+            'resname': 'AUM',
+            'reference_atom': {
+                'name': 'AU',
+            },
+            'element': 'Au',
+            'lmp': {
+                'type': 11,
+            }
+      
+        },
+        'solvent': {
+            'name': 'H2O',
+            'resname': 'SOL',
+            'reference_atom': {
+                'name': 'OW',
+            },
+            'height': 180.0,
+        }
+    },
+    step_specific={
+        'merge': {
+            'tol': 2.0,
+            'z_dist': 50.0,
+            'x_shift': 0.0,
+            'y_shift': 0.0,
+        },
+        'psfgen': psfgen_mappings_template_context,
+        'split_datafile': {
+            'region_tolerance': 5.0,
+            'shift_tolerance': 2.0,
+        },
+        'minimization': {
+            'ftol': 1.0e-6,
+            'maxiter': 10000,
+            'maxeval': 10000,
+            
+            'ewald_accuracy': 1.0e-4,
+            'coulomb_cutoff': 8.0,
+            'neigh_delay': 2,
+            'neigh_every': 1,
+            'neigh_check': True,
+            'skin_distance': 3.0,
+        },
+        'equilibration': {
+            'nvt': {
+                'initial_temperature': 1.0,
+                'temperature': 298.0,
+                'langevin_damping': 1000,
+                'steps': 10000,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
+            
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0,
+            },
+            'npt': {
+                'pressure': 1.0,
+                'temperature': 298.0,
+                'barostat_damping': 10000,
+                'langevin_damping': 1000,
+                'steps': 10000,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
+                
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0
+            },
+            'dpd': {
+                'freeze_substrate_layer': 14.0,  # freeze that slab at the substrate's bottom
+                'rigid_indenter_core_radius': 12.0,  # freeze that sphere at the ore of the indenter
+                'temperature': 298.0,
+                'steps': 10000,
+                'netcdf_frequency': 100,
+                'thermo_frequency': 100,
+                'thermo_average_frequency': 100,
+                
+                'ewald_accuracy': 1.0e-4,
+                'coulomb_cutoff': 8.0,
+                'neigh_delay': 2,
+                'neigh_every': 1,
+                'neigh_check': True,
+                'skin_distance': 3.0
+            },
+        },
+        'probe_normal_approach': {
+            'constant_indenter_velocity': -1.0e-4,
+            'freeze_substrate_layer': 14.0,  # freeze that slab at the substrate's bottom
+            'rigid_indenter_core_radius': 12.0,  # freeze that sphere at the ore of the indenter
+            'temperature': 298.0,
+            'steps': 10000,
+            'netcdf_frequency': 100,
+            'thermo_frequency': 100,
+            'thermo_average_frequency': 100,
+            'restart_frequency': 100,
+            
+            'ewald_accuracy': 1.0e-4,
+            'coulomb_cutoff': 8.0,
+            'neigh_delay': 2,
+            'neigh_every': 1,
+            'neigh_check': True,
+            'skin_distance': 3.0,
         },
         'dtool_push': {
             'dtool_target': '/p/project/chfr13/hoermann4/dtool/TRIAL_DATASETS',
