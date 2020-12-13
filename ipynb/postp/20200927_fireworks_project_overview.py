@@ -41,14 +41,17 @@ from ase.visualize import view
 from ase.visualize.plot import plot_atoms # has nasty offset issues
 from cycler import cycler # here used for cycling through colors in plots
 import datetime
-from fireworks import LaunchPad, Firework, Tracker, Workflow 
-from fireworks import FileTransferTask, PyTask, ScriptTask
+
+# dtool functionality
+import dtool_lookup_api.asynchronous as dl
+import dtoolcore
 
 # FireWorks functionality 
 from fireworks import Firework, LaunchPad, ScriptTask, Workflow
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask, GetFilesTask, GetFilesByQueryTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
+
 from fireworks.utilities.filepad import FilePad # direct FilePad access, similar to the familiar LaunchPad
 
 from collections.abc import Iterable
@@ -320,6 +323,65 @@ readme
 
 # %%
 query = make_query({'datetime': {'$gt': '2020'} })
+
+# %%
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 'project': '$readme.project' },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$readme.datetime' },
+            "latest":  {'$max': '$readme.datetime' },
+        },
+    },
+    {  # pull 'project' field up in hierarchy
+        "$addFields": { 
+            "project": "$_id.project",
+        },
+    },
+    {  # drop nested '_id.project'
+        "$project": { 
+            "_id": False 
+        },
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %% [markdown]
+# ## Overview on recent production projects
+
+# %%
+res = await dl.query(
+    {
+        'readme.owners.name': {'$regex': 'Johannes'},
+        'readme.mode': 'production'
+    })
+
+# %%
+len(res)
+
+# %%
+query = make_query(
+    {
+        'datetime': {'$gt': '2020'},
+        'mode': 'production'
+    })
 
 # %%
 aggregation_pipeline = [

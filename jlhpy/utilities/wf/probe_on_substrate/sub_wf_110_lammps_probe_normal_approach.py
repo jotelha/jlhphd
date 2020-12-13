@@ -810,13 +810,14 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
                 store_stdout=True,
                 store_stderr=True,
                 fizzle_bad_rc=False),
+            # fixed outfile name of ncjoin is traj.nc
             CmdTask(  # concatenate previous and current trajectory
                 cmd='ncjoin',
-                opt=['-v', 'time',  '-n', 'joint.nc', 'previous.nc ', 'default.nc'],
+                opt=['-v', 'time', 'previous.default.nc ', 'default.nc'],
                 env='python',
-                stderr_file='join_thermo.err',
-                stdout_file='join_thermo.out',
-                stdlog_file='join_thermo.log',
+                stderr_file='ncjoin.err',
+                stdout_file='ncjoin.out',
+                stdlog_file='ncjoin.log',
                 store_stdout=True,
                 store_stderr=True,
                 fizzle_bad_rc=False),
@@ -830,7 +831,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
                      'dest': 'thermo.out'},
                     {'src':  'joint.thermo_ave.out',
                      'dest': 'thermo_ave.out'},
-                    {'src':  'joint.nc',
+                    {'src':  'traj.nc',
                      'dest': 'default.nc'}
                 ]
             )
@@ -899,6 +900,17 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
             detour_wf=wf_detour.as_dict(),
             superpose_restart_on_parent_fw_spec=True,
             superpose_detour_on_parent_fw_spec=True,
+            fw_spec_to_exclude=[
+                '_category',
+                '_job_info',
+                '_fw_env',
+                '_files_prev',
+                '_files_in',
+                '_files_out',
+                '_fizzled_parents',
+                '_queueadapter',
+                '_tasks',
+            ],
             repeated_recover_fw_name=step_label,
             max_restarts=20,  # TODO: from global kwargs or fwspec
             fizzle_on_no_restart_file=False,

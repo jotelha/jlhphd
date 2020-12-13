@@ -161,6 +161,82 @@ def memuse():
     return sorted([(x, sys.getsizeof(globals().get(x))) for x in dir(sys.modules['__main__']) if not x.startswith('_') and x not in sys.modules and x not in ipython_vars], key=lambda x: x[1], reverse=True)
 
 
+# %%
+
+# %%
+from asgiref.sync import async_to_sync
+
+
+async def get_item_dict(uri):
+    manifest = await dl.manifest(uri)
+    item_dict = {item['relpath']: item_id for item_id, item in manifest['items'].items()}
+    return item_dict
+
+
+async def read_thermo(uri, file_name='thermo.out'): 
+    item_dict = await get_item_dict(uri)
+    d = dtoolcore.DataSet.from_uri(uri)
+    fpath = d.item_content_abspath(item_dict[file_name])
+
+
+    df = pd.read_csv(fpath, delim_whitespace=True)
+    df.set_index('Step', inplace=True)
+
+    return df
+
+def plot_df(df):
+    nplots = len(df.columns)
+    ncols = 2
+    nrows = nplots // 2
+
+    fig, axs = plt.subplots(nrows, ncols, figsize=(8*ncols, 5*nrows))
+    for i, col in enumerate(df.columns):
+        df[col].plot(ax=axs[i//ncols,i%ncols], title=col)
+        
+    return fig, axs
+
+async def plot_thermo(uri, file_name='thermo.out'):
+    df = await read_thermo(uri, file_name=file_name)
+    return plot_df(fg)
+
+# %%
+async def get_df_by_query(query):
+    res = await dl.query(query)
+    res_df = pd.DataFrame(res)
+    return res_df
+
+async def get_df_by_filtered_query(query):
+    aggregation_pipeline = [
+        {
+            "$match": query
+        },
+        {
+            "$project": {
+                'base_uri': True,
+                'uuid': True,
+                'uri': True,
+                'frozen_at': True,
+            }
+        },
+        {  # sort by earliest date, descending
+            "$sort": { 
+                "frozen_at": pymongo.DESCENDING,
+            }
+        }
+    ]
+
+    res = await dl.aggregate(aggregation_pipeline)
+    res_df = pd.DataFrame(res)
+    return res_df
+
+async def get_uri_by_query(query):
+    logger = logging.getLogger(__name__)
+    res_df = await get_df_by_query(query)
+    if len(res_df.uri) > 1:
+        logger.warning("Query '%s' yields %d uris %s, return first entry only." % (query, len(res_df.uri), res_df.uri))
+    return res_df.uri[0]
+    
+
 # %% [markdown]
 # ### Global settings
 
@@ -360,7 +436,7 @@ res_df
 # ## Overview on steps in project
 
 # %%
-project_id = '2020-12-07-sds-on-au-111-probe-and-substrate-minimization-test'
+project_id = '2020-12-08-sds-on-au-111-probe-and-substrate-minimzation-equilibration-approach-not-quite-as-quick-test'
 
 # %%
 # queries to the data base are simple dictionaries
@@ -421,7 +497,7 @@ res_df
 # %%
 query = {
     'readme.project': project_id,
-    'readme.step': 'LAMMPSMinimization:push_dtool'
+    'readme.step': {'$regex': 'LAMMPSMinimization'},
 }
 
 # %%
@@ -523,66 +599,28 @@ for i, col in enumerate(df.columns):
 # ### Overview on UUIDs in step
 
 # %%
-project_id = '2020-12-07-sds-on-au-111-probe-and-substrate-equilibration-nvt-test'
-
-# %%
 query = {
     'readme.project': project_id,
-    'readme.step': 'LAMMPSEquilibrationNVT:push_dtool'
+    'readme.step': {'$regex': 'LAMMPSEquilibrationNVT'},
 }
 
 # %%
-res = await dl.query(query)
+await get_df_by_query(query)
 
 # %%
-res_df = pd.DataFrame(res)
+await get_df_by_filtered_query(query)
 
 # %%
-res_df
+uri = await get_uri_by_query(query)
 
 # %%
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {
-        "$project": {
-            'base_uri': True,
-            'uuid': True,
-            'uri': True,
-            'frozen_at': True,
-        }
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "frozen_at": pymongo.DESCENDING,
-        }
-    }
-]
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df
-
-# %%
-uri = res_df.uri[0]
+uri
 
 # %% [markdown]
 # ### List items
 
 # %%
-manifest = await dl.manifest(uri)
-
-# %%
-manifest
-
-# %%
-item_dict = {item['relpath']: item_id for item_id, item in manifest['items'].items()}
+item_dict = await get_item_dict(uri)
 
 # %%
 item_dict
@@ -591,28 +629,155 @@ item_dict
 # ### Evaluate
 
 # %%
-d = dtoolcore.DataSet.from_uri(uri)
-
-# %%
-fpath = d.item_content_abspath(item_dict['thermo.out'])
-
-# %%
-fpath
-
-# %%
-df = pd.read_csv(fpath, delim_whitespace=True)
-df.set_index('Step', inplace=True)
+df = await read_thermo(uri)
 
 # %%
 df
 
 # %%
-nplots = len(df.columns)
-ncols = 2
-nrows = nplots // 2
+fig, ax = plot_df(df)
+fig.show()
 
-fig, axs = plt.subplots(nrows, ncols, figsize=(8*ncols, 5*nrows))
-for i, col in enumerate(df.columns):
-    df[col].plot(ax=axs[i//ncols,i%ncols], title=col)
+# %%
+
+# %% [markdown]
+# ## NPT Equilibration
+
+# %% [markdown]
+# ### Overview on UUIDs in step
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'LAMMPSEquilibrationNPT'},
+}
+
+# %%
+await get_df_by_query(query)
+
+# %%
+await get_df_by_filtered_query(query)
+
+# %%
+uri = await get_uri_by_query(query)
+
+# %%
+uri
+
+# %% [markdown]
+# ### List items
+
+# %%
+item_dict = await get_item_dict(uri)
+
+# %%
+item_dict
+
+# %% [markdown]
+# ### Evaluate
+
+# %%
+df = await read_thermo(uri)
+
+# %%
+df
+
+# %%
+fig, ax = plot_df(df)
+fig.show()
+
+# %% [markdown]
+# ## DPD Equilibration
+
+# %% [markdown]
+# ### Overview on UUIDs in step
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'LAMMPSEquilibrationDPD'},
+}
+
+# %%
+await get_df_by_query(query)
+
+# %%
+await get_df_by_filtered_query(query)
+
+# %%
+uri = await get_uri_by_query(query)
+
+# %%
+uri
+
+# %% [markdown]
+# ### List items
+
+# %%
+item_dict = await get_item_dict(uri)
+
+# %%
+item_dict
+
+# %% [markdown]
+# ### Evaluate
+
+# %%
+df = await read_thermo(uri)
+
+# %%
+df
+
+# %%
+fig, ax = plot_df(df)
+fig.show()
+
+# %% [markdown]
+# ## Normal approach
+
+# %% [markdown]
+# ### Overview on UUIDs in step
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'LAMMPSProbeNormalApproch'},
+}
+
+# %%
+await get_df_by_query(query)
+
+# %%
+await get_df_by_filtered_query(query)
+
+# %%
+uri = await get_uri_by_query(query)
+
+# %%
+uri
+
+# %% [markdown]
+# ### List items
+
+# %%
+item_dict = await get_item_dict(uri)
+
+# %%
+item_dict
+
+# %% [markdown]
+# ### Evaluate
+
+# %%
+df = await read_thermo(uri)
+
+# %%
+df
+
+# %%
+fig, ax = plot_df(df)
+fig.show()
+
+# %%
 
 # %%

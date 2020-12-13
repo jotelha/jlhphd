@@ -57,7 +57,7 @@ from jlhpy.utilities.wf.probe_on_substrate.sub_wf_110_lammps_probe_normal_approa
 from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
 
 
-project_id = '2020-12-10-sds-on-au-111-probe-and-substrate-approach-recover-test'
+project_id = '2020-12-11-sds-on-au-111-probe-and-substrate-approach-recover-test'
 
 wfg = LAMMPSProbeNormalApproch(
     project_id=project_id,
