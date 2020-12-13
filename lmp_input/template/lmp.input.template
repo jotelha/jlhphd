@@ -170,6 +170,8 @@ variable restart_file index default.mpiio.restart
 {%- endif %}
 
 {%- if is_restart is sameas true %}
+# In case of a restart, group definitions are not repeated and no datafile is read.
+# All other settings are explicitly redefined even if not necessary.
 read_restart ${restart_file}
 {%- if verbose is sameas true %}
 print "Force field parameters from restart file:"
@@ -312,11 +314,14 @@ variable substrate_type index {{ substrate_type }}
 
 ###############################################################################
 ### system intialization
-{%- if (not is_restart is sameas true) and (pbc2d is sameas true) %}
+{%- if (pbc2d is sameas true) %}
 boundary p p f
 {%- endif %}
 
 {%- if (not is_restart is sameas true) %}
+# units command must not appear if reading restart file, otherwise LAMMPS will fail with
+#   ERROR: Units command after simulation box is defined (src/input.cpp:1906)
+
 units real
 # http://lammps.sandia.gov/doc/units.html
     #mass = grams/mole
@@ -374,11 +379,17 @@ neigh_modify delay ${neigh_delay} every ${neigh_every} check no &
 #    bad physics, e.g. due to highly overlapping atoms, too large a timestep,
 #    etc.
 
-{%- if (not is_restart is sameas true) %}
 ###############################################################################
 ### CHARMM potential specific styles
 
+{%- if (not is_restart is sameas true) %}
+# in case of reading a restart file above, styles must not be redefined,
+# otherwise LAMMPS fails with
+#  ERROR: Atom_style command after simulation box is defined (src/input.cpp:1324)
 atom_style      full
+# Other styles below are allowed to be redefined.
+{%- endif %}
+
 bond_style      harmonic
 
 angle_style     charmm
@@ -393,24 +404,23 @@ dihedral_style  charmmfsw
 #             Gao, Guo, Ha, et al, J Phys Chem B, 102, 3586 (1998).
 
 improper_style  harmonic
-{%- endif %}
 
 ###############################################################################
 ### hybrid potential style descriptions
 
 ### without EAM
 
-{%- if (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
+{%- if (not use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
+{%- elif (not use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) and (use_ewald is sameas true) %}
+{%- elif (not use_eam is sameas true) and (use_ewald is sameas true) %}
 pair_style lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}
-{%- elif (not is_restart is sameas true) and (not use_eam is sameas true) %}
+{%- elif (not use_eam is sameas true) %}
 pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff}
 {%- endif %}
 
@@ -498,21 +508,21 @@ pair_style lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb
 
 ### with EAM
 
-{%- if (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
+{%- if (use_eam is sameas true) and (use_ewald is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
+{%- elif (use_eam is sameas true) and (use_dpd_tstat is sameas true) %}
 pair_style hybrid/overlay &
     lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy &
     dpd/tstat ${temperatureT} ${temperatureT} ${dpd_cutoff} ${random_seed}
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) and (use_ewald is sameas true) %}
+{%- elif (use_eam is sameas true) and (use_ewald is sameas true) %}
 pair_style hybrid &
     lj/charmmfsw/coul/long ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} &
     eam/alloy
-{%- elif (not is_restart is sameas true) and (use_eam is sameas true) %}
+{%- elif (use_eam is sameas true) %}
 pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${coulomb_cutoff} eam/alloy
 {%- endif %}
 # The hybrid and hybrid/overlay styles enable the use of multiple pair styles in
@@ -521,9 +531,7 @@ pair_style hybrid lj/charmmfsw/coul/charmmfsh ${inner_cutoff} ${outer_cutoff} ${
 # styles can be assigned to each pair of atom types. The assignment of pair
 # styles to type pairs is made via the pair_coeff command.
 
-{%- if not is_restart is sameas true %}
 pair_modify mix arithmetic
-{%- endif %}
 
 {%- if use_ewald is sameas true %}
 kspace_style    pppm ${ewald_accuracy}
@@ -817,7 +825,6 @@ region indenter_region plane 0  0  ${region_tolerance} 0 0 1 side in units box
 
 # 2019/04/26: contrary to previous practice, now expect substrate to be z < 0
 
-{%- if (not is_restart is sameas true) %}
 special_bonds charmm
 # http://lammps.sandia.gov/doc/special_bonds.html
 # The charmm keyword sets the 3 coefficients to 0.0, 0.0, 0.0 for both LJ and
@@ -827,7 +834,6 @@ special_bonds charmm
 # pairwise contributions are computed as part of the charmm dihedral style
 # - see the pair_coeff and dihedral_style commands for more information.
 # See (MacKerell) for a description of the CHARMM force field.
-{%- endif %}
 
 # if "${use_eam} > 0" then &
 #     "special_bonds  pair eam/fs 1.0 1.0 1.0"
@@ -837,9 +843,7 @@ special_bonds charmm
 # disable or enable registering compute */tally computes for a given sub-style.
 # More details are given below.
 
-{%- if (not is_restart is sameas true) %}
 timestep ${timestep}
-{%- endif %}
 
 ###############################################################################
 ### group definitions
