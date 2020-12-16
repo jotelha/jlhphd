@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.7.1
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -235,7 +235,7 @@ async def get_uri_by_query(query):
     if len(res_df.uri) > 1:
         logger.warning("Query '%s' yields %d uris %s, return first entry only." % (query, len(res_df.uri), res_df.uri))
     return res_df.uri[0]
-    
+
 
 # %% [markdown]
 # ### Global settings

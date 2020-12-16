@@ -9,14 +9,14 @@ import os.path
 import warnings
 
 from fireworks.user_objects.firetasks.script_task import PyTask
+from fireworks.user_objects.firetasks.fileio_tasks import FileTransferTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 
 # from fireworks.user_objects.firetasks.dataflow_tasks import JoinListTask
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
-    import CmdTask, EvalPyEnvTask, PickledPyEnvTask, PyEnvTask
+    import CmdTask, PickledPyEnvTask
 from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.geometry.morphology import (
@@ -524,6 +524,16 @@ class PackingMain(DefaultPushMixin, WorkflowGenerator):
             'data_file': 'default_packmol.pdb'}
 
         # ATTENTION: packmol return code == 0 even for failure
+
+        # NOTE: If PACKMOL did not converge, it offers two solutions:
+        # default_packmol.pdb and default_packmol.pdb_FORCED. See
+        # https://github.com/m3g/packmol/blob/add5deed4784812f3de8f2dadb5ea702a630d270/checkpoint.f90#L67-L84
+        # Only the latter has the constraints enforced, and we have better
+        # chances to succeed with this, as without enforcing constraints,
+        # molecules may overlap with the substrate or other molecules.
+        # Thus, we try to overwrite the default outfile default_packmol.pdb
+        # with default_packmol.pdb_FORCED, which fails silently if latter
+        # not present, i.e.PACKMOl converged successfully.
         fts_pack = [
             CmdTask(
                 cmd='packmol',
@@ -537,7 +547,16 @@ class PackingMain(DefaultPushMixin, WorkflowGenerator):
                 fizzle_bad_rc=True),
             PyTask(  # check for output file and fizzle if not existant
                 func='open',
-                args=['default_packmol.pdb'])]
+                args=['default_packmol.pdb']),
+            FileTransferTask(
+                mode='copy',
+                ignore_errors=True,
+                files=[
+                    {'src': 'default_packmol.pdb_FORCED',
+                     'dest': 'default_packmol.pdb'}
+                ]
+            ),
+        ]
 
         fw_pack = self.build_fw(
             fts_pack, step_label,

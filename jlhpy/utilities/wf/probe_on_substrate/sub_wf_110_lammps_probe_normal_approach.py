@@ -25,6 +25,7 @@ from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_analysis import LAMMPSTraj
 import jlhpy.utilities.wf.file_config as file_config
 import jlhpy.utilities.wf.phys_config as phys_config
 
+# TODO: separate exclusions for recovery, restart and detour
 
 class LAMMPSProbeNormalApproachMain(WorkflowGenerator):
     """
@@ -802,7 +803,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
                 use_shell=True),
             CmdTask(  # concatenate previous and current thermo output
                 cmd='join_thermo',
-                opt=['-v', 'previous.thermo.out ', 'thermo.out', 'joint.thermo.out'],
+                opt=['-v', 'previous.thermo.out', 'thermo.out', 'joint.thermo.out'],
                 env='python',
                 stderr_file='join_thermo.err',
                 stdout_file='join_thermo.out',
@@ -813,7 +814,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
             # fixed outfile name of ncjoin is traj.nc
             CmdTask(  # concatenate previous and current trajectory
                 cmd='ncjoin',
-                opt=['-v', 'time', 'previous.default.nc ', 'default.nc'],
+                opt=['-v', 'time', 'previous.default.nc', 'default.nc'],
                 env='python',
                 stderr_file='ncjoin.err',
                 stdout_file='ncjoin.out',
@@ -900,17 +901,6 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
             detour_wf=wf_detour.as_dict(),
             superpose_restart_on_parent_fw_spec=True,
             superpose_detour_on_parent_fw_spec=True,
-            fw_spec_to_exclude=[
-                '_category',
-                '_job_info',
-                '_fw_env',
-                '_files_prev',
-                '_files_in',
-                '_files_out',
-                '_fizzled_parents',
-                '_queueadapter',
-                '_tasks',
-            ],
             repeated_recover_fw_name=step_label,
             max_restarts=20,  # TODO: from global kwargs or fwspec
             fizzle_on_no_restart_file=False,
