@@ -930,7 +930,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
         return fw_list, [fw_lmp_recovery], [fw_lmp_run, fw_template]
 
 
-# class LAMMPSProbeNormalApproch(
+# class LAMMPSProbeNormalApproach(
 #         DefaultPullMixin, DefaultPushMixin,
 #         ProcessAnalyzeAndVisualize,
 #         ):
@@ -940,7 +940,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
 #             analysis_sub_wf=LAMMPSTrajectoryAnalysis,
 #             *args, **kwargs)
 
-class LAMMPSProbeNormalApproch(
+class LAMMPSProbeNormalApproach(
         DefaultPullMixin, DefaultPushMixin,
         LAMMPSRecoverableProbeNormalApproachMain,
         ):

@@ -37,7 +37,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
     dynamic infiles:
     - data_file: default.gro
-    - tpr_file: default.tpr
+    - run_file: default.tpr
 
     outfiles:
     - data_file: default.data
@@ -203,7 +203,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
 
         files_in = {
             'data_file': 'in.gro',
-            'tpr_file':  'in.tpr',
+            'run_file':  'in.tpr',
         }
         files_out = {
             'data_file': 'out.gro',

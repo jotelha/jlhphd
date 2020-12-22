@@ -1,4 +1,17 @@
+# -*- coding: utf-8 -*-
+""" Mappings """
+import numpy as np
+import ase
 
+# type dict, manually for SDS
+sds_t2n = {1: 1, 2: 1, 3: 6, 4: 6, 5: 8, 6: 8, 7: 16, 8: 1, 9: 8, 10: 11, 12: 79}
+sds_t2n_array = np.array([0,*list(sds_t2n.values())],dtype='uint64')
+sds_t2e_array = np.array(ase.data.chemical_symbols)[sds_t2n_array] # double-check against LAMMPS data file
+
+# type dict, manually for CTAB
+ctab_t2n = {1: 1, 2: 1, 3: 1, 4: 6, 5: 6, 6: 6, 7: 7, 8: 1, 9: 8, 10: 35, 11: 79}
+ctab_t2n_array = np.array([0,*list(ctab_t2n.values())],dtype='uint64')
+ctab_t2e_array = np.array(ase.data.chemical_symbols)[ctab_t2n_array] # double-check against LAMMPS data file
 
 lmp_type_ase_element_mapping = {
     '11': 'Au',

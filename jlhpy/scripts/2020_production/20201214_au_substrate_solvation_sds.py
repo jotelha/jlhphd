@@ -70,9 +70,16 @@ N = np.round(A_nm*C).astype(int).tolist()
 #     {'c': c, 'n': n, 'm': n, 's': s } 
 #     for c, n in zip(C,N) for s in ['monolayer','hemicylinders']][20:22]
 
+# launched on 2020/12/14
+# parameter_values = [
+#     {'c': c, 'n': n, 'm': n, 's': s } 
+#     for c, n in zip(C,N) for s in ['monolayer','hemicylinders']][:14]
+
+# launched on 2020/12/20
 parameter_values = [
     {'c': c, 'n': n, 'm': n, 's': s } 
-    for c, n in zip(C,N) for s in ['monolayer','hemicylinders']][:14]
+    for c, n in zip(C,N) for s in ['monolayer','hemicylinders']][22:24]
+
 # In[20]:
 
 # SDS on Au(111)

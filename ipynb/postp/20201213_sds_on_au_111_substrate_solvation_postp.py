@@ -284,7 +284,7 @@ async def get_edr_df(
     res_mi_df = pd.concat(res_mi_list)
     return res_mi_df
     # res_df = res_mi_df.reset_index()
- 
+    
 async def get_mp4_dict(
         ds_df, filename='default.mp4', parameter_dict=DEFAULT_PARAMETER_DICT):
     
@@ -295,6 +295,88 @@ async def get_mp4_dict(
         print('.',end='')
         
     return obj_dict
+
+# %%
+# rdf 
+async def get_rdf_dict(
+        ds_df, filename='default.txt', parameter_dict=DEFAULT_PARAMETER_DICT):
+    
+    parameter_keys = list(parameter_dict.keys())
+    
+    obj_dict = {}
+    for index, row in ds_df.iterrows():
+        fpath = await fetch_item(row['uri'], filename)
+        
+        data = np.loadtxt(fpath, comments='#')
+        d = data[0] # distance bins
+        rdf = data[1:]
+                
+        obj_dict.update({tuple(row[parameter_keys].values): {'dist': d, 'rdf': rdf}})
+        print('.',end='')
+        
+    return obj_dict
+
+async def get_rdf_df(
+        ds_df, filename='default.txt', parameter_dict=DEFAULT_PARAMETER_DICT):
+    
+    parameter_keys = list(parameter_dict.keys())
+    rdf_dict = await get_rdf_dict(ds_df, filename=filename, parameter_dict=parameter_dict)
+    
+    res_df = pd.DataFrame()
+    for parameter_vals, item in rdf_dict.items():
+        data = {k: v for k, v in zip(parameter_keys, parameter_vals)}
+        for i, rdf in enumerate(item['rdf']):
+            data.update({'step': i, 'dist': item['dist'], 'rdf': rdf})
+            df = pd.DataFrame(data=data)
+            res_df = pd.concat([res_df, df], ignore_index=True)
+
+    res_mi_df = res_df.set_index([*parameter_keys, 'step' , 'dist'])
+    return res_mi_df
+
+def plot_rdf_df(
+        rdf_df, filename='default.txt', parameter_dict=DEFAULT_PARAMETER_DICT):
+    
+    parameter_keys = list(parameter_dict.keys())
+    
+    unique_parameter_tuples = len(rdf_df[parameter_keys].groupby(parameter_keys))
+    n = unique_parameter_tuples
+
+    cols = 2 if n > 1 else 1
+    rows = round(n/cols)
+    if rows > 1:
+        positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
+    else:
+        positions = [i for i in range(cols)][:n]
+
+    fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
+    if not isinstance(ax, Iterable):
+        ax = [ax]
+
+
+    for pos, (key, grp) in zip(positions, rdf_df.groupby(by=parameter_keys)):
+        steps_of_interest = {
+            'first': int(grp['step'].unique().min()),
+            'intermediate': int(grp['step'].unique().mean().round()),
+            'last': int(grp['step'].unique().max())
+        }
+        for label, step in steps_of_interest.items():
+            grp[ grp['step'] == step ].plot('dist', 'rdf', ax=ax[pos], label=label,title=str(key))
+
+    # fig.tight_layout()
+    return fig
+
+async def get_rdf_plot_dict(ds_df, filenames, interval=(0.1,40.0)):
+    rdf_plot_dict = {}
+    for fn in filenames:
+        rdf_df = await get_rdf_df(ds_df, fn)
+        rdf_df.reset_index(inplace=True)
+        rdf_plot_dict.update(
+            {
+                fn: plot_rdf_df(rdf_df[ 
+                    (rdf_df['dist'] >= interval[0]) & (rdf_df['dist'] <= interval[1])
+                ])})
+        
+    return rdf_plot_dict
 
 # %% [markdown]
 # ### Global settings
@@ -412,7 +494,7 @@ res_df
 # ### Overview on steps in project
 
 # %%
-project_id = '2020-12-12-sds-on-au-111-substrate-passivation-trial'
+project_id = '2020-12-14-sds-on-au-111-substrate-passivation'
 
 # %%
 query = make_query({
@@ -566,7 +648,7 @@ positions = [
 fig, ax = plt.subplots(3,2,figsize=(10,12))
 for key, grp in res_df.groupby(parameter_keys):
     for y_quantity, position in zip(y_quantities, positions):
-        grp.plot('Time',y_quantity,ax=ax[position],label=key,title=y_quantity)
+        grp.plot('Time',y_quantity,ax=ax[position],label=str(key),title=y_quantity)
         
 fig.tight_layout()
 
@@ -574,7 +656,7 @@ fig.tight_layout()
 fig, ax = plt.subplots(3,2,figsize=(10,12))
 for key, grp in res_df[res_df['shape'] == 'monolayer'].groupby(parameter_keys):
     for y_quantity, position in zip(y_quantities, positions):
-        grp.plot('Time', y_quantity, ax=ax[position], label=key, title=y_quantity, legend=False)
+        grp.plot('Time', y_quantity, ax=ax[position], label=str(key), title=y_quantity, legend=True)
         
 fig.tight_layout()
 
@@ -582,7 +664,7 @@ fig.tight_layout()
 fig, ax = plt.subplots(3,2,figsize=(10,12))
 for key, grp in res_df[res_df['shape'] == 'hemicylinders'].groupby(parameter_keys):
     for y_quantity, position in zip(y_quantities, positions):
-        grp.plot('Time', y_quantity, ax=ax[position], label=key, title=y_quantity, legend=False)
+        grp.plot('Time', y_quantity, ax=ax[position], label=str(key), title=y_quantity, legend=True)
         
 fig.tight_layout()
 
@@ -788,7 +870,7 @@ else:
 fig, ax = plt.subplots(rows,cols,figsize=(10,12))
 for key, grp in res_df.groupby(parameter_keys):
     for y_quantity, position in zip(y_quantities, positions):
-        grp.plot('Time',y_quantity,ax=ax[position],label=key,title=y_quantity)
+        grp.plot('Time',y_quantity,ax=ax[position],label=str(key),title=y_quantity)
         
 fig.tight_layout()
 
@@ -813,282 +895,17 @@ for key, obj in obj_dict.items():
 #
 # ### Pre-evaluated RDF
 
-# %% [markdown]
-# #### Overview
+# %%
+rdf_file_names = sorted([fn for fn in await get_item_dict(uri) if fn.endswith('rdf.txt')])
+rdf_file_names
 
 # %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": {'$regex': '.*rdf$'},
-    "metadata.step": {'$regex': "GromacsNPTEquilibration"},
-}
-
-fp.filepad.count_documents(query)
+rdf_plot_dict = await get_rdf_plot_dict(ds_df, rdf_file_names, interval=(0.5,35.0))
 
 # %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'type': '$metadata.type',
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$metadata.datetime' },
-            "latest":  {'$max': '$metadata.datetime' },
-        },
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-res = [ {**c['_id'], **c} for c in cursor]
-columns = ['type', 'earliest', 'latest', 'object_count', '_id']
-res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice for printing in notebook
-del res_df["_id"]
-
-# %%
-res_df
-
-# %% [markdown]
-# #### Substrate - surfactant head RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'substrate_surfactant_head_rdf',
-    "metadata.step": {'$regex': "GromacsNPTEquilibration"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Substrate - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'substrate_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsNPTEquilibration"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-second_sort_aggregation = {
-    "$sort": { 
-        "_id.{}".format(parameter_keys[0]): pymongo.DESCENDING,
-    }
-}
-
-
-aggregation_pipeline = [ 
-    match_aggregation, sort_aggregation, group_aggregation, second_sort_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-    
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Surfactant head - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'surfactant_head_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsNPTEquilibration"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-second_sort_aggregation = {
-    "$sort": { 
-        "_id.{}".format(parameter_keys[0]): pymongo.DESCENDING,
-    }
-}
-
-aggregation_pipeline = [ 
-    match_aggregation, sort_aggregation, group_aggregation, second_sort_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['nmolecules']):
-for pos, (nmolecules, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(nmolecules)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
+for fn, fig in rdf_plot_dict.items():
+    print(fn)
+    display(fig)
 
 # %% [markdown]
 # ## Relaxation analysis
@@ -1186,815 +1003,15 @@ for key, obj in obj_dict.items():
 #
 # ### Pre-evaluated RDF
 
-# %% [markdown]
-# #### Overview
+# %%
+rdf_file_names
 
 # %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": {'$regex': '.*rdf$'},
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
+rdf_plot_dict = await get_rdf_plot_dict(ds_df, rdf_file_names, interval=(0.5,35.0))
 
 # %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'type': '$metadata.type',
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$metadata.datetime' },
-            "latest":  {'$max': '$metadata.datetime' },
-        },
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-res = [ {**c['_id'], **c} for c in cursor]
-columns = ['type', 'earliest', 'latest', 'object_count', '_id']
-res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice for printing in notebook
-del res_df["_id"]
-
-# %%
-res_df
-
-# %% [markdown]
-# #### Substrate - surfactant head RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'substrate_surfactant_head_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Substrate - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'substrate_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-second_sort_aggregation = {
-    "$sort": { 
-        "_id.{}".format(parameter_keys[0]): pymongo.DESCENDING,
-    }
-}
-
-
-aggregation_pipeline = [ 
-    match_aggregation, sort_aggregation, group_aggregation, second_sort_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-    
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Surfactant head - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'surfactant_head_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-second_sort_aggregation = {
-    "$sort": { 
-        "_id.{}".format(parameter_keys[0]): pymongo.DESCENDING,
-    }
-}
-
-aggregation_pipeline = [ 
-    match_aggregation, sort_aggregation, group_aggregation, second_sort_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['nmolecules']):
-for pos, (nmolecules, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(nmolecules)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Surfactant head - surfactant head RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'surfactant_head_surfactant_head_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'][1:],data['rdf'][0][1:], label='First frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][len(data)//2][1:],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][-1][1:],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'][1:],data['rdf'][-1][1:],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Surfactant tail - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'surfactant_tail_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'][1:],data['rdf'][0][1:], label='First frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][len(data)//2][1:],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][-1][1:],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'][1:],data['rdf'][-1][1:],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Counterion - surfactant head RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'counterion_surfactant_head_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'],data['rdf'][-1],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Counterion - surfactant tail RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'counterion_surfactant_tail_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'],data['rdf'][-1],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Counterion - substrate RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'counterion_substrate_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'],data['rdf'][0], label='First frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][len(data)//2],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'],data['rdf'][-1],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'],data['rdf'][-1],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %% [markdown]
-# #### Counterion - counterion RDF
-
-# %%
-query = { 
-    "metadata.project": project_id,
-    "metadata.type": 'counterion_counterion_rdf',
-    "metadata.step": {'$regex': "GromacsRelaxation"},
-}
-
-fp.filepad.count_documents(query)
-
-# %%
-parameter_dict = {'shape': 'metadata.system.surfactant.aggregates.shape'}
-parameter_keys = list(parameter_dict.keys())
-
-# %%
-res_dict = {}
-failed_list = []
-
-match_aggregation = {
-        "$match": query
-    }
-sort_aggregation = {
-        "$sort": { 
-            "metadata.datetime": pymongo.DESCENDING,
-        }
-    }
-group_aggregation = { 
-    "$group": { 
-        "_id": { field: '${}'.format(key) for field, key in parameter_dict.items() },
-        "degeneracy": {"$sum": 1}, # number matching data sets
-        "latest":     {"$first": "$gfs_id"} # unique gridfs id of file
-    }
-}
-aggregation_pipeline = [ match_aggregation, sort_aggregation, group_aggregation ]
-cursor = fp.filepad.aggregate(aggregation_pipeline)
-
-# res_list = []
-for i, c in enumerate(cursor): 
-    content, metadata = fp.get_file_by_id(c["latest"])
-    parameter_key = c["_id"][parameter_keys[0]]
-    data_str = io.StringIO(content.decode())
-    data = np.loadtxt(data_str, comments='#')
-    d = data[0] # distance bins
-    rdf = data[1:]
-    res_dict[parameter_key] = {'dist': d, 'rdf': rdf}
-    # res_list.append(data)
-    print('.',end='')
-print('')
-
-# %%
-n = len(res_dict)
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-if rows > 1:
-    positions = [(i,j) for i in range(rows) for j in range(cols)][:n]
-else:
-    positions = [i for i in range(cols)][:n]
-    
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-if not isinstance(ax, Iterable):
-    ax = [ax]
-# for key, grp in res_df.groupby(['parameter_key']):
-for pos, (parameter_key, data) in zip(positions, res_dict.items()):
-    ax[pos].plot(data['dist'][1:],data['rdf'][0][1:], label='First frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][len(data)//2][1:],label='Intermediate frame RDF')
-    ax[pos].plot(data['dist'][1:],data['rdf'][-1][1:],label='Last frame RDF')
-    ax[pos].set_title(parameter_key)
-    ax[pos].legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
-
-# %%
-n = 1
-cols = 2 if n > 1 else 1
-rows = round(n/cols)
-
-fig, ax = plt.subplots(rows,cols,figsize=(5*cols,4*rows))
-for (parameter_key, data) in res_dict.items():
-    ax.plot(data['dist'][1:],data['rdf'][-1][1:],label=parameter_key)
-    ax.legend()
-
-fig.tight_layout()
-# fig.legend()
-fig.show()
+for fn, fig in rdf_plot_dict.items():
+    print(fn)
+    display(fig)
 
 # %%

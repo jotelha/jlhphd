@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Substrate fixed box minimization sub workflow."""
+"""Probe on substrate minimization sub workflow."""
 
 import datetime
 import glob
