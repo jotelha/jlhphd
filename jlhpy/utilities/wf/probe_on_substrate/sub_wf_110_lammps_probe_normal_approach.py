@@ -814,7 +814,8 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
             # fixed outfile name of ncjoin is traj.nc
             CmdTask(  # concatenate previous and current trajectory
                 cmd='ncjoin',
-                opt=['-v', 'time', 'previous.default.nc', 'default.nc'],
+                opt=['-v', 'time', '-f', 'traj.nc', '-x', '--',
+                     'previous.default.nc', 'default.nc'],
                 env='python',
                 stderr_file='ncjoin.err',
                 stdout_file='ncjoin.out',

@@ -35,7 +35,7 @@ from imteksimfw.fireworks.user_objects.firetasks.dataflow_tasks import SearchDic
 from imteksimfw.fireworks.user_objects.firetasks.dtool_tasks import (
     CreateDatasetTask, FreezeDatasetTask, CopyDatasetTask, FetchItemTask)
 from imteksimfw.fireworks.user_objects.firetasks.dtool_lookup_tasks import (
-    QueryDtoolTask, ReadmeDtoolTask, ManifestDtoolTask)
+    QueryDtoolTask, ReadmeDtoolTask, ManifestDtoolTask, DirectReadmeTask, DirectManifestTask)
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import EvalPyEnvTask
 from imteksimfw.fireworks.user_objects.firetasks.ssh_tasks import SSHForwardTask
 from imteksimfw.fireworks.user_objects.firetasks.storage_tasks import GetObjectFromFilepadTask
@@ -175,15 +175,150 @@ class PushToFilePadMixin(PushMixin):
 
         return fw_list, fws_leaf_out, fws_root_out
 
+class PullFromDtoolURIMixin(PullMixin):
+    """Mixin for directly copying files from dataset identified by directly accessible URI."""
+
+    def pull(self, fws_root=[]):
+        fw_list, fws_root_out, fws_leaf_out = super().pull(fws_root)
+
+        logger = logging.getLogger(__name__)
+
+        # fetch items
+        for file in self.files_in_list:
+            file_label = file['file_label']
+            if (not hasattr(self, 'files_in_info')) or (file_label not in self.files_in_info):
+                logger.warning("No info on how to get infile '%s'" % file['file_label'])
+                continue
+            file_info = self.files_in_info[file_label]
+
+
+            uri = file_info['uri']
+
+            # readme
+
+            step_label = self.get_step_label('pull_dtool_readme')
+
+            files_in = {}
+            files_out = {}
+
+            # TODO: this must happen in a more elegant way
+            metadata_dtool_source_key = file_info.get('metadata_dtool_source_key',
+                                                      self.kwargs.get('metadata_dtool_source_key', None))
+            metadata_fw_dest_key = file_info.get('metadata_fw_dest_key',
+                                                 self.kwargs.get('metadata_fw_dest_key', 'metadata'))
+            metadata_fw_source_key = file_info.get('metadata_fw_source_key',
+                                                   self.kwargs.get('metadata_fw_source_key', 'metadata'))
+            fts_readme = [
+                DirectReadmeTask(
+                    uri=uri,
+                    output=metadata_fw_dest_key,
+                    metadata_dtool_source_key=metadata_dtool_source_key,
+                    metadata_fw_source_key=metadata_fw_source_key,
+                    fw_supersedes_dtool=True,
+                    loglevel=logging.DEBUG,
+                    propagate=True,
+                )
+            ]
+
+            fw_readme = self.build_fw(
+                fts_readme, step_label,
+                parents=fws_root,
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_readme)
+            fws_root_out.append(fw_readme)
+
+            # manifest
+
+            step_label = self.get_step_label('pull_dtool_manifest')
+
+            files_in = {}
+            files_out = {}
+
+            fts_manifest = [
+                DirectManifestTask(
+                    uri=uri,
+                    output='run->manifest_dtool_task',
+                    propagate=False,
+                )
+            ]
+
+            fw_manifest = self.build_fw(
+                fts_manifest, step_label,
+                parents=[fw_readme],
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_manifest)
+
+            # search item_id by filename
+
+            files_in = {}
+            files_out = {}
+
+            step_label = self.get_step_label('pull_dtool_search_item')
+
+            file_name = file_info.get('file_name', file['file_name'])
+
+            fts_search_item = [
+                SearchDictTask(
+                    input_key='run->manifest_dtool_task->items',
+                    search={'relpath': file_name},
+                    marker={'relpath': True},
+                    output_key='run->search_dict_task',
+                    limit=1,
+                    expand=True,
+                    loglevel=logging.DEBUG,
+                    propagate=False,
+                )
+            ]
+
+            fw_search_item = self.build_fw(
+                fts_search_item, step_label,
+                parents=[fw_manifest],
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fw_list.append(fw_search_item)
+
+            # fetch item by item_id
+
+            step_label = self.get_step_label('pull_dtool_fetch_item')
+
+            files_in = {}
+            files_out = {file['file_label']: file['file_name']}
+
+            fts_fetch_item = [
+                FetchItemTask(
+                    item_id={'key': 'run->search_dict_task'},
+                    source=uri,
+                    filename=file['file_name']
+                )
+            ]
+
+            fw_fetch_item = self.build_fw(
+                fts_fetch_item, step_label,
+                parents=[fw_search_item],
+                files_in=files_in,
+                files_out=files_out,
+                category=self.hpc_specs['fw_noqueue_category']
+            )
+
+            fws_leaf_out.append(fw_fetch_item)
+            fw_list.append(fw_fetch_item)
+
+        return fw_list, fws_leaf_out, fws_root_out
+
 
 class PullFromDtoolRepositoryMixin(PullMixin):
-    """Mixin for querying files from dtool lookup server and copying subsequently.
-
-    Implementation shall provide 'source_project_id' and 'source_step'
-    attributes.
-
-    TODO: These may be provided file-wise by according per-file keys
-    within the 'files_in_list' attribute."""
+    """Mixin for querying files from dtool lookup server and copying subsequently."""
 
     def pull(self, fws_root=[]):
         fw_list, fws_root_out, fws_leaf_out = super().pull(fws_root)
@@ -666,7 +801,7 @@ class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
     pass
 
 
-class DefaultPullMixin(PullFromDtoolRepositoryMixin):
+class DefaultPullMixin(PullFromDtoolURIMixin):
     pass
 
 class DefaultPushMixin(PushDerivedDatasetToDtoolRepositoryMixin):

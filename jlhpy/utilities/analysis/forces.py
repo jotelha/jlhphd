@@ -4,11 +4,14 @@
 def extract_summed_forces_from_netcdf(
         force_keys=[
             'forces',
-            'f_storeAnteSHAKEForces',
+            'f_storeAnteShakeForces',
             'f_storeAnteStatForces',
+            'f_storeAnteFreezeForces',
             'f_storeUnconstrainedForces',
-            'f_storeAnteSHAKEForcesAve',
+            'f_storeForcesAve',
+            'f_storeAnteShakeForcesAve',
             'f_storeAnteStatForcesAve',
+            'f_storeAnteFreezeForcesAve',
             'f_storeUnconstrainedForcesAve'],
         forces_file_name={
             'json': 'group_z_forces.json',

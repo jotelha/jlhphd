@@ -53,6 +53,7 @@ from fireworks.utilities.filepad import FilePad # direct FilePad access, similar
 
 # dtool
 import dtool_lookup_api.asynchronous as dl
+import dtoolcore
 
 from collections.abc import Iterable
 import copy
@@ -434,7 +435,7 @@ res_df
 # ## Overview on steps in project
 
 # %%
-project_id = '2020-12-08-sds-on-au-111-probe-and-substrate-minimzation-equilibration-approach-not-quite-as-quick-test'
+project_id = '2020-12-13-sds-on-au-111-probe-and-substrate-approach-trial'
 
 # %%
 # queries to the data base are simple dictionaries
@@ -763,7 +764,7 @@ item_dict
 # ### Evaluate
 
 # %%
-df = await read_thermo(uri)
+df = await read_thermo(uri, file_name="joint.thermo.out")
 
 # %%
 df
@@ -773,5 +774,6 @@ fig, ax = plot_df(df)
 fig.show()
 
 # %%
+uri
 
 # %%
