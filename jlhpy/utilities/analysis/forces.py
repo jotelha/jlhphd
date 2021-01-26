@@ -18,9 +18,31 @@ def extract_summed_forces_from_netcdf(
             'txt': 'group_z_forces.txt'},
         netcdf='default.nc',
         dimension_of_interest=2,  # forces in z dir
-        output_formats=['json', 'txt']):
+        output_formats=['json', 'txt'],
+        **kwargs):
 
-    """Extracts sum of force compoents along particular spatial dimension."""
+    """Extracts sum of force compoents along particular spatial dimension.
+
+    Parameters
+    ----------
+    force_keys : list of str, optional
+        list od 3-d vector fields in netcdf
+    forces_file_name : str or dict of str: str, opional
+        name of output file or dict of format : file name
+    netcdf : str, optional
+        input NetCDF trajectory
+    dimension_of_interest : int, optional
+        spatial dimension 0, 1, or 2 for x, y, or z to write to output file(s)
+    output_formats str or list of str, optional
+        formats for output, 'txt' or 'json',
+    **kwargs:
+        directly forwarded to ase.io.NetCDFTrajectory for NetCDF import
+
+    Returns
+    -------
+    force_z_sum_df: pandas.Dataframe
+        extracted forces, continuously integer-indexed
+    """
     import logging
 
     logger = logging.getLogger(__name__)
@@ -31,7 +53,7 @@ def extract_summed_forces_from_netcdf(
 
     logger.info("Opening NetCDF '{:s}'.".format(netcdf))
     tmp_traj = NetCDFTrajectory(netcdf, 'r',
-                                keep_open=True)
+                                keep_open=True, **kwargs)
     logger.info("Opened NetCDF '{:s}' with {:d} frames.".format(
         netcdf, len(tmp_traj)))
 

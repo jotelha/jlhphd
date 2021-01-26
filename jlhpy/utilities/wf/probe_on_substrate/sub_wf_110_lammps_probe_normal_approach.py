@@ -811,6 +811,17 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
                 store_stdout=True,
                 store_stderr=True,
                 fizzle_bad_rc=False),
+            CmdTask(  # concatenate previous and current thermo_ave output
+                cmd='join_thermo',
+                opt=['-v', '--hashed-header',
+                     'previous.thermo_ave.out', 'thermo_ave.out', 'joint.thermo_ave.out'],
+                env='python',
+                stderr_file='join_thermo_ave.err',
+                stdout_file='join_thermo_ave.out',
+                stdlog_file='join_thermo_ave.log',
+                store_stdout=True,
+                store_stderr=True,
+                fizzle_bad_rc=False),
             # fixed outfile name of ncjoin is traj.nc
             CmdTask(  # concatenate previous and current trajectory
                 cmd='ncjoin',

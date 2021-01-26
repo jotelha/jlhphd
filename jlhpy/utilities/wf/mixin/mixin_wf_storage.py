@@ -801,7 +801,7 @@ class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
     pass
 
 
-class DefaultPullMixin(PullFromDtoolURIMixin):
+class DefaultPullMixin(PullFromDtoolRepositoryMixin):
     pass
 
 class DefaultPushMixin(PushDerivedDatasetToDtoolRepositoryMixin):

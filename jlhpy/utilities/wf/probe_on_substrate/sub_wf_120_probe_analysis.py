@@ -115,6 +115,14 @@ class ProbeAnalysisMain(WorkflowGenerator):
                 'forces_file_name': {'txt': 'default.txt'},
                 'output_formats': ['txt'],
                 'netcdf': 'default.nc',
+                'index_var': None,
+                # see https://wiki.fysik.dtu.dk/ase/dev/_modules/ase/io/netcdftrajectory.html
+                #  Name of variable containing the atom indices. Atoms are reordered
+                #  by this index upon reading if this variable is present. Default
+                #  value is for LAMMPS output. None switches atom indices off.
+                # This is necessary as the previous filtering will likely leave atom indices
+                # within the netcdf non-continuous or non-zero-indexed, which causes ASEto fail
+                # when evaluating.
             },
             kwargs_inputs={
                 'dimension_of_interest': 'metadata->step_specific->extract_forces->dimension',
@@ -131,7 +139,7 @@ class ProbeAnalysisMain(WorkflowGenerator):
 
         fw_extract = self.build_fw(
             fts_extract, step_label,
-            parents=fws_root,
+            parents=[fw_filter],
             files_in=files_in,
             files_out=files_out,
             category = self.hpc_specs['fw_queue_category'],
