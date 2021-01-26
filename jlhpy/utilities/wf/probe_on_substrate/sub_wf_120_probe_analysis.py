@@ -36,7 +36,7 @@ class ProbeAnalysisMain(WorkflowGenerator):
     - metadata->step_specific->extract_forces->dimension
 
     dynamic infiles:
-    - trajectory_file: default.nc
+    - joint_traj_file: default.nc
     - index_file:      default.ndx
 
     outfiles:
@@ -54,7 +54,7 @@ class ProbeAnalysisMain(WorkflowGenerator):
         step_label = self.get_step_label('filter')
 
         files_in = {
-            'trajectory_file': 'default.nc',
+            'joint_traj_file': 'default.nc',
             'index_file': 'default.ndx',
         }
         files_out = {
