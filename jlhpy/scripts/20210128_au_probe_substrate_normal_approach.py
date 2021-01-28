@@ -54,39 +54,70 @@ fp = FilePad.auto_load()
 # In[010]
 
 
-# c, substrate (monolayer), probe uuid
-probe_on_monolayer_input_datasets = []
-
-# concentration and source dataset uuid
-probe_on_hemicylinders_input_datasets = [
-    {
-         "shape": "hemicylindrical", # lost somewhere in the source datasets
-         "concentration": 0.0125, # redundant, only for readability here
-         "uuid": "eea1c50c-5d4d-4261-8ea7-492f328af3bf"
-    }
+probe_on_substrate_input_datasets = [
+     {'concentration': 0.0175,
+      'shape': 'hemicylinders',
+      'uuid': 'f4154128-47d1-4378-979d-b6f49d45b117'},
+     # {'concentration': 0.0125,
+     #  'shape': 'hemicylinders',
+     #  'uuid': 'eea1c50c-5d4d-4261-8ea7-492f328af3bf'},
+     # {'concentration': 0.01,
+     #  'shape': 'hemicylinders',
+     #  'uuid': '357c6a47-866b-4645-b9b3-6b623b4fd361'},
+     # {'concentration': 0.0075,
+     #  'shape': 'hemicylinders',
+     #  'uuid': 'c17b298c-5e8f-4d34-8d4c-67462709386b'},
+     # {'concentration': 0.005,
+     #  'shape': 'hemicylinders',
+     #  'uuid': '8b40904c-e772-436a-8ae1-72e0f646f01f'},
+     # {'concentration': 0.0275,
+     #  'shape': 'monolayer',
+     #  'uuid': 'f29d9189-4bb9-4a13-849e-75bdd7eaf347'},
+     # {'concentration': 0.0225,
+     #  'shape': 'monolayer',
+     #  'uuid': '05dd441b-4ef5-4267-b9da-c2b82f7d6db9'},
+     # {'concentration': 0.02,
+     #  'shape': 'monolayer',
+     #  'uuid': '319e10ef-124b-4f2f-9566-15d59c18d4b4'},
+     # {'concentration': 0.015,
+     #  'shape': 'monolayer',
+     #  'uuid': '6ae4c3bb-9222-441e-aaa5-c5f0e5605d8a'},
+     # {'concentration': 0.0125,
+     #  'shape': 'monolayer',
+     #  'uuid': '92383040-64bb-44fc-bc02-173944883756'},
+     # {'concentration': 0.01,
+     #  'shape': 'monolayer',
+     #  'uuid': '5276283a-5f9a-4592-a9cc-a4866df512ba'},
+     # {'concentration': 0.0075,
+     #  'shape': 'monolayer',
+     #  'uuid': '6f309e3f-648a-4dec-a700-f336b2f59de2'},
+     # {'concentration': 0.005,
+     #  'shape': 'monolayer',
+     #  'uuid': '4c140e7e-8e9e-4382-abab-c53a0a4dad8e'},
+     # {'concentration': 0.0025,
+     #  'shape': 'monolayer',
+     #  'uuid': '04fb6760-8189-487a-9b47-88b53b82a284'}
 ]
-
-probe_on_substrate_input_datasets = [*probe_on_monolayer_input_datasets, *probe_on_hemicylinders_input_datasets]
     
 # parameters
 
 parameter_sets = [
     {
-        'constant_indenter_velocity': -1.0e-4, # 10 m / s
-        'steps': 250000,
-        'netcdf_frequency': 100,
-        'thermo_frequency': 100,
-        'thermo_average_frequency': 100,
-        'restart_frequency': 100,
+        'constant_indenter_velocity': -1.0e-3, # 10 m / s
+        'steps': 25000,
+        'netcdf_frequency': 10,
+        'thermo_frequency': 10,
+        'thermo_average_frequency': 10,
+        'restart_frequency': 10,
     },
-    {
-        'constant_indenter_velocity': -1.0e-5, # 1 m / s
-        'steps': 2500000,
-        'netcdf_frequency': 1000,
-        'thermo_frequency': 1000,
-        'thermo_average_frequency': 1000,
-        'restart_frequency': 1000,
-     }
+    # {
+    #     'constant_indenter_velocity': -1.0e-5, # 1 m / s
+    #     'steps': 2500000,
+    #     'netcdf_frequency': 1000,
+    #     'thermo_frequency': 1000,
+    #     'thermo_average_frequency': 1000,
+    #     'restart_frequency': 1000,
+    #  }
 ]
 
 parameter_dict_list = [{**d, **p} for p in parameter_sets for d in probe_on_substrate_input_datasets]
@@ -97,7 +128,7 @@ parameter_dict_list = [{**d, **p} for p in parameter_sets for d in probe_on_subs
 from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateNormalApproach
 
 
-project_id = '2021-01-19-sds-on-au-111-probe-and-substrate-approach'
+project_id = '2021-01-28-sds-on-au-111-probe-and-substrate-approach-trial'
 
 wf_list = []
 
@@ -165,43 +196,3 @@ for p in parameter_dict_list:
     fp_files = wfg.push_infiles(fp)
     wf = wfg.build_wf()
     wf_list.append(wf)
-    
-# In[090]
-
-# Addition fixing broken wf, 2021/01/26
-
-from fireworks import Workflow
-from jlhpy.utilities.wf.probe_on_substrate.sub_wf_120_probe_analysis import ProbeAnalysis
-
-
-project_id = '2021-01-19-sds-on-au-111-probe-and-substrate-approach'
-
-wf_list = []
-fws_root_list = []
-
-for p in parameter_dict_list:
-    wfg = ProbeAnalysis(
-        project_id=project_id,
-
-        integrate_push=True,
-        
-        infile_prefix=prefix,
-        machine='juwels',
-        mode='trial',
-        
-    )
-    
-    #fp_files = wfg.push_infiles(fp)
-    fw_list, fws_feaf, fws_root = wfg.get_as_leaf()
-    fws_root_list.append(fws_root)
-    wf_list.append(Workflow(fw_list, name=wfg.get_wf_label(), metadata=wfg.kwargs))  
-    
-# append to 
-parent_fw_ids = [66163, 66159] # ProbeOnSubstrateNormalApproach:LAMMPSProbeNormalApproach:lmp_analysis, ProbeOnSubstrateNormalApproach:LAMMPSProbeNormalApproach:lmp_recovery
-wf = wf_list[0]
-
-# In[]
-lp.append_wf(wf, parent_fw_ids, root_fw_ids=wf.root_fw_ids, 
-             parent_fw_spec_to_include=['metadata'], 
-             parent_fw_spec_source_fw_id=parent_fw_ids[0], 
-             superpose_child_on_parent_fw_spec=True)

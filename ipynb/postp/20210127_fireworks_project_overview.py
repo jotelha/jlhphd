@@ -32,6 +32,10 @@
 # %%
 # %aimport
 
+# %%
+# see https://stackoverflow.com/questions/40536560/ipython-and-jupyter-autocomplete-not-working
+# %config Completer.use_jedi = False
+
 # %% [markdown]
 # ### Imports
 
@@ -214,10 +218,84 @@ fp = FilePad.from_db_file(
     os.path.join(os.path.expanduser("~"), '.fireworks', 'fireworks_sandbox_mongodb_auth.yaml'))
 
 # %% [markdown]
+# # Source datasets
+
+# %%
+# parameter combinations in project
+
+# c, substrate (monolayer), probe uuid
+probe_on_monolayer_input_datasets = [
+    (0.0025,
+      'e1766c11-ec23-488e-adfe-cbefc630ac68',
+      '43a09eb9-a27b-42fb-a424-66d2cdbdf605'),
+     (0.005,
+      '13da3027-2a2f-45e7-bd8d-73bee135f24f',
+      '9835cce9-b7d0-4e1f-9bdf-fd9767fea72c'),
+     (0.0075,
+      '0537047b-04c0-42b7-8aac-8de900c9e357',
+      '30b97009-7d73-4e65-aa4a-04e1dc4cb2d2'),
+     (0.01,
+      'e11c3cb7-f53e-4024-af1c-dadbc8a01119',
+      'a72b124b-c5aa-43d8-900b-f6b6ddc05d39'),
+     (0.0125,
+      'cda86934-50f1-4c7d-bdb5-3782c9f39a5a',
+      '02c578b1-b331-42cf-8aef-4e3dcd0b4c77'),
+     (0.015,
+      'fe9bfb8d-d671-4c2d-bb1e-55dc1bfeec93',
+      '974b41b2-de1c-421c-897b-7e091facff3a'),
+     (0.0175,
+      '90dbac16-9f05-4610-b765-484198116042',
+      '86d2a465-61b8-4f1d-b13b-912c8f1f814b'),
+     (0.02,
+      'f0648f54-9a5d-488c-a913-ea53b88c99ce',
+      '7e128862-4221-4554-bc27-22812a6047ae'),
+     (0.0225,
+      '9fb66e67-d08d-4686-972a-078bae8ef723',
+      '1bc8bb4a-f4cf-4e4f-96ee-208b01bc3d02'),
+     (0.025,
+      'a9245caa-1439-4515-926f-c35b0476df44',
+      '5b45ef1f-d24b-4a86-ab3c-3f3063b4def2'),
+     (0.0275,
+      'e96ff87c-7880-4d76-810e-e1a468d6b872',
+      'b789ebc7-daec-488b-ba8f-e1c9b2d8fb47')]
+
+probe_on_hemicylinders_input_datasets = [
+     (0.005,
+      '88c14189-f072-4df0-a04b-57bf27760b9d',
+      '9835cce9-b7d0-4e1f-9bdf-fd9767fea72c'),
+     (0.0075,
+      'fcc304df-219a-4170-a6e0-bee06eed14e2',
+      '30b97009-7d73-4e65-aa4a-04e1dc4cb2d2'),
+     (0.01,
+      '0899dd47-5659-408c-8dc1-253980adc975',
+      'a72b124b-c5aa-43d8-900b-f6b6ddc05d39'),
+     (0.0125,
+      '01339270-76df-40c2-bec6-c69072f5a5f7',
+      '02c578b1-b331-42cf-8aef-4e3dcd0b4c77'),
+     (0.015,
+      'b14873d7-0bba-4c2d-9915-ac9ee99f43c7',
+      '974b41b2-de1c-421c-897b-7e091facff3a'),
+     (0.0175,
+      'b5d0bbfe-9c69-4dfd-9189-417bfa367882',
+      '86d2a465-61b8-4f1d-b13b-912c8f1f814b')]
+
+# %%
+monolayer_input_datasets = [tup[1] for tup in probe_on_monolayer_input_datasets]
+
+# %%
+hemicylinders_input_datasets = [tup[1] for tup in probe_on_hemicylinders_input_datasets]
+
+# %%
+monolayer_input_datasets
+
+# %%
+hemicylinders_input_datasets
+
+# %% [markdown]
 # # Fireworks
 
 # %%
-project = '2020-09-28-ctab-on-au-111-substrate-passivation'
+project = '2020-12-23-sds-on-au-111-probe-and-substrate-conversion'
 
 # %%
 query={'spec.metadata.project': project}
@@ -242,12 +320,6 @@ wf.keys()
 
 # %%
 fw_ids = wf['nodes']
-
-# %%
-fw = lp.fireworks.find_one()
-
-# %%
-fw
 
 # %%
 query = {'fw_id': {'$in': fw_ids}}
@@ -284,6 +356,24 @@ fw['spec']['metadata']['step_specific']
 
 # %%
 fw['spec']['metadata']['step_specific']
+
+# %% [markdown]
+# ## Reconstruct shape
+#
+# shape attribute lost, reconstruct from source dataset uuids
+#
+#
+
+# %%
+query={'spec.metadata.project': project, 
+       'spec.metadata.files_in_info.substrate_data_file.query.uuid': {
+           '$in':}}
+
+# %%
+fw_ids = lp.get_fw_ids(query)
+
+# %%
+len(fw_ids)
 
 
 # %% [markdown]
@@ -426,11 +516,13 @@ res_df
 # ## Overview on steps in project (SDS on substrate)
 
 # %%
+
+# %%
 #project_id = '2020-11-25-au-111-150x150x150-fcc-substrate-creation'
 #project_id = '2020-09-14-sds-on-au-111-substrate-passivation'
 #project_id = '2020-10-13-ctab-on-au-111-substrate-passivation
 #project_id = '2020-12-12-sds-on-au-111-substrate-passivation-trial'
-project_id = '2020-12-14-sds-on-au-111-substrate-passivation'
+project_id = '2020-12-23-sds-on-au-111-probe-and-substrate-conversion'
 
 # %%
 # queries to the data base are simple dictionaries
@@ -485,447 +577,8 @@ res_df
 # %% [markdown]
 # ### Pivot overview on steps and parameters in project
 
-# %%
-query = make_query({
-    'project': project_id,
-    'system.surfactant.nmolecules': {'$exists': True},
-    'system.surfactant.aggregates.shape': {'$exists': True},
-})
-
-# %%
-len(await dl.query(query))
-
-# %%
-parameters = { 
-    'nmolecules': 'readme.system.surfactant.nmolecules',
-    'shape': 'readme.system.surfactant.aggregates.shape',
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$frozen_at' },
-            "latest":  {'$max': '$frozen_at' },
-        },
-    },
-    {
-        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df
-
-# %%
-res_df['nmolecules'].unique()[-1]
-
-# %%
-type(res_df['nmolecules'].unique()[-1])
-
-# %%
-type(np.nan)
-
-# %%
-type(np.float64(np.nan))
-
-# %%
-res_df['shape'].unique()
-
-# %%
-distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
-
-# %%
-# filter out unwanted values
-immutable_distinct_parameter_values = {k: [e for e in p if (
-        isinstance(e, np.float64) and not np.isnan(e)) or (
-        not isinstance(e, np.float64) and e is not None)] 
-    for k, p in distinct_parameter_values.items()}
-
-# %%
-print(immutable_distinct_parameter_values)
-
 # %% [markdown]
-# ### Refined aggregation for hemicylindrical systems
-
-# %%
-distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
-distinct_parameter_values['shape'].remove('monolayer')
-
-# %%
-query = {
-    'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'step': '$readme.step',
-                **{label: '${}'.format(key) for label, key in parameters.items()},
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$readme.datetime' },
-            "latest":  {'$max': '$readme.datetime' },
-        },
-    },
-    {
-        "$set": {
-            'step': '$_id.step',
-            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
-        }
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df
-
-# %%
-res_pivot = res_df.pivot_table(values='object_count', index=['step'], columns=list(parameters.keys()), aggfunc=pd.notna, fill_value=False)
-res_pivot.style.apply(highlight_bool)
-
-# %% [markdown]
-# #### Concentrations
-
-# %%
-query = {
-    'readme.project': project_id,
-    #'readme.step': {'$regex': 'GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool'},
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
-
-# %%
-doc_id = {
-    'step': '$readme.step',
-    'length': '$readme.system.box.length',
-    'width': '$readme.system.box.width',
-    **{label: '${}'.format(key) for label, key in parameters.items()},
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": doc_id,
-            "object_count": {"$sum": 1}, # count matching data sets
-            "uuid": {"$addToSet": "$uuid"},
-            "earliest":  {'$min': '$readme.datetime'},
-            "latest":  {'$max': '$readme.datetime'},
-        },
-    },
-    {
-        "$set": {k: '$_id.{}'.format(k) for k in doc_id.keys()}
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df['surfc'] = res_df['nmolecules']/(res_df['length']*res_df['width'])
-
-# %%
-res_df
-
-# %%
-doc_id
-
-# %%
-res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
-
-# %%
-res_pivot
-
-# %%
-substrate_hemicylinders_res_df = res_pivot.copy()
-
-# %% [markdown]
-# ### Refined aggregation for monolayer systems
-
-# %%
-distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
-distinct_parameter_values['shape'].remove('hemicylinders')
-
-# %%
-query = {
-    'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'step': '$readme.step',
-                **{label: '${}'.format(key) for label, key in parameters.items()},
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$readme.datetime' },
-            "latest":  {'$max': '$readme.datetime' },
-        },
-    },
-    {
-        "$set": {
-            'step': '$_id.step',
-            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
-        }
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df
-
-# %%
-res_pivot = res_df.pivot_table(values='object_count', index=['step'], columns=list(parameters.keys()), aggfunc=pd.notna, fill_value=False)
-res_pivot.style.apply(highlight_bool)
-
-# %% [markdown]
-# #### Concentrations (at final step)
-
-# %%
-query = {
-    'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
-
-# %%
-doc_id = {
-    'step': '$readme.step',
-    'length': '$readme.system.box.length',
-    'width': '$readme.system.box.width',
-    **{label: '${}'.format(key) for label, key in parameters.items()},
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": doc_id,
-            "object_count": {"$sum": 1}, # count matching data sets
-            "uuid": {"$addToSet": "$uuid"},
-            "earliest":  {'$min': '$readme.datetime'},
-            "latest":  {'$max': '$readme.datetime'},
-        },
-    },
-    {
-        "$set": {k: '$_id.{}'.format(k) for k in doc_id.keys()}
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df['surfc'] = res_df['nmolecules']/(res_df['length']*res_df['width'])
-
-# %%
-res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
-
-# %%
-res_pivot
-
-# %%
-substrate_monolayer_res_df = res_pivot.copy()
-
-# %% [markdown]
-# ### Overview on UUIDs
-
-# %%
-distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
-distinct_parameter_values['shape'].remove('hemicylinders')
-
-# %%
-query = {
-    'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'step': '$readme.step',
-                **{label: '${}'.format(key) for label, key in parameters.items()},
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "uuid": {"$addToSet": "$uuid"},
-            "earliest":  {'$min': '$readme.datetime'},
-            "latest":  {'$max': '$readme.datetime'},
-        },
-    },
-    {
-        "$set": {
-            'step': '$_id.step',
-            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
-        }
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-res_df = pd.DataFrame(res)
-
-# %%
-res_df
-
-# %%
-res_pivot = res_df.pivot(values='uuid', index=['step'], columns=list(parameters.keys()))
-res_pivot.style.apply(highlight_nan)
-
-# %% [markdown]
-# ## Overview on steps in project (SDS on probe)
-
-# %%
-project_id = '2020-07-29-sds-on-au-111-indenter-passivation'
-
-# %%
-# queries to the data base are simple dictionaries
-query = make_query({
-    'project': project_id,
-})
-
-# %%
-query
-
-# %%
-len(await dl.query(query))
-
-# %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": { 
-                'step': '$readme.step',
-            },
-            "object_count": {"$sum": 1}, # count matching data sets
-            "earliest":  {'$min': '$frozen_at' },
-            "latest":  {'$max': '$frozen_at' },
-        },
-    },
-    {
-        "$set": {
-            'step': '$_id.step',
-        }
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-# %%
-res = await dl.aggregate(aggregation_pipeline)
-
-# %%
-columns = ['step', 'earliest', 'latest', 'object_count']
-res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice for printing in notebook
-
-# %%
-res_df
-
-# %% [markdown]
-# ### Pivot overview on steps and parameters in project
+# <font color="red">Issue: shape parameter lost.</font>
 
 # %%
 query = make_query({
@@ -935,11 +588,23 @@ query = make_query({
 })
 
 # %%
+res = await dl.query(query)
+
+# %%
+readme = await dl.readme(res[0]['uri'])
+
+# %%
+readme
+
+# %%
 len(await dl.query(query))
 
 # %%
+
+# %%
 parameters = { 
-    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'nmolecules': 'readme.system.surfactant.nmolecules',
+    'concentration': 'readme.system.surfactant.surface_concentration',
     #'shape': 'readme.system.surfactant.aggregates.shape',
 }
 
@@ -962,7 +627,6 @@ aggregation_pipeline = [
     },
     {  # sort by earliest date, descending
         "$sort": { 
-            **{k: pymongo.ASCENDING for k in parameters.keys()},
             "earliest": pymongo.DESCENDING,
         }
     }
@@ -988,10 +652,10 @@ immutable_distinct_parameter_values = {k: [e for e in p if (
     for k, p in distinct_parameter_values.items()}
 
 # %%
-immutable_distinct_parameter_values
+print(immutable_distinct_parameter_values)
 
 # %% [markdown]
-# ### Refined overview on steps
+# ### Refined aggregation for hemicylindrical systems
 
 # %%
 distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
@@ -999,7 +663,69 @@ distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter
 # %%
 query = {
     'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+    'readme.files_in_info.substrate_data_file.query.uuid': {'$in': hemicylinders_input_datasets}
+}
+
+# %%
+query
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$readme.datetime' },
+            "latest":  {'$max': '$readme.datetime' },
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+res_pivot = res_df.pivot_table(values='object_count', index=['step'], columns=list(parameters.keys()), aggfunc=pd.notna, fill_value=False)
+res_pivot.style.apply(highlight_bool)
+
+# %% [markdown]
+# ### Refined aggregation for monolayer systems
+
+# %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
+query = {
+    'readme.project': project_id,
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+    'readme.files_in_info.substrate_data_file.query.uuid': {'$in': monolayer_input_datasets}
 }
 
 # %%
@@ -1027,7 +753,6 @@ aggregation_pipeline = [
     },
     {  # sort by earliest date, descending
         "$sort": { 
-            **{k: pymongo.ASCENDING for k in parameters.keys()},
             "earliest": pymongo.DESCENDING,
         }
     }
@@ -1052,9 +777,13 @@ res_pivot.style.apply(highlight_bool)
 # ### Overview on UUIDs
 
 # %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
 query = {
     'readme.project': project_id,
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+    #'readme.files_in_info.substrate_data_file.query.uuid': {'$in': hemicylinders_input_datasets}
 }
 
 # %%
@@ -1063,11 +792,24 @@ aggregation_pipeline = [
     {
         "$match": query
     },
+    {
+        '$set': {'readme.shape': { 
+            '$cond': [
+                {'$in': [
+                    '$readme.files_in_info.substrate_data_file.query.uuid',
+                    hemicylinders_input_datasets]
+                }, 
+                'hemicylinders', 
+                'monolayer']
+            }
+        } 
+    },
     {  # group by unique project id
         "$group": { 
             "_id": { 
                 'step': '$readme.step',
                 **{label: '${}'.format(key) for label, key in parameters.items()},
+                'shape': '$readme.shape'
             },
             "object_count": {"$sum": 1}, # count matching data sets
             "uuid": {"$addToSet": "$uuid"},
@@ -1078,7 +820,8 @@ aggregation_pipeline = [
     {
         "$set": {
             'step': '$_id.step',
-            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+            'shape': '$_id.shape'
         }
     },
     {  # sort by earliest date, descending
@@ -1100,182 +843,36 @@ res_df = pd.DataFrame(res)
 res_df
 
 # %%
-res_pivot = res_df.pivot(values='uuid', index=['step'], columns=list(parameters.keys()))
+len(res_df)
+
+# %%
+res_pivot = res_df.pivot(values='uuid', index=['step'], columns=['shape',*list(parameters.keys())])
 res_pivot.style.apply(highlight_nan)
 
-# %% [markdown]
-# ### Concentrations
+# %%
 
 # %%
-query = {
-    'readme.project': project_id,
-    #'readme.step': 'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool',
-    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()}
-}
+final_config_df = res_df[res_df['step']=='ProbeOnSubstrateMergeConversionMinimizationAndEquilibration:ProbeOnSubstrateMinimizationAndEquilibration:LAMMPSEquilibrationDPD:push_dtool']
 
 # %%
-doc_id = {
-    'step': '$readme.step',
-    'radius': '$readme.system.indenter.bounding_sphere.radius',
-    **{label: '${}'.format(key) for label, key in parameters.items()},
-}
+final_config_df[['concentration','shape','uuid']]
 
 # %%
-# check files degenerate by 'metadata.type' ad 'metadata.name'
-aggregation_pipeline = [
-    {
-        "$match": query
-    },
-    {  # group by unique project id
-        "$group": { 
-            "_id": doc_id,
-            "object_count": {"$sum": 1}, # count matching data sets
-            "uuid": {"$addToSet": "$uuid"},
-            "earliest":  {'$min': '$readme.datetime'},
-            "latest":  {'$max': '$readme.datetime'},
-        },
-    },
-    {
-        "$set": {k: '$_id.{}'.format(k) for k in doc_id.keys()}
-    },
-    {  # sort by earliest date, descending
-        "$sort": { 
-            "earliest": pymongo.DESCENDING,
-        }
-    }
-]
-
-
+list_of_tuples = [(row['concentration'], row['shape'], row['uuid'][0]) 
+    for _, row in final_config_df[['concentration','shape','uuid']].iterrows()]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+list_of_tuples
 
 # %%
-res_df = pd.DataFrame(res)
+final_config_datasets = [row.to_dict() for _, row in final_config_df[['concentration','shape','uuid']].iterrows()]
 
 # %%
-res_df['surfc'] = res_df['nmolecules']/(4.0*np.pi*np.square(res_df['radius']))
+for d in final_config_datasets:
+    d['uuid'] = d['uuid'][0]
 
 # %%
-res_pivot = res_df.pivot(values='uuid', index=['surfc'], columns=['step'])
-
-# %%
-res_pivot
-
-# %%
-probe_res_df = res_pivot.copy()
-
-# %% [markdown]
-# ## Match concentrations
-
-# %% [markdown]
-# ### substrate
-
-# %%
-substrate_hemicylinders_res_df
-
-# %%
-substrate_monolayer_res_df
-
-# %% [markdown]
-# ### probe
-
-# %%
-probe_res_df
-
-# %%
-substrate_monolayer_res_df['SubstratePassivation:MonolayerPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool']
-
-# %%
-substrate_hemicylinders_res_df['SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool']
-
-# %%
-probe_res_df['GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool']
-
-# %% [markdown]
-# ## Match rounded concentrations
-
-# %%
-ref_surfc = np.arange(0.0025,0.0625,0.0025)
-
-
-# %%
-def round_to_significant_digits(x, significant_digits=2):
-    #return np.round(x, significant_digits - (np.floor(np.log10(np.abs(x))).astype(int) - 1))
-    y=np.abs(x)
-    return np.round(x, significant_digits-np.ceil(np.log10(np.abs(x))).astype(int))
-
-
-# %% [markdown]
-# ### Monolayer - Probe
-
-# %%
-rounded_substrate_monolayer_res_df = substrate_monolayer_res_df.reset_index()
-rounded_probe_res_df = probe_res_df.reset_index()
-
-rounded_substrate_monolayer_res_df['surfc'] = rounded_substrate_monolayer_res_df['surfc'].apply(lambda x: round_to_significant_digits(x, 2))
-rounded_probe_res_df['surfc'] = rounded_probe_res_df['surfc'].apply(lambda x: round_to_significant_digits(x, 2))
-
-# %%
-surfc = rounded_substrate_monolayer_res_df['surfc'].values
-dist = np.abs(ref_surfc[:, np.newaxis] - surfc)
-closest = dist.argmin(axis=0)
-rounded_substrate_monolayer_res_df['surfc'] = ref_surfc[closest]
-
-# %%
-surfc = rounded_probe_res_df['surfc'].values
-dist = np.abs(ref_surfc[:, np.newaxis] - surfc)
-closest = dist.argmin(axis=0)
-rounded_probe_res_df['surfc'] = ref_surfc[closest]
-
-# %%
-probe_on_monolayer_matches = rounded_substrate_monolayer_res_df.set_index('surfc').join(rounded_probe_res_df.set_index('surfc')).reset_index()
-
-# %%
-probe_on_monolayer_tuples = probe_on_monolayer_matches[[
-    'surfc',
-    'SubstratePassivation:MonolayerPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool',
-    'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool']]
-
-# %%
-probe_on_monolayer_tuples
-
-# %%
-c_substrate_uuid_probe_uuid = [tuple(c[0] if isinstance(c, list) else c for c in r) for r in probe_on_monolayer_tuples.values.tolist()]
-c_substrate_uuid_probe_uuid = [(round_to_significant_digits(r[0],3), *r[1:]) for r in c_substrate_uuid_probe_uuid]
-
-# %%
-c_substrate_uuid_probe_uuid
-
-# %% [markdown]
-# ### Hemicylinders - Probe
-
-# %%
-rounded_substrate_hemicylinders_res_df = substrate_hemicylinders_res_df.reset_index()
-rounded_probe_res_df = probe_res_df.reset_index()
-
-surfc = rounded_substrate_hemicylinders_res_df['surfc'].values
-dist = np.abs(ref_surfc[:, np.newaxis] - surfc)
-closest = dist.argmin(axis=0)
-rounded_substrate_hemicylinders_res_df['surfc'] = ref_surfc[closest]
-
-surfc = rounded_probe_res_df['surfc'].values
-dist = np.abs(ref_surfc[:, np.newaxis] - surfc)
-closest = dist.argmin(axis=0)
-rounded_probe_res_df['surfc'] = ref_surfc[closest]
-
-probe_on_hemicylinders_matches = rounded_substrate_hemicylinders_res_df.set_index('surfc').join(rounded_probe_res_df.set_index('surfc')).reset_index()
-
-probe_on_hemicylinders_tuples = probe_on_hemicylinders_matches[[
-    'surfc',
-    'SubstratePassivation:HemicylindricalPackingAndEquilibartion:GromacsMinimizationEquilibrationRelaxation:GromacsRelaxation:push_dtool',
-    'GromacsRelaxation:ProcessAnalyzeAndVisualize:push_dtool']]
-
-c_substrate_uuid_probe_uuid = [tuple(c[0] if isinstance(c, list) else c for c in r) for r in probe_on_hemicylinders_tuples.values.tolist()]
-c_substrate_uuid_probe_uuid = [(round_to_significant_digits(r[0],3), *r[1:]) for r in c_substrate_uuid_probe_uuid]
-
-# %%
-c_substrate_uuid_probe_uuid
+final_config_datasets
 
 # %% [markdown]
 # # Filepad

@@ -914,7 +914,7 @@ class LAMMPSRecoverableProbeNormalApproachMain(WorkflowGenerator):
             superpose_restart_on_parent_fw_spec=True,
             superpose_detour_on_parent_fw_spec=True,
             repeated_recover_fw_name=step_label,
-            max_restarts=20,  # TODO: from global kwargs or fwspec
+            max_restarts=100,  # TODO: from global kwargs or fwspec
             fizzle_on_no_restart_file=False,
             restart_file_glob_patterns="*.restart[0-9]",
             restart_file_dests = 'default.mpiio.restart',
