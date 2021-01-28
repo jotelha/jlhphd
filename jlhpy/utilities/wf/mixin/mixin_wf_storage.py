@@ -335,7 +335,6 @@ class PullFromDtoolRepositoryMixin(PullMixin):
                 continue
             file_info = self.files_in_info[file_label]
 
-
             # query
             step_label = self.get_step_label('pull_dtool_query')
 
@@ -471,7 +470,9 @@ class PullFromDtoolRepositoryMixin(PullMixin):
                 FetchItemTask(
                     item_id={'key': 'run->search_dict_task'},
                     source={'key': 'run->query_dtool_task->uri'},
-                    filename=file['file_name']
+                    filename=file['file_name'],
+                    output='metadata->step_specific->dtool_push->remote_dataset',  # to provide source dataset information to next push stub
+                    propagate=True,
                 )
             ]
 
