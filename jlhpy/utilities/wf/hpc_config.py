@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # hpc infrastructure-related specifications go here
 
+JUWELS_QUEUE = 'juwels_chka18_queue'
+JUWELS_NOQUEUE = 'juwels_chka18_noqueue'
+
 HPC_SPECS = {
     'forhlr2': {
         'fw_queue_category':   'forhlr2_queue',
@@ -12,8 +15,8 @@ HPC_SPECS = {
         'walltime':  '00:60:00',
     },
     'juwels_devel_short': {  # for testing failures due to wall time limits
-        'fw_queue_category':   'juwels_queue',
-        'fw_noqueue_category': 'juwels_noqueue',
+        'fw_queue_category':   JUWELS_QUEUE,
+        'fw_noqueue_category': JUWELS_NOQUEUE,
         'queue': 'devel',
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
@@ -83,8 +86,8 @@ HPC_SPECS = {
         },
     },
     'juwels_devel': {
-        'fw_queue_category':   'juwels_queue',
-        'fw_noqueue_category': 'juwels_noqueue',
+        'fw_queue_category':   JUWELS_QUEUE,
+        'fw_noqueue_category': JUWELS_NOQUEUE,
         'queue': 'devel',
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
@@ -154,8 +157,8 @@ HPC_SPECS = {
         },
     },
     'juwels': {
-        'fw_queue_category':   'juwels_queue',
-        'fw_noqueue_category': 'juwels_noqueue',
+        'fw_queue_category':   JUWELS_QUEUE,
+        'fw_noqueue_category': JUWELS_NOQUEUE,
         'queue': 'batch',
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
