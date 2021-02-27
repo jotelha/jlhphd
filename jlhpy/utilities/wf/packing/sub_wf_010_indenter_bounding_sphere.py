@@ -69,6 +69,41 @@ class IndenterBoundingSphereMain(WorkflowGenerator):
     def main(self, fws_root=[]):
         fw_list = []
 
+        step_label = self.get_step_label('input_files_pull')
+
+        files_in = {}
+        files_out = {
+            'indenter_file': 'default.pdb',
+        }
+
+        fts_pull = [
+            GetFilesByQueryTask(
+                query={
+                    'metadata->project': self.project_id,  # earlier
+                    'metadata->type': 'indenter_file',
+                },
+                sort_key='metadata.datetime',
+                sort_direction=pymongo.DESCENDING,
+                limit=1,
+                new_file_names=['default.pdb'])]
+
+        fw_pull = Firework(fts_pull,
+                           name=self.get_fw_label(step_label),
+                           spec={
+                               '_category': self.hpc_specs['fw_noqueue_category'],
+                               '_files_in': files_in,
+                               '_files_out': files_out,
+                               'metadata': {
+                                   'project': self.project_id,
+                                   'datetime': str(datetime.datetime.now()),
+                                   'step': step_label,
+                                   **self.kwargs
+                               }
+                           },
+                           parents=None)
+
+        fw_list.append(fw_pull)
+
         # Bounding sphere Fireworks
         # -------------------------
         step_label = self.get_step_label('bounding_sphere')
@@ -112,7 +147,7 @@ class IndenterBoundingSphereMain(WorkflowGenerator):
                      **self.kwargs
                 }
             },
-            parents=fws_root)
+            parents=[*fws_root, fw_pull])
 
         fw_list.append(fw_bounding_sphere)
 
@@ -182,12 +217,12 @@ class IndenterBoundingSphereVis(
         return fw_list, [fw_vis], [fw_vis]
 
 
-class IndenterBoundingSphereWorkflowGenerator(
+class IndenterBoundingSphere(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=IndenterBoundingSphereMain(*args, **kwargs),
-            vis_sub_wf=IndenterBoundingSphereVis(*args, **kwargs),
+            main_sub_wf=IndenterBoundingSphereMain,
+            vis_sub_wf=IndenterBoundingSphereVis,
             *args, **kwargs)

@@ -18,8 +18,8 @@ from jlhpy.utilities.wf.workflow_generator import (
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
 
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysisWorkflowGenerator
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualizationWorkflowGenerator
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsVacuumTrajectoryAnalysis
+from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
 
@@ -290,13 +290,13 @@ class GromacsEnergyMinimizationAfterSolvationMain(WorkflowGenerator):
         return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
 
 
-class GromacsEnergyMinimizationAfterSolvationWorkflowGenerator(
+class GromacsEnergyMinimizationAfterSolvation(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsEnergyMinimizationAfterSolvationMain(*args, **kwargs),
-            analysis_sub_wf=GromacsVacuumTrajectoryAnalysisWorkflowGenerator(*args, **kwargs),
-            vis_sub_wf=GromacsTrajectoryVisualizationWorkflowGenerator(*args, **kwargs),
+            main_sub_wf=GromacsEnergyMinimizationAfterSolvationMain,
+            analysis_sub_wf=GromacsVacuumTrajectoryAnalysis,
+            vis_sub_wf=GromacsTrajectoryVisualization,
             *args, **kwargs)

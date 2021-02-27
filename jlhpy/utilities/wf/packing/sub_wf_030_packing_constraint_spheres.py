@@ -350,12 +350,12 @@ class PackingConstraintSpheresVis(
         return fw_list, [fw_vis], [fw_join, fw_vis]
 
 
-class PackingConstraintSpheresWorkflowGenerator(
+class PackingConstraintSpheres(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=PackingConstraintSpheresMain(*args, **kwargs),
-            vis_sub_wf=PackingConstraintSpheresVis(*args, **kwargs),
+            main_sub_wf=PackingConstraintSpheresMain,
+            vis_sub_wf=PackingConstraintSpheresVis,
             *args, **kwargs)

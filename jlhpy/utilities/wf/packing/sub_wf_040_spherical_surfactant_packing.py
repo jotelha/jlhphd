@@ -506,12 +506,12 @@ class SphericalSurfactantPackingVis(WorkflowGenerator):
         return fw_list, [fw_vis], [fw_join]
 
 
-class SphericalSurfactantPackingWorkflowGenerator(
+class SphericalSurfactantPacking(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=SphericalSurfactantPackingMain(*args, **kwargs),
-            vis_sub_wf=SphericalSurfactantPackingVis(*args, **kwargs),
+            main_sub_wf=SphericalSurfactantPackingMain,
+            vis_sub_wf=SphericalSurfactantPackingVis,
             *args, **kwargs)

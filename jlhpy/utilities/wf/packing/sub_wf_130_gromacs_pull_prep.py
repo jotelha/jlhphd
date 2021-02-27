@@ -312,11 +312,11 @@ class GromacsPullPrepMain(WorkflowGenerator):
         return fw_list, [fw_make_pull_groups], [fw_template, fw_gmx_make_ndx, fw_make_pull_groups]
 
 
-class GromacsPullPrepWorkflowGenerator(
+class GromacsPullPrep(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsPullPrepMain(*args, **kwargs),
+            main_sub_wf=GromacsPullPrepMain,
             *args, **kwargs)

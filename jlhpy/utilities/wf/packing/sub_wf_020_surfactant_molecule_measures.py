@@ -179,9 +179,10 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         step_label = self.get_step_label('head_atom_position')
 
         files_in = {
-            'surfactant_file':      'default.pdb',
+            'surfactant_file': 'default.pdb',
         }
         files_out = {
+            'surfactant_file': 'default.pdb',  # untouched
         }
 
         func_str = serialize_module_obj(get_atom_position_via_parmed)
@@ -225,8 +226,12 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
         # -------------------------------
         step_label = self.get_step_label('head_atom_to_center_distance')
 
-        files_in = {}
-        files_out = {}
+        files_in = {
+            'surfactant_file': 'default.pdb',
+        }
+        files_out = {
+            'surfactant_file': 'default.pdb',  # untouched
+        }
 
         func_str = serialize_module_obj(get_distance)
 
@@ -270,9 +275,11 @@ class SurfactantMoleculeMeasuresMain(WorkflowGenerator):
 
         files_in = {
             'indenter_file': 'indenter.pdb',
+            'surfactant_file': 'default.pdb',
         }
         files_out = {
             'indenter_file': 'indenter.pdb',
+            'surfactant_file': 'default.pdb',  # untouched
         }
 
         # func_str = serialize_module_obj(get_distance)
@@ -388,12 +395,12 @@ class SurfactantMoleculeMeasuresVis(WorkflowGenerator):
             [fw_vis])
 
 
-class SurfactantMoleculeMeasuresWorkflowGenerator(
+class SurfactantMoleculeMeasures(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=SurfactantMoleculeMeasuresMain(*args, **kwargs),
-            vis_sub_wf=SurfactantMoleculeMeasuresVis(*args, **kwargs),
+            main_sub_wf=SurfactantMoleculeMeasuresMain,
+            vis_sub_wf=SurfactantMoleculeMeasuresVis,
             *args, **kwargs)

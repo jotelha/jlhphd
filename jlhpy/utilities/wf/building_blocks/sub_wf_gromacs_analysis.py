@@ -550,8 +550,7 @@ class GromacsVacuumTrajectoryAnalysis(
                 'atom_name_b': 'metadata->system->surfactant->tail_atom->name'},
         ]
 
-class GromacsSolvatedTrajectoryAnalysis(
-        GromacsVacuumTrajectoryAnalysis):
+class GromacsSolvatedTrajectoryAnalysis(GromacsVacuumTrajectoryAnalysis):
     """
     Implements partial analysis worklfow only.
 

@@ -176,11 +176,11 @@ class GromacsPrepMain(WorkflowGenerator):
         return fw_list, [fw_gmx_editconf], [fw_pdb_chain]
 
 
-class GromacsPrepWorkflowGenerator(
+class GromacsPrep(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsPrepMain(*args, **kwargs),
+            main_sub_wf=GromacsPrepMain,
             *args, **kwargs)

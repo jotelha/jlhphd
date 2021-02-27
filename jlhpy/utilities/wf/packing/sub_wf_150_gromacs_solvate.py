@@ -91,11 +91,11 @@ class GromacsSolvateMain(WorkflowGenerator):
         return fw_list, [fw_gmx_solvate], [fw_gmx_solvate]
 
 
-class GromacsSolvateWorkflowGenerator(
+class GromacsSolvate(
         DefaultPullMixin, DefaultPushMixin,
         ProcessAnalyzeAndVisualize,
         ):
     def __init__(self, *args, **kwargs):
         ProcessAnalyzeAndVisualize.__init__(self,
-            main_sub_wf=GromacsSolvateMain(*args, **kwargs),
+            main_sub_wf=GromacsSolvateMain,
             *args, **kwargs)
