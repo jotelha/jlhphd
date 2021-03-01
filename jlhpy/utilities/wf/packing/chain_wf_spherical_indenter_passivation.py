@@ -13,13 +13,13 @@ from jlhpy.utilities.wf.packing.sub_wf_130_gromacs_pull_prep import GromacsPullP
 from jlhpy.utilities.wf.packing.sub_wf_140_gromacs_pull import GromacsPull
 
 from jlhpy.utilities.wf.packing.sub_wf_150_gromacs_solvate import GromacsSolvate
-from jlhpy.utilities.wf.packing.sub_wf_160_gromacs_em_solvated import GromacsEnergyMinimizationAfterSolvation
 
-from jlhpy.utilities.wf.packing.sub_wf_170_gromacs_nvt import GromacsNVTEquilibration
-from jlhpy.utilities.wf.packing.sub_wf_180_gromacs_npt import GromacsNPTEquilibration
-from jlhpy.utilities.wf.packing.sub_wf_190_gromacs_relax import GromacsRelaxation
+from jlhpy.utilities.wf.building_blocks.gmx.sub_wf_gromacs_em_solvated import GromacsEnergyMinimizationAfterSolvation
+from jlhpy.utilities.wf.building_blocks.gmx.sub_wf_gromacs_nvt import GromacsNVTEquilibration
+from jlhpy.utilities.wf.building_blocks.gmx.sub_wf_gromacs_npt import GromacsNPTEquilibration
+from jlhpy.utilities.wf.building_blocks.gmx.sub_wf_gromacs_relax import GromacsRelaxation
 
-class SphericalSurfactantPacking(ChainWorkflowGenerator):
+class SphericalSurfactantPackingPrep(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
 
     Concatenates
@@ -77,13 +77,13 @@ class IndenterPassivation(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
 
     Concatenates
-    - SphericalSurfactantPacking
+    - SphericalSurfactantPackingPrep
     - GromacsPackingMinimizationChainWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            SphericalSurfactantPacking,
+            SphericalSurfactantPackingPrep,
             GromacsPackingMinimizationEquilibration,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
@@ -98,13 +98,13 @@ class ParametricIndenterPassivation(ChainWorkflowGenerator):
     """Spherical surfactant packing with PACKMOL sub workflow.
 
     Concatenates
-    - SphericalSurfactantPacking
+    - SphericalSurfactantPackingPrep
     - GromacsPackingMinimizationChainWorkflowGenerator
     """
 
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
-            SphericalSurfactantPacking,
+            SphericalSurfactantPackingPrep,
             ParametricGromacsPackingMinimizationEquilibration,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

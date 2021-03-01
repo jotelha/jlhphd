@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 """Indenter bounding sphere sub workflow."""
 
-import datetime
-import glob
-import os
-import pymongo
-
-from fireworks import Firework
-from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
-from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
@@ -39,26 +30,6 @@ class GromacsPullMain(WorkflowGenerator):
     - index_file:    default.ndx
         queried by { 'metadata->type': 'pull_ndx' }
 
-    static infiles:
-        always queried within main trunk
-
-    - template_file: sys.top.template,
-        queried by {'metadata->name': file_config.GMX_PULL_TOP_TEMPLATE}
-    - parameter_file: pull.mdp.template,
-        queried by {'metadata->name': file_config.GMX_PULL_MDP_TEMPLATE}
-
-    fw_spec inputs:
-    - metadata->system->surfactant->nmolecules
-    - metadata->system->surfactant->name
-    - metadata->system->counterion->nmolecules
-    - metadata->system->counterion->name
-    - metadata->system->substrate->natoms
-    - metadata->system->substrate->name
-
-    - metadata->step_specific->pulling->pull_atom_name
-    - metadata->step_specific->pulling->spring_constant
-    - metadata->step_specific->pulling->rate
-
     outfiles:
         use regex replacement /'([^']*)':(\\s*)'([^']*)',/- $1:$2$3/
         to format from files_out dict
@@ -81,64 +52,6 @@ class GromacsPullMain(WorkflowGenerator):
     - topology_file:  default.top
         passed through unmodified
     """
-    def push_infiles(self, fp):
-        step_label = self.get_step_label('push_static_infiles')
-
-        fp_files = []
-
-        # static pymol infile for vis
-        # ---------------------------
-        infiles = sorted(glob.glob(os.path.join(
-            self.infile_prefix,
-            file_config.PML_SUBDIR,
-            file_config.PML_MOVIE_TEMPLATE)))
-
-        files = {os.path.basename(f): f for f in infiles}
-
-        # metadata common to all these files
-        metadata = {
-            'project': self.project_id,
-            'type': 'input',
-            'name': file_config.PML_MOVIE_TEMPLATE,
-            'step': step_label,
-        }
-
-        # insert these input files into data base
-        for name, file_path in files.items():
-            identifier = '/'.join((self.project_id, name))
-            fp_files.append(
-                fp.add_file(
-                    file_path,
-                    identifier=identifier,
-                    metadata=metadata))
-
-        # static bash cript infile for vis
-        # --------------------------------
-        infiles = sorted(glob.glob(os.path.join(
-            self.infile_prefix,
-            file_config.BASH_SCRIPT_SUBDIR,
-            file_config.BASH_RENUMBER_PNG)))
-
-        files = {os.path.basename(f): f for f in infiles}
-
-        # metadata common to all these files
-        metadata = {
-            'project': self.project_id,
-            'type': 'input',
-            'name': file_config.BASH_RENUMBER_PNG,
-            'step': step_label,
-        }
-
-        # insert these input files into data base
-        for name, file_path in files.items():
-            identifier = '/'.join((self.project_id, name))
-            fp_files.append(
-                fp.add_file(
-                    file_path,
-                    identifier=identifier,
-                    metadata=metadata))
-
-        return fp_files
 
     def main(self, fws_root=[]):
         fw_list = []
@@ -157,6 +70,7 @@ class GromacsPullMain(WorkflowGenerator):
             'input_file':     'default.tpr',
             'parameter_file': 'mdout.mdp',
             'topology_file':  'default.top',  # pass through unmodified
+            'index_file':     'default.ndx',  # pass through untouched
         }
 
         fts_gmx_grompp = [CmdTask(
@@ -178,20 +92,13 @@ class GromacsPullMain(WorkflowGenerator):
             store_stdlog=False,
             fizzle_bad_rc=True)]
 
-        fw_gmx_grompp = Firework(fts_gmx_grompp,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root])
+        fw_gmx_grompp = self.build_fw(
+            fts_gmx_grompp, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_grompp)
 
@@ -203,6 +110,7 @@ class GromacsPullMain(WorkflowGenerator):
         files_in = {
             'input_file': 'default.tpr',
             'topology_file':  'default.top',  # pass through unmodified
+            'index_file': 'default.ndx',  # pass through untouched
         }
         files_out = {
             'log_file':        'default.log',
@@ -212,7 +120,9 @@ class GromacsPullMain(WorkflowGenerator):
             'data_file':       'default.gro',
             'pullf_file':      'default_pullf.xvg',
             'pullx_file':      'default_pullx.xvg',
-            'topology_file':  'default.top',  # pass through unmodified
+            'topology_file':   'default.top',  # pass through unmodified
+            'index_file':      'default.ndx',  # pass through untouched
+            'run_file':        'default.tpr',  # passed throught unmodified
         }
 
         fts_gmx_mdrun = [CmdTask(
@@ -226,29 +136,19 @@ class GromacsPullMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_mdrun = Firework(fts_gmx_mdrun,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['quick_single_core_job_queueadapter_defaults'],
-                    # NOTE: JUWELS GROMACS
-                    # module("load","Stages/2019a","Intel/2019.3.199-GCC-8.3.0","IntelMPI/2019.3.199")
-                    # module("load","GROMACS/2019.3","GROMACS-Top/2019.3")
-                    # fails with segmentation fault when using SMT (96 logical cores)
-                    # NOTE: later encountered problems with any parallelization
-                    # run serial, only 1000 steps, to many issues with segementation faults
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs,
-                }
-            },
-            parents=[fw_gmx_grompp])
+        # NOTE: JUWELS GROMACS
+        # module("load","Stages/2019a","Intel/2019.3.199-GCC-8.3.0","IntelMPI/2019.3.199")
+        # module("load","GROMACS/2019.3","GROMACS-Top/2019.3")
+        # fails with segmentation fault when using SMT (96 logical cores)
+        # NOTE: later encountered problems with any parallelization
+        # run serial, only 1000 steps, to many issues with segmentation faults
+        fw_gmx_mdrun = self.build_fw(
+            fts_gmx_mdrun, step_label,
+            parents=[fw_gmx_grompp],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_mdrun)
 

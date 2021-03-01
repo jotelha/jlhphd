@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 """Indenter bounding sphere sub workflow."""
 
-import datetime
-import glob
-import os
-import pymongo
-
-from fireworks import Firework
-from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
@@ -71,20 +63,13 @@ class GromacsSolvateMain(WorkflowGenerator):
             store_stdlog=False,
             fizzle_bad_rc=True)]
 
-        fw_gmx_solvate = Firework(fts_gmx_solvate,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root])
+        fw_gmx_solvate = self.build_fw(
+            fts_gmx_solvate, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_solvate)
 

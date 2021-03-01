@@ -1,0 +1,1 @@
+Merge probe system and substrate system, convert gro format to LAMMPS datafile, run LAMMPS minimization, equlibration and normal approach production.

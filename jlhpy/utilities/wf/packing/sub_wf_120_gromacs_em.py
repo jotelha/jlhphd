@@ -4,10 +4,7 @@ import glob
 import os
 import pymongo
 
-from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
-from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
@@ -107,20 +104,11 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
                 limit=1,
                 new_file_names=['default.mdp'])]
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -136,6 +124,7 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
         files_out = {
             'input_file': 'default.tpr',
             'parameter_file': 'mdout.mdp',
+            'topology_file': 'default.top',  # passed throught unmodified
         }
 
         fts_gmx_grompp = [CmdTask(
@@ -155,20 +144,13 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_grompp = Firework(fts_gmx_grompp,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_pull])
+        fw_gmx_grompp = self.build_fw(
+            fts_gmx_grompp, step_label,
+            parents=[*fws_root, fw_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['quick_single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_grompp)
 
@@ -177,18 +159,23 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
         # ---------
         step_label = self.get_step_label('gmx_mdrun')
 
-        files_in = {'input_file':   'em.tpr'}
+        files_in = {
+            'input_file':   'default.tpr',
+            'energy_file':  'default.edr',
+        }
         files_out = {
-            'log_file':        'em.log',
-            'energy_file':     'em.edr',
-            'trajectory_file': 'em.xtc',
-            'data_file':       'em.gro'
+            'log_file':        'default.log',
+            'energy_file':     'default.edr',
+            'uncompressed_trajectory_file': 'default.trr',
+            'data_file':       'default.gro',
+            'topology_file':   'default.top',  # passed throught unmodified
+            'run_file':        'default.tpr',  # passed throught unmodified
         }
 
         fts_gmx_mdrun = [CmdTask(
             cmd='gmx',
             opt=['mdrun',
-                 '-deffnm', 'em', '-v'],
+                 '-deffnm', 'default', '-v'],
             env='python',
             stderr_file='std.err',
             stdout_file='std.out',
@@ -197,30 +184,57 @@ class GromacsEnergyMinimizationMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_mdrun = Firework(fts_gmx_mdrun,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    'queue':    self.hpc_specs['queue'],
-                    'walltime': self.hpc_specs['walltime'],
-                    'ntasks':   self.hpc_specs['logical_cores_per_node'],  # get 1 node
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs,
-                }
-            },
-            parents=[fw_gmx_grompp])
+        fw_gmx_mdrun = self.build_fw(
+            fts_gmx_mdrun, step_label,
+            parents=[fw_gmx_grompp],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults'])
 
         fw_list.append(fw_gmx_mdrun)
 
-        return fw_list, [fw_gmx_mdrun], [fw_gmx_grompp]
+        # for some mysterious reason, energy minimization won't write xtc directly
 
+        # GMX trjconv
+        # ---------
+        step_label = self.get_step_label('gmx_trjconv')
+
+        files_in = {
+            'run_file': 'default.tpr',
+            'uncompressed_trajectory_file': 'default.trr',
+        }
+        files_out = {
+            'trajectory_file': 'default.xtc',
+        }
+
+        fts_gmx_trjconv = [CmdTask(
+            cmd='gmx',
+            opt=['trjconv',
+                 '-f', 'default.trr',
+                 '-s', 'default.tpr',
+                 '-o', 'default.xtc'],
+            env='python',
+            stdin_key='stdin',
+            stderr_file='std.err',
+            stdout_file='std.out',
+            stdlog_file='std.log',
+            store_stdout=True,
+            store_stderr=True,
+            fizzle_bad_rc=True)]
+
+        fw_gmx_trjconv = self.build_fw(
+            fts_gmx_trjconv, step_label,
+            parents=[fw_gmx_mdrun],
+            files_in=files_in,
+            files_out=files_out,
+            stdin='0\n',  # select the whole system
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_task_job_queueadapter_defaults'])
+
+        fw_list.append(fw_gmx_trjconv)
+
+        return fw_list, [fw_gmx_mdrun, fw_gmx_trjconv], [fw_gmx_grompp]
 
 class GromacsEnergyMinimization(
         DefaultPullMixin, DefaultPushMixin,

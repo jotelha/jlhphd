@@ -6,7 +6,6 @@ import pymongo
 
 from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask
 
 from jlhpy.utilities.geometry.bounding_sphere import get_bounding_sphere_via_ase
@@ -87,20 +86,11 @@ class IndenterBoundingSphereMain(WorkflowGenerator):
                 limit=1,
                 new_file_names=['default.pdb'])]
 
-        fw_pull = Firework(fts_pull,
-                           name=self.get_fw_label(step_label),
-                           spec={
-                               '_category': self.hpc_specs['fw_noqueue_category'],
-                               '_files_in': files_in,
-                               '_files_out': files_out,
-                               'metadata': {
-                                   'project': self.project_id,
-                                   'datetime': str(datetime.datetime.now()),
-                                   'step': step_label,
-                                   **self.kwargs
-                               }
-                           },
-                           parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -134,20 +124,12 @@ class IndenterBoundingSphereMain(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_bounding_sphere = Firework(fts_bounding_sphere,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_pull])
+        fw_bounding_sphere = self.build_fw(
+            fts_bounding_sphere, step_label,
+            parents=[*fws_root, fw_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_bounding_sphere)
 
@@ -198,22 +180,15 @@ class IndenterBoundingSphereVis(
             propagate=True,
         )]
 
-        fw_vis = Firework(fts_vis,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root])
+        fw_vis = self.build_fw(
+            fts_vis, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_vis)
+
         return fw_list, [fw_vis], [fw_vis]
 
 

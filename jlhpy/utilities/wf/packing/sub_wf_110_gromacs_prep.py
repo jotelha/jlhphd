@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """Indenter bounding sphere sub workflow."""
 
-import datetime
-import pymongo
-
-from fireworks import Firework
-from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
 from jlhpy.utilities.wf.workflow_generator import (
@@ -34,20 +28,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=False,
             fizzle_bad_rc=True)]
 
-        fw_pdb_chain = Firework(fts_pdb_chain,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_pdb_chain = self.build_fw(
+            fts_pdb_chain, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pdb_chain)
 
@@ -67,20 +53,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=False,
             fizzle_bad_rc=True)]
 
-        fw_pdb_tidy = Firework(fts_pdb_tidy,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_pdb_chain])
+        fw_pdb_tidy = self.build_fw(
+            fts_pdb_tidy, step_label,
+            parents=[fw_pdb_chain],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pdb_tidy)
 
@@ -110,20 +88,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_pdb2gro = Firework(fts_gmx_pdb2gro,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=[fw_pdb_tidy])
+        fw_gmx_pdb2gro = self.build_fw(
+            fts_gmx_pdb2gro, step_label,
+            parents=[fw_pdb_tidy],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_pdb2gro)
 
@@ -156,20 +126,12 @@ class GromacsPrepMain(WorkflowGenerator):
             store_stderr=True,
             fizzle_bad_rc=True)]
 
-        fw_gmx_editconf = Firework(fts_gmx_editconf,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs,
-                }
-            },
-            parents=[fw_gmx_pdb2gro])
+        fw_gmx_editconf = self.build_fw(
+            fts_gmx_editconf, step_label,
+            parents=[fw_gmx_pdb2gro],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_editconf)
 

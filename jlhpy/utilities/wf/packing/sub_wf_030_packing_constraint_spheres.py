@@ -2,11 +2,7 @@
 """Packing constraint spheres sub workflow."""
 
 import datetime
-import pymongo
 
-from fireworks import Firework
-from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.dataflow_tasks import JoinListTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
     import EvalPyEnvTask, PickledPyEnvTask, PyEnvTask
@@ -14,7 +10,7 @@ from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks \
 from jlhpy.utilities.vis.plot_side_views_with_spheres import \
     plot_side_views_with_spheres_via_parmed
 
-from imteksimfw.utils.serialize import serialize_module_obj, serialize_obj
+from imteksimfw.utils.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
@@ -68,20 +64,12 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
             )
         ]
 
-        fw_R_inner = Firework(fts_R_inner,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_R_inner = self.build_fw(
+            fts_R_inner, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_R_inner)
 
@@ -112,20 +100,12 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
             )
         ]
 
-        fw_R_inner_constraint = Firework(fts_R_inner_constraint,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_R_inner_constraint = self.build_fw(
+            fts_R_inner_constraint, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_R_inner_constraint)
 
@@ -135,11 +115,6 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
 
         files_in = {}
         files_out = {}
-
-        # def get_R_outer_constraint(R, R_surfactant, tol):
-        #     return R+2.0*R_surfactant+tol
-
-        # func_str = serialize_obj(get_R_outer_constraint)
 
         fts_R_outer_constraint = [
             EvalPyEnvTask(
@@ -161,20 +136,12 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
             )
         ]
 
-        fw_R_outer_constraint = Firework(fts_R_outer_constraint,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_R_outer_constraint = self.build_fw(
+            fts_R_outer_constraint, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_R_outer_constraint)
 
@@ -184,11 +151,6 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
 
         files_in = {}
         files_out = {}
-
-        #def get_R_outer(R, R_surfactant, tol):
-        #    return R+2.0*R_surfactant+2*tol
-
-        #func_str = serialize_obj(get_R_outer)
 
         fts_R_outer = [
             EvalPyEnvTask(
@@ -210,20 +172,12 @@ class PackingConstraintSpheresMain(WorkflowGenerator):
             )
         ]
 
-        fw_R_outer = Firework(fts_R_outer,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_R_outer = self.build_fw(
+            fts_R_outer, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_R_outer)
 
@@ -284,20 +238,12 @@ class PackingConstraintSpheresVis(
             )
         ]
 
-        fw_join = Firework(fts_join,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_join = self.build_fw(
+            fts_join, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_join)
 
@@ -330,20 +276,12 @@ class PackingConstraintSpheresVis(
             propagate=True,
         )]
 
-        fw_vis = Firework(fts_vis,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_join])
+        fw_vis = self.build_fw(
+            fts_vis, step_label,
+            parents=[*fws_root, fw_join],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_vis)
 

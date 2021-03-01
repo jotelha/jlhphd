@@ -1,14 +1,1 @@
-Chained order:
-
-Packing
-- IndenterBoundingSphere
-- SurfactantMoleculeMeasures
-- PackingConstraintSpheres
-- SphericalSurfactantPacking
-
-Minimization
--
-
-
-Chains
-- SphericalIndenterPassivationWorkflowGenerator
+Packing of surfactants around spherical cluster (probe).

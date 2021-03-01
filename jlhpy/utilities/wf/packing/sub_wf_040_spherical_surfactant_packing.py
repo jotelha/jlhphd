@@ -3,17 +3,14 @@
 import datetime
 import glob
 import os
+import warnings
 
-from fireworks import Firework
 from fireworks.user_objects.firetasks.dataflow_tasks import JoinListTask
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.script_task import PyTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask, PickledPyEnvTask
-
-# from jlhpy.utilities.vis.plot_side_views_with_spheres import plot_side_views_with_spheres_via_ase
 
 from imteksimfw.utils.serialize import serialize_module_obj
 from jlhpy.utilities.wf.workflow_generator import (
@@ -180,19 +177,11 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
                 new_file_names=['counterion.pdb'])
         ]
 
-        fw_coordinates_pull = Firework(fts_coordinates_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                      'project': self.project_id,
-                      'datetime': str(datetime.datetime.now()),
-                      'step':    step_label
-                }
-            },
-            parents=None)
+        fw_coordinates_pull = self.build_fw(
+            fts_coordinates_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_coordinates_pull)
 
@@ -213,19 +202,11 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
             limit=1,
             new_file_names=['input.template'])]
 
-        fw_inputs_pull = Firework(fts_inputs_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                      'project': self.project_id,
-                      'datetime': str(datetime.datetime.now()),
-                      'step':    step_label
-                }
-            },
-            parents=None)
+        fw_inputs_pull = self.build_fw(
+            fts_inputs_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_inputs_pull)
 
@@ -233,8 +214,12 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
         # -----------------
         step_label = self.get_step_label('packmol_template_context')
 
-        files_in = {}
-        files_out = {}
+        files_in = {
+            'indenter_file': 'indenter.pdb'  # pass untouched
+        }
+        files_out = {
+            'indenter_file': 'indenter.pdb'  # pass untouched
+        }
 
         func_str = serialize_module_obj(generate_pack_sphere_packmol_template_context)
 
@@ -265,20 +250,12 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
             propagate=False,
         )]
 
-        fw_context_generator = Firework(fts_context_generator,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_context_generator = self.build_fw(
+            fts_context_generator, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_context_generator)
 
@@ -286,8 +263,14 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
         # -----------------------------
         step_label = self.get_step_label('packmol_template')
 
-        files_in =  {'input_file': 'input.template'}
-        files_out = {'input_file': 'input.inp'}
+        files_in =  {
+            'input_file': 'input.template',
+            'indenter_file': 'indenter.pdb'  # pass untouched
+        }
+        files_out = {
+            'input_file': 'input.inp',
+            'indenter_file': 'indenter.pdb'
+        }
 
         # Jinja2 context:
         static_packmol_script_context = {
@@ -313,27 +296,21 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
             'movebadrandom': 'run->template->context->movebadrandom',
         }
 
-        ft_template = TemplateWriterTask({
-            'context': static_packmol_script_context,
-            'context_inputs': context_inputs,
-            'template_file': 'input.template',
-            'template_dir': '.',
-            'output_file': 'input.inp'})
+        fts_template = [
+            TemplateWriterTask({
+                'context': static_packmol_script_context,
+                'context_inputs': context_inputs,
+                'template_file': 'input.template',
+                'template_dir': '.',
+                'output_file': 'input.inp'})
+            ]
 
-        fw_template = Firework([ft_template],
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_context_generator, fw_inputs_pull])
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[fw_context_generator, fw_inputs_pull],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_template)
 
@@ -367,23 +344,13 @@ class SphericalSurfactantPackingMain(WorkflowGenerator):
                 func='open',
                 args=['default_packmol.pdb'])]
 
-        fw_pack = Firework(fts_pack,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_queue_category'],
-                '_queueadapter': {
-                    **self.hpc_specs['single_core_job_queueadapter_defaults'],  # packmol only serial
-                },
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    'packmol',
-                    **self.kwargs
-                }
-            },
-            parents=[fw_coordinates_pull, fw_template])
+        fw_pack = self.build_fw(
+            fts_pack, step_label,
+            parents=[fw_coordinates_pull, fw_template],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults'])
 
         fw_list.append(fw_pack)
 
@@ -440,20 +407,13 @@ class SphericalSurfactantPackingVis(WorkflowGenerator):
             )
         ]
 
-        fw_join = Firework(fts_join,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=fws_root)
+        fw_join = self.build_fw(
+            fts_join, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
+
 
         fw_list.append(fw_join)
 
@@ -486,20 +446,12 @@ class SphericalSurfactantPackingVis(WorkflowGenerator):
             propagate=True,
         )]
 
-        fw_vis = Firework(fts_vis,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':     step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_join])
+        fw_vis = self.build_fw(
+            fts_vis, step_label,
+            parents=[*fws_root, fw_join],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_vis)
 

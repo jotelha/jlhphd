@@ -5,9 +5,7 @@ import glob
 import os
 import pymongo
 
-from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
@@ -143,20 +141,11 @@ class GromacsPullPrepMain(WorkflowGenerator):
                 limit=1,
                 new_file_names=['pull.mdp.template'])]
 
-        fw_pull = Firework(fts_pull,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=None)
+        fw_pull = self.build_fw(
+            fts_pull, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_pull)
 
@@ -192,20 +181,12 @@ class GromacsPullPrepMain(WorkflowGenerator):
             'template_dir': '.',
             'output_file': 'sys.top'} ) ]
 
-        fw_template = Firework(fts_template,
-            name=self.get_fw_label(step_label),
-            spec = {
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in': files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[fw_pull,*fws_root])
+        fw_template = self.build_fw(
+            fts_template, step_label,
+            parents=[fw_pull, *fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_template)
 
@@ -233,21 +214,13 @@ class GromacsPullPrepMain(WorkflowGenerator):
                 store_stdlog = True,
                 fizzle_bad_rc= True) ]
 
-        fw_gmx_make_ndx = Firework(fts_gmx_make_ndx,
-            name=self.get_fw_label(step_label),
-            spec = {
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'stdin':    'q\n',
-                'metadata': {
-                    'project': self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                    **self.kwargs
-                }
-            },
-            parents=fws_root )
+        fw_gmx_make_ndx = self.build_fw(
+            fts_gmx_make_ndx, step_label,
+            parents=fws_root,
+            files_in=files_in,
+            files_out=files_out,
+            stdin='q\n',
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_gmx_make_ndx)
 
@@ -292,20 +265,12 @@ class GromacsPullPrepMain(WorkflowGenerator):
             store_stdlog=False,
             fizzle_bad_rc=True)]
 
-        fw_make_pull_groups = Firework(fts_make_pull_groups,
-            name=self.get_fw_label(step_label),
-            spec={
-                '_category': self.hpc_specs['fw_noqueue_category'],
-                '_files_in':  files_in,
-                '_files_out': files_out,
-                'metadata': {
-                    'project':  self.project_id,
-                    'datetime': str(datetime.datetime.now()),
-                    'step':    step_label,
-                     **self.kwargs
-                }
-            },
-            parents=[*fws_root, fw_pull, fw_template, fw_gmx_make_ndx] )
+        fw_make_pull_groups = self.build_fw(
+            fts_make_pull_groups, step_label,
+            parents=[*fws_root, fw_pull, fw_template, fw_gmx_make_ndx],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'])
 
         fw_list.append(fw_make_pull_groups)
 
