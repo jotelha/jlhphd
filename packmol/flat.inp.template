@@ -91,8 +91,8 @@ end structure
 structure {{ cylinder.surfactant }}.pdb
   resnumbers 2
   number {{ cylinder.N|int }}
-  inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer) }} {{ "%.3f"|format(cylinder.length) }}
-  outside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner) }} {{ "%.3f"|format(cylinder.length) }}
+  inside cylinder {{ "%.3f"|format(cylinder.base_center[0]+tolerance) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer) }} {{ "%.3f"|format(cylinder.length-2*tolerance) }}
+  outside cylinder {{ "%.3f"|format(cylinder.base_center[0]-cylinder.r_outer) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner) }} {{ "%.3f"|format(cylinder.length+2*cylinder.r_outer) }}
   {% if cylinder.upper_hemi %}
   over plane 0. 0. 1. {{ "%.3f"|format(cylinder.base_center[2]) }}
   {% elif cylinder.lower_hemi %}
@@ -100,10 +100,10 @@ structure {{ cylinder.surfactant }}.pdb
   {% endif %}
 
   atoms {{ cylinder.inner_atom_number|int }}
-    inside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner_constraint) }} {{ "%.3f"|format(cylinder.length) }}
+    inside cylinder {{ "%.3f"|format(cylinder.base_center[0]+tolerance) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_inner_constraint) }} {{ "%.3f"|format(cylinder.length-2*tolerance) }}
   end atoms
   atoms {{ cylinder.outer_atom_number|int }}
-    outside cylinder {{ "%.3f"|format(cylinder.base_center[0]) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer_constraint) }} {{ "%.3f"|format(cylinder.length) }}
+    outside cylinder {{ "%.3f"|format(cylinder.base_center[0]-cylinder.r_outer) }} {{ "%.3f"|format(cylinder.base_center[1]) }} {{ "%.3f"|format(cylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(cylinder.r_outer_constraint) }} {{ "%.3f"|format(cylinder.length+2*cylinder.r_outer) }}
   end atoms
   {% if write_restart %}
     restart_to {{ system_name }}_cylinder_{{ "%03d"|format(loop.index0) }}_restart.pack
@@ -131,8 +131,8 @@ structure {{ ioncylinder.ion }}.pdb
   resnumbers 2
   number {{ ioncylinder.N|int }}
   # along x axis
-  inside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_outer) }} {{ "%.3f"|format(ioncylinder.length) }}
-  outside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_inner) }} {{ "%.3f"|format(ioncylinder.length) }}
+  inside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]+tolerance) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_outer) }} {{ "%.3f"|format(ioncylinder.length-2*tolerance) }}
+  outside cylinder {{ "%.3f"|format(ioncylinder.base_center[0]-ioncylinder.r_outer) }} {{ "%.3f"|format(ioncylinder.base_center[1]) }} {{ "%.3f"|format(ioncylinder.base_center[2]) }} 1. 0. 0. {{ "%.3f"|format(ioncylinder.r_inner) }} {{ "%.3f"|format(ioncylinder.length+2*ioncylinder.r_outer) }}
   {% if ioncylinder.upper_hemi %}
   over plane 0. 0. 1. {{ "%.3f"|format(ioncylinder.base_center[2]) }}
   {% elif ioncylinder.lower_hemi %}
