@@ -18,6 +18,7 @@ from jlhpy.utilities.wf.flat_packing.sub_wf_030_packing import (
 from jlhpy.utilities.wf.flat_packing.sub_wf_035_pdb_cleanup import PDBCleanup
 from jlhpy.utilities.wf.flat_packing.sub_wf_040_box_measures import SimulationBoxMeasures
 
+# TODO: relaxation postprocessing analysis_rdf often takes longer than default 6 h wall time configured for JUWELS
 
 from jlhpy.utilities.wf.building_blocks.gmx.chain_wf_gromacs import GromacsMinimizationEquilibrationRelaxation
 

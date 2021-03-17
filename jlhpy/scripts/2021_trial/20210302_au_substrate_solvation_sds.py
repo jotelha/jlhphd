@@ -86,7 +86,7 @@ parameter_values = [
 from jlhpy.utilities.wf.flat_packing.chain_wf_flat_substrate_passivation import SubstratePassivation
 from jlhpy.utilities.wf.phys_config import TOLERANCE, SURFACTANTS
 
-project_id = '2020-02-26-sds-on-au-111-substrate-passivation-trial'
+project_id = '2020-03-02-sds-on-au-111-substrate-passivation-trial'
 
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
