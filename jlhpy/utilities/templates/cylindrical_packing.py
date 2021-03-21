@@ -83,7 +83,7 @@ def generate_cylinders_packmol_template_context(
         'movebadrandom': True,
         'nloop':         200,
         'nloop0':        1000,  # undocumented keyword for initial packing loop
-        'maxit':         50,
+        'maxit':         200,
     }
 
     return context
