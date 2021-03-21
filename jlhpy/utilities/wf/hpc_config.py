@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 # hpc infrastructure-related specifications go here
 
-JUWELS_QUEUE = 'juwels_chka18_queue'
-JUWELS_NOQUEUE = 'juwels_chka18_noqueue'
+#JUWELS_QUEUE = 'juwels_chka18_queue'
+#JUWELS_NOQUEUE = 'juwels_chka18_noqueue'
+
+JUWELS_QUEUE = 'juwels_chfr13_queue'
+JUWELS_NOQUEUE = 'juwels_chfr13_noqueue'
 
 HPC_SPECS = {
     'forhlr2': {
@@ -163,10 +166,10 @@ HPC_SPECS = {
         'physical_cores_per_node': 48,
         'logical_cores_per_node':  96,
         'nodes': 1024,
-        'walltime':  '06:00:00',
+        'walltime':  '24:00:00',
         'single_core_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
         },
@@ -178,7 +181,7 @@ HPC_SPECS = {
         },
         'single_task_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
             'cpus_per_task': 96,
@@ -193,7 +196,7 @@ HPC_SPECS = {
 
         'single_node_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks':   96,
             'ntasks_per_node': 96,
         },
@@ -205,24 +208,24 @@ HPC_SPECS = {
         },
         'no_smt_single_node_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks':   48,
             'ntasks_per_node': 48,
         },
         'no_smt_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks_per_node': 48,
         },
         'smt_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks_per_node': 96,
         },
 
         'four_nodes_job_queueadapter_defaults': {
             'queue':    'batch',
-            'walltime': '06:00:00',
+            'walltime': '24:00:00',
             'ntasks':   384,
             'ntasks_per_node': 96,
         },
