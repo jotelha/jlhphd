@@ -80,7 +80,7 @@ def generate_cylinders_packmol_template_context(
     context = {
         'cylinders':     cylinders,
         'ioncylinders':  ioncylinders,
-        'movebadrandom': True,
+        'movebadrandom': False,
         'nloop':         500,
         'nloop0':        1000,  # undocumented keyword for initial packing loop
         'maxit':         200,

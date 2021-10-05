@@ -70,8 +70,9 @@ class ComponentMeasures(BranchingWorkflowGenerator):
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
+
 # TODO: remove four classes, pull up dynamic decision for packing workflow
-class MonolayerPackingAndEquilibartion(ChainWorkflowGenerator):
+class MonolayerPackingAndEquilibration(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             MonolayerPacking,
@@ -81,7 +82,7 @@ class MonolayerPackingAndEquilibartion(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class BilayerPackingAndEquilibartion(ChainWorkflowGenerator):
+class BilayerPackingAndEquilibration(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             BilayerPacking,
@@ -91,7 +92,7 @@ class BilayerPackingAndEquilibartion(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class CylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
+class CylindricalPackingAndEquilibration(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             CylindricalPacking,
@@ -101,7 +102,7 @@ class CylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
 
-class HemicylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
+class HemicylindricalPackingAndEquilibration(ChainWorkflowGenerator):
     def __init__(self, *args, **kwargs):
         sub_wf_components = [
             HemicylindricalPacking,
@@ -112,10 +113,10 @@ class HemicylindricalPackingAndEquilibartion(ChainWorkflowGenerator):
 
 
 AGGREGATE_SHAPE_SUB_WF_DICT = {
-    'monolayer': MonolayerPackingAndEquilibartion,
-    'bilayer': BilayerPackingAndEquilibartion,
-    'cylinders': CylindricalPackingAndEquilibartion,
-    'hemicylinders': HemicylindricalPackingAndEquilibartion,
+    'monolayer': MonolayerPackingAndEquilibration,
+    'bilayer': BilayerPackingAndEquilibration,
+    'cylinders': CylindricalPackingAndEquilibration,
+    'hemicylinders': HemicylindricalPackingAndEquilibration,
 }
 
 

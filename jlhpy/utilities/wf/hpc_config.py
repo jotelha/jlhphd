@@ -4,8 +4,11 @@
 #JUWELS_QUEUE = 'juwels_chka18_queue'
 #JUWELS_NOQUEUE = 'juwels_chka18_noqueue'
 
-JUWELS_QUEUE = 'juwels_chfr13_queue'
-JUWELS_NOQUEUE = 'juwels_chfr13_noqueue'
+# JUWELS_QUEUE = 'juwels_chfr13_queue'
+# JUWELS_NOQUEUE = 'juwels_chfr13_noqueue'
+
+JUWELS_QUEUE = 'juwels_hfr21_queue'
+JUWELS_NOQUEUE = 'juwels_hfr21_noqueue'
 
 HPC_SPECS = {
     'forhlr2': {

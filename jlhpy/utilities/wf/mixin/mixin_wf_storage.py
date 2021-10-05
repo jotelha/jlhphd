@@ -175,6 +175,7 @@ class PushToFilePadMixin(PushMixin):
 
         return fw_list, fws_leaf_out, fws_root_out
 
+
 class PullFromDtoolURIMixin(PullMixin):
     """Mixin for directly copying files from dataset identified by directly accessible URI."""
 
@@ -190,7 +191,6 @@ class PullFromDtoolURIMixin(PullMixin):
                 logger.warning("No info on how to get infile '%s'" % file['file_label'])
                 continue
             file_info = self.files_in_info[file_label]
-
 
             uri = file_info['uri']
 
@@ -802,8 +802,9 @@ class PushToDtoolRepositoryViaSSHJumpHostAndFilePadMixin(
     pass
 
 
-class DefaultPullMixin(PullFromDtoolRepositoryMixin):
+class DefaultPullMixin(PullFromDtoolURIMixin):
     pass
+
 
 class DefaultPushMixin(PushDerivedDatasetToDtoolRepositoryMixin):
     pass

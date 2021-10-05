@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.6.0
+#       jupytext_version: 1.9.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -280,7 +280,7 @@ lp = LaunchPad.auto_load() #Define the server and database
 # FilePad behaves analogous to LaunchPad
 # fp = FilePad.auto_load()
 fp = FilePad.from_db_file(
-    os.path.join(os.path.expanduser("~"), '.fireworks', 'fireworks_sandbox_mongodb_auth.yaml'))
+    os.path.join(os.path.expanduser("~"), '.fireworks', 'fireworks_mongodb_auth.yaml'))
 
 # %% [markdown]
 # # Fireworks

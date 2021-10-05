@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+# %%
 
 # # Analyze AFM tip solvation
 
@@ -9,14 +10,14 @@
 
 # ### IPython magic
 
-# In[239]:
+# %%
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[14]:
+# %%
 
 
 get_ipython().run_line_magic('aimport', '')
@@ -24,7 +25,7 @@ get_ipython().run_line_magic('aimport', '')
 
 # ### Imports
 
-# In[240]:
+# %%
 
 
 import ase.io # here used for reading pdb files
@@ -32,7 +33,7 @@ from ase.visualize import view
 from ase.visualize.plot import plot_atoms # has nasty offset issues
 from cycler import cycler # here used for cycling through colors in plots
 import datetime
-import fabric # for pythonic ssh connections
+# import fabric # for pythonic ssh connections
 from fireworks import LaunchPad, Firework, Tracker, Workflow 
 from fireworks import FileTransferTask, PyTask, ScriptTask
 
@@ -104,7 +105,7 @@ import yaml
 
 # ### Logging
 
-# In[241]:
+# %%
 
 
 logging.basicConfig(level=logging.INFO)
@@ -117,7 +118,7 @@ logger.setLevel(logging.INFO)
 
 # ### Function definitions
 
-# In[242]:
+# %%
 
 
 def find_undeclared_variables(infile):
@@ -130,7 +131,7 @@ def find_undeclared_variables(infile):
     return undefined
 
 
-# In[243]:
+# %%
 
 
 def memuse():
@@ -145,7 +146,7 @@ def memuse():
 
 # ### Global settings
 
-# In[19]:
+# %%
 
 
 # pandas settings
@@ -154,33 +155,33 @@ pd.options.display.max_columns = 16
 pd.options.display.max_colwidth = 256
 
 
-# In[244]:
+# %%
 
 
 os.environ['GMXLIB'] = '/gmx_top'
 
 
-# In[245]:
+# %%
 
 
 # pmd.gromacs.GROMACS_TOPDIR = os.environ['GMXLIB']
 pmd.gromacs.GROMACS_TOPDIR = '/gmx_top'
 
 
-# In[246]:
+# %%
 
 
 # prefix = '/mnt/dat/work/testuser/indenter/sandbox/20191110_packmol'
 prefix = '/mnt/dat/work'
 
 
-# In[247]:
+# %%
 
 
 work_prefix = '/mnt/dat/work/tmp'
 
 
-# In[248]:
+# %%
 
 
 try:
@@ -189,13 +190,13 @@ except FileExistsError as exc:
     print(exc)
 
 
-# In[249]:
+# %%
 
 
 os.chdir(work_prefix)
 
 
-# In[250]:
+# %%
 
 
 # the FireWorks LaunchPad
@@ -233,19 +234,19 @@ fp = FilePad.auto_load()
 
 # ### Overview on projects in database
 
-# In[252]:
+# %%
 
 
 query = {'metadata.datetime': {'$gt': '2020'} }
 
 
-# In[253]:
+# %%
 
 
 fp.filepad.count_documents(query)
 
 
-# In[254]:
+# %%
 
 
 aggregation_pipeline = [
@@ -285,7 +286,7 @@ res = [c for c in cursor]
 res_df = pd.DataFrame(data=res) # pandas Dataframe is just nice for printing in notebook
 
 
-# In[255]:
+# %%
 
 
 res_df
@@ -293,13 +294,13 @@ res_df
 
 # ### Overview on steps in project
 
-# In[256]:
+# %%
 
 
 project_id = '2020-07-29-sds-on-au-111-indenter-passivation-trial'
 
 
-# In[257]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -308,14 +309,14 @@ query = {
 }
 
 
-# In[258]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[259]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -348,13 +349,13 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[260]:
+# %%
 
 
 res_df
 
 
-# In[261]:
+# %%
 
 
 res_df['step'].values
@@ -362,7 +363,7 @@ res_df['step'].values
 
 # ### Overview on objects in project
 
-# In[262]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -371,14 +372,14 @@ query = {
 }
 
 
-# In[263]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[264]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -413,7 +414,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[265]:
+# %%
 
 
 res_df
@@ -421,7 +422,7 @@ res_df
 
 # ### Overview on images by distinct steps
 
-# In[266]:
+# %%
 
 
 query = {
@@ -430,14 +431,14 @@ query = {
 }
 
 
-# In[267]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[268]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -473,13 +474,13 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[269]:
+# %%
 
 
 res_df
 
 
-# In[270]:
+# %%
 
 
 res_df["step"][0]
@@ -489,7 +490,7 @@ res_df["step"][0]
 
 # ### Indenter bounding sphere
 
-# In[271]:
+# %%
 
 
 query = {
@@ -499,14 +500,14 @@ query = {
 }
 
 
-# In[272]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[273]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -533,7 +534,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[274]:
+# %%
 
 
 for obj in obj_list:
@@ -542,7 +543,7 @@ for obj in obj_list:
 
 # ### Surfactant measures
 
-# In[275]:
+# %%
 
 
 query = {
@@ -552,14 +553,14 @@ query = {
 }
 
 
-# In[276]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[277]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -586,7 +587,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[278]:
+# %%
 
 
 obj_list[0]
@@ -594,7 +595,7 @@ obj_list[0]
 
 # ### Packing constraints
 
-# In[279]:
+# %%
 
 
 query = {
@@ -604,14 +605,14 @@ query = {
 }
 
 
-# In[280]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[281]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -638,7 +639,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[282]:
+# %%
 
 
 obj_list[0]
@@ -646,7 +647,7 @@ obj_list[0]
 
 # ### Packed film
 
-# In[283]:
+# %%
 
 
 query = {
@@ -656,14 +657,14 @@ query = {
 }
 
 
-# In[284]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[285]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -690,7 +691,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[286]:
+# %%
 
 
 for obj in obj_list:
@@ -701,7 +702,7 @@ for obj in obj_list:
 
 # ### Overview on objects in step
 
-# In[287]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -711,14 +712,14 @@ query = {
 }
 
 
-# In[288]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[289]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -752,7 +753,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[290]:
+# %%
 
 
 res_df
@@ -760,7 +761,7 @@ res_df
 
 # ### Global observables
 
-# In[291]:
+# %%
 
 
 query = { 
@@ -771,13 +772,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[292]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[293]:
+# %%
 
 
 aggregation_pipeline = [
@@ -801,13 +802,13 @@ aggregation_pipeline = [
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[294]:
+# %%
 
 
 [ c for c in cursor]
 
 
-# In[295]:
+# %%
 
 
 res_mi_list = []
@@ -850,19 +851,19 @@ res_mi_df = pd.concat(res_mi_list)
 res_df = res_mi_df.reset_index()
 
 
-# In[296]:
+# %%
 
 
 res_mi_df
 
 
-# In[297]:
+# %%
 
 
 res_df
 
 
-# In[298]:
+# %%
 
 
 y_quantities = [
@@ -890,7 +891,7 @@ fig.tight_layout()
 
 # ###  Visualize trajectory
 
-# In[299]:
+# %%
 
 
 query = {
@@ -900,14 +901,14 @@ query = {
 }
 
 
-# In[300]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[301]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -943,13 +944,13 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[302]:
+# %%
 
 
 res_df
 
 
-# In[303]:
+# %%
 
 
 aggregation_pipeline = [
@@ -976,7 +977,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[304]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
@@ -1019,7 +1020,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[305]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -1031,7 +1032,7 @@ for key, obj in obj_dict.items():
 
 # ### Overview on objects in step
 
-# In[306]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -1041,14 +1042,14 @@ query = {
 }
 
 
-# In[307]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[308]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -1082,7 +1083,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[309]:
+# %%
 
 
 res_df
@@ -1111,7 +1112,7 @@ res_df
 #  
 #      '$2': $1,\n
 
-# In[310]:
+# %%
 
 
 gmx_energy_dict = {
@@ -1154,7 +1155,7 @@ gmx_energy_dict = {
 }
 
 
-# In[311]:
+# %%
 
 
 query = { 
@@ -1166,14 +1167,14 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[312]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[313]:
+# %%
 
 
 gmx_energy_selection = [
@@ -1189,7 +1190,7 @@ gmx_energy_selection = [
 ]
 
 
-# In[314]:
+# %%
 
 
 res_list = []
@@ -1257,13 +1258,13 @@ res_df = pd.concat(res_df_list)
 res_df_mi = res_df.set_index(['nmolecules','time'])
 
 
-# In[315]:
+# %%
 
 
 res_df_mi
 
 
-# In[316]:
+# %%
 
 
 cols = 2
@@ -1291,7 +1292,7 @@ fig.tight_layout()
 
 # ### Pulling forces
 
-# In[317]:
+# %%
 
 
 res_df_list = []
@@ -1351,7 +1352,7 @@ res_df = pd.concat(res_df_list)
 res_df_mi = res_df.set_index(['nmolecules','time'])
 
 
-# In[318]:
+# %%
 
 
 # pulling forces
@@ -1372,7 +1373,7 @@ for pos, (key, grp) in zip(positions,res_df.groupby(['nmolecules'])):
 fig.tight_layout()
 
 
-# In[319]:
+# %%
 
 
 # mean pulling force
@@ -1388,7 +1389,7 @@ fig.tight_layout()
 
 # ### Pulling groups movement
 
-# In[320]:
+# %%
 
 
 res_df_list = []
@@ -1462,25 +1463,25 @@ res_df_mi = res_df.set_index(['nmolecules','time'])
 res_df_mi.columns = pd.MultiIndex.from_tuples(res_df_mi.columns, names=['nmolecule', 'coord'])
 
 
-# In[321]:
+# %%
 
 
 res_df_mi
 
 
-# In[322]:
+# %%
 
 
 res_df = res_df_mi.groupby(axis=1,level='coord').mean().reset_index()
 
 
-# In[323]:
+# %%
 
 
 res_df
 
 
-# In[324]:
+# %%
 
 
 cols = 2
@@ -1510,7 +1511,7 @@ fig.tight_layout()
 
 # ###  Visualize trajectory
 
-# In[325]:
+# %%
 
 
 query = {
@@ -1520,14 +1521,14 @@ query = {
 }
 
 
-# In[326]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[327]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -1568,13 +1569,13 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[328]:
+# %%
 
 
 res_df
 
 
-# In[329]:
+# %%
 
 
 aggregation_pipeline = [
@@ -1601,7 +1602,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[330]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -1614,7 +1615,7 @@ for key, obj in obj_dict.items():
 
 # #### Overview
 
-# In[331]:
+# %%
 
 
 query = { 
@@ -1626,7 +1627,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[332]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -1659,7 +1660,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[333]:
+# %%
 
 
 res_df
@@ -1667,14 +1668,14 @@ res_df
 
 # #### Substrate - surfactant head RDF
 
-# In[465]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[466]:
+# %%
 
 
 query = { 
@@ -1686,7 +1687,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[467]:
+# %%
 
 
 res_dict = {}
@@ -1724,7 +1725,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[469]:
+# %%
 
 
 n = len(res_dict)
@@ -1753,14 +1754,14 @@ fig.show()
 
 # #### Substrate - surfactant tail RDF
 
-# In[338]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[339]:
+# %%
 
 
 query = { 
@@ -1772,7 +1773,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[340]:
+# %%
 
 
 res_dict = {}
@@ -1818,7 +1819,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[341]:
+# %%
 
 
 n = len(res_dict)
@@ -1848,14 +1849,14 @@ fig.show()
 
 # #### Surfactant head - surfactant tail RDF
 
-# In[342]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[343]:
+# %%
 
 
 query = { 
@@ -1867,7 +1868,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[344]:
+# %%
 
 
 res_dict = {}
@@ -1913,7 +1914,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[345]:
+# %%
 
 
 n = len(res_dict)
@@ -1944,7 +1945,7 @@ fig.show()
 
 # ### Overview on objects in step
 
-# In[346]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -1954,14 +1955,14 @@ query = {
 }
 
 
-# In[347]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[348]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -1995,7 +1996,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[349]:
+# %%
 
 
 res_df
@@ -2003,7 +2004,7 @@ res_df
 
 # ### Global observables
 
-# In[350]:
+# %%
 
 
 query = { 
@@ -2014,13 +2015,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[351]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[352]:
+# %%
 
 
 aggregation_pipeline = [
@@ -2044,7 +2045,7 @@ aggregation_pipeline = [
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[353]:
+# %%
 
 
 res_mi_list = []
@@ -2087,13 +2088,13 @@ res_mi_df = pd.concat(res_mi_list)
 res_df = res_mi_df.reset_index()
 
 
-# In[354]:
+# %%
 
 
 res_mi_df
 
 
-# In[355]:
+# %%
 
 
 y_quantities = [
@@ -2121,7 +2122,7 @@ fig.tight_layout()
 
 # ###  Visualize trajectory
 
-# In[356]:
+# %%
 
 
 query = {
@@ -2131,14 +2132,14 @@ query = {
 }
 
 
-# In[357]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[358]:
+# %%
 
 
 # check
@@ -2177,13 +2178,13 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[359]:
+# %%
 
 
 res_df
 
 
-# In[360]:
+# %%
 
 
 aggregation_pipeline = [
@@ -2223,7 +2224,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[361]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -2235,7 +2236,7 @@ for key, obj in obj_dict.items():
 
 # ### Overview on objects in step
 
-# In[362]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -2245,14 +2246,14 @@ query = {
 }
 
 
-# In[363]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[364]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -2286,7 +2287,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[365]:
+# %%
 
 
 res_df
@@ -2294,7 +2295,7 @@ res_df
 
 # ### Global observables
 
-# In[366]:
+# %%
 
 
 query = { 
@@ -2305,13 +2306,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[367]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[368]:
+# %%
 
 
 aggregation_pipeline = [
@@ -2335,13 +2336,13 @@ aggregation_pipeline = [
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[369]:
+# %%
 
 
 [ c for c in cursor]
 
 
-# In[370]:
+# %%
 
 
 res_list = []
@@ -2383,19 +2384,19 @@ res_df_mi = pd.concat(res_list)
 res_df = res_df_mi.reset_index()
 
 
-# In[371]:
+# %%
 
 
 res_df.columns
 
 
-# In[372]:
+# %%
 
 
 res_df_mi
 
 
-# In[373]:
+# %%
 
 
 #n = len(res_df['nmolecules'].unique())
@@ -2426,7 +2427,7 @@ fig.tight_layout()
 
 # ### Visualize trajectory
 
-# In[374]:
+# %%
 
 
 query = {
@@ -2436,14 +2437,14 @@ query = {
 }
 
 
-# In[375]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[376]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
@@ -2486,7 +2487,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[377]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -2498,7 +2499,7 @@ for key, obj in obj_dict.items():
 
 # ### Datasets in step
 
-# In[378]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -2508,7 +2509,7 @@ query = {
 }
 
 
-# In[379]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -2541,7 +2542,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[380]:
+# %%
 
 
 res_df
@@ -2549,7 +2550,7 @@ res_df
 
 # ### Overview on objects in step
 
-# In[381]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -2559,14 +2560,14 @@ query = {
 }
 
 
-# In[382]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[383]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -2600,7 +2601,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[384]:
+# %%
 
 
 res_df
@@ -2608,7 +2609,7 @@ res_df
 
 # ### Global observables
 
-# In[385]:
+# %%
 
 
 query = { 
@@ -2619,25 +2620,25 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[386]:
+# %%
 
 
 metadata = fp.filepad.find_one(query)
 
 
-# In[387]:
+# %%
 
 
 metadata
 
 
-# In[388]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[389]:
+# %%
 
 
 aggregation_pipeline = [
@@ -2661,13 +2662,13 @@ aggregation_pipeline = [
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[390]:
+# %%
 
 
 [ c for c in cursor]
 
 
-# In[391]:
+# %%
 
 
 res_list = []
@@ -2691,19 +2692,19 @@ res_df_mi = pd.concat(res_list)
 res_df = res_df_mi.reset_index()
 
 
-# In[392]:
+# %%
 
 
 res_df.columns
 
 
-# In[393]:
+# %%
 
 
 res_df_mi
 
 
-# In[394]:
+# %%
 
 
 #n = len(res_df['nmolecules'].unique())
@@ -2735,7 +2736,7 @@ fig.tight_layout()
 
 # ### Visualize trajectory
 
-# In[395]:
+# %%
 
 
 query = {
@@ -2745,14 +2746,14 @@ query = {
 }
 
 
-# In[396]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[397]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
@@ -2795,7 +2796,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[398]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -2808,7 +2809,7 @@ for key, obj in obj_dict.items():
 
 # #### Overview
 
-# In[399]:
+# %%
 
 
 query = { 
@@ -2820,7 +2821,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[400]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -2853,7 +2854,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[401]:
+# %%
 
 
 res_df
@@ -2861,14 +2862,14 @@ res_df
 
 # #### Substrate - surfactant head RDF
 
-# In[402]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[403]:
+# %%
 
 
 query = { 
@@ -2880,7 +2881,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[404]:
+# %%
 
 
 res_dict = {}
@@ -2918,7 +2919,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[405]:
+# %%
 
 
 n = len(res_dict)
@@ -2947,14 +2948,14 @@ fig.show()
 
 # #### Substrate - surfactant tail RDF
 
-# In[406]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[407]:
+# %%
 
 
 query = { 
@@ -2966,7 +2967,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[408]:
+# %%
 
 
 res_dict = {}
@@ -3012,7 +3013,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[409]:
+# %%
 
 
 n = len(res_dict)
@@ -3042,14 +3043,14 @@ fig.show()
 
 # #### Surfactant head - surfactant tail RDF
 
-# In[410]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[411]:
+# %%
 
 
 query = { 
@@ -3061,7 +3062,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[412]:
+# %%
 
 
 res_dict = {}
@@ -3107,7 +3108,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[413]:
+# %%
 
 
 n = len(res_dict)
@@ -3136,14 +3137,14 @@ fig.show()
 
 # #### Substrate - substrate RDF
 
-# In[414]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[415]:
+# %%
 
 
 query = { 
@@ -3155,7 +3156,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[416]:
+# %%
 
 
 res_dict = {}
@@ -3201,7 +3202,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[417]:
+# %%
 
 
 n = len(res_dict)
@@ -3234,7 +3235,7 @@ fig.show()
 
 # ### Datasets in step
 
-# In[418]:
+# %%
 
 
 # queries to the data base are simple dictionaries
@@ -3244,7 +3245,7 @@ query = {
 }
 
 
-# In[419]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -3277,7 +3278,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[420]:
+# %%
 
 
 res_df
@@ -3285,14 +3286,14 @@ res_df
 
 # ### Overview on objects in step
 
-# In[421]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[422]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -3326,7 +3327,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[423]:
+# %%
 
 
 res_df
@@ -3334,7 +3335,7 @@ res_df
 
 # ### Global observables
 
-# In[424]:
+# %%
 
 
 query = { 
@@ -3345,13 +3346,13 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[425]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[426]:
+# %%
 
 
 aggregation_pipeline = [
@@ -3375,13 +3376,13 @@ aggregation_pipeline = [
 cursor = fp.filepad.aggregate(aggregation_pipeline)
 
 
-# In[427]:
+# %%
 
 
 [ c for c in cursor]
 
 
-# In[428]:
+# %%
 
 
 res_list = []
@@ -3405,19 +3406,19 @@ res_df_mi = pd.concat(res_list)
 res_df = res_df_mi.reset_index()
 
 
-# In[ ]:
+# %%
 
 
 res_df.columns
 
 
-# In[ ]:
+# %%
 
 
 res_df_mi
 
 
-# In[ ]:
+# %%
 
 
 #n = len(res_df['nmolecules'].unique())
@@ -3449,7 +3450,7 @@ fig.tight_layout()
 
 # ### Visualize trajectory
 
-# In[429]:
+# %%
 
 
 query = {
@@ -3459,14 +3460,14 @@ query = {
 }
 
 
-# In[430]:
+# %%
 
 
 # use underlying MongoDB functionality to check total number of documents matching query
 fp.filepad.count_documents(query)
 
 
-# In[431]:
+# %%
 
 
 parameter_dict = {'nmolecules': 'metadata.system.surfactant.nmolecules'}
@@ -3509,7 +3510,7 @@ for i, c in enumerate(cursor):
     print('.',end='')
 
 
-# In[432]:
+# %%
 
 
 for key, obj in obj_dict.items():
@@ -3522,7 +3523,7 @@ for key, obj in obj_dict.items():
 
 # #### Overview
 
-# In[433]:
+# %%
 
 
 query = { 
@@ -3534,7 +3535,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[434]:
+# %%
 
 
 # check files degenerate by 'metadata.type' ad 'metadata.name'
@@ -3567,7 +3568,7 @@ res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice
 del res_df["_id"]
 
 
-# In[435]:
+# %%
 
 
 res_df
@@ -3575,14 +3576,14 @@ res_df
 
 # #### Substrate - surfactant head RDF
 
-# In[436]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[437]:
+# %%
 
 
 query = { 
@@ -3594,7 +3595,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[438]:
+# %%
 
 
 res_dict = {}
@@ -3632,7 +3633,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[439]:
+# %%
 
 
 n = len(res_dict)
@@ -3661,14 +3662,14 @@ fig.show()
 
 # #### Substrate - surfactant tail RDF
 
-# In[440]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[441]:
+# %%
 
 
 query = { 
@@ -3680,7 +3681,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[442]:
+# %%
 
 
 res_dict = {}
@@ -3726,7 +3727,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[443]:
+# %%
 
 
 n = len(res_dict)
@@ -3756,14 +3757,14 @@ fig.show()
 
 # #### Surfactant head - surfactant tail RDF
 
-# In[444]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[445]:
+# %%
 
 
 query = { 
@@ -3775,7 +3776,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[446]:
+# %%
 
 
 res_dict = {}
@@ -3821,7 +3822,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[447]:
+# %%
 
 
 n = len(res_dict)
@@ -3850,14 +3851,14 @@ fig.show()
 
 # #### Surfactant head - counterion RDF
 
-# In[448]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[449]:
+# %%
 
 
 query = { 
@@ -3869,7 +3870,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[450]:
+# %%
 
 
 res_dict = {}
@@ -3915,7 +3916,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[451]:
+# %%
 
 
 n = len(res_dict)
@@ -3944,14 +3945,14 @@ fig.show()
 
 # #### Surfactant head - surfactant head RDF
 
-# In[452]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[453]:
+# %%
 
 
 query = { 
@@ -3963,7 +3964,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[454]:
+# %%
 
 
 res_dict = {}
@@ -4009,7 +4010,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[455]:
+# %%
 
 
 n = len(res_dict)
@@ -4040,14 +4041,14 @@ fig.show()
 
 # #### Surfactant tail - surfactant tail RDF
 
-# In[456]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[457]:
+# %%
 
 
 query = { 
@@ -4059,7 +4060,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[458]:
+# %%
 
 
 res_dict = {}
@@ -4105,7 +4106,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[459]:
+# %%
 
 
 n = len(res_dict)
@@ -4136,14 +4137,14 @@ fig.show()
 
 # #### Substrate - substrate RDF
 
-# In[460]:
+# %%
 
 
 parameter_dict = {
     'nmolecules': 'metadata.system.surfactant.nmolecules'}
 
 
-# In[461]:
+# %%
 
 
 query = { 
@@ -4155,7 +4156,7 @@ query = {
 fp.filepad.count_documents(query)
 
 
-# In[462]:
+# %%
 
 
 res_dict = {}
@@ -4201,7 +4202,7 @@ for i, c in enumerate(cursor):
 print('')
 
 
-# In[463]:
+# %%
 
 
 n = len(res_dict)
@@ -4230,7 +4231,7 @@ fig.tight_layout()
 fig.show()
 
 
-# In[ ]:
+# %%
 
 
 
