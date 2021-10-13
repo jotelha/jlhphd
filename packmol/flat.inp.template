@@ -50,7 +50,7 @@ end structure
 {% endif %}
 
 {% for layer in layers %}
-
+{% if layer.N|int > 0 %}
 # monolayer examples:
 
 # SDS monolayer: the polar head is oriented downwards, tail upwards.
@@ -85,9 +85,11 @@ structure {{ layer.surfactant }}.pdb
     restart_to {{ system_name }}_layer_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}
 
 {% for cylinder in cylinders %}
+{% if cylinder.N|int > 0 %}
 structure {{ cylinder.surfactant }}.pdb
   resnumbers 2
   number {{ cylinder.N|int }}
@@ -109,10 +111,12 @@ structure {{ cylinder.surfactant }}.pdb
     restart_to {{ system_name }}_cylinder_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}
 
 # point particles, generally ions
 {% for ionlayer in ionlayers %}
+{% if ionlayer.N|int > 0 %}
 structure {{ ionlayer.ion }}.pdb
   chain A
   resnumbers 2
@@ -122,10 +126,12 @@ structure {{ ionlayer.ion }}.pdb
     restart_to {{ system_name }}_ionlayer_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}
 
 # ions outside cylinder
 {% for ioncylinder in ioncylinders %}
+{% if ioncylinder.N|int > 0 %}
 structure {{ ioncylinder.ion }}.pdb
   chain A
   resnumbers 2
@@ -142,4 +148,5 @@ structure {{ ioncylinder.ion }}.pdb
     restart_to {{ system_name }}_ioncylinder_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}

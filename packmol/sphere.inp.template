@@ -47,6 +47,7 @@ end structure
 {% endif %}
 
 {% for sphere in spheres %}
+{% if sphere.N|int > 0 %}
 structure {{ sphere.surfactant }}.pdb
   resnumbers 2
   number {{ sphere.N|int }}
@@ -62,10 +63,12 @@ structure {{ sphere.surfactant }}.pdb
     restart_to {{ system_name }}_sphere_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}
 
 # ions outside sphere
 {% for sphere in ionspheres %}
+{% if sphere.N|int > 0 %}
 structure {{ sphere.ion }}.pdb
   resnumbers 2
   number {{ sphere.N|int }}
@@ -76,4 +79,5 @@ structure {{ sphere.ion }}.pdb
     restart_to {{ system_name }}_sphere_{{ "%03d"|format(loop.index0) }}_restart.pack
   {% endif %}
 end structure
+{% endif %}
 {% endfor %}
