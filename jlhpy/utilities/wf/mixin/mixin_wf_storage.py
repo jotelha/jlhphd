@@ -17,7 +17,7 @@ or
 
     fw_list, fws_root_out, fws_leaf_out = super().push(fws_root)
 
-initialy to allow for arbitrary combinations of storage mixins.
+initially to allow for arbitrary combinations of storage mixins.
 Those three lists are to be extended accordingly eventually returned with
 
     return fw_list, fws_leaf_out, fws_root_out

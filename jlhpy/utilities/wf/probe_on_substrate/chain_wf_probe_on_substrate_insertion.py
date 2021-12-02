@@ -117,7 +117,7 @@ class ProbeOnSubstrateMergeConversionMinimizationAndEquilibration(ChainWorkflowG
     Concatenates
     - LAMMPSMinimization
     - ProbeOnSubstrateConversion
-    - ProbeOnSubstrateConversionMinizationAndEquilibration
+    - ProbeOnSubstrateConversionMinimizationAndEquilibration
     """
 
     def __init__(self, *args, **kwargs):
@@ -163,6 +163,7 @@ class ProbeOnSubstrateMinimizationEquilibrationAndNormalApproach(ChainWorkflowGe
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
 
+
 class ProbeOnSubstrateMergeConversionMinimizationEquilibrationAndApproach(ChainWorkflowGenerator):
     """Merge probe and substrate component, minimize, equilibrate with GROMACS,
     convert GROMACS system to LAMMPS system using CHARMM36 force field,
@@ -171,7 +172,7 @@ class ProbeOnSubstrateMergeConversionMinimizationEquilibrationAndApproach(ChainW
     Concatenates
     - LAMMPSMinimization
     - ProbeOnSubstrateConversion
-    - ProbeOnSubstrateConversionMinizationAndEquilibration
+    - ProbeOnSubstrateConversionMinimizationAndEquilibration
     - ProbeAnalysis
     """
 
