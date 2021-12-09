@@ -68,7 +68,7 @@ probe_on_substrate_input_datasets = [
 
 from jlhpy.utilities.wf.building_blocks.sub_wf_lammps_trajectory_frame_extraction import LAMMPSTrajectoryFrameExtraction
 
-project_id = '2021-12-02-sds-on-au-111-probe-and-substrate-approach-frame-extraction-trial'
+project_id = '2021-12-09-sds-on-au-111-probe-and-substrate-approach-frame-extraction'
 
 wf_list = []
 
@@ -96,7 +96,7 @@ wfg = LAMMPSTrajectoryFrameExtraction(
     },
 
     integrate_push=True,
-    description="SDS on Au(111) substrate and probe frame extraction trial",
+    description="SDS on Au(111) substrate and probe frame extraction",
     owners=[{
         'name': 'Johannes Laurin Hörmann',
         'email': 'johannes.hoermann@imtek.uni-freiburg.de',
@@ -105,20 +105,17 @@ wfg = LAMMPSTrajectoryFrameExtraction(
     }],
     infile_prefix=prefix,
     machine='juwels',
-    mode='trial',
+    mode='production',
     system={},
     step_specific={
         'frame_extraction': {
-            #'first_frame_to_extract': 0 ,
-            #'last_frame_to_extract': 2501,
-            #'every_nth_frame_to_extract': 500,
             'first_distance_to_extract': 50.0,
             'last_distance_to_extract': 0.0,
             'distance_interval': -5.0,
             'time_step': 2.0, # this should be xtractable from somewhere else, but not the case
         },
         'dtool_push': {
-            'dtool_target': '/p/project/hfr21/hoermann4/dtool/TRIAL_DATASETS',
+            'dtool_target': '/p/project/hfr21/hoermann4/dtool/PRODUCTION/2021-12-09-sds-on-au-111-probe-and-substrate-approach-frame-extraction',
             'remote_dataset': probe_on_substrate_input_datasets,
         },
         'merge': {},

@@ -332,6 +332,29 @@ class WorkflowGenerator(FireWorksWorkflowGenerator):
 
         return slug
 
+    def get_n_char_slug(self, suffix='', length=76):
+        # timestamp - parameters - sub-workflow hierarchy - step
+
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+
+        label = ' '.join((
+            timestamp, self.fw_name_prefix,
+            self.wf_name_prefix, suffix))
+        slug = slugify(label)
+
+        if len(slug) > length:  # ellipsis
+            label = ' '.join((
+                timestamp,
+                self.fw_name_prefix,
+                self.wf_name_prefix.split(':')[0],
+                suffix))
+            slug = slugify(label)
+
+        if len(slug) > length:  # ellipsis
+            slug = slug[:length//2-1].rstrip('-') + '--' + slug[-length//2+1:].lstrip('-')
+
+        return slug
+
     def get_wf_label(self):
         return self.wf_name
 

@@ -36,9 +36,12 @@ from imteksimfw.fireworks.user_objects.firetasks.dtool_tasks import (
     CreateDatasetTask, FreezeDatasetTask, CopyDatasetTask, FetchItemTask)
 from imteksimfw.fireworks.user_objects.firetasks.dtool_lookup_tasks import (
     QueryDtoolTask, ReadmeDtoolTask, ManifestDtoolTask, DirectReadmeTask, DirectManifestTask)
-from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import EvalPyEnvTask
+from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import EvalPyEnvTask, PickledPyEnvTask
 from imteksimfw.fireworks.user_objects.firetasks.ssh_tasks import SSHForwardTask
 from imteksimfw.fireworks.user_objects.firetasks.storage_tasks import GetObjectFromFilepadTask
+from imteksimfw.utils.serialize import serialize_module_obj
+
+from jlhpy.utilities.prep.random import random_alphanumeric_string
 
 
 class PullMixin():
@@ -505,13 +508,28 @@ class PushToDtoolRepositoryMixin(PushMixin):
             f['file_label']: f['file_name'] for f in self.files_out_list
         }
 
-        # make step label a valid 80 char dataset name
-        dataset_name = self.get_80_char_slug()
+        # make step label a valid 80 char dataset name with short 4-letter random component
+        base_dataset_name = self.get_n_char_slug(length=76)
 
         if len(files_in) > 0:
+            func_str = serialize_module_obj(random_alphanumeric_string)
             fts_push = [
+                PickledPyEnvTask(
+                    func=func_str,
+                    args=[4], # string length
+                    outputs=[
+                        'metadata->step_specific->dtool_push->randomized_string',
+                    ],
+                    env='imteksimpy'
+                ),
+                EvalPyEnvTask(
+                    func='lambda a,b: "".join((a,b))',
+                    args=[base_dataset_name],
+                    inputs=['metadata->step_specific->dtool_push->randomized_string'],
+                    outputs=['metadata->step_specific->dtool_push->randomized_dataset_name'],
+                ),
                 CreateDatasetTask(
-                    name=dataset_name,
+                    name={'key': 'metadata->step_specific->dtool_push->randomized_dataset_name'},
                     metadata={'project': self.project_id},
                     metadata_key='metadata',
                     output='metadata->step_specific->dtool_push->local_proto_dataset',
@@ -573,13 +591,28 @@ class PushDerivedDatasetToDtoolRepositoryMixin(PushMixin):
             f['file_label']: f['file_name'] for f in self.files_out_list
         }
 
-        # make step label a valid 80 char dataset name
-        dataset_name = self.get_80_char_slug()
+        # make step label a valid 80 char dataset name with short 4-letter random component
+        base_dataset_name = self.get_n_char_slug(length=76)
 
         if len(files_in) > 0:
+            func_str = serialize_module_obj(random_alphanumeric_string)
             fts_push = [
+                PickledPyEnvTask(
+                    func=func_str,
+                    args=[4],  # string length
+                    outputs=[
+                        'metadata->step_specific->dtool_push->randomized_string',
+                    ],
+                    env='imteksimpy'
+                ),
+                EvalPyEnvTask(
+                    func='lambda a,b: "".join((a,b))',
+                    args=[base_dataset_name],
+                    inputs=['metadata->step_specific->dtool_push->randomized_string'],
+                    outputs=['metadata->step_specific->dtool_push->randomized_dataset_name'],
+                ),
                 CreateDatasetTask(
-                    name=dataset_name,
+                    name={'key': 'metadata->step_specific->dtool_push->randomized_dataset_name'},
                     metadata={'project': self.project_id},
                     metadata_key='metadata',
                     output='metadata->step_specific->dtool_push->local_proto_dataset',

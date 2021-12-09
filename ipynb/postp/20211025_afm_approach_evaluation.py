@@ -98,6 +98,15 @@ from cycler import cycler
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 
+# for ovito visualization
+ # Initialization of Qt event loop in the backend:
+from PySide2 import QtCore, QtGui
+# %gui qt5
+
+from ovito.io import *
+from ovito.vis import *
+from ovito.modifiers import *
+
 # %% [markdown]
 # GromacsWrapper might need a file `~/.gromacswrapper.cfg` with content
 # ```cfg
@@ -931,6 +940,210 @@ ax.legend()
 ax.grid(which='major', axis='y')
 
 # %% [markdown]
+# #### x shift = -50 A
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.x_shift': -50.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
 # #### x shift = -25 A
 
 # %%
@@ -938,6 +1151,210 @@ query = {
     'readme.project': project_id,
     'readme.step': {'$regex': 'ProbeAnalysis'},
     'readme.step_specific.merge.x_shift': -25.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# #### x shift = 0
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.x_shift': 0,
 }
 
 # %%
@@ -1339,6 +1756,414 @@ ax.legend()
 ax.grid(which='major', axis='y')
 
 # %% [markdown]
+# #### x shift = 50 A
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.x_shift': -25.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# #### y shift = -50.0
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': -50.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
 # #### y shift = -25.0
 
 # %%
@@ -1543,8 +2368,1147 @@ ax.legend()
 ax.grid(which='major', axis='y')
 
 # %% [markdown]
+# #### y shift = 0
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': 0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# #### y shift = 25.0
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': 25.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# #### y shift = 50.0
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': 50.0,
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# #### y shift = (50.0, 0, -50)
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': {'$in': [50.0,0.0,-50]},
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %%
+win = 10
+offset_per_curve = 20
+
+
+fig, ax = plt.subplots(1,1)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+# for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+mean_df = res_df.drop(labels=['x_shift','y_shift'],axis=1).groupby(by='distance').mean() # .rolling(window=win,center=True).mean()
+    
+ax.plot(mean_df.index, mean_df['f_storeUnconstrainedForcesAve'],
+    label="On hemicylinders.")
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %%
+on_hemicylinders_df = mean_df
+
+# %% [markdown]
+# #### y shift = (-25, 25)
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    'readme.step_specific.merge.y_shift': {'$in': [-25.0,25.0]},
+}
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+# filter out unwanted values
+distinct_parameter_values = {k: [e.item() for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+distinct_parameter_values
+
+# filter out unwanted values
+
+
+# %%
+query = {
+    'readme.project': project_id,
+    'readme.step': {'$regex': 'ProbeAnalysis'},
+    **{parameters[label]: {'$in': values} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0]) 
+    for _, row in res_df[['x_shift','y_shift','uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+df_list = []
+for (x_shift, y_shift, uuid) in list_of_tuples:
+    lookup_res = await dl.lookup(uuid)
+    assert len(lookup_res) == 1
+    
+    uri = lookup_res[0]['uri']
+    
+    readme = await dl.readme(uri)
+    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
+    if isinstance(velocity, str):
+        velocity = float(velocity)
+        
+    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
+    
+    
+    df = await read_forces(uri, file_name='default.txt')
+    df = df*force_conversion_factor
+        
+    df['x_shift'] = x_shift
+    df['y_shift'] = y_shift
+    df.reset_index(inplace=True)
+    df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
+    df.drop('index', axis=1, inplace=True)
+    df_list.append(df)
+
+
+# %%
+res_df = pd.concat(df_list, axis=0, join="outer", ignore_index=True)
+
+# %%
+legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
+
+# %%
+offset_per_curve = 5
+
+# %%
+from cycler import cycler
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator)
+
+# %%
+win = 10
+offset_per_curve = 20
+
+unique_parameter_sets = res_df[['y_shift','x_shift']].drop_duplicates()
+
+n = len(unique_parameter_sets) # Number of colors
+new_colors = [plt.get_cmap('jet')(1. * i/n) for i in range(n)]
+
+custom_cycler = cycler(color=new_colors)
+
+fig, ax = plt.subplots(1,1)
+ax.set_prop_cycle(custom_cycler)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+    sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
+    
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+        label=legend_pattern.format(
+            x_shift=row['x_shift'],
+            y_shift=row['y_shift']))
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %%
+win = 10
+offset_per_curve = 20
+
+
+fig, ax = plt.subplots(1,1)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+
+# for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
+mean_df = res_df.drop(labels=['x_shift','y_shift'],axis=1).groupby(by='distance').mean() # .rolling(window=win,center=True).mean()
+    
+ax.plot(mean_df.index, mean_df['f_storeUnconstrainedForcesAve'],
+    label="Between hemicylinders.")
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %%
+between_hemicylinders_df = mean_df
+
+# %% [markdown]
+# #### Comparison: on & between hemicylinders
+
+# %%
+#win = 10
+offset_per_curve = 10
+
+
+fig, ax = plt.subplots(1,1)
+
+# Make a plot with major ticks that are multiples of 20 and minor ticks that
+# are multiples of 5.  Label major ticks with '%d' formatting but don't label
+# minor ticks.
+ax.yaxis.set_major_locator(MultipleLocator(offset_per_curve))
+ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+
+
+ax.xaxis.set_major_locator(MultipleLocator(10))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+# For the minor ticks, use no labels; default NullFormatter.
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+    
+ax.plot(on_hemicylinders_df.index, on_hemicylinders_df['f_storeUnconstrainedForcesAve'],
+    label="On hemicylinders.")
+ax.plot(between_hemicylinders_df.index, between_hemicylinders_df['f_storeUnconstrainedForcesAve'],
+    label="Between hemicylinders.")
+    
+ax.set_xlabel(r'distance $d\, (\mathrm{\AA})$')
+ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
+
+ax.legend()
+ax.grid(which='major', axis='y')
+
+# %% [markdown]
 #
 # ### Configurations
+
+# %%
+project_id = "2021-10-07-sds-on-au-111-probe-and-substrate-merge-and-approach"
 
 # %%
 query = {
@@ -1664,47 +3628,24 @@ list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0])
 list_of_tuples
 
 # %%
-df_list = []
-for (x_shift, y_shift, uuid) in list_of_tuples:
-    lookup_res = await dl.lookup(uuid)
-    assert len(lookup_res) == 1
-    
-    uri = lookup_res[0]['uri']
-    
-    readme = await dl.readme(uri)
-    velocity = readme['step_specific']['probe_normal_approach']['constant_indenter_velocity']
-    if isinstance(velocity, str):
-        velocity = float(velocity)
-        
-    steps_per_datapoint = readme['step_specific']['probe_normal_approach']['netcdf_frequency']
-    
-    atoms = await read_lammps_config(uri)
-    # df = await read_forces(uri, file_name='default.txt')
-    # df = df*force_conversion_factor
-        
-    # df['x_shift'] = x_shift
-    # df['y_shift'] = y_shift
-    # df.reset_index(inplace=True)
-    # df['distance'] = initial_distance + velocity*steps_per_datapoint*fs_per_step*df['index']
-    # df.drop('index', axis=1, inplace=True)
-
-    # df_list.append(df)
-
+dict_of_tuples = {(x,y): uuid for x,y,uuid in list_of_tuples}
 
 # %%
-atoms
+dict_of_tuples
 
 # %%
-filtered_atoms = atoms[[atom.index for atom in atoms if atom.number not in {8,9}]]
+offset_tuple = (0,50)
 
 # %%
-filtered_atoms
+uuid = dict_of_tuples[offset_tuple]
 
 # %%
-view(filtered_atoms)
+uuid
 
 # %%
-from chemview import MolecularViewer
+lookup_res = await dl.lookup(uuid)
+assert len(lookup_res) == 1
+uri = lookup_res[0]['uri']
 
 # %%
 uri
@@ -1719,17 +3660,154 @@ fpath = d.item_content_abspath(item_dict[file_name])
 fpath
 
 # %%
-u = mda.Universe(fpath,format='DATA')
+try: # https://www.ovito.org/forum/topic/visualization-elements-persist/
+    del ovito.scene.pipelines[:]
+except:
+    pass
+# Create a virtual viewport:
+vp = Viewport(type=Viewport.Type.Perspective, camera_dir=(0, 0, -1))
+vp.zoom_all(size=(800, 600))
+
+# Create the visual viewport widget:
+widget = vp.create_jupyter_widget(width=800, height=600, device_pixel_ratio=2.0)
 
 # %%
-nglview.show_mdanalysis(u)
+display(widget)
 
 # %%
+# Import a simulation model and set up a data pipeline:
+pipeline = import_file(fpath)
+pipeline.add_to_scene()
+pipeline.modifiers.clear()
+
+# remove water
+pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {8,9}))
+pipeline.modifiers.append(DeleteSelectedModifier())
 
 # %%
-2500000/50
+# select gold indenter, color red
+pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {11}))
+pipeline.modifiers.append(SliceModifier(distance=0, normal=(0,0,1), 
+                          select=True, only_selected=True))
+pipeline.modifiers.append(AssignColorModifier(color=(1,0,0)))
 
 # %%
-2000000
+# remove surfactant on top of indenter
+pipeline.modifiers.append(ClearSelectionModifier())
+pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {1,2,3,4,5,6,7}))
+pipeline.modifiers.append(SliceModifier(distance=10, normal=(0,0,1), 
+                          select=True, only_selected=True))
+pipeline.modifiers.append(DeleteSelectedModifier())
+
 
 # %%
+vp.zoom_all()
+
+# %%
+# remove all surfactant
+# pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {1,2,3,4,5,6,7}))
+# pipeline.modifiers.append(DeleteSelectedModifier())
+
+# %%
+import ovito
+del ovito.scene.pipelines[:]
+
+# %%
+# iter
+
+# %%
+try: # https://www.ovito.org/forum/topic/visualization-elements-persist/
+    del ovito.scene.pipelines[:]
+except:
+    pass
+
+for offset_tuple, uuid in dict_of_tuples.items():
+    x_shift, y_shift = offset_tuple
+    
+    lookup_res = await dl.lookup(uuid)
+    
+    if len(lookup_res) != 1:
+        logger.warning(
+            "Not exactly one lookup result for uuid {}, but {}".format(
+                uuid, len(lookup_res)))
+        continue
+        
+    uri = lookup_res[0]['uri']
+    logger.info("Process offset ({},{}): {}".format(x_shift, y_shift, uri))
+
+    file_name = 'default.lammps'
+    item_dict = await get_item_dict(uri)
+    if file_name not in item_dict:
+        logger.warning("{} not in dataset!".format(file_name))
+        logger.info(item_dict)
+        continue
+    d = dtoolcore.DataSet.from_uri(uri)
+    
+    fpath = d.item_content_abspath(item_dict[file_name])
+    
+    logger.info("Process local {}".format(fpath))
+
+
+    # Import a simulation model and set up a data pipeline:
+    pipeline = import_file(fpath)
+    pipeline.add_to_scene()
+    # pipeline.modifiers.clear()
+
+    # remove water
+    pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {8,9}))
+    pipeline.modifiers.append(DeleteSelectedModifier())
+
+    # select gold indenter, color red
+    pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {11}))
+    pipeline.modifiers.append(SliceModifier(distance=0, normal=(0,0,1), 
+                              select=True, only_selected=True))
+    pipeline.modifiers.append(AssignColorModifier(color=(1,0,0)))
+
+    # remove surfactant on top of indenter
+    pipeline.modifiers.append(ClearSelectionModifier())
+    pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {1,2,3,4,5,6,7}))
+    pipeline.modifiers.append(SliceModifier(distance=10, normal=(0,0,1), 
+                              select=True, only_selected=True))
+    pipeline.modifiers.append(DeleteSelectedModifier())
+
+    # remove all surfactant
+    # pipeline.modifiers.append(SelectTypeModifier(property = 'Particle Type', types = {1,2,3,4,5,6,7}))
+    # pipeline.modifiers.append(DeleteSelectedModifier())
+
+    vp.zoom_all()
+    
+    filename = 'final_config_x_{}_y_{}.png'.format(x_shift,y_shift)
+    
+    logger.info("Render {}".format(filename))
+
+    qimage = vp.render_image(
+         size=(640, 480), frame=0, 
+         filename=filename, 
+         background=(1.0, 1.0, 1.0), 
+         alpha=False, renderer=None, crop=False, layout=None)
+    
+    pipeline.remove_from_scene()
+
+# %%
+# display
+
+# %%
+# !display final_config_x_0_y_50.png
+
+# %%
+pipeline.remove_from_scene()
+
+# %%
+# https://www.ovito.org/forum/topic/visualization-elements-persist/
+del ovito.scene.pipelines[:]
+
+# %%
+del widget, vp
+
+# %%
+widget.
+
+# %%
+# y: direction across hemicylinders
+# x: direction along hemicylinders
+

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Probe on substrate normal approach."""
+import logging
 
-from fireworks import Firework, Workflow, FWAction
-from fireworks.user_objects.firetasks.dataflow_tasks import (
-    JoinDictTask, ForeachTask, CommandLineTask)
+from fireworks.user_objects.firetasks.dataflow_tasks import CommandLineTask, JoinDictTask
 from fireworks.user_objects.firetasks.script_task import PyTask
 
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import (
-    CmdTask, EvalPyEnvTask, PickledPyEnvTask)
+     CmdTask, EvalPyEnvTask, PickledPyEnvTask)
+from imteksimfw.fireworks.user_objects.firetasks.dataflow_tasks import BranchWorkflowTask
 from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.wf.workflow_generator import WorkflowGenerator
@@ -24,41 +24,25 @@ class ForeachPushStub(DefaultPushMixin, WorkflowGenerator):
     def main(self, fws_root=[]):
         fw_list = []
 
-        step_label = self.get_step_label('retrieve_frames')
+        step_label = self.get_step_label('retrieve_metadata')
 
-        files_in = {
-        }
-        files_out = {
-            'data_file': 'default.lammps'
-        }
+        files_in = {}
+        files_out = {}
 
         func_str = serialize_module_obj(compute_distance_from_frame_number)
 
-        fts_retrieve_frames = [
-            CommandLineTask(
-                command_spec={
-                    "command": "cp",
-                    "sorted_frame_file_dict_list": {
-                        "source": "sorted_frame_file_dict_list",
-                    },
-                    "restored_frame_file_dict_list": {
-                        "target": {
-                            "type": "path", "value": "default.lammps"
-                        },
-                    },
-                },
-                inputs=["sorted_frame_file_dict_list", "reference_file_dict"],
-                outputs=["restored_frame_file_dict_list"],
+        fts_retrieve_metadata = [
+            # Remove encapsulating list from sorted_frame_file_dict_list
+            EvalPyEnvTask(
+                func='lambda l: l[0]',
+                inputs=['sorted_frame_file_dict_list'],
+                outputs=['sorted_frame_file_dict'],
             ),
 
             EvalPyEnvTask(
-                func='lambda f: int(f[ f.rfind("_")+1:f.rfind(".")',
-                inputs=['sorted_frame_file_dict_list->value'],
+                func='lambda f: int(f[ f.rfind("_")+1:f.rfind(".")])',
+                inputs=['sorted_frame_file_dict->value'],
                 outputs=['metadata->step_specific->frame_extraction->frame_number'],
-                stderr_file='EvalPyEnvTask.err',
-                stdout_file='EvalPyEnvTask.out',
-                store_stdout=True,
-                store_stderr=True,
                 propagate=True,
             ),
 
@@ -73,34 +57,59 @@ class ForeachPushStub(DefaultPushMixin, WorkflowGenerator):
                     'metadata->step_specific->frame_extraction->time_step',  # this should come from somewhere else
                 ],
                 outputs=[
-                    'metadata->step_specific->frame_extraction->first_frame_to_extract',
-                    'metadata->step_specific->frame_extraction->last_frame_to_extract',
-                    'metadata->step_specific->frame_extraction->every_nth_frame_to_extract',
+                    'metadata->step_specific->frame_extraction->distance',
                 ],
                 propagate=True,
-                stderr_file='PickledPyEnvTask.err',
-                stdout_file='PickledPyEnvTask.out',
-                store_stdout=True,
-                store_stderr=True,
                 env='imteksimpy',
+            ),
+        ]
+        fw_retrieve_metadata = self.build_fw(
+            fts_retrieve_metadata, step_label,
+            parents=[*fws_root],
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_noqueue_category'],
+        )
+        fw_list.append(fw_retrieve_metadata)
+
+        # retrieve frames
+        #----------------
+        step_label = self.get_step_label('retrieve_frames')
+
+        files_in = {}
+        files_out = {
+            'data_file': 'default.lammps'
+        }
+
+        fts_retrieve_frames = [
+            # TODO: Replace with FileTransferTask
+            CommandLineTask(
+                command_spec={
+                    "command": ["cp"],
+                    "sorted_frame_file_dict": {
+                        "source": "sorted_frame_file_dict",
+                    },
+                    "restored_frame_file_dict": {
+                        "target": {
+                            "type": "path", "value": "default.lammps"
+                        },
+                    },
+                },
+                inputs=["sorted_frame_file_dict"],
+                outputs=["restored_frame_file_dict"],
             ),
         ]
 
         fw_retrieve_frames = self.build_fw(
             fts_retrieve_frames, step_label,
-            parents=[*fws_root],
+            parents=[fw_retrieve_metadata],
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_noqueue_category'],
         )
         fw_list.append(fw_retrieve_frames)
 
-        return fw_list, [fw_retrieve_frames], [fw_retrieve_frames]
-
-
-def detour_fw_action_from_wf_dict(wf_dict, *args):
-    wf = Workflow.from_dict(wf_dict)
-    return FWAction(detours=[wf], propagate=True)
+        return fw_list, [fw_retrieve_frames], [fw_retrieve_metadata]
 
 
 class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
@@ -118,7 +127,7 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
     - metadata->step_specific->probe_normal_approach->constant_indenter_velocity # Ang / fs
 
     outputs:
-    - metadata->step_specific->probe_normal_approach->frame_extraction: distance
+    - metadata->step_specific->frame_extraction->distance
 
     dynamic infiles:
         only queried in pull stub, otherwise expected through data flow
@@ -303,12 +312,7 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
         # restore frames
         # --------------
 
-        # def append_storage_detour():
         push_wf = self._foreach_push_stub.build_wf()
-        push_wf_dict = push_wf.as_dict()
-        # push_fw_action = FWAction(detours=push_wf)
-
-        func_str = serialize_module_obj(detour_fw_action_from_wf_dict)
 
         step_label = self.get_step_label('branch_frames')
 
@@ -317,49 +321,17 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
 
         # Maybe need propagate
         fts_branch_frames = [
-            ForeachTask(
+            BranchWorkflowTask(
                 # split=['sorted_frame_index_dict_list', 'sorted_frame_file_dict_list'],
                 split='sorted_frame_file_dict_list',
+                addition_wf=push_wf,
                 # store frame index in metadata and push to specs in order to preserve
                 # processing order of frames for subsequent fireworks
                 # TODO: replace with PyEnvTask
-                task=PickledPyEnvTask(
-                        func=func_str,
-                        args=[push_wf_dict],
-                        inputs=['sorted_frame_file_dict_list'],
-                        stderr_file='std.err',
-                        stdout_file='std.out',
-                        store_stdout=True,
-                        store_stderr=True,
-                        propagate=True,
-                    )
-                    # PickledPyEnvTask(
-                    #    func=func_str,
-                    #    args=['''__import__("fireworks").core.firework.FWAction(
-                    #                mod_spec={
-                    #                    "_set": {"metadata->frame_index": value},
-                    #                    "_push": {"processed_frame_index_list": value}
-                    #                }
-                    #            )''', {}],
-                    #    inputs=['sorted_frame_index_dict_list']),
-
-                    # compute position from metadata and update metadata
-                    # PyTask(
-                    #    func='eval',
-                    #    args=['''__import__("fireworks").core.firework.FWAction(
-                    #                mod_spec={
-                    #                    "_set": {
-                    #                        "metadata->initial_sb_in_dist": sb_in_dist,
-                    #                        "metadata->sb_in_dist": round(
-                    #                            float(sb_in_dist) + float(frame_index) * float(netcdf_frequency) * float(time_step) * float(
-                    #                                constant_indenter_velocity), 6),
-                    #                        "metadata->ellapsed_time_steps": int(frame_index) * int(netcdf_frequency),
-                    #                        "metadata->ellapsed_time": round(float(frame_index) * float(netcdf_frequency) * float(time_step), 2)
-                    #                    }
-                    #                }
-                    #            )''', {}],
-                    #    inputs=['metadata']
-                    # ),
+                superpose_addition_on_my_fw_spec=True,
+                stdlog_file='std.log',
+                store_stdlog=True,
+                loglevel=logging.DEBUG,
             )
         ]
 
