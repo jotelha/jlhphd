@@ -313,7 +313,7 @@ variable angle_id_water index {{ solvent_angle }}
 variable substrate_type index {{ substrate_type }}
 
 ###############################################################################
-### system intialization
+### system initialization
 {%- if (pbc2d is sameas true) %}
 boundary p p f
 {%- endif %}

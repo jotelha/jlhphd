@@ -8,7 +8,6 @@ from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
 from fireworks.user_objects.firetasks.script_task import ScriptTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import PickledPyEnvTask, EvalPyEnvTask, CmdTask
-# from imteksimfw.fireworks.user_objects.firetasks.storage_tasks import GetObjectFromFilepadTask
 from imteksimfw.utils.serialize import serialize_module_obj
 
 from jlhpy.utilities.prep.segids import make_seg_id_seg_pdb_dict

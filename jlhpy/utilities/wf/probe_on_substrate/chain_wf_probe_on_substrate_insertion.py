@@ -233,7 +233,6 @@ class ProbeOnSubstrateMergeConversionMinimizationEquilibrationApproachAndFrameEx
             LAMMPSEquilibrationNPT,
             LAMMPSEquilibrationDPD,
             LAMMPSProbeNormalApproach,
-            ProbeAnalysis3D,
-            ProbeAnalysis3DAndFrameExtraction
+            ProbeAnalysis3DAndFrameExtraction,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
 import glob
 import os
 import pymongo
 
-from fireworks import Firework
 from fireworks.user_objects.firetasks.filepad_tasks import GetFilesByQueryTask
-from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask
 from fireworks.user_objects.firetasks.templatewriter_task import TemplateWriterTask
 from imteksimfw.fireworks.user_objects.firetasks.cmd_tasks import CmdTask
 
@@ -14,9 +11,6 @@ from jlhpy.utilities.wf.workflow_generator import (
     WorkflowGenerator, ProcessAnalyzeAndVisualize)
 from jlhpy.utilities.wf.mixin.mixin_wf_storage import (
    DefaultPullMixin, DefaultPushMixin)
-
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_analysis import GromacsDefaultTrajectoryAnalysis
-from jlhpy.utilities.wf.building_blocks.sub_wf_gromacs_vis import GromacsTrajectoryVisualization
 
 import jlhpy.utilities.wf.file_config as file_config
 
@@ -35,7 +29,7 @@ class MergeSubstrateAndProbeSystemsMain(WorkflowGenerator):
         always queried within main trunk
 
     - vmd_input_file_template: default.tcl.template,
-        queried by {'metadata->name': file_config.GMX_NVT_MDP}
+        queried by {'metadata->name': file_config.VMD_MERGE_TEMPLATE}
 
     outfiles:
     - data_file:       default.pdb
@@ -241,6 +235,7 @@ class MergeSubstrateAndProbeSystems(
         ProcessAnalyzeAndVisualize,
         ):
     pass
+
     def __init__(self, *args, **kwargs):
        super().__init__(
            main_sub_wf=MergeSubstrateAndProbeSystemsMain,

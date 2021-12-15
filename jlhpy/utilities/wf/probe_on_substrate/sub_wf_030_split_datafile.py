@@ -204,6 +204,6 @@ class SplitDatafileMain(WorkflowGenerator):
 
 
 class SplitDatafile(
-    DefaultPullMixin, DefaultPushMixin,
-    SplitDatafileMain):
+        DefaultPullMixin, DefaultPushMixin,
+        SplitDatafileMain):
     pass
