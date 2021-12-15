@@ -27,9 +27,10 @@ import jlhpy.utilities.wf.phys_config as phys_config
 
 # TODO: separate exclusions for recovery, restart and detour
 
+
 class LAMMPSProbeNormalApproachMain(WorkflowGenerator):
     """
-    Probe aaproach production.
+    Probe approach production.
 
     inputs:
     - metadata->step_specific->probe_normal_approach->freeze_substrate_layer

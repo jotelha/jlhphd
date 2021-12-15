@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# MergeLammpsDataFiles.py
+# merge.py
 #
-# Copyright (C) 2018, 2019 IMTEK Simulation
+# Copyright (C) 2018, 2019, 2020, 2021 IMTEK Simulation
 # Author: Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
