@@ -55,30 +55,26 @@
 # - split bb positioning and wrapping
 # - added several wrapping and joining commands
 
-namespace eval ::JlhVmd:: {
-    variable version 0.3
-
-    package require topotools
-    package require pbctools
-    package require yaml
+package require topotools
+package require pbctools
+package require yaml
 
     # default values:
-    set bounding_box { {0. 0. 0.} {150. 150. 150.} }
-    set bb_center    { 75. 75. 75. }
+# set bounding_box { {0. 0. 0.} {150. 150. 150.} }
+# set bb_center    { 75. 75. 75. }
 
-    # io
-    set data_file "default.lammps"
-    set out_prefix "system"
-}
+# io
+# set data_file "default.lammps"
+# set out_prefix "system"
 
 # help/usage/error message and online documentation.
-proc ::JlhVmd::usage {} {
+proc usage {} {
     vmdcon -info ""
     vmdcon -info "JlhVmd, a VMD package to manipulate interfacial systems or other"
     vmdcon -info "topology related properties in VMD with the help of TopoTools and PbcTools."
     vmdcon -info ""
     vmdcon -info ""
-    vmdcon -info "usage: jlh <command> \[args...\] <flags>"
+    vmdcon -info "usage: jlh command> \[args...\] <flags>"
     vmdcon -info ""
     vmdcon -info ""
     vmdcon -info "common flags (not implemented):"
@@ -127,7 +123,7 @@ proc ::JlhVmd::usage {} {
 }
 
 
-proc ::JlhVmd::jlh { args } {
+proc jlh { args } {
     variable version
 
     variable bounding_box
@@ -229,12 +225,12 @@ proc ::JlhVmd::jlh { args } {
                         set newargs [lrange $newargs 1 end]
                     }
 
-                    data_file {
+                    "data_file" {
                         set data_file [lindex $newargs 0]
                         set newargs [lrange $newargs 1 end]
                     }
 
-                    out_prefix {
+                    "out_prefix" {
                         set out_prefix [lindex $newargs 0]
                         set newargs [lrange $newargs 1 end]
                     }
@@ -378,7 +374,7 @@ proc ::JlhVmd::jlh { args } {
         }
 
         "init" {
-            initialize data_file
+            initialize $data_file
             set retval 0
         }
 
@@ -405,7 +401,7 @@ proc ::JlhVmd::jlh { args } {
     return $retval
 }
 
-proc ::JlhVmd::read_bb_from_yaml { bb_file } {
+proc read_bb_from_yaml { bb_file } {
     variable bounding_box
     # read bounding box from .yaml file
     set bb [::yaml::yaml2dict -file $bb_file]
@@ -420,7 +416,7 @@ proc ::JlhVmd::read_bb_from_yaml { bb_file } {
     return $bounding_box
 }
 
-proc ::JlhVmd::compute_bb_center { } {
+proc compute_bb_center { } {
     variable bounding_box
     variable bb_center
     variable bb_measure
@@ -438,30 +434,30 @@ proc ::JlhVmd::compute_bb_center { } {
 }
 
 # adjust position of bounding box
-proc ::JlhVmd::position_bb {} {
+proc position_bb {} {
   variable bb_center
   pbc box -center origin -shiftcenter $bb_center -on
 }
 
 # wraps everything into one periodic image
-proc ::JlhVmd::wrap_atom_into_bb {} {
+proc wrap_atom_into_bb {} {
     variable bb_center
     pbc wrap -center origin -shiftcenter $bb_center -nocompound -all -verbose
 }
 
 # wraps into one periodic image, but keeps residues connected
-proc ::JlhVmd::wrap_residue_into_bb {} {
+proc wrap_residue_into_bb {} {
     variable bb_center
     pbc wrap -center origin -shiftcenter $bb_center -compound residue -all -verbose
 }
 
 # tries to join residues split across bb boundaries
-proc ::JlhVmd::join_residue {} {
+proc join_residue {} {
     variable bb_center
     pbc join residue -bondlist -all -verbose
 }
 
-proc ::JlhVmd::init_system { infile { psffile "" } } {
+proc init_system { infile { psffile "" } } {
   variable system_id
   variable system
   variable type_name_list
@@ -476,7 +472,7 @@ proc ::JlhVmd::init_system { infile { psffile "" } } {
     # https://sites.google.com/site/akohlmey/software/topotools/topotools-tutorial---various-tips-tricks
     topo guessatom element mass
     # topo guessatom name element
-    +topo guessatom radius element
+    topo guessatom radius element
 
     # suggestion from https://lammps.sandia.gov/threads/msg21297.html
     foreach {type name} $type_name_list {
@@ -492,7 +488,7 @@ proc ::JlhVmd::init_system { infile { psffile "" } } {
   mol rename $system_id interface
 }
 
-proc ::JlhVmd::display_system_information { {mol_id 0} } {
+proc display_system_information { {mol_id 0} } {
   vmdcon -info "Number of objects:"
   vmdcon -info "Number of atoms:           [format "% 12d" [topo numatoms -molid ${mol_id} ]]"
   vmdcon -info "Number of bonds:           [format "% 12d" [topo numbonds -molid ${mol_id} ]]"
@@ -515,7 +511,7 @@ proc ::JlhVmd::display_system_information { {mol_id 0} } {
   vmdcon -info "Improper type names:  [topo impropertypenames -molid ${mol_id} ]"
 }
 
-proc ::JlhVmd::show_nonsolvent { {mol_id 0} {rep_id 0} } {
+proc show_nonsolvent { {mol_id 0} {rep_id 0} } {
   # atomselect keywords
   # name type backbonetype residuetype index serial atomicnumber element residue
   # resname altloc resid insertion chain segname segid all none fragment pfrag
@@ -562,7 +558,7 @@ proc ::JlhVmd::show_nonsolvent { {mol_id 0} {rep_id 0} } {
   pbc box -on -center origin -shiftcenter $bb_center -molid $mol_id
 }
 
-proc ::JlhVmd::show_solvent_only { {mol_id 0} {rep_id 0} } {
+proc show_solvent_only { {mol_id 0} {rep_id 0} } {
   variable solvent_resname
   mol selection resname $solvent_resname
   mol representation lines
@@ -572,7 +568,7 @@ proc ::JlhVmd::show_solvent_only { {mol_id 0} {rep_id 0} } {
   mol modrep $rep_id $mol_id
 }
 
-proc ::JlhVmd::show_surfactant_only { {mol_id 0} {rep_id 0} } {
+proc show_surfactant_only { {mol_id 0} {rep_id 0} } {
   variable surfactant_resname
   mol selection resname $surfactant_resname
 
@@ -583,7 +579,7 @@ proc ::JlhVmd::show_surfactant_only { {mol_id 0} {rep_id 0} } {
   mol modrep $rep_id $mol_id
 }
 
-proc ::JlhVmd::show_overlap { {mol_id 0} {rep_id 0} } {
+proc show_overlap { {mol_id 0} {rep_id 0} } {
   variable system
   variable overlap_distance
 
@@ -598,7 +594,7 @@ proc ::JlhVmd::show_overlap { {mol_id 0} {rep_id 0} } {
 }
 
 # hides solvent
-proc ::JlhVmd::set_visual {} {
+proc set_visual {} {
   variable substrate
   variable indenter
   variable counterion
@@ -620,18 +616,18 @@ proc ::JlhVmd::set_visual {} {
 
   # after resetview usually centered top view
   # these should result in a centered side view
-  rotate x by -90
+  rotate x by -45
   # values set empirically
-  translate by 0 0.5 0
-  scale by 0.4
+  # translate by 0 0.5 0
+  # scale by 0.4
 }
 
-proc ::JlhVmd::render_scene { outname } {
+proc render_scene { outname } {
   render TachyonInternal $outname.tga
 }
 
 # initialization without manipulation
-proc ::JlhVmd::initialize { system_infile } {
+proc initialize { system_infile } {
   vmdcon -info "-------------------------------------------------------------"
   vmdcon -info "Read system from LAMMPS data file $system_infile..."
   init_system $system_infile
@@ -652,7 +648,7 @@ proc ::JlhVmd::initialize { system_infile } {
   position_bb
 }
 
-proc ::JlhVmd::render_nonsolvent {} {
+proc render_nonsolvent {} {
   variable out_prefix
   vmdcon -info "-------------------------------------------------------------"
   vmdcon -info "Set visualization properties..."
@@ -665,7 +661,7 @@ proc ::JlhVmd::render_nonsolvent {} {
   render_scene $out_prefix
 }
 
-proc ::JlhVmd::render_solvent {} {
+proc render_solvent {} {
   variable out_prefix
   vmdcon -info "-------------------------------------------------------------"
   vmdcon -info "Set visualization properties..."
@@ -678,7 +674,7 @@ proc ::JlhVmd::render_solvent {} {
   render_scene $out_prefix
 }
 
-proc ::JlhVmd::render_surfactant {} {
+proc render_surfactant {} {
   variable out_prefix
   vmdcon -info "-------------------------------------------------------------"
   vmdcon -info "Set visualization properties..."
@@ -689,6 +685,48 @@ proc ::JlhVmd::render_surfactant {} {
   vmdcon -info "-------------------------------------------------------------"
   vmdcon -info "Render snapshot..."
   render_scene $out_prefix
+}
+
+proc make_types_ascii_sortable {} {
+  # preserve ordering of types when writing output, as TopoTools 1.7
+  # sorts types alphabeticall, not numerically,
+  # see topotools/topolammps.tcl::TopoTools::writelammpsmasses, line 900:
+  #   set typemap  [lsort -unique -ascii [$sel get type]]
+
+  # number of digits necessary to address all types with decimal numbers
+  variable system
+  variable H2O_H_type
+  variable H2O_O_type
+
+  set num_digits [
+    string length [ lindex [ lsort -integer [ topo atomtypenames ] ] end ] ]
+
+  vmdcon -info "Prepending zeros to fill ${num_digits} digits to types."
+
+  proc map {lambda list} {
+    #upvar num_digits
+    set result {}
+    foreach item $list {
+        lappend result [apply $lambda $item]
+    }
+    return $result
+  }
+  # fill types with leading zeroes if necessary
+  $system set type [
+    map { x {
+      upvar 2 num_digits num_digits
+      return [format "%0${num_digits}d" $x]
+      } } [ $system get type] ]
+
+  # also set type-dependent variables
+  set H2O_H_type [format "%0${num_digits}d" $H2O_H_type]
+  set H2O_O_type [format "%0${num_digits}d" $H2O_O_type]
+  # the following types reside within TopoTools, thus the retyping procedures
+  # are placed within the according namespace
+  ::TopoTools::make_bond_types_ascii_sortable $system
+  ::TopoTools::make_angle_types_ascii_sortable $system
+  ::TopoTools::make_dihedral_types_ascii_sortable $system
+  ::TopoTools::make_improper_types_ascii_sortable $system
 }
 
 # namespace eval ::TopoTools::
@@ -766,7 +804,7 @@ proc ::TopoTools::make_improper_types_ascii_sortable {sel} {
   setimproperlist $sel $newimproperlist
 }
 
-proc ::JlhVmd::populate_selections {} {
+proc populate_selections {} {
   variable counterion_name
   variable counterion_resname
   variable substrate_name
@@ -813,5 +851,19 @@ proc ::JlhVmd::populate_selections {} {
   vmdcon -info [format "%-30.30s %12d" "#atoms in nonsolvent:" [$nonsolvent num]]
 }
 
-interp alias {} jlh {} ::JlhVmd::jlh
-package provide jlhvmd $::JlhVmd::version
+
+proc write_top_all { outname } {
+  set sel [atomselect top all]
+  topo writelammpsdata $outname.lammps full
+  vmdcon -info "Wrote $outname.lammps"
+  vmdcon -warn "The data files created by TopoTools don't contain any \
+    potential parameters or pair/bond/angle/dihedral style definitions. \
+    Those have to be generated in addition, however, the generated data \
+    files contain comments that match the symbolic type names with the \
+    corresponding numeric definitions, which helps in writing those input \
+    segment. In many cases, this can be easily scripted, too."
+  $sel writepsf $outname.psf
+  vmdcon -info "Wrote $outname.psf"
+  $sel writepdb $outname.pdb
+  vmdcon -info "Wrote $outname.pdb"
+}

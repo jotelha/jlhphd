@@ -71,3 +71,57 @@ def get_bounding_box_via_parmed(
             else a.atomic_number for a in pmd_structure.atoms],
         positions=pmd_structure.get_coordinates(0))
     return get_bounding_box_from_ase_atoms(ase_structure)
+
+
+def get_cell_from_lammps_data_file(file='default.lammps'):
+    import re
+
+    float_regex = '[-+]?[0-9]*\.?[0-9]+'
+    x_line_regex = f'({float_regex})\s+({float_regex})\s+xlo\s+xhi'
+    y_line_regex = f'({float_regex})\s+({float_regex})\s+ylo\s+yhi'
+    z_line_regex = f'({float_regex})\s+({float_regex})\s+zlo\s+zhi'
+
+    patterns = [
+        re.compile(x_line_regex),
+        re.compile(y_line_regex),
+        re.compile(z_line_regex)
+    ]
+
+    bb = [None, None, None]
+    with open(file, 'r') as f:
+        for line in f:
+            found_measures = 0
+            for i, pattern in enumerate(patterns):
+                if bb[i] is not None:
+                    found_measures += 1
+                    continue
+
+                match = re.search(pattern, line)
+                if match is not None:
+                    bb[i] = [match.group(1), match.group(2)]
+                    found_measures += 1
+                    break
+
+            if found_measures >= 3:
+                break
+
+    bb_dict = {
+        "xlo": float(bb[0][0]),
+        "xhi": float(bb[0][1]),
+        "ylo": float(bb[1][0]),
+        "yhi": float(bb[1][1]),
+        "zlo": float(bb[2][0]),
+        "zhi": float(bb[2][1])
+    }
+    return bb_dict
+
+def dump_cell_from_lammps_data_file_to_yaml_file(
+        infile='default.lammps', outfile='bb.yaml'):
+    import yaml
+
+    bb_dict = get_cell_from_lammps_data_file(file=infile)
+    yaml_str = yaml.dump(bb_dict, default_flow_style=False)
+    with open(outfile, 'w') as yaml_file:
+        yaml_file.write(yaml_str)
+
+

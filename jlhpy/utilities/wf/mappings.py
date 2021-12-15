@@ -63,3 +63,17 @@ psfgen_mappings_template_context = {
         } for res_in, res_out in pdb_residue_charmm_residue_mapping.items()
     ]
 }
+
+sds_lammps_type_atom_name_mapping = {
+    1: 'HAL2',
+    2: 'HAL3',
+    3: 'CTL2',
+    4: 'CTL3',
+    5: 'OSL',
+    6: 'O2L',
+    7: 'SL',
+    8: 'HT',
+    9: 'OT',
+    10: 'SOD',
+    11: 'AU',
+}

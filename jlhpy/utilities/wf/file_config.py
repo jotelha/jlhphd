@@ -58,6 +58,9 @@ VMD_SUBDIR  = 'vmd'
 VMD_MERGE_TEMPLATE = 'merge.tcl.template'
 VMD_PSFGEN_TEMPLATE = 'psfgen.tcl.template'
 
+VMD_JLHVMD = 'jlhvmd.tcl'
+VMD_WRAP_JOIN_TEMPLATE ='wrap-join.tcl.template'
+
 # visualization-related
 
 PML_SUBDIR = 'pymol'

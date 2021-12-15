@@ -1,0 +1,60 @@
+# wrap-join.tcl.template
+#
+# Copyright (C) 2021 IMTEK Simulation
+# Author: Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# This script template illustrates how to wrap-join and render a surfactant
+# system with VMD. Fill placeholders with jinja2 template engine and run with
+#
+#    vmd -e wrap-join.tcl
+#
+# note: the ;list appendix to every line suppresses any undesired output
+source jlhvmd.tcl
+
+set solvent_resname " {{ solvent_residue_name|default('TIP3',true) }}"; list
+set substrate_name "{{ substrate_name|default('AU',true) }}"; list
+set substrate_resname "{{ substrate_residue_name|default('AUM',true) }}"; list
+set surfactant_resname "{{ surfactant_residue_name|default('SDS',true) }}"; list
+set counterion_name "{{ counterion_name|default('SOD',true) }}"; list
+set counterion_resname "{{ counterion_residue_name|default('SOD',true) }}"; list
+
+# TODO: remove these type dependencies
+set H2O_H_type "{{ h2o_h_type|default(8,true)|int }}"; list
+set H2O_O_type "{{ h2o_o_type|default(9,true)|int }}"; list
+
+# from SDS-related data file
+set type_name_list { \
+    {% for key, value in type_name_mapping.items() %}{{type}} {{name}} {% endfor %} \
+}
+
+jlh set data_file "{{ data_file|default('default.lammps',true) }}"
+jlh read bb "{{ bb_yaml|default('bb.yaml',true) }}"
+jlh init
+
+jlh set out_prefix unwrapped
+jlh render nonsolvent
+jlh wrap atom
+jlh set out_prefix wrapped
+jlh render nonsolvent
+jlh join residue
+jlh set out_prefix wrap-joint
+jlh write
+jlh render nonsolvent
