@@ -20,6 +20,7 @@ from jlhpy.utilities.wf.probe_on_substrate.sub_wf_150_lammps_trajectory_frame_ex
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_160_foreach_push_stub import ForeachPushStub
 from jlhpy.utilities.wf.probe_on_substrate.sub_wf_170_wrap_join_datafile import WrapJoinDataFile
 
+from jlhpy.utilities.wf.probe_on_substrate.sub_wf_190_lammps_equilibration_dpd import LAMMPSEquilibrationDPD as SecondLAMMPSEquilibrationDPD
 # TODO: reduce, sort and eliminate obsolete
 
 class ProbeOnSubstrateTest(ChainWorkflowGenerator):
@@ -204,6 +205,23 @@ class ForeachWrapJoin(ChainWorkflowGenerator):
             WrapJoinDataFile,
         ]
         super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class ForeachWrapJoinAndDPDEquilibration(ChainWorkflowGenerator):
+    """Concatenates
+        - ForeachPushStub
+        - WrapJoinDataFile
+        - SecondLAMMPSEquilibrationDPD
+        """
+
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
+            ForeachPushStub,
+            WrapJoinDataFile,
+            SecondLAMMPSEquilibrationDPD,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
 
 class ProbeAnalysis3DAndFrameExtraction(BranchingWorkflowGenerator):
     """Extract forces and frames from trajectoy.

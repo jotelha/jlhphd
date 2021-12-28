@@ -86,13 +86,15 @@ parameter_sets = [
         'thermo_frequency': 1000,
         'thermo_average_frequency': 1000,
         'restart_frequency': 1000,
-    } for x in np.arange(0.0, 25.0, 25.0) for y in np.arange(-50.0+12.5, 75.0+12.5, 25.0)
+    } for x in np.arange(-50.0, 75.0, 25.0) for y in np.arange(-50.0+12.5, 75.0+12.5, 25.0)
 ]
 
 parameter_dict_list = [{**d, **p} for p in parameter_sets for d in probe_on_substrate_input_datasets]
 # In[20]:
 
 # SDS on Au(111)
+import jlhpy.utilities.wf.mixin.mixin_wf_storage as mixin_wf_storage
+mixin_wf_storage.DefaultPullMixin = mixin_wf_storage.PullFromDtoolURIMixin # set the desired pull mixin
 from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_insertion import ProbeOnSubstrateMergeConversionMinimizationEquilibrationApproachAndFrameExtraction
 
 from jlhpy.utilities.wf.mappings import psfgen_mappings_template_context
@@ -310,6 +312,10 @@ for p in parameter_dict_list:
     
 # In[]:
     
-# 20211007: So far only queued first 5 workflows [:5]
-# 20211011: Corrected nesting, queued [5:10]
-# 20211014: confirmed 5:10 running, queued [10:], requeued [:5]
+# 2021-12.11: So far only queued first 5 workflows 0, [1:5]
+# 2021-12-11: index 3 (x,y) = 0, 37.5 failed, rebuilt and resubmitted
+# 2021-12-11: index 0 (x,y) = 0, -37.5 failed, rebuilt and resubmitted
+# 2021-12-11: superfluous ProbeAnalysis3D in chain worklfow for [0:5], corrected now
+# 2021-12-12: extended x range from only including 0 to np.arange(-50.,75.,25.), 
+#             previosuly submitted runs 0:5 now correspond to indices 10:15
+#             Submitted [0:5] following new indexing scheme

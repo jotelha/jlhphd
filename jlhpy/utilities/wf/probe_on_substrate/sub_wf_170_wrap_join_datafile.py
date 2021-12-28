@@ -23,10 +23,20 @@ from imteksimfw.utils.serialize import serialize_module_obj
 class WrapJoinDataFileMain(WorkflowGenerator):
     """Make molecules in LAMMPS datafile whole again and reset image flags.
 
+    inputs:
+    - metadata->system->counterion->name
+    - metadata->system->counterion->resname
+    - metadata->system->solvent->resname
+    - metadata->system->substrate->name
+    - metadata->system->substrate->resname
+    - metadata->system->surfactant->resname
+    - metadata->step_specific->wrap_join->type_name_mapping
+
     dynamic infiles:
         only queried in pull stub, otherwise expected through data flow
 
     - data_file: default.lammps
+    - index_file: groups.ndx, only passed through
 
     static infiles:
         always queried within main trunk
@@ -193,12 +203,14 @@ class WrapJoinDataFileMain(WorkflowGenerator):
         step_label = self.get_step_label('vmd_run')
 
         files_in = {
+            'index_file': 'groups.ndx',
             'input_file': 'default.tcl',
             'data_file': 'default.lammps',
             'library_file': 'jlhvmd.tcl',
         }
         files_out = {
             'bb_file': 'bb.yaml',
+            'index_file': 'groups.ndx', # only passed through
             'input_file': 'default.tcl',
             'reference_file': 'default.lammps',
             'wrap_joint_file': 'wrap-joint.lammps',
@@ -227,37 +239,38 @@ class WrapJoinDataFileMain(WorkflowGenerator):
                 store_stdout=True,
                 store_stderr=True,
                 fizzle_bad_rc=True),
+            # All renderings steps switched off for VMD in text-only mode
             # convert tga snapshots to png
-            CmdTask(
-                cmd='convert',
-                opt=['unwrapped.tga', 'unwrapped.png'],
-                env='python',
-                stderr_file='convert_unwrapped.err',
-                stdout_file='convert_unwrapped.out',
-                stdlog_file='convert_unwrapped.log',
-                store_stdout=True,
-                store_stderr=True,
-                fizzle_bad_rc=True),
-            CmdTask(
-                cmd='convert',
-                opt=['wrapped.tga', 'wrapped.png'],
-                env='python',
-                stderr_file='convert_wrapped.err',
-                stdout_file='convert_wrapped.out',
-                stdlog_file='convert_wrapped.log',
-                store_stdout=True,
-                store_stderr=True,
-                fizzle_bad_rc=True),
-            CmdTask(
-                cmd='convert',
-                opt=['wrap-joint.tga', 'wrap-joint.png'],
-                env='python',
-                stderr_file='convert_wrap_joint.err',
-                stdout_file='convert_wrap_joint.out',
-                stdlog_file='convert_wrap_joint.log',
-                store_stdout=True,
-                store_stderr=True,
-                fizzle_bad_rc=True),
+            # CmdTask(
+            #     cmd='convert',
+            #     opt=['unwrapped.tga', 'unwrapped.png'],
+            #     env='python',
+            #     stderr_file='convert_unwrapped.err',
+            #     stdout_file='convert_unwrapped.out',
+            #     stdlog_file='convert_unwrapped.log',
+            #     store_stdout=True,
+            #     store_stderr=True,
+            #     fizzle_bad_rc=True),
+            # CmdTask(
+            #     cmd='convert',
+            #     opt=['wrapped.tga', 'wrapped.png'],
+            #     env='python',
+            #     stderr_file='convert_wrapped.err',
+            #     stdout_file='convert_wrapped.out',
+            #     stdlog_file='convert_wrapped.log',
+            #     store_stdout=True,
+            #     store_stderr=True,
+            #     fizzle_bad_rc=True),
+            # CmdTask(
+            #     cmd='convert',
+            #     opt=['wrap-joint.tga', 'wrap-joint.png'],
+            #     env='python',
+            #     stderr_file='convert_wrap_joint.err',
+            #     stdout_file='convert_wrap_joint.out',
+            #     stdlog_file='convert_wrap_joint.log',
+            #     store_stdout=True,
+            #     store_stderr=True,
+            #     fizzle_bad_rc=True),
         ]
 
         fw_vmd_run = self.build_fw(
@@ -305,7 +318,7 @@ class WrapJoinDataFileMain(WorkflowGenerator):
 
         fw_list.append(fw_merge)
 
-        return fw_list, [fw_vmd_run, fw_merge], [fw_template, fw_vmd_run]
+        return fw_list, [fw_vmd_run, fw_merge], [fw_vmd_run, fw_template]
 
 
 class WrapJoinDataFile(DefaultPullMixin, DefaultPushMixin, WrapJoinDataFileMain):
