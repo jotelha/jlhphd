@@ -49,12 +49,13 @@ jlh set data_file "{{ data_file|default('default.lammps',true) }}"
 jlh read bb "{{ bb_yaml|default('bb.yaml',true) }}"
 jlh init
 
-jlh set out_prefix unwrapped
-jlh render nonsolvent
+# commented out all rendering steps for VMD in text-only mode
+# jlh set out_prefix unwrapped
+# jlh render nonsolvent
 jlh wrap atom
-jlh set out_prefix wrapped
-jlh render nonsolvent
+# jlh set out_prefix wrapped
+# jlh render nonsolvent
 jlh join residue
 jlh set out_prefix wrap-joint
 jlh write
-jlh render nonsolvent
+# jlh render nonsolvent
