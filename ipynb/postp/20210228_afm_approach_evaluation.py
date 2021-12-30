@@ -248,7 +248,7 @@ async def get_uri_by_query(query):
     return res_df.uri[0]
 
 
-# %%
+# %% init_cell=true
 async def read_forces(uri, file_name='default.txt'): 
     item_dict = await get_item_dict(uri)
     d = dtoolcore.DataSet.from_uri(uri)
@@ -2470,11 +2470,6 @@ plt.savefig('monolayer_c_0.5_to_1.25_per_sq_nm.svg', dpi=dpi)
 ax.legend(framealpha=1, labelcolor='linecolor')
 
 plt.savefig('monolayer_c_0.5_to_1.25_per_sq_nm_legended.svg', dpi=dpi)
-
-# %%
-i
-
-# %%
 
 # %% [markdown]
 # ### Reverse query UUIDs

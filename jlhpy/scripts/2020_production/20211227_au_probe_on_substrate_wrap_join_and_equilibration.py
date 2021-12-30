@@ -1267,6 +1267,7 @@ for p in parameter_dict_list:
                     'netcdf_frequency': 100,
                     'thermo_frequency': 100,
                     'thermo_average_frequency': 100,
+                    'restart_frequency': 100,
                     
                     'ewald_accuracy': 1.0e-4,
                     'coulomb_cutoff': 8.0,
@@ -1287,3 +1288,10 @@ for p in parameter_dict_list:
     wf_list.append(wf)
     
 # In[]:
+ 
+    
+# for wf in wf_list:
+#    lp.add_wf(wf)
+
+# 2021-12-27: submitted 0:20, failed due to 6 h walltime on JUWELS
+# 2021-12-28: submitted 21

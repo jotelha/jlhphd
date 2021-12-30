@@ -688,7 +688,7 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
         # restart fill input file template
         # --------------------------------
         step_label = self.get_step_label('fill_template')
-        fw_restart_template_name= self.get_fw_label(step_label)
+        fw_restart_template_name = self.get_fw_label(step_label)
 
         files_in = {
             'input_template': 'default.input.template',
@@ -725,7 +725,7 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
         # ---------------
 
         step_label = self.get_step_label('lmp_run')
-        fw_restart_lmp_run_name= self.get_fw_label(step_label)
+        fw_restart_lmp_run_name = self.get_fw_label(step_label)
 
         files_in = {
             'input_file':   'default.input',
@@ -921,7 +921,7 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
             max_restarts=100,  # TODO: from global kwargs or fwspec
             fizzle_on_no_restart_file=False,
             restart_file_glob_patterns="*.restart[0-9]",
-            restart_file_dests = 'default.mpiio.restart',
+            restart_file_dests ='default.mpiio.restart',
             other_glob_patterns=[
                 "default.input",
                 "default.nc",

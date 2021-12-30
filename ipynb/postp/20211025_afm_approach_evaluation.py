@@ -107,6 +107,10 @@ from ovito.io import *
 from ovito.vis import *
 from ovito.modifiers import *
 
+# Gaussion Process Regression
+from SurfaceTopography.Support.Regression import (
+    gaussian_process_regression, make_grid, gaussian_kernel)
+
 # %% [markdown]
 # GromacsWrapper might need a file `~/.gromacswrapper.cfg` with content
 # ```cfg
@@ -568,7 +572,7 @@ res_df
 # %% [markdown]
 # ## Overview on steps in project
 
-# %%
+# %% init_cell=true
 project_id = "2021-10-07-sds-on-au-111-probe-and-substrate-merge-and-approach"
 
 # %%
@@ -703,7 +707,7 @@ item_dict
 # %% [markdown]
 # ### Approach velocity = 1 m /s
 
-# %%
+# %% init_cell=true
 fs_per_step = 2  # fs
 initial_distance = 50  # Ang
 
@@ -3098,6 +3102,9 @@ list_of_tuples = [(row['x_shift'], row['y_shift'], row['uuid'][0])
 list_of_tuples
 
 # %%
+print(json.dumps(list_of_tuples, indent=4))
+
+# %%
 df_list = []
 for (x_shift, y_shift, uuid) in list_of_tuples:
     lookup_res = await dl.lookup(uuid)
@@ -3132,6 +3139,9 @@ legend_pattern = '''$(x,y) = ({x_shift:},{y_shift:}) \mathrm{{\AA}}$'''
 
 # %%
 offset_per_curve = 5
+
+# %%
+res_df
 
 # %%
 from cycler import cycler
@@ -3172,7 +3182,7 @@ ax.xaxis.set_minor_locator(MultipleLocator(1))
 for i, (_, row) in enumerate(unique_parameter_sets.iterrows()):
     sub_df = res_df[ (res_df['x_shift'] == row['x_shift']) & (res_df['y_shift'] == row['y_shift'])].rolling(window=win,center=True).mean()
     
-    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForcesAve']+i*offset_per_curve,
+    ax.plot(sub_df['distance'], sub_df['f_storeUnconstrainedForces']+i*offset_per_curve,
         label=legend_pattern.format(
             x_shift=row['x_shift'],
             y_shift=row['y_shift']))
@@ -3182,6 +3192,115 @@ ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
 
 ax.legend()
 ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# ##### Gaussian Progress Regression
+
+# %%
+res_pivot = res_df.pivot_table(
+    values='f_storeUnconstrainedForcesAve', index=['distance'], columns=('x_shift','y_shift'))
+#res_pivot = res_pivot.style.apply(highlight_bool)
+res_pivot
+
+# %%
+sanitized_res_pivot = res_pivot.drop(axis=1,labels=(50.0,0)) # manually remove illigal result
+
+# %%
+sanitized_res_pivot
+
+# %%
+# suffix s: sample, d: distance
+
+# %%
+forces_ds = sanitized_res_pivot.values
+
+# %%
+forces_ds.shape
+
+# %%
+distance_d = sanitized_res_pivot.index.values
+
+# %%
+distance_d.shape
+
+# %%
+distance_ds = np.tile(distance_d,(forces_ds.shape[1],1)).T
+
+# %%
+distance_ds.shape
+
+# %%
+np.savetxt('on_hemicylinders_forces_ds.txt',forces_ds)
+np.savetxt('on_hemicylinders_distance_ds.txt',distance_ds)
+
+# %%
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import ConstantKernel, RBF
+
+# %%
+
+# %%
+resampled_values = gaussian_process_regression(
+    output_x=collocation_points, x=distance_ds.flatten(), values=forces_ds.flatten())
+
+# %%
+np.savetxt("resampled_values.txt", resampled_values)
+
+# %%
+# select subset of data
+# index_slice = (slice(None), slice(0,2)) # only first two data series
+index_slice = (slice(None), slice(None)) # all
+
+forces_ds = np.loadtxt('forces_ds.txt')[index_slice]
+distance_ds = np.loadtxt('distance_ds.txt')[index_slice]
+
+# collocation_points, bin_edges = make_grid('linear', np.min(forces_ds), np.max(forces_ds), nb_points=100)
+# kernel = suggest_kernel_for_grid('linear', len(collocation_points), np.min(forces_ds), np.max(forces_ds))
+
+# resampled_values = gaussian_process_regression(
+#    output_x=collocation_points, x=distance_ds.flatten(), values=forces_ds.flatten())
+
+collocation_points, bin_edges, resampled_values, resampled_variance = resample(
+    distance_ds.flatten(), forces_ds.flatten(), collocation='linear', nb_points=100, method='gaussian-process')
+
+np.savetxt("collocation_points.txt", collocation_points)
+np.savetxt("bin_edges.txt", bin_edges)
+np.savetxt("resampled_values.txt", resampled_values)
+np.savetxt("resampled_variance.txt", resampled_variance)
+
+# %%
+resampled_variance
+
+# %%
+plt.plot(distance_d, forces_ds[:,0])
+
+# %%
+plt.plot(collocation_points, resampled_values)
+
+# %%
+collocation_points, bin_edges, resampled_values, resampled_variance = resample(
+    distance_ds.flatten(), forces_ds.flatten(), collocation='linear', nb_points=100, method='gaussian-process')
+
+# %%
+resampled_variance
+
+# %%
+np.sqrt(resampled_variance)
+
+# %%
+plt.plot(collocation_points, resampled_values)
+
+# %%
+distance_ds.flatten().shape
+
+# %%
+# res_pivot.drop??
+
+# %%
+# !pwd
+
+# %% [markdown]
+# ##### Mean
 
 # %%
 win = 10
@@ -3425,6 +3544,49 @@ ax.set_ylabel(r'normal force $F_N\, (\mathrm{nN})$')
 
 ax.legend()
 ax.grid(which='major', axis='y')
+
+# %% [markdown]
+# ##### Gaussian progress regression
+
+# %%
+# use instantaneous forces
+
+# %%
+res_pivot = res_df.pivot_table(
+    values='f_storeUnconstrainedForces', index=['distance'], columns=('x_shift','y_shift'))
+#res_pivot = res_pivot.style.apply(highlight_bool)
+res_pivot
+
+# %%
+sanitized_res_pivot = res_pivot # nothing to sanitize
+
+# %%
+# suffix s: sample, d: distance
+
+# %%
+forces_ds = sanitized_res_pivot.values
+
+# %%
+forces_ds.shape
+
+# %%
+distance_d = sanitized_res_pivot.index.values
+
+# %%
+distance_d.shape
+
+# %%
+distance_ds = np.tile(distance_d,(forces_ds.shape[1],1)).T
+
+# %%
+distance_ds.shape
+
+# %%
+np.savetxt('between_hemicylinders_forces_ds.txt',forces_ds)
+np.savetxt('between_hemicylinders_distance_ds.txt',distance_ds)
+
+# %% [markdown]
+# ##### mean
 
 # %%
 win = 10
@@ -3789,25 +3951,11 @@ for offset_tuple, uuid in dict_of_tuples.items():
     pipeline.remove_from_scene()
 
 # %%
-# display
-
-# %%
-# !display final_config_x_0_y_50.png
-
-# %%
-pipeline.remove_from_scene()
-
-# %%
-# https://www.ovito.org/forum/topic/visualization-elements-persist/
-del ovito.scene.pipelines[:]
-
-# %%
-del widget, vp
-
-# %%
-widget.
-
-# %%
 # y: direction across hemicylinders
 # x: direction along hemicylinders
 
+
+# %% [markdown]
+# ## Extracted Frames
+
+# %%
