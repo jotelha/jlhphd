@@ -24,7 +24,7 @@ import jlhpy.utilities.wf.phys_config as phys_config
 
 class LAMMPSProbeLateralSlidingMain(WorkflowGenerator):
     """
-    Probe aaproach production.
+    Probe lateral sliding production.
 
     inputs:
     - metadata->step_specific->probe_lateral_sliding->freeze_substrate_layer
@@ -918,10 +918,10 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
             superpose_restart_on_parent_fw_spec=True,
             superpose_detour_on_parent_fw_spec=True,
             repeated_recover_fw_name=step_label,
-            max_restarts=100,  # TODO: from global kwargs or fwspec
-            fizzle_on_no_restart_file=False,
+            max_restarts={'key': 'metadata->step_specific->probe_lateral_sliding->max_restarts'},
+            fizzle_on_no_restart_file=True,
             restart_file_glob_patterns="*.restart[0-9]",
-            restart_file_dests ='default.mpiio.restart',
+            restart_file_dests='default.mpiio.restart',
             other_glob_patterns=[
                 "default.input",
                 "default.nc",
@@ -929,7 +929,7 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
                 "log.lammps",
                 "thermo_ave.out",
             ],
-            restart_counter='metadata->step_specific->lmp_run->restart_count',
+            restart_counter='metadata->step_specific->probe_lateral_sliding->restart_count',
             store_stdlog=True,
             stdlog_file='std.log',
             loglevel=logging.DEBUG)]

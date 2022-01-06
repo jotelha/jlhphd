@@ -1214,7 +1214,7 @@ from jlhpy.utilities.wf.mappings import sds_lammps_type_atom_name_mapping
 # remove all project files from filepad:
 #     fp.delete_file_by_query({'metadata.project': project_id})
 
-index = probe_on_substrate_input_datasets_index_map[0,0,25.0]
+# index = probe_on_substrate_input_datasets_index_map[0,0,25.0]
 # In[25]:
     
 project_id = '2021-12-27-sds-on-au-111-probe-on-substrate-wrap-join-and-dpd-equilibration'
@@ -1274,7 +1274,9 @@ for p in parameter_dict_list:
                     'neigh_delay': 2,
                     'neigh_every': 1,
                     'neigh_check': True,
-                    'skin_distance': 3.0
+                    'skin_distance': 3.0,
+                    
+                    'max_restarts': 5,
                 },
             },
             'dtool_push': {
@@ -1295,3 +1297,4 @@ for p in parameter_dict_list:
 
 # 2021-12-27: submitted 0:20, failed due to 6 h walltime on JUWELS
 # 2021-12-28: submitted 21
+# 2021-12-31: submitted 21, [22:]

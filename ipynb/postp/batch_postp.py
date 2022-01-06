@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+# %%
 
 # # Collect results
 
@@ -7,31 +8,31 @@
 
 # ### Imports and options
 
-# In[1]:
+# %%
 
 
 get_ipython().run_line_magic('load_ext', 'autoreload')
 
 
-# In[2]:
+# %%
 
 
 get_ipython().run_line_magic('autoreload', '2')
 
 
-# In[3]:
+# %%
 
 
 get_ipython().run_line_magic('config', 'Application.log_level="WARN"')
 
 
-# In[4]:
+# %%
 
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[5]:
+# %%
 
 
 import os
@@ -41,7 +42,7 @@ import io
 import tarfile
 
 
-# In[6]:
+# %%
 
 
 import numpy as np
@@ -49,7 +50,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# In[7]:
+# %%
 
 
 import ase
@@ -63,19 +64,19 @@ from ase.io import NetCDFTrajectory
 import scipy.constants as C
 
 
-# In[9]:
+# %%
 
 
 import postprocessing
 
 
-# In[10]:
+# %%
 
 
 from fireworks.utilities.filepad import FilePad 
 
 
-# In[11]:
+# %%
 
 
 fp = FilePad(
@@ -86,13 +87,13 @@ fp = FilePad(
     password='fireworks')
 
 
-# In[12]:
+# %%
 
 
 content, doc = fp.get_file(identifier='surfactant_on_AU_111_df_json')
 
 
-# In[13]:
+# %%
 
 
 sim_df = pd.read_json(content, orient='index')
@@ -100,7 +101,7 @@ sim_df = pd.read_json(content, orient='index')
 
 # ### Poster plotting
 
-# In[14]:
+# %%
 
 
 # matplotlib settings
@@ -149,61 +150,61 @@ plt.rcParams["lines.markeredgewidth"]=1
 #     
 # $ \frac{\mathrm{ kcal }}{ {\mathrm{mol} \mathrm{\mathring{A}}}} = 1.66053892103219 \cdot 10^{-11} \frac{\mathrm{J}}{\mathrm{m}}$
 
-# In[15]:
+# %%
 
 
 C.calorie # kCal -> kJ
 
 
-# In[16]:
+# %%
 
 
 C.calorie * 1e3 # kCal -> J
 
 
-# In[17]:
+# %%
 
 
 C.calorie * 1e3 / C.angstrom # kCal / Ang -> J / m
 
 
-# In[18]:
+# %%
 
 
 C.calorie * 1e3 / C.angstrom *1e9 # kCal / Ang -> n J / m = n N
 
 
-# In[19]:
+# %%
 
 
 force_conversion_factor = C.calorie * 1e3 / C.angstrom *1e9 / C.Avogadro# kCal / (mol * Ang ) -> n N
 
 
-# In[20]:
+# %%
 
 
 force_conversion_factor
 
 
-# In[21]:
+# %%
 
 
 # force_conversion_factor_per_mole = 1*C.calorie
 
 
-# In[22]:
+# %%
 
 
 # force_conversion_factor_per_mole
 
 
-# In[23]:
+# %%
 
 
 # force_conversion_factor_absolute = force_conversion_factor_per_mole/C.Avogadro
 
 
-# In[24]:
+# %%
 
 
 # force_conversion_factor_absolute
@@ -211,7 +212,7 @@ force_conversion_factor
 
 # ### Constant velocity force-distance curves
 
-# In[25]:
+# %%
 
 
 def constant_velocity_force_distance_curve_from_thermo_ave(
@@ -271,7 +272,7 @@ def constant_velocity_force_distance_curve_from_thermo_ave(
     return production_thermo_pd, production_thermo_ave_pd
 
 
-# In[26]:
+# %%
 
 
 def constant_velocity_force_distance_curve_from_force_file(
@@ -316,7 +317,7 @@ def constant_velocity_force_distance_curve_from_force_file(
     return indenter_forces_df 
 
 
-# In[27]:
+# %%
 
 
 averaging_time = 2.0
@@ -324,7 +325,7 @@ force_label         = r'$F \ [ \mathrm{nN} ]$'
 distance_label      = r'$d \ [ \mathrm{nm} ]$'
 
 
-# In[29]:
+# %%
 
 
 # force distanc
@@ -336,7 +337,7 @@ thermo_df_10_m_per_s, thermo_ave_df_10_m_per_s = constant_velocity_force_distanc
     averaging_steps = 1000 )
 
 
-# In[28]:
+# %%
 
 
 query = {
@@ -347,20 +348,20 @@ query = {
     'metadata.indenter_dist':  7.5}
 
 
-# In[29]:
+# %%
 
 
 files = fp.get_file_by_query(query)
 
 
-# In[380]:
+# %%
 
 
 # correction for missing entry
 files[1][1]['metadata']['total_steps'] = 3750000
 
 
-# In[132]:
+# %%
 
 
 # force distanc) in files
@@ -375,7 +376,7 @@ for (cont,doc) in files:
             averaging_steps = 1000 ) )
 
 
-# In[382]:
+# %%
 
 
 query = {
@@ -386,20 +387,20 @@ query = {
 files = fp.get_file_by_query(query)
 
 
-# In[383]:
+# %%
 
 
 len(files)
 
 
-# In[138]:
+# %%
 
 
 for 
 files[0][1]['metadata']['total_steps'] = 15000000
 
 
-# In[131]:
+# %%
 
 
 # force distanc) in files
@@ -414,13 +415,13 @@ for (cont,doc) in files:
             averaging_steps = 1000 ) )
 
 
-# In[140]:
+# %%
 
 
 plotData[0]
 
 
-# In[146]:
+# %%
 
 
 query = {
@@ -430,20 +431,20 @@ query = {
 files = fp.get_file_by_query(query)
 
 
-# In[147]:
+# %%
 
 
 len(files)
 
 
-# In[148]:
+# %%
 
 
 for i,f in enumerate(files):
     print('{:3d}:'.format(i), f[1]['identifier'],':', 'total_steps' in f[1]['metadata'])
 
 
-# In[149]:
+# %%
 
 
 # wrong step size in input files
@@ -457,14 +458,14 @@ files[6][1]['metadata']['total_steps'] = 15000000 # wrong step size
 files[7][1]['metadata']['total_steps'] = 37500000
 
 
-# In[150]:
+# %%
 
 
 for f in files:
     print(f[1]['identifier'],':', f[1]['metadata']['total_steps'])
 
 
-# In[151]:
+# %%
 
 
 # force distanc) in files
@@ -479,50 +480,50 @@ for (cont,doc) in files:
             averaging_steps = 1000 ) )
 
 
-# In[152]:
+# %%
 
 
 for i,f in enumerate(files):
     print('{:3d}:'.format(i), f[1]['identifier'],':', 'total_steps' in f[1]['metadata'])
 
 
-# In[114]:
+# %%
 
 
 files_hemicylinders = files[2:6]
 
 
-# In[115]:
+# %%
 
 
 files_1m_per_s = [ files[6], files[0], files[2] ] 
 
 
-# In[116]:
+# %%
 
 
 files_10cm_per_s = [ files[7], files[1], files[5] ] 
 
 
-# In[153]:
+# %%
 
 
 plotData_hemicylinders = [ plotData[5], plotData[4], plotData[2], plotData[3] ]
 
 
-# In[154]:
+# %%
 
 
 plotData_1m_per_s = [ plotData[6], plotData[0], plotData[2] ] 
 
 
-# In[155]:
+# %%
 
 
 plotData_10cm_per_s = [ plotData[7], plotData[1], plotData[5] ] 
 
 
-# In[156]:
+# %%
 
 
 labels =  [ 
@@ -533,7 +534,7 @@ labels =  [
     r'$1 \mathrm{\ m \ s^{-1}}$, bilayer']   
 
 
-# In[157]:
+# %%
 
 
 labels_hemicylinders =  [ 
@@ -543,7 +544,7 @@ labels_hemicylinders =  [
     r'$10 \mathrm{\ m \ s^{-1}}$']
 
 
-# In[158]:
+# %%
 
 
 labels_1m_per_s = [ 
@@ -552,13 +553,13 @@ labels_1m_per_s = [
     'hemicylinder' ]
 
 
-# In[159]:
+# %%
 
 
 plt.rcParams["figure.figsize"] = (8,6) # the standard figure size
 
 
-# In[160]:
+# %%
 
 
 plt.plot(
@@ -567,7 +568,7 @@ plt.plot(
     label = lab) 
 
 
-# In[161]:
+# %%
 
 
 figure = plt.figure()
@@ -591,7 +592,7 @@ for t in legend.get_texts():
     t.set_position((shift,0))
 
 
-# In[162]:
+# %%
 
 
 # get the width of your widest label, since every label will need 
@@ -603,13 +604,13 @@ for t in legend.get_texts():
     t.set_position((shift,0))
 
 
-# In[163]:
+# %%
 
 
 legend.get_texts()[0].get_window_extent().width
 
 
-# In[164]:
+# %%
 
 
 # get the width of your widest label, since every label will need 
@@ -622,7 +623,7 @@ for t in legend.get_texts():
 
 # # 1m per s approach
 
-# In[165]:
+# %%
 
 
 windows = np.array([10,10,10,]) # do average on the same scale, i.e. 2ps
@@ -638,7 +639,7 @@ plt.legend()
 
 # ## 10 cm per s approach
 
-# In[166]:
+# %%
 
 
 windows = np.array([10,10,10,]) # do average on the same scale, i.e. 2ps
@@ -652,37 +653,37 @@ plt.ylabel(force_label)
 plt.legend()
 
 
-# In[178]:
+# %%
 
 
 test = None
 
 
-# In[179]:
+# %%
 
 
 type(test) is not list
 
 
-# In[180]:
+# %%
 
 
 test = [None]
 
 
-# In[181]:
+# %%
 
 
 test
 
 
-# In[182]:
+# %%
 
 
 type(test) is not list
 
 
-# In[167]:
+# %%
 
 
 windows = np.array([10,10,10]) # do average on the same scale, i.e. 2*2ps
@@ -697,7 +698,7 @@ plt.ylabel(force_label)
 plt.legend()
 
 
-# In[169]:
+# %%
 
 
 windows = np.array([10,10,1,]) # do average on the same scale, i.e. 2*2ps
@@ -712,7 +713,7 @@ plt.ylabel(force_label)
 plt.legend()
 
 
-# In[70]:
+# %%
 
 
 # force distanc
@@ -723,7 +724,7 @@ indenter_forces_10_m_per_s = constant_velocity_force_distance_curve_from_force_f
     averaging_steps = 1000 )
 
 
-# In[50]:
+# %%
 
 
 # force distanc
@@ -734,7 +735,7 @@ indenter_forces_10_m_per_s = constant_velocity_force_distance_curve_from_force_f
     averaging_steps = 1000 )
 
 
-# In[32]:
+# %%
 
 
 # force distanc
@@ -745,13 +746,13 @@ indenter_forces_1_m_per_s = constant_velocity_force_distance_curve_from_force_fi
     averaging_steps = 10000 )
 
 
-# In[33]:
+# %%
 
 
 indenter_forces_1_m_per_s.head()
 
 
-# In[37]:
+# %%
 
 
 plt.plot(force_conversion_factor*indenter_forces_1_m_per_s["f_storeUnconstrainedForcesAve"],
@@ -763,7 +764,7 @@ plt.ylabel(force_label)
 plt.legend()
 
 
-# In[44]:
+# %%
 
 
 # force distanc
@@ -774,13 +775,13 @@ nonindenter_forces_10_m_per_s = constant_velocity_force_distance_curve_from_forc
     averaging_steps = 1000 )
 
 
-# In[67]:
+# %%
 
 
 thermo_ave_df_1_m_per_s = [None]*2
 
 
-# In[46]:
+# %%
 
 
 thermo_df_1_m_per_s, thermo_ave_df_1_m_per_s = constant_velocity_force_distance_curve_from_thermo_ave(
@@ -791,7 +792,7 @@ thermo_df_1_m_per_s, thermo_ave_df_1_m_per_s = constant_velocity_force_distance_
    averaging_steps = 1000 )
 
 
-# In[69]:
+# %%
 
 
 _, thermo_ave_df_1_m_per_s[1] = constant_velocity_force_distance_curve(
@@ -801,7 +802,7 @@ _, thermo_ave_df_1_m_per_s[1] = constant_velocity_force_distance_curve(
     averaging_steps = 1000 )
 
 
-# In[100]:
+# %%
 
 
 plt.plot(force_conversion_factor*thermo_ave_df_1_m_per_s[0]["indenter_non_indenter_interaction[3]"].loc[ thermo_ave_df_1_m_per_s[0].index < 7],
@@ -814,14 +815,14 @@ plt.ylabel(force_label)
 plt.legend()
 
 
-# In[115]:
+# %%
 
 
 plt.plot(force_conversion_factor*thermo_ave_df_1_m_per_s[0]["c_indenter_surfactant_interaction[3]"])
 plt.plot(force_conversion_factor*thermo_ave_df_10_m_per_s["c_indenter_surfactant_interaction[3]"] )
 
 
-# In[121]:
+# %%
 
 
 plt.plot(force_conversion_factor*thermo_ave_df_1_m_per_s[0]["indenter_non_indenter_interaction[3]"].loc[ thermo_ave_df_1_m_per_s[0].index < 7 ],
@@ -841,7 +842,7 @@ plt.legend()
 
 # #### 1 m / s
 
-# In[126]:
+# %%
 
 
 (force_conversion_factor*thermo_ave_df_1_m_per_s[0]["indenter_non_indenter_interaction[3]"].loc[ 
@@ -850,7 +851,7 @@ plt.legend()
 
 # #### 10 m / s
 
-# In[127]:
+# %%
 
 
 (force_conversion_factor*thermo_ave_df_10_m_per_s["indenter_non_indenter_interaction[3]"].loc[
@@ -859,118 +860,118 @@ plt.legend()
 
 # ### File system
 
-# In[526]:
+# %%
 
 
 lmplab_prefix = os.getcwd()
 
 
-# In[527]:
+# %%
 
 
 lmplab_prefix
 
 
-# In[528]:
+# %%
 
 
 sds_sys_subdir = os.sep.join(('sds','201810','sys'))
 
 
-# In[529]:
+# %%
 
 
 sds_sys_subdir
 
 
-# In[530]:
+# %%
 
 
 ctab_sys_subdir = os.sep.join(('ctab','201809','sys'))
 
 
-# In[531]:
+# %%
 
 
 ctab_sys_subdir
 
 
-# In[532]:
+# %%
 
 
 ctab_absolute_prefix = os.sep.join((lmplab_prefix,ctab_sys_subdir))
 
 
-# In[533]:
+# %%
 
 
 sds_absolute_prefix = os.sep.join((lmplab_prefix,sds_sys_subdir))
 
 
-# In[534]:
+# %%
 
 
 sds_absolute_prefix
 
 
-# In[535]:
+# %%
 
 
 indenter_system_suffix = '_50Ang_stepped'
 
 
-# In[536]:
+# %%
 
 
 ctab_system_glob_pattern = ''.join((
     ctab_absolute_prefix,os.sep,'*',indenter_system_suffix))
 
 
-# In[537]:
+# %%
 
 
 sds_system_glob_pattern = ''.join((
     sds_absolute_prefix,os.sep,'*',indenter_system_suffix))
 
 
-# In[538]:
+# %%
 
 
 ctab_system_glob_pattern = ''.join((
     ctab_absolute_prefix,os.sep,'*',indenter_system_suffix))
 
 
-# In[539]:
+# %%
 
 
 sds_system_glob_pattern
 
 
-# In[540]:
+# %%
 
 
 ctab_system_glob_pattern
 
 
-# In[541]:
+# %%
 
 
 # os.chdir(absolute_prefix)
 
 
-# In[542]:
+# %%
 
 
 sds_indenter_system_absolute_prefix_lst = sorted(glob(sds_system_glob_pattern))
 
 
-# In[543]:
+# %%
 
 
 ctab_indenter_system_absolute_prefix_lst = sorted(glob(ctab_system_glob_pattern))
 
 
-# In[544]:
+# %%
 
 
 sds_indenter_system_lst = [ 
@@ -979,7 +980,7 @@ sds_indenter_system_lst = [
             in sds_indenter_system_absolute_prefix_lst ]
 
 
-# In[545]:
+# %%
 
 
 ctab_indenter_system_lst = [ 
@@ -988,98 +989,98 @@ ctab_indenter_system_lst = [
             in ctab_indenter_system_absolute_prefix_lst ]
 
 
-# In[588]:
+# %%
 
 
 ctab_indenter_system_lst
 
 
-# In[589]:
+# %%
 
 
 sds_indenter_system_lst
 
 
-# In[548]:
+# %%
 
 
 system_lst = [*sds_indenter_system_lst, *ctab_indenter_system_lst]
 
 
-# In[549]:
+# %%
 
 
 system_absolute_prefix_lst = [*sds_indenter_system_absolute_prefix_lst, 
                               *ctab_indenter_system_absolute_prefix_lst]
 
 
-# In[550]:
+# %%
 
 
 system_absolute_prefix_dict = dict(zip( system_lst, system_absolute_prefix_lst))
 
 
-# In[551]:
+# %%
 
 
 sorted(system_absolute_prefix_dict)
 
 
-# In[552]:
+# %%
 
 
 production_steps = [500000, 1000000]
 
 
-# In[590]:
+# %%
 
 
 production_steps
 
 
-# In[554]:
+# %%
 
 
 production_subdir_lst = [ 'production_{:d}'.format(steps) for steps in production_steps]
 
 
-# In[591]:
+# %%
 
 
 production_subdir_lst
 
 
-# In[556]:
+# %%
 
 
 production_dict = dict( zip(production_steps, production_subdir_lst) )
 
 
-# In[592]:
+# %%
 
 
 production_dict
 
 
-# In[594]:
+# %%
 
 
 system_names = system_lst
 
 
-# In[595]:
+# %%
 
 
 system_names
 
 
-# In[596]:
+# %%
 
 
 os.getcwd()
 
 
-# In[597]:
+# %%
 
 
 indenter_dict = {system: [] for system in system_names}
@@ -1087,7 +1088,7 @@ indenter_dict = {system: [] for system in system_names}
 
 # ### Extract colvars tar files
 
-# In[598]:
+# %%
 
 
 # unpack all tar files
@@ -1113,13 +1114,13 @@ for system_name in system_names:
                 indenter_dict[system_name].append(steps)
 
 
-# In[600]:
+# %%
 
 
 indenter_dict
 
 
-# In[864]:
+# %%
 
 
 indenter_dict
@@ -1127,19 +1128,19 @@ indenter_dict
 
 # ## Batch
 
-# In[601]:
+# %%
 
 
 system_names = [ system_name for system_name, run_list                  in indenter_dict.items() if len(run_list) > 0 ]
 
 
-# In[602]:
+# %%
 
 
 set(system_names) & set(sds_indenter_system_lst)
 
 
-# In[603]:
+# %%
 
 
 set(system_names) & set(ctab_indenter_system_lst)
@@ -1147,7 +1148,7 @@ set(system_names) & set(ctab_indenter_system_lst)
 
 # ### Read data files
 
-# In[994]:
+# %%
 
 
 # read all systems
@@ -1188,7 +1189,7 @@ for system_name in system_names:
 
 # ### Read forces from netcdf
 
-# In[569]:
+# %%
 
 
 force_keys = [
@@ -1201,14 +1202,14 @@ force_keys = [
     'f_storeUnconstrainedForcesAve' ]
 
 
-# In[570]:
+# %%
 
 
 t2n_array_dict = { system_name: postprocessing.sds_t2n_array for system_name
                       in sds_indenter_system_lst }
 
 
-# In[571]:
+# %%
 
 
 t2n_array_dict.update( 
@@ -1216,7 +1217,7 @@ t2n_array_dict.update(
                       in ctab_indenter_system_lst } )
 
 
-# In[882]:
+# %%
 
 
 # 
@@ -1228,19 +1229,19 @@ exclude_dict = {'1010_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_50Ang_stepp
 # 1010_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_50Ang_stepped/production_1000000
 
 
-# In[884]:
+# %%
 
 
 indenter_dict['653_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_50Ang_stepped']
 
 
-# In[885]:
+# %%
 
 
 constant_offset = 7.0637 # Ang, half thickness of substrate
 
 
-# In[1005]:
+# %%
 
 
 # RUN AGAIN
@@ -1387,13 +1388,13 @@ for system_name in system_names:
         i+=1
 
 
-# In[893]:
+# %%
 
 
 tmp_traj[1]
 
 
-# In[766]:
+# %%
 
 
 df_dict['1107_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000].keys()
@@ -1401,85 +1402,85 @@ df_dict['1107_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][5000
 
 # ### Make plots
 
-# In[863]:
+# %%
 
 
 system_names
 
 
-# In[621]:
+# %%
 
 
 import re
 
 
-# In[623]:
+# %%
 
 
 bilayer_regex = re.compile('.*bilayer.*')
 
 
-# In[633]:
+# %%
 
 
 monolayer_regex = re.compile('.*monolayer.*')
 
 
-# In[648]:
+# %%
 
 
 cylinders_regex = re.compile('(?!hemi)*cylinders.*')
 
 
-# In[695]:
+# %%
 
 
 hemicylinders_regex = re.compile('.*hemicylinders.*')
 
 
-# In[696]:
+# %%
 
 
 sds_regex = re.compile('.*SDS.*')
 
 
-# In[697]:
+# %%
 
 
 ctab_regex = re.compile('.*CTAB.*')
 
 
-# In[698]:
+# %%
 
 
 ctab_653_regex = re.compile('653_CTAB.*')
 
 
-# In[850]:
+# %%
 
 
 sds_646_regex = re.compile('646_SDS.*')
 
 
-# In[851]:
+# %%
 
 
 sds_377_regex = re.compile('377_SDS.*')
 
 
-# In[1107]:
+# %%
 
 
 sds_220_regex = re.compile('220_SDS.*')
 
 
-# In[1108]:
+# %%
 
 
 sds_75_regex = re.compile('75_SDS.*')
 
 
-# In[631]:
+# %%
 
 
 ctab_bilayer_systems = list(
@@ -1487,7 +1488,7 @@ ctab_bilayer_systems = list(
     & set( filter( ctab_regex.match, system_names ) ) )
 
 
-# In[637]:
+# %%
 
 
 ctab_monolayer_systems = list(
@@ -1495,7 +1496,7 @@ ctab_monolayer_systems = list(
     & set( filter( ctab_regex.match, system_names ) ) )
 
 
-# In[650]:
+# %%
 
 
 ctab_hemicylindrical_systems = list( # attention cylinders & hemicylinders swicthed accidentially
@@ -1503,7 +1504,7 @@ ctab_hemicylindrical_systems = list( # attention cylinders & hemicylinders swict
     & set( filter( ctab_regex.match, system_names ) ) )
 
 
-# In[651]:
+# %%
 
 
 ctab_cylindrical_systems = list( # attention cylinders & hemicylinders swicthed accidentially
@@ -1511,49 +1512,49 @@ ctab_cylindrical_systems = list( # attention cylinders & hemicylinders swicthed 
     & set( filter( ctab_regex.match, system_names ) ) )
 
 
-# In[660]:
+# %%
 
 
 ctab_653_systems = list( set( filter( ctab_653_regex.match, system_names ) ) )
 
 
-# In[639]:
+# %%
 
 
 ctab_monolayer_systems
 
 
-# In[638]:
+# %%
 
 
 ctab_bilayer_systems
 
 
-# In[652]:
+# %%
 
 
 ctab_hemicylindrical_systems
 
 
-# In[654]:
+# %%
 
 
 ctab_cylindrical_systems
 
 
-# In[661]:
+# %%
 
 
 ctab_653_systems
 
 
-# In[862]:
+# %%
 
 
 system_names
 
 
-# In[844]:
+# %%
 
 
 sds_bilayer_systems = list(
@@ -1561,7 +1562,7 @@ sds_bilayer_systems = list(
     & set( filter( sds_regex.match, system_names ) ) )
 
 
-# In[846]:
+# %%
 
 
 sds_monolayer_systems = list(
@@ -1569,7 +1570,7 @@ sds_monolayer_systems = list(
     & set( filter( sds_regex.match, system_names ) ) )
 
 
-# In[858]:
+# %%
 
 
 sds_hemicylindrical_systems = list(
@@ -1577,7 +1578,7 @@ sds_hemicylindrical_systems = list(
     & set( filter( sds_regex.match, system_names ) ) )
 
 
-# In[859]:
+# %%
 
 
 sds_cylindrical_systems = list( 
@@ -1585,67 +1586,67 @@ sds_cylindrical_systems = list(
     & set( filter( sds_regex.match, system_names ) ) )
 
 
-# In[852]:
+# %%
 
 
 sds_646_systems = list( set( filter( sds_646_regex.match, system_names ) ) )
 
 
-# In[853]:
+# %%
 
 
 sds_377_systems = list( set( filter( sds_377_regex.match, system_names ) ) )
 
 
-# In[1109]:
+# %%
 
 
 sds_220_systems = list( set( filter( sds_220_regex.match, system_names ) ) )
 
 
-# In[1110]:
+# %%
 
 
 sds_75_systems = list( set( filter( sds_75_regex.match, system_names ) ) )
 
 
-# In[1111]:
+# %%
 
 
 system_names
 
 
-# In[854]:
+# %%
 
 
 sds_monolayer_systems
 
 
-# In[855]:
+# %%
 
 
 sds_bilayer_systems
 
 
-# In[663]:
+# %%
 
 
 shape_labels = ['monolayer','bilayer', 'cylinders']
 
 
-# In[682]:
+# %%
 
 
 shape_labels
 
 
-# In[664]:
+# %%
 
 
 shape_label_dict = dict(zip(system_names, shape_labels))
 
 
-# In[699]:
+# %%
 
 
 def shape_label_assigner(system_name):
@@ -1661,7 +1662,7 @@ def shape_label_assigner(system_name):
         return 'cylinder'
 
 
-# In[700]:
+# %%
 
 
 shape_label_dict = {
@@ -1669,44 +1670,44 @@ shape_label_dict = {
 }
 
 
-# In[701]:
+# %%
 
 
 shape_label_dict
 
 
-# In[702]:
+# %%
 
 
 np.array(production_steps) * postprocessing.fs
 
 
-# In[703]:
+# %%
 
 
 distance_covered = 100 # rough estimate
 
 
-# In[704]:
+# %%
 
 
 rate_labels = distance_covered * postprocessing.AA / ( 
     2* np.array(production_steps) * postprocessing.fs ) # labels in m/s or nm/ns
 
 
-# In[705]:
+# %%
 
 
 rate_labels
 
 
-# In[706]:
+# %%
 
 
 production_dict
 
 
-# In[707]:
+# %%
 
 
 rate_labels_str = [ 
@@ -1714,44 +1715,44 @@ rate_labels_str = [
                    for vel in rate_labels ]
 
 
-# In[708]:
+# %%
 
 
 rate_labels_str
 
 
-# In[709]:
+# %%
 
 
 rate_label_dict = dict(zip(production_steps,rate_labels_str))
 
 
-# In[996]:
+# %%
 
 
 data_tags = ['thermo', 'colvars', 'ti.pmf', 'ti.grad', 'ti.count']
 fig_tags =  ['thermo', 'colvars', 'groupgroup', 'pmf' ]
 
 
-# In[711]:
+# %%
 
 
 system_selection = ctab_653_systems
 
 
-# In[906]:
+# %%
 
 
 dist_interval = slice(20,80)
 
 
-# In[743]:
+# %%
 
 
 df_dict.keys()
 
 
-# In[744]:
+# %%
 
 
 df_dict['377_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'].keys()
@@ -1759,97 +1760,97 @@ df_dict['377_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'].keys(
 
 # #### Thermo- & group interaction plots
 
-# In[1138]:
+# %%
 
 
 system_lst
 
 
-# In[1045]:
+# %%
 
 
 indenter_system_suffix = '_50Ang_stepped'
 
 
-# In[1049]:
+# %%
 
 
 original_system_lst = [ s[:-len(indenter_system_suffix)] for s in system_lst ]
 
 
-# In[1058]:
+# %%
 
 
 molecules_per_area = 1e-18/sim_df.loc[original_system_lst,'sb_area_per_sf_molecule'] # in nm**2
 
 
-# In[1139]:
+# %%
 
 
 shape_label_dict = dict( zip( system_lst, [ '${: 4.2f} \mathrm{{nm}}^{{-2}}$'.format(gamma) for gamma in molecules_per_area]))
 
 
-# In[1140]:
+# %%
 
 
 n_surfactant_regexp = re.compile('^([0-9]+)_.*')
 
 
-# In[1141]:
+# %%
 
 
 n_surfactant = [ int(n_surfactant_regexp.match(s).group(1)) for s in system_lst ]
 
 
-# In[1157]:
+# %%
 
 
 system_selection = ctab_hemicylindrical_systems
 
 
-# In[1154]:
+# %%
 
 
 system_selection = sorted(system_selection,key=lambda s: dict(zip(system_lst,n_surfactant))[s])
 
 
-# In[1155]:
+# %%
 
 
 system_selection = sorted(system_selection)
 
 
-# In[1158]:
+# %%
 
 
 system_selection
 
 
-# In[1096]:
+# %%
 
 
 shape_label_dict = dict( zip( system_selection, ['bilayer', 'monolayer', 'cylinders']))
 
 
-# In[1131]:
+# %%
 
 
 shape_label_dict = dict( zip( system_selection, ['bilayer', 'hemicylinders', 'monolayer']))
 
 
-# In[1124]:
+# %%
 
 
 shape_label_dict = dict( zip( system_selection, ['bilayer','monolayer']))
 
 
-# In[1028]:
+# %%
 
 
 window = 3
 
 
-# In[1151]:
+# %%
 
 
 # plot all
@@ -1917,80 +1918,80 @@ for system_name in system_selection:
 print("Finished after {:d} loops".format(i))
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[1152]:
+# %%
 
 
 shape_fig_dict[500000]['groupgroup']['fig']
 
 
-# In[1068]:
+# %%
 
 
 rate_fig_dict.keys()
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[1072]:
+# %%
 
 
 system_selection
 
 
-# In[1073]:
+# %%
 
 
 rate_fig_dict['75_SDS_on_AU_111_51x30x2_monolayer_with_counterion_50Ang_stepped']['groupgroup']['fig']
 
 
-# In[1030]:
+# %%
 
 
 for ax in shape_fig_dict[500000]['groupgroup']['axes']:
     ax.legend().set_visible(False)
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[717]:
+# %%
 
 
 rate_fig_dict['653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_50Ang_stepped']['groupgroup']['fig']
 
 
-# In[718]:
+# %%
 
 
 shape_fig_dict[500000]['groupgroup']['fig']
 
 
-# In[719]:
+# %%
 
 
 fig_tags
 
 
-# In[753]:
+# %%
 
 
 fig_tags = ['indenter_forces_z', 'nonindenter_forces_z']
 
 
-# In[754]:
+# %%
 
 
 dist_interval = slice(25,80)
@@ -1998,13 +1999,13 @@ dist_interval = slice(25,80)
 
 # #### Netcdf force plots
 
-# In[1003]:
+# %%
 
 
 data_df_dict.keys()
 
 
-# In[1004]:
+# %%
 
 
 # plot all
@@ -2078,91 +2079,91 @@ for system_name, steps_df_dict in df_dict.items():
 print("Finished after {:d} loops".format(i))
 
 
-# In[832]:
+# %%
 
 
 label_dict = dict( zip( system_lst, system_lst))
 
 
-# In[895]:
+# %%
 
 
 ctab_653_systems
 
 
-# In[896]:
+# %%
 
 
 system_selection = ['653_CTAB_on_AU_111_63x36x2_bilayer_with_counterion_50Ang_stepped']
 
 
-# In[990]:
+# %%
 
 
 sds_cylindrical_systems
 
 
-# In[975]:
+# %%
 
 
 nsds_lst = [646,75,129,377,220]
 
 
-# In[973]:
+# %%
 
 
 system_selection = sds_monolayer_systems
 
 
-# In[987]:
+# %%
 
 
 system_selection
 
 
-# In[985]:
+# %%
 
 
 system_selection
 
 
-# In[ ]:
+# %%
 
 
 system_selection = sorted(system_selection,key=lambda s: dict(zip(sds_bilayer_systems,nsds_lst))[s])
 
 
-# In[979]:
+# %%
 
 
 sys
 
 
-# In[947]:
+# %%
 
 
 rate_label_dict
 
 
-# In[942]:
+# %%
 
 
 window = 1
 
 
-# In[965]:
+# %%
 
 
 dist_interval = slice(25,80)
 
 
-# In[982]:
+# %%
 
 
 system_selection = sds_377_systems
 
 
-# In[984]:
+# %%
 
 
 # plot all
@@ -2253,55 +2254,55 @@ for system_name in system_selection:
 print("Finished after {:d} loops".format(i))
 
 
-# In[914]:
+# %%
 
 
 ctab_653_systems
 
 
-# In[920]:
+# %%
 
 
 df_dict[ctab_653_systems[0]][500000]['dist_offset']
 
 
-# In[919]:
+# %%
 
 
 df_dict[ctab_653_systems[1]][500000]['dist_offset']
 
 
-# In[921]:
+# %%
 
 
 df_dict[ctab_653_systems[2]][500000]['dist_offset']
 
 
-# In[922]:
+# %%
 
 
 ave_offset = np.sum( [df_dict[ctab_653_systems[i]][500000]['dist_offset'] for i in range(3) ] ) / 3
 
 
-# In[950]:
+# %%
 
 
 ave_offset
 
 
-# In[784]:
+# %%
 
 
 nonindenter_force_z_sum_df.index = indenter_force_z_sum_df.index
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[811]:
+# %%
 
 
 postprocessing.makeVariableByDistPlot(
@@ -2313,13 +2314,13 @@ postprocessing.makeVariableByDistPlot(
     y_label=r'Normal force $ F \ \left( \mathrm{nN} \mathrm{mol}^{-1} \right)$')
 
 
-# In[739]:
+# %%
 
 
 data_df_dict.keys()
 
 
-# In[742]:
+# %%
 
 
 data_df_dict.keys()
@@ -2327,37 +2328,37 @@ data_df_dict.keys()
 
 # ## Colvars
 
-# In[129]:
+# %%
 
 
 df_dict['646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000].keys()
 
 
-# In[130]:
+# %%
 
 
 colvars_traj_df = df_dict['646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000]['colvars']
 
 
-# In[132]:
+# %%
 
 
 pmf_df = df_dict['646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000]['ti.pmf']
 
 
-# In[154]:
+# %%
 
 
 grad_df = df_dict['646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000]['ti.grad']
 
 
-# In[155]:
+# %%
 
 
 count_df = df_dict['646_SDS_on_AU_111_51x30x2_bilayer_with_counterion_50Ang_stepped'][500000]['ti.count']
 
 
-# In[133]:
+# %%
 
 
 fig, axes = postprocessing.makeColvarsPlots(
@@ -2365,7 +2366,7 @@ fig, axes = postprocessing.makeColvarsPlots(
     legend_prefix = 'raw');
 
 
-# In[134]:
+# %%
 
 
 fig, axes = postprocessing.makeColvarsPlots(
@@ -2374,19 +2375,19 @@ fig, axes = postprocessing.makeColvarsPlots(
     fig = fig, axes = axes, legend_prefix = 'ave' );
 
 
-# In[135]:
+# %%
 
 
 fig
 
 
-# In[150]:
+# %%
 
 
 dist_interval=slice(20,60)
 
 
-# In[151]:
+# %%
 
 
 fig, axes = postprocessing.makeColvarsPlotsByDist(
@@ -2394,7 +2395,7 @@ fig, axes = postprocessing.makeColvarsPlotsByDist(
     interval=dist_interval);
 
 
-# In[152]:
+# %%
 
 
 fig, axes = postprocessing.makeColvarsPlotsByDist(
@@ -2402,13 +2403,13 @@ fig, axes = postprocessing.makeColvarsPlotsByDist(
     fig = fig, axes = axes, interval=dist_interval );
 
 
-# In[153]:
+# %%
 
 
 fig
 
 
-# In[156]:
+# %%
 
 
 fig, axes = postprocessing.makePMEPlots(
@@ -2417,7 +2418,7 @@ fig, axes = postprocessing.makePMEPlots(
     legend_prefix ='raw');
 
 
-# In[638]:
+# %%
 
 
 fig, axes = postprocessing.makePMEPlots(
@@ -2427,7 +2428,7 @@ fig, axes = postprocessing.makePMEPlots(
     fig = fig, axes = axes);
 
 
-# In[639]:
+# %%
 
 
 fig
@@ -2435,26 +2436,26 @@ fig
 
 # ## Thermo output
 
-# In[ ]:
+# %%
 
 
 postprocessing.read_production_thermo()
 
 
-# In[476]:
+# %%
 
 
 thermo_df = postprocessing.evaluate_production();
 
 
-# In[555]:
+# %%
 
 
 fig, axes = postprocessing.makeThermoPlotsFromDataFrame(
     thermo_df, legend_prefix = 'raw');
 
 
-# In[556]:
+# %%
 
 
 fig, axes = postprocessing.makeThermoPlotsFromDataFrame(
@@ -2462,7 +2463,7 @@ fig, axes = postprocessing.makeThermoPlotsFromDataFrame(
     legend_prefix='ave');
 
 
-# In[558]:
+# %%
 
 
 fig
@@ -2470,13 +2471,13 @@ fig
 
 # ## Group - Group interactions
 
-# In[584]:
+# %%
 
 
 fig, axes = postprocessing.makeGroupGroupInteractionsPlot(thermo_df,legend_prefix='raw')
 
 
-# In[585]:
+# %%
 
 
 fig, axes = postprocessing.makeGroupGroupInteractionsPlot(
@@ -2484,20 +2485,20 @@ fig, axes = postprocessing.makeGroupGroupInteractionsPlot(
     fig = fig, axes = axes)
 
 
-# In[586]:
+# %%
 
 
 fig
 
 
-# In[591]:
+# %%
 
 
 fig, axes = postprocessing.makeGroupGroupInteractionsByDistPlot(
     thermo_df, colvars_traj_df, pmf_df, legend_prefix = 'raw');
 
 
-# In[592]:
+# %%
 
 
 fig, axes = postprocessing.makeGroupGroupInteractionsByDistPlot(
@@ -2505,25 +2506,25 @@ fig, axes = postprocessing.makeGroupGroupInteractionsByDistPlot(
     fig = fig, axes = axes );
 
 
-# In[662]:
+# %%
 
 
 fig
 
 
-# In[139]:
+# %%
 
 
 thermo_df = postprocessing.evaluate_production();
 
 
-# In[142]:
+# %%
 
 
 postprocessing.evaluate_group_group_interactions(thermo_df);
 
 
-# In[15]:
+# %%
 
 
 for dirname, dirnames, filenames in os.walk('.'):
@@ -2542,7 +2543,7 @@ for dirname, dirnames, filenames in os.walk('.'):
         dirnames.remove('.git')
 
 
-# In[111]:
+# %%
 
 
 get_ipython().system('cat  653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counterion_50Ang_stepped.indenter_pulled.ti.pmf')
@@ -2569,19 +2570,19 @@ get_ipython().system('cat  653_CTAB_on_AU_111_63x36x2_hemicylinders_with_counter
 #     = \frac{ 10^{-4} \cdot N_A^{-1}}{ 4.184 } [F_{LMP}]
 #     = 0.239 \cdot 10^{-4} N_A^{-1} [F_{LMP}] $
 
-# In[314]:
+# %%
 
 
 system_names
 
 
-# In[159]:
+# %%
 
 
 system_name
 
 
-# In[163]:
+# %%
 
 
 production_absolute_prefix = os.sep.join((
@@ -2589,44 +2590,44 @@ production_absolute_prefix = os.sep.join((
     production_dict[500000]))
 
 
-# In[164]:
+# %%
 
 
 production_absolute_prefix
 
 
-# In[165]:
+# %%
 
 
 netcdf_glob_pattern = os.sep.join((
     production_absolute_prefix, '*.nc'))
 
 
-# In[475]:
+# %%
 
 
 netcdf_glob_pattern
 
 
-# In[167]:
+# %%
 
 
 netcdf = glob(netcdf_glob_pattern)[0]
 
 
-# In[282]:
+# %%
 
 
 netcdf
 
 
-# In[239]:
+# %%
 
 
 postprocessing.sds_t2n_array
 
 
-# In[240]:
+# %%
 
 
 tmp_traj = NetCDFTrajectory(
@@ -2635,19 +2636,19 @@ tmp_traj = NetCDFTrajectory(
                         keep_open=True )
 
 
-# In[241]:
+# %%
 
 
 len(tmp_traj)
 
 
-# In[287]:
+# %%
 
 
 f1 = tmp_traj[0]
 
 
-# In[286]:
+# %%
 
 
 f2 = tmp_traj[-1]
@@ -2655,64 +2656,64 @@ f2 = tmp_traj[-1]
 
 # ### select groups
 
-# In[290]:
+# %%
 
 
 solid_selection = (
     f.get_atomic_numbers() == ase.data.atomic_numbers['Au'])
 
 
-# In[293]:
+# %%
 
 
 indenter_selection = (
     solid_selection & (f.get_positions()[:,2] > 20) )
 
 
-# In[300]:
+# %%
 
 
 np.count_nonzero(indenter_selection)
 
 
-# In[301]:
+# %%
 
 
 tmp_traj[0][ indenter_selection ]
 
 
-# In[302]:
+# %%
 
 
 tmp_traj[-1][ indenter_selection]
 
 
-# In[306]:
+# %%
 
 
 len(tmp_traj[0][ solid_selection ]) # 21901
 
 
-# In[307]:
+# %%
 
 
 len(tmp_traj[0][ indenter_selection ]) # 3541
 
 
-# In[308]:
+# %%
 
 
 tmp_traj[0][ indenter_selection ].get_positions().max(axis=0)
 
 
-# In[309]:
+# %%
 
 
 for key in force_keys:
     force_sum_dict[key] = f_indenter.arrays[key].sum(axis=0)
 
 
-# In[273]:
+# %%
 
 
 force_keys = [
@@ -2725,25 +2726,25 @@ force_keys = [
     'f_storeUnconstrainedForcesAve' ]
 
 
-# In[310]:
+# %%
 
 
 force_sum_dict = { key: [] for key in force_keys }
 
 
-# In[ ]:
+# %%
 
 
 df = pd.DataFrame()
 
 
-# In[361]:
+# %%
 
 
 tmp_traj[100][indenter_selection].arrays.keys()
 
 
-# In[351]:
+# %%
 
 
 # sum forces on all indenter atoms for all frames
@@ -2758,205 +2759,205 @@ for key in force_keys:
              for f in tmp_traj ] )
 
 
-# In[352]:
+# %%
 
 
 data_prefix = '/work/ws/nemo/fr_jh1130-201708-0/jobs/doc/md/surfactants/data/forces'
 
 
-# In[353]:
+# %%
 
 
 indenter_force_z_sum_dict = { key: value[:,2] for key, value 
                         in indenter_force_sum_dict.items() }
 
 
-# In[354]:
+# %%
 
 
 nonindenter_force_z_sum_dict = { key: value[:,2] for key, value 
                         in nonindenter_force_sum_dict.items() }
 
 
-# In[355]:
+# %%
 
 
 indenter_force_z_sum_df = pd.DataFrame.from_dict(indenter_force_z_sum_dict, dtype=float)
 
 
-# In[356]:
+# %%
 
 
 nonindenter_force_z_sum_df = pd.DataFrame.from_dict(nonindenter_force_z_sum_dict, dtype=float)
 
 
-# In[398]:
+# %%
 
 
 production_steps = 500000
 
 
-# In[399]:
+# %%
 
 
 production_dict[production_steps]
 
 
-# In[400]:
+# %%
 
 
 system_prefix = system_name + '_' + production_dict[production_steps]
 
 
-# In[389]:
+# %%
 
 
 indenter_z_forces_json_name = system_prefix + '_indenter_z_forces.json'
 
 
-# In[391]:
+# %%
 
 
 nonindenter_z_forces_json_name = system_prefix + '_nonindenter_z_forces.json'
 
 
-# In[382]:
+# %%
 
 
 # indenter_z_forces_csv_name = system_name + '_' + production_dict[500000] + '_indenter_z_forces.csv'
 
 
-# In[386]:
+# %%
 
 
 indenter_force_z_sum_df.to_json(
     os.sep.join((data_prefix, indenter_z_forces_json_name)),  orient='index')
 
 
-# In[392]:
+# %%
 
 
 nonindenter_force_z_sum_df.to_json(
     os.sep.join((data_prefix, nonindenter_z_forces_json_name)),  orient='index')
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[404]:
+# %%
 
 
 pmf_df = df_dict[system_name][production_steps]['ti.pmf']
 
 
-# In[407]:
+# %%
 
 
 colvars_traj_df = df_dict[system_name][production_steps]['colvars']
 
 
-# In[416]:
+# %%
 
 
 thermo_df = df_dict[system_name][production_steps]['thermo']
 
 
-# In[450]:
+# %%
 
 
 # initial apex position at frame 0:
 apex_z0 = tmp_traj[0][indenter_selection].get_positions()[:,2].min()
 
 
-# In[453]:
+# %%
 
 
 # initial substrate surface position at frame 0:
 surface_z0 = tmp_traj[0][solid_selection & ~indenter_selection].get_positions()[:,2].max()
 
 
-# In[454]:
+# %%
 
 
 extents_dist_0 = apex_z0 - surface_z0
 
 
-# In[456]:
+# %%
 
 
 extents_dist_0
 
 
-# In[461]:
+# %%
 
 
 com_com_dist_0 = colvars_traj_df.loc[0,'com_com_dist_z']
 
 
-# In[462]:
+# %%
 
 
 com_com_dist_0
 
 
-# In[463]:
+# %%
 
 
 dist_offset = com_com_dist_0 - extents_dist_0
 
 
-# In[464]:
+# %%
 
 
 dist_offset
 
 
-# In[406]:
+# %%
 
 
 df_dict[system_name][production_steps].keys()
 
 
-# In[420]:
+# %%
 
 
 len(thermo_df.index)
 
 
-# In[429]:
+# %%
 
 
 thermo_df.index
 
 
-# In[428]:
+# %%
 
 
 len(colvars_traj_df)
 
 
-# In[421]:
+# %%
 
 
 colvar_freq = 1 # every step
 
 
-# In[422]:
+# %%
 
 
 netcdf_freq = 1e-3 # every 1000 steps
 
 
-# In[434]:
+# %%
 
 
 indenter_force_z_sum_df.set_index(
@@ -2964,25 +2965,25 @@ indenter_force_z_sum_df.set_index(
     inplace=True )
 
 
-# In[438]:
+# %%
 
 
 colvars_traj_df_dist_column = "com_com_dist_z"
 
 
-# In[440]:
+# %%
 
 
 #colvars_traj_df[colvars_traj_df_dist_column]
 
 
-# In[468]:
+# %%
 
 
 d_interval = slice(25,80)
 
 
-# In[812]:
+# %%
 
 
 postprocessing.makeVariableByDistPlot(
@@ -2994,33 +2995,33 @@ postprocessing.makeVariableByDistPlot(
     y_label=r'Normal force $ F \ \left( \mathrm{nN} \mathrm{mol}^{-1} \right)$')
 
 
-# In[445]:
+# %%
 
 
 indenter_force_z_sum_df
 
 
-# In[366]:
+# %%
 
 
 interval = slice(100,400)
 
 
-# In[813]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeUnconstrainedForcesAve']*force_conversion_factor)
 plt.plot(nonindenter_force_z_sum_df['f_storeUnconstrainedForcesAve']*force_conversion_factor)
 
 
-# In[367]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeUnconstrainedForcesAve'][interval]*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['f_storeUnconstrainedForcesAve'][interval]*force_conversion_factor_per_mole)
 
 
-# In[ ]:
+# %%
 
 
 'f_storeAnteSHAKEForcesAve', 
@@ -3028,109 +3029,109 @@ plt.plot(nonindenter_force_z_sum_df['f_storeUnconstrainedForcesAve'][interval]*f
 'f_storeUnconstrainedForcesAve' 
 
 
-# In[362]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeAnteStatForcesAve']*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['f_storeAnteStatForcesAve']*force_conversion_factor_per_mole)
 
 
-# In[368]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeAnteStatForcesAve'][interval]*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['f_storeAnteStatForcesAve'][interval]*force_conversion_factor_per_mole)
 
 
-# In[369]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeAnteSHAKEForcesAve']*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['f_storeAnteSHAKEForcesAve']*force_conversion_factor_per_mole)
 
 
-# In[370]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['f_storeAnteSHAKEForcesAve'][interval]*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['f_storeAnteSHAKEForcesAve'][interval]*force_conversion_factor_per_mole)
 
 
-# In[371]:
+# %%
 
 
 plt.plot(indenter_force_z_sum_df['forces'][interval]*force_conversion_factor_per_mole)
 plt.plot(nonindenter_force_z_sum_df['forces'][interval]*force_conversion_factor_per_mole)
 
 
-# In[331]:
+# %%
 
 
 force_sum_dict['f_storeUnconstrainedForcesAve'][:,2]
 
 
-# In[ ]:
+# %%
 
 
 # 3541 in indenter, 18360 in substrate
 
 
-# In[264]:
+# %%
 
 
 f_indenter.arrays.keys()
 
 
-# In[279]:
+# %%
 
 
 force_sum_dict = {}
 
 
-# In[280]:
+# %%
 
 
 for key in force_keys:
     force_sum_dict[key] = f_indenter.arrays[key].sum(axis=0)
 
 
-# In[ ]:
+# %%
 
 
 
 
 
-# In[281]:
+# %%
 
 
 force_sum_dict
 
 
-# In[180]:
+# %%
 
 
 get_ipython().run_line_magic('pinfo', 'NetCDFTrajectory')
 
 
-# In[181]:
+# %%
 
 
 traj = ase.io.read(netcdf,index=0,format='netcdftrajectory')
 
 
-# In[182]:
+# %%
 
 
 ase.__version__
 
 
-# In[491]:
+# %%
 
 
 data_df
 
 
-# In[ ]:
+# %%
 
 
 

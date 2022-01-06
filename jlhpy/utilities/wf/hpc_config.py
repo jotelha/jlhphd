@@ -177,7 +177,7 @@ HPC_SPECS = {
             'ntasks_per_node': 1,
         },
         'quick_single_core_job_queueadapter_defaults': {
-            'queue':    'devel',
+            'queue':    'batch',
             'walltime': '00:30:00',
             'ntasks':   1,
             'ntasks_per_node': 1,
@@ -190,7 +190,7 @@ HPC_SPECS = {
             'cpus_per_task': 96,
         },
         'quick_task_core_job_queueadapter_defaults': {
-            'queue':    'devel',
+            'queue':    'batch',
             'walltime': '00:30:00',
             'ntasks':   1,
             'ntasks_per_node': 1,

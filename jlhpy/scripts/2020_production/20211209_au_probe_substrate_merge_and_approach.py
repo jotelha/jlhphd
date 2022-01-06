@@ -290,6 +290,8 @@ for p in parameter_dict_list:
                 'neigh_every': 1,
                 'neigh_check': True,
                 'skin_distance': 3.0,
+                
+                'max_restarts': 20,
             },
             'filter_netcdf': {
                 'group': 'indenter',
@@ -319,3 +321,5 @@ for p in parameter_dict_list:
 # 2021-12-12: extended x range from only including 0 to np.arange(-50.,75.,25.), 
 #             previosuly submitted runs 0:5 now correspond to indices 10:15
 #             Submitted [0:5] following new indexing scheme
+# 2021-12-31: submitted [5:10], all fizzled at GromacsNVTEquilibration 
+# 2022-01-06: submitted [15:20]

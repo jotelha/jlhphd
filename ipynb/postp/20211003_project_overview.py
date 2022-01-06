@@ -3116,9 +3116,682 @@ for d in final_config_datasets:
 # %%
 final_config_datasets
 
+# %% [markdown]
+# ## Overview on wrap-join
+
+# %%
+project_id = "2021-12-27-sds-on-au-111-probe-on-substrate-wrap-join-and-dpd-equilibration"
+
+# %%
+# queries to the data base are simple dictionaries
+query = make_query({
+    'project': project_id,
+})
+
+# %%
+query
+
+# %%
+len(await dl.query(query))
+
+# %% [markdown]
+# ### Overview on steps in project
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+columns = ['step', 'earliest', 'latest', 'object_count']
+res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice for printing in notebook
+
+# %%
+res_df
+
+# %% [markdown]
+# ### Pivot overview on steps and parameters in project
+
+# %% [markdown]
+# #### Identify distinct parameter values
+
+# %%
+query = make_query({
+    'project': project_id,
+    'system.surfactant.nmolecules': {'$exists': True},
+    #'system.surfactant.aggregates.shape': {'$exists': True},
+})
+
+# %%
+res = await dl.query(query)
+
+# %%
+len(res)
+
+# %%
+readme = await dl.readme(res[-1]['uri'])
+
+# %%
+readme
+
+# %%
+# no concentration, only molecules
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+    'distance': 'readme.step_specific.frame_extraction.distance',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df.sort_values(by='nmolecules')
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# %%
+# filter out unwanted values
+immutable_distinct_parameter_values = {k: [e for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+
+# %%
+print(immutable_distinct_parameter_values)
+
+# %% [markdown]
+# #### Actual pivot
+
+# %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
+query = {
+    'readme.project': project_id,
+    **{parameters[label]: {'$in': [as_std_type(val) for val in values]} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$readme.datetime' },
+            "latest":  {'$max': '$readme.datetime' },
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+set(parameters.keys()) - set(['distance'])
+
+# %%
+res_pivot = res_df.pivot_table(
+    values='object_count', index=['step', 'distance'], columns=list(set(parameters.keys()) - set(['distance'])), 
+    aggfunc=pd.notna, fill_value=False)
+res_pivot = res_pivot.style.apply(highlight_bool)
+res_pivot
+
+
+# %% [markdown]
+# ### Overview on UUIDs
+
+# %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
+query = {
+    'readme.project': project_id,
+    **{parameters[label]: {'$in': [as_std_type(val) for val in values]} for label, values in distinct_parameter_values.items()},
+    #'readme.files_in_info.substrate_data_file.query.uuid': {'$in': hemicylinders_input_datasets}
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+                #'shape': '$readme.shape'
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+            #'shape': '$_id.shape'
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+len(res_df)
+
+# %% [markdown]
+# ### Look at last step
+
+# %%
+steps_of_interest = [
+    "WrapJoinAndDPDEquilibration:WrapJoinDataFile:push_dtool",
+]
+
+
+# %%
+final_config_df = res_df[res_df['step'].isin(steps_of_interest)]
+
+# %%
+final_config_df
+
+# %%
+final_config_df[[*list(parameters.keys()),'uuid']]
+
+# %%
+list_of_tuples = [(*row[parameters.keys()], row['uuid'][0]) 
+    for _, row in final_config_df[[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+final_config_datasets = [row.to_dict() for _, row in final_config_df[[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+for d in final_config_datasets:
+    d['uuid'] = d['uuid'][0]
+
+# %%
+final_config_datasets
+
 # %%
 df = pd.DataFrame(final_config_datasets)
 df.to_clipboard(index=False,header=False)
+
+# %%
+df = pd.DataFrame(final_config_datasets)
+df.to_clipboard(index=False,header=False)
+
+# %% [markdown]
+# ## Overview on repeated DPD equilibration
+
+# %%
+project_id = "2021-12-27-sds-on-au-111-probe-on-substrate-wrap-join-and-dpd-equilibration"
+
+# %%
+# queries to the data base are simple dictionaries
+query = make_query({
+    'project': project_id,
+})
+
+# %%
+query
+
+# %%
+len(await dl.query(query))
+
+# %% [markdown]
+# ### Overview on steps in project
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+columns = ['step', 'earliest', 'latest', 'object_count']
+res_df = pd.DataFrame(data=res, columns=columns) # pandas Dataframe is just nice for printing in notebook
+
+# %%
+res_df
+
+# %% [markdown]
+# ### Pivot overview on steps and parameters in project
+
+# %% [markdown]
+# #### Identify distinct parameter values
+
+# %%
+query = make_query({
+    'project': project_id,
+    'system.surfactant.nmolecules': {'$exists': True},
+    #'system.surfactant.aggregates.shape': {'$exists': True},
+})
+
+# %%
+res = await dl.query(query)
+
+# %%
+len(res)
+
+# %%
+readme = await dl.readme(res[-1]['uri'])
+
+# %%
+readme
+
+# %%
+# no concentration, only molecules
+
+# %%
+parameters = { 
+    'nmolecules': 'readme.system.surfactant.nmolecules',
+    #'concentration': 'readme.system.surfactant.surface_concentration',
+    #'shape': 'readme.system.surfactant.aggregates.shape',
+    'x_shift': 'readme.step_specific.merge.x_shift',
+    'y_shift': 'readme.step_specific.merge.y_shift',
+    'distance': 'readme.step_specific.frame_extraction.distance',
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": {k: '${}'.format(v) for k, v in parameters.items()},
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$frozen_at' },
+            "latest":  {'$max': '$frozen_at' },
+        },
+    },
+    {
+        "$set": {k: '$_id.{}'.format(k) for k in parameters.keys()}
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df.sort_values(by='nmolecules')
+
+# %%
+distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
+
+# %%
+# filter out unwanted values
+immutable_distinct_parameter_values = {k: [e for e in p if (
+        isinstance(e, np.float64) and not np.isnan(e)) or (
+        not isinstance(e, np.float64) and e is not None)] 
+    for k, p in distinct_parameter_values.items()}
+
+# %%
+print(immutable_distinct_parameter_values)
+
+# %% [markdown]
+# #### Actual pivot
+
+# %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
+query = {
+    'readme.project': project_id,
+    **{parameters[label]: {'$in': [as_std_type(val) for val in values]} for label, values in distinct_parameter_values.items()},
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "earliest":  {'$min': '$readme.datetime' },
+            "latest":  {'$max': '$readme.datetime' },
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()}
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+set(parameters.keys()) - set(['distance'])
+
+# %%
+res_pivot = res_df.pivot_table(
+    values='object_count', index=['step', 'distance'], columns=list(set(parameters.keys()) - set(['distance'])), 
+    aggfunc=pd.notna, fill_value=False)
+res_pivot = res_pivot.style.apply(highlight_bool)
+res_pivot
+
+
+# %% [markdown]
+# ### Overview on UUIDs
+
+# %%
+distinct_parameter_values = {k: v.copy() for k,v in immutable_distinct_parameter_values.items()}
+
+# %%
+query = {
+    'readme.project': project_id,
+    **{parameters[label]: {'$in': [as_std_type(val) for val in values]} for label, values in distinct_parameter_values.items()},
+    #'readme.files_in_info.substrate_data_file.query.uuid': {'$in': hemicylinders_input_datasets}
+}
+
+# %%
+# check files degenerate by 'metadata.type' ad 'metadata.name'
+aggregation_pipeline = [
+    {
+        "$match": query
+    },
+    {  # group by unique project id
+        "$group": { 
+            "_id": { 
+                'step': '$readme.step',
+                **{label: '${}'.format(key) for label, key in parameters.items()},
+                #'shape': '$readme.shape'
+            },
+            "object_count": {"$sum": 1}, # count matching data sets
+            "uuid": {"$addToSet": "$uuid"},
+            "earliest":  {'$min': '$readme.datetime'},
+            "latest":  {'$max': '$readme.datetime'},
+        },
+    },
+    {
+        "$set": {
+            'step': '$_id.step',
+            **{k: '$_id.{}'.format(k) for k in parameters.keys()},
+            #'shape': '$_id.shape'
+        }
+    },
+    {  # sort by earliest date, descending
+        "$sort": { 
+            "earliest": pymongo.DESCENDING,
+        }
+    }
+]
+
+
+
+# %%
+res = await dl.aggregate(aggregation_pipeline)
+
+# %%
+res_df = pd.DataFrame(res)
+
+# %%
+res_df
+
+# %%
+len(res_df)
+
+# %% [markdown]
+# ### Look at equilibrated configurations
+
+# %%
+steps_of_interest = [
+    "WrapJoinAndDPDEquilibration:LAMMPSEquilibrationDPD:push_dtool",
+    "LAMMPSEquilibrationDPD:push_dtool",
+]
+
+
+# %%
+final_config_df = res_df[res_df['step'].isin(steps_of_interest)]
+
+# %%
+final_config_df
+
+# %%
+final_config_df[[*list(parameters.keys()),'uuid']]
+
+# %%
+list_of_tuples = [(*row[parameters.keys()], row['uuid'][0]) 
+    for _, row in final_config_df[[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+final_config_datasets = [row.to_dict() for _, row in final_config_df[[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+for d in final_config_datasets:
+    d['uuid'] = d['uuid'][0]
+
+# %%
+final_config_datasets
+
+# %%
+#df = pd.DataFrame(final_config_datasets)
+#df.to_clipboard(index=False,header=False)
+
+# %% [markdown]
+# #### Datasets at x = 25, y = 0 (on hemicylinders)
+
+# %%
+# y shift 0: on hemicylinders
+selection = (final_config_df['x_shift'] == 25.0) & (final_config_df['y_shift'] == 0.0)
+
+# %%
+final_config_df[selection]
+
+# %%
+final_config_df[selection][[*list(parameters.keys()),'uuid']]
+
+# %%
+list_of_tuples = [(*row[parameters.keys()], row['uuid'][0]) 
+    for _, row in final_config_df[selection][[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+final_config_datasets = [row.to_dict() for _, row in final_config_df[selection][[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+for d in final_config_datasets:
+    d['uuid'] = d['uuid'][0]
+
+# %%
+final_config_datasets
+
+# %% [markdown]
+# #### Datasets at x = 0, y = -25 (between hemicylinders)
+
+# %%
+# y shift -25: between hemicylinders
+selection = (final_config_df['x_shift'] == 0.0) & (final_config_df['y_shift'] == -25.0)
+
+# %%
+final_config_df[selection]
+
+# %%
+final_config_df[selection][[*list(parameters.keys()),'uuid']]
+
+# %%
+list_of_tuples = [(*row[parameters.keys()], row['uuid'][0]) 
+    for _, row in final_config_df[selection][[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+list_of_tuples
+
+# %%
+final_config_datasets = [row.to_dict() for _, row in final_config_df[selection][[*list(parameters.keys()),'uuid']].iterrows()]
+
+# %%
+for d in final_config_datasets:
+    d['uuid'] = d['uuid'][0]
+
+# %%
+final_config_datasets
 
 # %% [markdown]
 # ## Overview on lateral sliding

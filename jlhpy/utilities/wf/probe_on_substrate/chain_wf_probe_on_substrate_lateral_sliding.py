@@ -25,8 +25,9 @@ class ProbeOnSubstrateWrapJoinEquilibrationAndLateralSliding(ChainWorkflowGenera
     """Run lateral sliding production with LAMMPS.
 
     Concatenates
-    - LAMMPSProbeLateralSliding
+    - WrapJoinDataFile
     - LAMMPSEquilibrationDPD
+    - LAMMPSProbeLateralSliding
     - ProbeAnalysis3D
     """
 
@@ -34,6 +35,22 @@ class ProbeOnSubstrateWrapJoinEquilibrationAndLateralSliding(ChainWorkflowGenera
         sub_wf_components = [
             WrapJoinDataFile,
             LAMMPSEquilibrationDPD,
+            LAMMPSProbeLateralSliding,
+            ProbeAnalysis3D,
+        ]
+        super().__init__(*args, sub_wf_components=sub_wf_components, **kwargs)
+
+
+class ProbeOnSubstrateLateralSliding(ChainWorkflowGenerator):
+    """Run lateral sliding production with LAMMPS.
+
+    Concatenates
+    - LAMMPSProbeLateralSliding
+    - ProbeAnalysis3D
+    """
+
+    def __init__(self, *args, **kwargs):
+        sub_wf_components = [
             LAMMPSProbeLateralSliding,
             ProbeAnalysis3D,
         ]

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+# %%
 
 # # 41 CTAB on AU 111 21x12x2 LAMMPS
 
@@ -16,7 +17,7 @@
 
 # ### Jupyter Notebook-related "magic" commands
 
-# In[1]:
+# %%
 
 
 ## preferred installation method for netcdf on NEMO locally:
@@ -30,26 +31,26 @@
 # pip install --user --global-option=build_ext --global-option="-L${MPI_INC_DIR}" netCDF4
 
 
-# In[2]:
+# %%
 
 
 get_ipython().run_line_magic('lsmagic', '# notebook commands')
 
 
-# In[3]:
+# %%
 
 
 # list environment variables, like bash's 'printenv'
 get_ipython().run_line_magic('env', '')
 
 
-# In[4]:
+# %%
 
 
 get_ipython().run_line_magic('load_ext', 'memory_profiler')
 
 
-# In[5]:
+# %%
 
 
 # for some reason, nglview sometimes changes into some temporary directory
@@ -59,7 +60,7 @@ get_ipython().run_line_magic('load_ext', 'memory_profiler')
 
 # ### Imports
 
-# In[5]:
+# %%
 
 
 # system basics
@@ -68,7 +69,7 @@ absolute_prefix = os.getcwd() # might be handy to get back to the initial workin
 os.sep # '\' ond windows and '/' on unix-like
 
 
-# In[6]:
+# %%
 
 
 # data analysis 
@@ -91,7 +92,7 @@ import matplotlib.pyplot as plt
 import ipywidgets # just for jupyter notebooks
 
 
-# In[7]:
+# %%
 
 
 import ipyparallel as ipp
@@ -99,13 +100,13 @@ import ipyparallel as ipp
 
 # ### Global options
 
-# In[8]:
+# %%
 
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[9]:
+# %%
 
 
 # matplotlib settings
@@ -126,7 +127,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure titlex
 plt.rcParams["figure.figsize"] = (11,7) # the standard figure size
 
 
-# In[10]:
+# %%
 
 
 # numpy truncates the output of large array above the treshold length
@@ -135,7 +136,7 @@ np.set_printoptions(threshold=100)
 
 # ### Definition of helper functions
 
-# In[11]:
+# %%
 
 
 # conversion units, only for better readability
@@ -143,13 +144,13 @@ fs = 1e-15 # s
 ps = 1e-12 # s
 
 
-# In[12]:
+# %%
 
 
 AA = 1e-10 # m
 
 
-# In[13]:
+# %%
 
 
 def fullprint(*args, **kwargs):
@@ -163,7 +164,7 @@ def fullprint(*args, **kwargs):
     np.set_printoptions(**opt)
 
 
-# In[14]:
+# %%
 
 
 def runningMeanFast(x, N):
@@ -171,7 +172,7 @@ def runningMeanFast(x, N):
     return np.convolve(x, np.ones((N,))/N)[(N-1):]
 
 
-# In[15]:
+# %%
 
 
 def running_mean(x, N):
@@ -180,7 +181,7 @@ def running_mean(x, N):
     return (cumsum[N:] - cumsum[:-N]) / float(N)
 
 
-# In[16]:
+# %%
 
 
 def subplotPosition(rows,cols):
@@ -220,7 +221,7 @@ def addSubplot(x, y,
     return fig, ax
 
 
-# In[17]:
+# %%
 
 
 def makeThermoPlotsFromDataFrame(df, fig=None,
@@ -275,7 +276,7 @@ def makeThermoPlotsFromDataFrame(df, fig=None,
     return fig
 
 
-# In[18]:
+# %%
 
 
 def makeRollingAverageThermoPlotsFromDataFrame(df, fig=None,
@@ -332,7 +333,7 @@ def makeRollingAverageThermoPlotsFromDataFrame(df, fig=None,
     return fig
 
 
-# In[19]:
+# %%
 
 
 # ASE by default infers elements from LAMMPS atom types, in our case they are unrelated
@@ -383,7 +384,7 @@ def inferTypes2NumbersFromPdbAndLmp(pdb_file,lmp_data_file):
     return types2numbers, types2numbers_array
 
 
-# In[20]:
+# %%
 
 
 # helper function needs:
@@ -433,7 +434,7 @@ def piecewiseRDF(traj, atom_indices, element_tuples,
     return listOfRdfLists, rdf_x, rdfObj
 
 
-# In[21]:
+# %%
 
 
 # code snippet for neat plotting of all time-segemtn rdfs
@@ -478,7 +479,7 @@ def plotPiecewiceRdf(rdf_x, listOfRdfLists, legend=None,
     return fig
 
 
-# In[22]:
+# %%
 
 
 def piecewiseAveragedDistance(traj, reference_index, atom_indices,
@@ -505,7 +506,7 @@ def piecewiseAveragedDistance(traj, reference_index, atom_indices,
     return averageDistance, t
 
 
-# In[23]:
+# %%
 
 
 def piecewiseAveragedComComDistance(traj, group1_indices, group2_indices,
@@ -533,7 +534,7 @@ def piecewiseAveragedComComDistance(traj, group1_indices, group2_indices,
     return averageDistance, t
 
 
-# In[24]:
+# %%
 
 
 def comDisplacement(traj, atom_indices, dt = 10):
@@ -551,7 +552,7 @@ def comDisplacement(traj, atom_indices, dt = 10):
     return displacement
 
 
-# In[25]:
+# %%
 
 
 def evaluateDisplacement(displacement, dt = 10, window = 500):
@@ -614,7 +615,7 @@ def evaluateDisplacement(displacement, dt = 10, window = 500):
 
 # ## Energy evaluations with pandas
 
-# In[58]:
+# %%
 
 
 dt = 2e-15 # s, 2 fs timestep
@@ -622,62 +623,62 @@ dt = 2e-15 # s, 2 fs timestep
 
 # ### Minimization
 
-# In[59]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '-lh *minimization.log')
 
 
-# In[60]:
+# %%
 
 
 get_ipython().system('./extract_thermo.sh *minimization.log 01_minimization_thermo.out')
 
 
-# In[61]:
+# %%
 
 
 minimization_thermo_file = absolute_prefix + os.sep + '01_minimization_thermo.out'
 
 
-# In[62]:
+# %%
 
 
 minimization_thermo_pd = pd.read_csv(minimization_thermo_file,delim_whitespace=True)
 
 
-# In[63]:
+# %%
 
 
 minimization_thermo_pd.set_index("Step",inplace=True)
 
 
-# In[64]:
+# %%
 
 
 minimization_thermo_pd
 
 
-# In[65]:
+# %%
 
 
 makeThermoPlotsFromDataFrame(minimization_thermo_pd);
 
 
-# In[66]:
+# %%
 
 
 minimization_thermo_pd[["E_long"]][2:].plot()
 
 
-# In[67]:
+# %%
 
 
 # The total energy decreases, but intramolecular energy increases during minimization:
 minimization_thermo_pd[["PotEng","E_pair"]][2:].plot()
 
 
-# In[68]:
+# %%
 
 
 # double-check: total potential energy of system minus non-bonded energy (LJ & Coulomb) 
@@ -685,32 +686,32 @@ minimization_thermo_pd[["PotEng","E_pair"]][2:].plot()
 intramolecularEnergyValidation = minimization_thermo_pd["PotEng"] - minimization_thermo_pd["E_pair"]
 
 
-# In[69]:
+# %%
 
 
 intramolecularEnergyValidationDiff = (intramolecularEnergyValidation - minimization_thermo_pd["E_intramolecular"])
 
 
-# In[70]:
+# %%
 
 
 intramolecularEnergyValidationDiff.max()
 
 
-# In[71]:
+# %%
 
 
 intramolecularEnergyValidationDiff.abs().max() / intramolecularEnergyValidation.min()
 
 
-# In[72]:
+# %%
 
 
 (intramolecularEnergyValidation - minimization_thermo_pd["E_intramolecular"])[1:].plot()
 # obviously "equal" (up to a tiny fraction)
 
 
-# In[73]:
+# %%
 
 
 # descent to steep t the first few steps, excluded
@@ -719,50 +720,50 @@ makeThermoPlotsFromDataFrame(minimization_thermo_pd.iloc[2:].copy());
 
 # ### NVT equilibration
 
-# In[106]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '*nvtEquilibration.log')
 
 
-# In[107]:
+# %%
 
 
 get_ipython().system('./extract_thermo.sh *nvtEquilibration.log 02_nvtEquilibration_thermo.out')
 
 
-# In[108]:
+# %%
 
 
 nvtEquilibration_thermo_file = absolute_prefix + os.sep + '02_nvtEquilibration_thermo.out'
 
 
-# In[109]:
+# %%
 
 
 get_ipython().system('cat $nvtEquilibration_thermo_file | wc -l # count the lines in file, simple way for verification')
 # at 2500 steps and output every 10 steps ~ 250 steps, 251 frames, 1 header line
 
 
-# In[110]:
+# %%
 
 
 nvtEquilibration_thermo_pd = pd.read_csv(nvtEquilibration_thermo_file,delim_whitespace=True)
 
 
-# In[111]:
+# %%
 
 
 nvtEquilibration_thermo_pd.set_index("Step",inplace=True)
 
 
-# In[112]:
+# %%
 
 
 nvtEquilibration_thermo_pd
 
 
-# In[113]:
+# %%
 
 
 makeThermoPlotsFromDataFrame(nvtEquilibration_thermo_pd);
@@ -770,86 +771,86 @@ makeThermoPlotsFromDataFrame(nvtEquilibration_thermo_pd);
 
 # ### NPT equilibration
 
-# In[114]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '*nptEquilibration.log')
 
 
-# In[115]:
+# %%
 
 
 get_ipython().system('./extract_thermo.sh *nptEquilibration.log 03_nptEquilibration_thermo.out')
 
 
-# In[116]:
+# %%
 
 
 nptEquilibration_thermo_file = absolute_prefix + os.sep + '03_nptEquilibration_thermo.out'
 
 
-# In[117]:
+# %%
 
 
 nptEquilibration_thermo_pd = pd.read_csv(nptEquilibration_thermo_file,delim_whitespace=True)
 
 
-# In[118]:
+# %%
 
 
 nptEquilibration_thermo_pd.set_index("Step",inplace=True)
 
 
-# In[119]:
+# %%
 
 
 nptEquilibration_thermo_pd
 
 
-# In[120]:
+# %%
 
 
 nptEquilibration_thermo_consecutive_pd = nptEquilibration_thermo_pd.copy()
 
 
-# In[121]:
+# %%
 
 
 nvtEquilibration_thermo_pd.index.max()
 
 
-# In[122]:
+# %%
 
 
 nptEquilibration_thermo_consecutive_pd.index = nptEquilibration_thermo_pd.index + nvtEquilibration_thermo_pd.index.max()
 
 
-# In[123]:
+# %%
 
 
 equilibration_pd = pd.concat([nvtEquilibration_thermo_pd,nptEquilibration_thermo_consecutive_pd])
 
 
-# In[124]:
+# %%
 
 
 equilibration_pd
 
 
-# In[125]:
+# %%
 
 
 makeThermoPlotsFromDataFrame(nptEquilibration_thermo_pd);
 
 
-# In[126]:
+# %%
 
 
 # show nvt and npt equilibration consecutively
 makeThermoPlotsFromDataFrame(equilibration_pd);
 
 
-# In[127]:
+# %%
 
 
 makeRollingAverageThermoPlotsFromDataFrame(equilibration_pd,window=10);
@@ -857,19 +858,19 @@ makeRollingAverageThermoPlotsFromDataFrame(equilibration_pd,window=10);
 
 # ### 1 ns NPT
 
-# In[128]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '-lh *_1ns_npt_01_nptProduction.log')
 
 
-# In[61]:
+# %%
 
 
 get_ipython().system('./extract_thermo.sh *_1ns_npt_01_nptProduction.log 05_1ns_nptProduction_thermo.out')
 
 
-# In[62]:
+# %%
 
 
 nptProduction_1ns_thermo_file = absolute_prefix + os.sep + '05_1ns_nptProduction_thermo.out'
@@ -877,25 +878,25 @@ nptProduction_1ns_thermo_pd = pd.read_csv(nptProduction_1ns_thermo_file,delim_wh
 nptProduction_1ns_thermo_pd.set_index("Step",inplace=True)
 
 
-# In[63]:
+# %%
 
 
 makeThermoPlotsFromDataFrame(nptProduction_1ns_thermo_pd.iloc[::100].copy()); # only every 100th data point
 
 
-# In[64]:
+# %%
 
 
 makeRollingAverageThermoPlotsFromDataFrame(nptProduction_1ns_thermo_pd,window=5000);
 
 
-# In[65]:
+# %%
 
 
 makeRollingAverageThermoPlotsFromDataFrame(nptProduction_1ns_thermo_pd,window=25000);
 
 
-# In[66]:
+# %%
 
 
 nptProduction_1ns_thermo_pd[["PotEng","E_pair"]].rolling(window=5000,center=True).mean().plot()
@@ -903,19 +904,19 @@ nptProduction_1ns_thermo_pd[["PotEng","E_pair"]].rolling(window=5000,center=True
 
 # ### 1 ns NVE
 
-# In[67]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '-lh *_1ns_nve_01_nveProduction.log')
 
 
-# In[68]:
+# %%
 
 
 get_ipython().system('./extract_thermo.sh *_1ns_nve_01_nveProduction.log 05_1ns_nveProduction_thermo.out')
 
 
-# In[69]:
+# %%
 
 
 nveProduction_1ns_thermo_file = absolute_prefix + os.sep + '05_1ns_nveProduction_thermo.out'
@@ -923,44 +924,44 @@ nveProduction_1ns_thermo_pd = pd.read_csv(nveProduction_1ns_thermo_file,delim_wh
 nveProduction_1ns_thermo_pd.set_index("Step",inplace=True)
 
 
-# In[70]:
+# %%
 
 
 makeThermoPlotsFromDataFrame(nveProduction_1ns_thermo_pd.iloc[::100].copy()); # only every 100th data point
 
 
-# In[71]:
+# %%
 
 
 makeRollingAverageThermoPlotsFromDataFrame(nveProduction_1ns_thermo_pd,window=5000);
 
 
-# In[72]:
+# %%
 
 
 makeRollingAverageThermoPlotsFromDataFrame(nveProduction_1ns_thermo_pd,window=25000);
 
 
-# In[73]:
+# %%
 
 
 nveProduction_1ns_thermo_pd[["PotEng","E_pair"]].rolling(window=5000,center=True).mean().plot()
 
 
-# In[74]:
+# %%
 
 
 ax = nveProduction_1ns_thermo_pd[["TotEng"]].rolling(window=5000,center=True).mean().plot()
 nptProduction_1ns_thermo_pd[["TotEng"]].rolling(window=5000,center=True).mean().plot(ax=ax)
 
 
-# In[75]:
+# %%
 
 
 nveProduction_1ns_thermo_pd[["TotEng"]].rolling(window=5000,center=True).mean().plot()
 
 
-# In[76]:
+# %%
 
 
 nptProduction_1ns_thermo_pd[["TotEng"]].rolling(window=5000,center=True).mean().plot()
@@ -968,19 +969,19 @@ nptProduction_1ns_thermo_pd[["TotEng"]].rolling(window=5000,center=True).mean().
 
 # ## Trajectory visualization with ASE and ParmEd
 
-# In[77]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '*.lammps')
 
 
-# In[78]:
+# %%
 
 
 get_ipython().run_line_magic('ls', '-lh *.nc')
 
 
-# In[79]:
+# %%
 
 
 # File names
@@ -1014,26 +1015,26 @@ lmp_netcdf = {
              }
 
 
-# In[80]:
+# %%
 
 
 # construct a dictionary-like atom type-> atom number array
 t2n, t2n_array = inferTypes2NumbersFromPdbAndLmp(pdb_file_initial_config, lmp_files['initial'])
 
 
-# In[81]:
+# %%
 
 
 t2n
 
 
-# In[82]:
+# %%
 
 
 t2n_array
 
 
-# In[83]:
+# %%
 
 
 np.array(ase.data.chemical_symbols)[t2n_array] # double-check against LAMMPS data file
@@ -1041,7 +1042,7 @@ np.array(ase.data.chemical_symbols)[t2n_array] # double-check against LAMMPS dat
 
 # ### Initial configuration from .pdb
 
-# In[84]:
+# %%
 
 
 # create atom selections for later post-processing:
@@ -1056,37 +1057,37 @@ ions               = [ a for a in struct_pdb_pmd.atoms if a.residue.name == 'ION
 ion_indices        = [ a.number - 1 for a in ions ] 
 
 
-# In[85]:
+# %%
 
 
 struct_pdb_pmd
 
 
-# In[86]:
+# %%
 
 
 surface_indices[0] # double check index begins at 0
 
 
-# In[87]:
+# %%
 
 
 len(surfactant_indices)
 
 
-# In[88]:
+# %%
 
 
 ions
 
 
-# In[89]:
+# %%
 
 
 ions[0].atomic_number # wrong: inferred C (carbon)
 
 
-# In[90]:
+# %%
 
 
 nv.show_parmed(struct_pdb_pmd)
@@ -1094,7 +1095,7 @@ nv.show_parmed(struct_pdb_pmd)
 
 # ### LAMMPS data files
 
-# In[94]:
+# %%
 
 
 # read frames of interest
@@ -1105,13 +1106,13 @@ for k,f in lmp_files.items():
         t2n_array[lmp_frames[k].get_atomic_numbers() ] )
 
 
-# In[1]:
+# %%
 
 
 lmp_frames['minimized']
 
 
-# In[96]:
+# %%
 
 
 # lmp_views = []
@@ -1123,19 +1124,19 @@ lmp_frames['minimized']
 #     lmp_views[-1].render_image()
 
 
-# In[97]:
+# %%
 
 
 # vbox = ipywidgets.VBox(lmp_views)
 
 
-# In[98]:
+# %%
 
 
 # vbox
 
 
-# In[99]:
+# %%
 
 
 # frames stripped of all oxygen & hydrogen:
@@ -1151,19 +1152,19 @@ for k,f in lmp_frames.items():
     lmp_naked_frames[k] = g.copy()
 
 
-# In[100]:
+# %%
 
 
 lmp_naked_frames["nvtEquilibrated"]
 
 
-# In[101]:
+# %%
 
 
 lmp_frames["nvtEquilibrated"]
 
 
-# In[102]:
+# %%
 
 
 lmp_views = []
@@ -1175,13 +1176,13 @@ for k, f in lmp_naked_frames.items():
     lmp_views[-1].render_image()
 
 
-# In[103]:
+# %%
 
 
 vbox = ipywidgets.VBox(lmp_views)
 
 
-# In[104]:
+# %%
 
 
 vbox
@@ -1189,7 +1190,7 @@ vbox
 
 # ### LAMMPS NETCDF trajectories
 
-# In[106]:
+# %%
 
 
 # lmp_trajectrories = {}
@@ -1201,13 +1202,13 @@ vbox
 #         f.center()
 
 
-# In[107]:
+# %%
 
 
 # lmp_netcdf['nvtEquilibration']
 
 
-# In[108]:
+# %%
 
 
 # # trial
@@ -1223,7 +1224,7 @@ vbox
 # traj.close()
 
 
-# In[109]:
+# %%
 
 
 lmp_trajectrories = {}
@@ -1242,31 +1243,31 @@ for k,t in lmp_netcdf.items():
 get_ipython().run_line_magic('memit', '')
 
 
-# In[110]:
+# %%
 
 
 get_ipython().run_line_magic('memit', '')
 
 
-# In[116]:
+# %%
 
 
 len(lmp_trajectrories['nvtEquilibration'])
 
 
-# In[117]:
+# %%
 
 
 view(lmp_trajectrories['nvtEquilibration'], viewer='ase') # opens ASE GUI
 
 
-# In[118]:
+# %%
 
 
 #nv.show_asetraj(lmp_trajectrories['npt100ps'])
 
 
-# In[119]:
+# %%
 
 
 # Several problems with nglview:
@@ -1274,7 +1275,7 @@ view(lmp_trajectrories['nvtEquilibration'], viewer='ase') # opens ASE GUI
 #  2) even with displayed gui, not clear how to activate
 
 
-# In[120]:
+# %%
 
 
 lmp_trajectrories['npt1ns'][0]
@@ -1282,7 +1283,7 @@ lmp_trajectrories['npt1ns'][0]
 
 # ### LAMMPS trajectories, stripped of solvent
 
-# In[121]:
+# %%
 
 
 get_ipython().run_line_magic('memit', '')
@@ -1297,49 +1298,49 @@ for k in lmp_trajectrories:
         lmp_naked_trajectrories[k].append(g)
 
 
-# In[122]:
+# %%
 
 
 trajectoryView = nv.show_asetraj(lmp_naked_trajectrories['npt1ns'][::100])
 
 
-# In[123]:
+# %%
 
 
 #trajectoryView = nv.show_asetraj(lmp_naked_trajectrories['nvtEquilibration'][::100])
 
 
-# In[124]:
+# %%
 
 
 trajectoryView.remove_ball_and_stick()
 
 
-# In[125]:
+# %%
 
 
 trajectoryView.add_spacefill() # try a different representation sytle
 
 
-# In[126]:
+# %%
 
 
 trajectoryView
 
 
-# In[168]:
+# %%
 
 
 view(lmp_naked_trajectrories['npt1ns'], viewer='ase') # opens ASE GUI
 
 
-# In[169]:
+# %%
 
 
 view(lmp_naked_trajectrories['nvtEquilibration'], viewer='ngl') # opens ASE GUI
 
 
-# In[107]:
+# %%
 
 
 # Several problems with nglview:
@@ -1352,74 +1353,74 @@ view(lmp_naked_trajectrories['nvtEquilibration'], viewer='ngl') # opens ASE GUI
 
 # #### Preparation 
 
-# In[127]:
+# %%
 
 
 # create a subdir from within the notebook
 get_ipython().run_line_magic('mkdir', 'png')
 
 
-# In[128]:
+# %%
 
 
 traj = lmp_naked_trajectrories['npt1ns']
 
 
-# In[129]:
+# %%
 
 
 nv.show_ase(traj[200])
 
 
-# In[130]:
+# %%
 
 
 # from ~ frame 3500 to the end ~ means
 
 
-# In[131]:
+# %%
 
 
 totalFramesAvailable = 5000
 
 
-# In[132]:
+# %%
 
 
 desiredVideoDuration = 30 # s
 
 
-# In[133]:
+# %%
 
 
 framesPerSecond = 30 # s^-1
 
 
-# In[134]:
+# %%
 
 
 neededFrames = desiredVideoDuration*framesPerSecond
 
 
-# In[135]:
+# %%
 
 
 neededFrames
 
 
-# In[136]:
+# %%
 
 
 every_nth = np.ceil(totalFramesAvailable / neededFrames).astype(int)
 
 
-# In[137]:
+# %%
 
 
 every_nth
 
 
-# In[140]:
+# %%
 
 
 png_prefix = absolute_prefix + os.sep + 'png' + os.sep + 'traj_1ns'
@@ -1427,13 +1428,13 @@ png_prefix = absolute_prefix + os.sep + 'png' + os.sep + 'traj_1ns'
 
 # #### Orientation and bounding box settings by trial & error
 
-# In[148]:
+# %%
 
 
 f = traj[0].copy()
 
 
-# In[149]:
+# %%
 
 
 # find a desired orientation
@@ -1444,49 +1445,49 @@ f = traj[0].copy()
 # strange, somehow opposite behavior with "in-notebook" viewer and png renderer
 
 
-# In[150]:
+# %%
 
 
 f.rotate(-60,'x', rotate_cell=False)
 
 
-# In[151]:
+# %%
 
 
 f.rotate(30,'y', rotate_cell=False)
 
 
-# In[152]:
+# %%
 
 
 view(f,viewer='ngl')
 
 
-# In[389]:
+# %%
 
 
 nv.show_ase(f)
 
 
-# In[390]:
+# %%
 
 
 cell = f.get_cell()
 
 
-# In[391]:
+# %%
 
 
 cell
 
 
-# In[158]:
+# %%
 
 
 bbox = [-20, 20, 80, 120 ]
 
 
-# In[159]:
+# %%
 
 
 # one trial
@@ -1511,13 +1512,13 @@ ase.io.write(png_prefix + '_test.png', f, show_unit_cell=False,
 
 # #### Batch rendering
 
-# In[160]:
+# %%
 
 
 bbox = [-20, 20, 80, 120 ]
 
 
-# In[162]:
+# %%
 
 
 # make a movie
@@ -1540,38 +1541,38 @@ for i,g in enumerate(traj[::every_nth]):
 #    ffmpeg -r 30 -f image2 -i "traj_1ns_%05d.png" -vcodec libx264 -crf 25 -pix_fmt yuv420p "traj_1ns.mp4
 
 
-# In[143]:
+# %%
 
 
 # operating some bash commands from within jupyter nb
 get_ipython().run_line_magic('cd', 'png')
 
 
-# In[144]:
+# %%
 
 
 group_ws = get_ipython().run_line_magic('env', 'GROUP_WS')
 
 
-# In[ ]:
+# %%
 
 
 group_ws
 
 
-# In[ ]:
+# %%
 
 
 get_ipython().system('find $group_ws -name ffmpeg')
 
 
-# In[ ]:
+# %%
 
 
 get_ipython().run_line_magic('pwd', '')
 
 
-# In[163]:
+# %%
 
 
 get_ipython().run_cell_magic('bash', '', 'source \'/work/ws/nemo/fr_lp1029-IMTEK_SIMULATION-0/local_Nov17/env.sh\'\ncd /work/ws/nemo/fr_jh1130-201708-0/jobs/lmplab/ctab/201807/1_CTAB_on_AU_21x12x2_netcdf/png\nffmpeg -r 30 -f image2 -i "traj_1ns_%05d.png" -vcodec libx264 -crf 25 -pix_fmt yuv420p "traj_1ns.mp4"')
@@ -1581,32 +1582,32 @@ get_ipython().run_cell_magic('bash', '', 'source \'/work/ws/nemo/fr_lp1029-IMTEK
 
 # ### 4.0. Index selections
 
-# In[138]:
+# %%
 
 
 # helps in selecting atom nmbers based on element abbreviations
 chem_sym = np.array(ase.data.chemical_symbols)
 
 
-# In[139]:
+# %%
 
 
 sulfur_index = [ a.number - 1 for a in surfactant if a.name == 'S' ][0]
 
 
-# In[140]:
+# %%
 
 
 tail_carbon_index = [ a.number - 1 for a in surfactant if a.name == 'C12' ][0]
 
 
-# In[141]:
+# %%
 
 
 sulfur_index
 
 
-# In[142]:
+# %%
 
 
 tail_carbon_index
@@ -1614,7 +1615,7 @@ tail_carbon_index
 
 # ### 4.1. Headgroup, Tailgroud - Gold RDF
 
-# In[143]:
+# %%
 
 
 # Quoted from https://wiki.fysik.dtu.dk/asap/Radial%20Distribution%20Functions
@@ -1686,7 +1687,7 @@ for nStart in range(0,absoluteEnd,nSegment):
     rdfTailCarbonGoldList.append(rdfTailCarbonGold)
 
 
-# In[176]:
+# %%
 
 
 # code snippet for neat plotting of all time-segemtn rdfs
@@ -1712,7 +1713,7 @@ fig.tight_layout()
 
 # ### 4.2. head group sulfur, tail group carbon - water RDF
 
-# In[177]:
+# %%
 
 
 # Element tuples
@@ -1721,26 +1722,26 @@ element_tuples = [
     ( np.where(chem_sym == 'C')[0][0], np.where(chem_sym == 'O')[0][0] ) ]
 
 
-# In[178]:
+# %%
 
 
 element_tuples # in atomic numbers
 
 
-# In[179]:
+# %%
 
 
 surfactantSolventIndicesOfInterest = water_indices + [ sulfur_index ] + [ tail_carbon_index ]
 
 
-# In[180]:
+# %%
 
 
 surfactantSolventRDFs, surfactantSolventRDFx, surfactantSolventRDFobj = piecewiseRDF(
     lmp_trajectrories['npt1ns'], surfactantSolventIndicesOfInterest, element_tuples)
 
 
-# In[181]:
+# %%
 
 
 plotPiecewiceRdf(surfactantSolventRDFx, surfactantSolventRDFs, 
@@ -1749,7 +1750,7 @@ plotPiecewiceRdf(surfactantSolventRDFx, surfactantSolventRDFs,
 
 # ### 4.3. Sodium counterion RDF
 
-# In[182]:
+# %%
 
 
 # Element tuples
@@ -1760,13 +1761,13 @@ counterionRdf_element_tuples = [
     ( np.where(chem_sym == 'Na')[0][0], np.where(chem_sym == 'Au')[0][0] ) ]
 
 
-# In[183]:
+# %%
 
 
 counterionRdf_element_tuples
 
 
-# In[184]:
+# %%
 
 
 counterionRdfLabels = [ "Na+ counterion - SDS head sulfur RDF", 
@@ -1775,33 +1776,33 @@ counterionRdfLabels = [ "Na+ counterion - SDS head sulfur RDF",
                         "Na+ counterion - surface gold RDF"]
 
 
-# In[185]:
+# %%
 
 
 counterionRdfIndicesOfInterest = water_indices + surface_indices +     ion_indices + [ sulfur_index ] + [ tail_carbon_index ]
 
 
-# In[186]:
+# %%
 
 
 counterionRDFs, counterionRDFx, counterionRDFobj = piecewiseRDF(
     lmp_trajectrories['npt1ns'], counterionRdfIndicesOfInterest, counterionRdf_element_tuples)
 
 
-# In[187]:
+# %%
 
 
 plotPiecewiceRdf(counterionRDFx, counterionRDFs, legend= counterionRdfLabels);
 
 
-# In[189]:
+# %%
 
 
 plotPiecewiceRdf(counterionRDFx, counterionRDFs[0:2], 
                  legend= (counterionRdfLabels[0:2]));
 
 
-# In[190]:
+# %%
 
 
 plotPiecewiceRdf(counterionRDFx, counterionRDFs[2:], 
@@ -1813,19 +1814,19 @@ plotPiecewiceRdf(counterionRDFx, counterionRDFs[2:],
 # ### 5.1. Headgroup - gold distance
 # Head approaches surfaces, apparently "stepwise"
 
-# In[191]:
+# %%
 
 
 traj = lmp_trajectrories['npt1ns']
 
 
-# In[192]:
+# %%
 
 
 traj[0][surfactant_indices].get_atomic_numbers()
 
 
-# In[193]:
+# %%
 
 
 averageDistanceS2Au, averageDistanceS2AuTimes = piecewiseAveragedDistance(traj,
@@ -1834,25 +1835,25 @@ averageDistanceS2Au, averageDistanceS2AuTimes = piecewiseAveragedDistance(traj,
                                 nSegment=50)
 
 
-# In[194]:
+# %%
 
 
 len(averageDistanceS2AuTimes)
 
 
-# In[195]:
+# %%
 
 
 averageDistanceS2Au.shape
 
 
-# In[196]:
+# %%
 
 
 distanceLabels = ['x', 'y', 'z']
 
 
-# In[197]:
+# %%
 
 
 distanceFig = plt.figure()
@@ -1864,19 +1865,19 @@ plt.xlabel("time t / ps")
 plt.ylabel(r'Distance $\frac{r}{\AA}$')
 
 
-# In[198]:
+# %%
 
 
 traj = lmp_trajectrories['npt1ns']
 
 
-# In[199]:
+# %%
 
 
 traj[0][surfactant_indices].get_atomic_numbers()
 
 
-# In[201]:
+# %%
 
 
 # slight decrease in potential in comparison with approach towards surface
@@ -1884,26 +1885,26 @@ traj[0][surfactant_indices].get_atomic_numbers()
 nptProduction_1ns_thermo_pd[["PotEng","E_pair"]].rolling(window=5000,center=True).mean().plot()
 
 
-# In[202]:
+# %%
 
 
 nptProduction_1ns_thermo_pd
 
 
-# In[203]:
+# %%
 
 
 nptProduction_1ns_thermo_pd[["E_intramolecular"]].rolling(window=5000,center=True).mean().plot()
 
 
-# In[204]:
+# %%
 
 
 ax = nptProduction_1ns_thermo_pd[["E_intramolecular"]].plot()
 nptProduction_1ns_thermo_pd[["E_intramolecular"]].rolling(window=5000,center=True).mean().plot(ax=ax)
 
 
-# In[205]:
+# %%
 
 
 # running average, non-bonded energy
@@ -1911,7 +1912,7 @@ ax = nptProduction_1ns_thermo_pd[["E_pair"]].plot()
 nptProduction_1ns_thermo_pd[["E_pair"]].rolling(window=10000,center=True).mean().plot(ax=ax)
 
 
-# In[206]:
+# %%
 
 
 # running average, total energy
@@ -1919,7 +1920,7 @@ ax = nptProduction_1ns_thermo_pd[["TotEng"]].plot()
 nptProduction_1ns_thermo_pd[["TotEng"]].rolling(window=10000,center=True).mean().plot(ax=ax)
 
 
-# In[207]:
+# %%
 
 
 # running average, total energy
@@ -1930,7 +1931,7 @@ nptProduction_1ns_thermo_pd[["PotEng"]].rolling(window=10000,center=True).mean()
 # ### 5.2. Tailgroup - gold distance
 # z - direction: does not change much
 
-# In[210]:
+# %%
 
 
 averageDistanceTailC2Au, averageDistanceTailC2AuTimes = piecewiseAveragedDistance(traj,
@@ -1939,7 +1940,7 @@ averageDistanceTailC2Au, averageDistanceTailC2AuTimes = piecewiseAveragedDistanc
                                 nSegment=50)
 
 
-# In[211]:
+# %%
 
 
 for i in range(0,3):
@@ -1952,7 +1953,7 @@ plt.ylabel(r'Distance $\frac{r}{\AA}$')
 
 # ### 5.3. Surface COM - Surfactant COM distance
 
-# In[212]:
+# %%
 
 
 averageDistanceComCom, averageDistanceComComTimes = piecewiseAveragedComComDistance(traj,
@@ -1960,7 +1961,7 @@ averageDistanceComCom, averageDistanceComComTimes = piecewiseAveragedComComDista
                                 nSegment=50)
 
 
-# In[213]:
+# %%
 
 
 for i in range(0,3):
@@ -1971,7 +1972,7 @@ plt.xlabel("time t / ps")
 plt.ylabel(r'Distance $\frac{r}{\AA}$')
 
 
-# In[215]:
+# %%
 
 
 # for comparison: Headgroup - surface distance: 
@@ -1980,7 +1981,7 @@ distanceFig
 
 # ### SDS chain length
 
-# In[216]:
+# %%
 
 
 averageChainLength, averageChainLengthTimes = piecewiseAveragedDistance(traj,
@@ -1989,19 +1990,19 @@ averageChainLength, averageChainLengthTimes = piecewiseAveragedDistance(traj,
                                 nSegment=50)
 
 
-# In[217]:
+# %%
 
 
 np.linalg.norm(averageChainLength,axis=0)
 
 
-# In[218]:
+# %%
 
 
 np.linalg.norm(averageChainLength,axis=0).shape
 
 
-# In[219]:
+# %%
 
 
 plt.plot( averageChainLengthTimes*0.2, 
@@ -2014,85 +2015,85 @@ plt.ylabel(r'Distance $\frac{r}{\AA}$')
 
 # ## MSD and diffusivities
 
-# In[220]:
+# %%
 
 
 dt
 
 
-# In[221]:
+# %%
 
 
 T = 1e-9 # 1 ns
 
 
-# In[222]:
+# %%
 
 
 Nf = len(traj) - 1 # number of stored frames, corresponds to 1ns
 
 
-# In[223]:
+# %%
 
 
 Nf
 
 
-# In[224]:
+# %%
 
 
 Ns = T/dt # number of steps
 
 
-# In[225]:
+# %%
 
 
 Ns
 
 
-# In[226]:
+# %%
 
 
 StepsPerFrame = Ns / Nf
 
 
-# In[227]:
+# %%
 
 
 StepsPerFrame
 
 
-# In[228]:
+# %%
 
 
 TimePerFrame = StepsPerFrame*dt
 
 
-# In[229]:
+# %%
 
 
 TimePerFrame
 
 
-# In[235]:
+# %%
 
 
 # displacements over fixed time spans, i.e. from each frame to the 50th or 5th following frame
 
 
-# In[230]:
+# %%
 
 
 displacement10ps = comDisplacement(traj, surfactant_indices, dt=50)
 
 
-# In[231]:
+# %%
 
 
 displacement1ps = comDisplacement(traj, surfactant_indices, dt=5)
 
 
-# In[232]:
+# %%
 
 
 # instead of averaging over many trajectories, we average over N time-wise close frames-frame displacements
@@ -2103,13 +2104,13 @@ evaluateDisplacement(displacement10ps, dt=50);
 # during approach towards surface
 
 
-# In[233]:
+# %%
 
 
 evaluateDisplacement(displacement1ps, dt=5);
 
 
-# In[234]:
+# %%
 
 
 evaluateDisplacement(displacement1ps, dt=5, window=1000);
