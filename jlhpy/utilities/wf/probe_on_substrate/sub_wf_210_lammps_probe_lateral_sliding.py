@@ -858,8 +858,8 @@ class LAMMPSRecoverableProbeLateralSlidingMain(WorkflowGenerator):
             fts_detour, step_label,
             files_in=files_in,
             files_out=files_out,
-            category=self.hpc_specs['fw_queue_category'],
-            queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults']
+            category=self.hpc_specs['fw_noqueue_category'],
+            # queueadapter=self.hpc_specs['single_core_job_queueadapter_defaults']
         )
 
         wf_detour = Workflow([fw_detour])
