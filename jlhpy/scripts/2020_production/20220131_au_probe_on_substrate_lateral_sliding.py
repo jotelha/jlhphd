@@ -133,64 +133,68 @@ index_file_input_datasets = [
   'uuid': 'c4f94979-f778-4d84-b779-d3de7be4f8c5'}
 ]
 
-# y = 0 only
-probe_on_substrate_input_datasets = [
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 35.0,
-  'uuid': 'da653b6f-d472-406b-a1e4-23461a00577f'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 5.0,
-  'uuid': 'f5c52335-0b9a-45af-b921-67715486f626'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 50.0,
-  'uuid': 'b8e91e45-393b-40b9-b909-d57abfe6e385'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 25.0,
-  'uuid': '4efada58-7387-4da0-9896-eeb7db182527'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 10.0,
-  'uuid': 'dd0311ab-c999-4cdb-9504-a6fb45c6935a'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
+# x = 0, y = 0 only
+probe_on_substrate_input_datasets = [{
+  'nmolecules': 916,
+  'x_shift': 0.0,
   'y_shift': 0.0,
   'distance': 30.0,
-  'uuid': '5f67af8a-bfb1-4d81-9f38-c4c6382a7f12'},
+  'uuid': 'b96138c1-2614-4cd0-a9ff-95c0d347b917'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
+  'x_shift': 0.0,
   'y_shift': 0.0,
-  'distance': 40.0,
-  'uuid': '58d27921-b7ef-4c47-a721-de825e0e91dc'},
+  'distance': 10.0,
+  'uuid': '7af7c276-e76f-432b-83ad-fce2e7e79750'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
+  'x_shift': 0.0,
   'y_shift': 0.0,
   'distance': 20.0,
-  'uuid': '0cc5552d-5619-4aa3-a62d-6f61a176a0c1'},
+  'uuid': '0d4e17f4-cf3a-48ac-997b-eee069dba51d'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
+  'x_shift': 0.0,
   'y_shift': 0.0,
-  'distance': 45.0,
-  'uuid': 'd34eb00f-784d-461a-a2f1-adccf6ea47fe'},
+  'distance': 35.0,
+  'uuid': '09fca054-8aa7-456a-95e6-d20c78cebe58'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
+  'x_shift': 0.0,
   'y_shift': 0.0,
-  'distance': 15.0,
-  'uuid': 'c00c568e-adbf-4c78-9106-4e89a56b4eb4'},
+  'distance': 25.0,
+  'uuid': '5e054c3a-09d0-44c0-9782-bf7372cab78d'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 5.0,
+  'uuid': 'c18ce5ca-1414-4a70-8981-22348b1a6706'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 40.0,
+  'uuid': 'fa8ca88a-0e76-48e3-bbfe-79c9699d64e1'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
   'y_shift': 0.0,
   'distance': 0.0,
-  'uuid': 'f07b80e9-bbd4-45c7-a428-f811154fcadb'}
-]
+  'uuid': 'ea9e6e01-6289-453c-8dbd-668095dba943'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 45.0,
+  'uuid': '4650409c-9d76-44d9-a69f-8821f047d813'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 15.0,
+  'uuid': '17337917-3f31-4fdc-a878-c2d163fbaaac'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 50.0,
+  'uuid': '2e335fa2-4d3e-4678-bba2-eebde5ad9ffe'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': 0.0,
+  'distance': 25.0,
+  'uuid': '0d2d1ce6-1982-4b55-b287-a59788fea5a5'}]
 
 index_file_input_datasets_index_map = { (d["x_shift"], d["y_shift"]): i for i, d in enumerate(index_file_input_datasets) }
 
@@ -225,12 +229,12 @@ from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_lateral_s
 # index = probe_on_substrate_input_datasets_index_map[0,0,25.0]
 # In[25]:
     
-project_id = '2021-12-30-sds-on-au-111-probe-on-substrate-lateral-sliding'
+project_id = '2021-01-31-sds-on-au-111-probe-on-substrate-lateral-sliding'
 
 wf_list = []
 # for c, substrate_uuid, probe_uuid in probe_on_substrate_input_datasets:
 # c = 0.03
-for p in parameter_dict_list_to_rerun:
+for p in parameter_dict_list:
     wfg = ProbeOnSubstrateLateralSliding(
         project_id=project_id,
         
@@ -288,7 +292,7 @@ for p in parameter_dict_list_to_rerun:
                 'group': 'indenter',
             },
             'dtool_push': {
-                'dtool_target': '/p/project/hfr21/hoermann4/dtool/PRODUCTION/2021-12-30-sds-on-au-111-probe-on-substrate-lateral-sliding',
+                'dtool_target': '/p/project/hfr21/hoermann4/dtool/PRODUCTION/2021-01-31-sds-on-au-111-probe-on-substrate-lateral-sliding',
                 'remote_dataset': None,
             }
         }
@@ -300,68 +304,3 @@ for p in parameter_dict_list_to_rerun:
     
 # In[]:
     
-# 20220106: queued [0:5], queued [5:]
-
-# 20220108: failed due to fzzled parents not being updated in recovery task 
-#           when rerunning lmp task
-
-parameter_sets_to_rerun = [{'distance': 0.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 15.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 45.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 20.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 40.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 0.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 45.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 20.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 25.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 50.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 35.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 50.0,
-  'direction_of_linear_movement': 1}]
-
-parameter_dict_list_to_rerun = [
-    p for p in parameter_dict_list for q in parameter_sets_to_rerun 
-    if all([p[k] == q[k] for k in q.keys()])]

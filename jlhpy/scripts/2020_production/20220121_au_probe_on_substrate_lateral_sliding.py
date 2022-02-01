@@ -133,64 +133,64 @@ index_file_input_datasets = [
   'uuid': 'c4f94979-f778-4d84-b779-d3de7be4f8c5'}
 ]
 
-# y = 0 only
+# y = -25.0, x = 0.0 only
 probe_on_substrate_input_datasets = [
  {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 35.0,
-  'uuid': 'da653b6f-d472-406b-a1e4-23461a00577f'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 5.0,
-  'uuid': 'f5c52335-0b9a-45af-b921-67715486f626'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 50.0,
-  'uuid': 'b8e91e45-393b-40b9-b909-d57abfe6e385'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 25.0,
-  'uuid': '4efada58-7387-4da0-9896-eeb7db182527'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 10.0,
-  'uuid': 'dd0311ab-c999-4cdb-9504-a6fb45c6935a'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 30.0,
-  'uuid': '5f67af8a-bfb1-4d81-9f38-c4c6382a7f12'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 40.0,
-  'uuid': '58d27921-b7ef-4c47-a721-de825e0e91dc'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 20.0,
-  'uuid': '0cc5552d-5619-4aa3-a62d-6f61a176a0c1'},
- {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
   'distance': 45.0,
-  'uuid': 'd34eb00f-784d-461a-a2f1-adccf6ea47fe'},
+  'uuid': '6268f844-e4c0-40cd-adad-ee0cdfa53a71'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'distance': 15.0,
-  'uuid': 'c00c568e-adbf-4c78-9106-4e89a56b4eb4'},
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 35.0,
+  'uuid': '2b1e9079-8f95-44eb-89ba-c03b9bec440b'},
  {'nmolecules': 916,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 40.0,
+  'uuid': '5617a3f9-644d-46a3-a8cd-7dee6f48c0dc'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 5.0,
+  'uuid': 'd9a7d9a9-606f-4815-81a6-7e2f6c1f26d6'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 20.0,
+  'uuid': '9c100916-3686-404e-95aa-2eb0273934f3'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
   'distance': 0.0,
-  'uuid': 'f07b80e9-bbd4-45c7-a428-f811154fcadb'}
-]
+  'uuid': '620ae5db-9e36-4af4-8aaa-5b817b60b583'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 10.0,
+  'uuid': 'e5d12d2f-4db9-4636-bf28-33f1d59e4e7f'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 15.0,
+  'uuid': 'd06373e7-f9ab-4fcc-b326-d24db817b861'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 30.0,
+  'uuid': '2b09157a-f333-4425-a076-ae4ba78cedda'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 25.0,
+  'uuid': 'b67ed3ac-df55-449f-8c0f-22be948ab01e'},
+ {'nmolecules': 916,
+  'x_shift': 0.0,
+  'y_shift': -25.0,
+  'distance': 50.0,
+  'uuid': '59563459-f62e-46ce-867f-6369ac155dd2'}
+ ]
 
 index_file_input_datasets_index_map = { (d["x_shift"], d["y_shift"]): i for i, d in enumerate(index_file_input_datasets) }
 
@@ -225,12 +225,12 @@ from jlhpy.utilities.wf.probe_on_substrate.chain_wf_probe_on_substrate_lateral_s
 # index = probe_on_substrate_input_datasets_index_map[0,0,25.0]
 # In[25]:
     
-project_id = '2021-12-30-sds-on-au-111-probe-on-substrate-lateral-sliding'
+project_id = '2022-01-21-sds-on-au-111-probe-on-substrate-lateral-sliding'
 
 wf_list = []
 # for c, substrate_uuid, probe_uuid in probe_on_substrate_input_datasets:
 # c = 0.03
-for p in parameter_dict_list_to_rerun:
+for p in parameter_dict_list:
     wfg = ProbeOnSubstrateLateralSliding(
         project_id=project_id,
         
@@ -300,68 +300,4 @@ for p in parameter_dict_list_to_rerun:
     
 # In[]:
     
-# 20220106: queued [0:5], queued [5:]
-
-# 20220108: failed due to fzzled parents not being updated in recovery task 
-#           when rerunning lmp task
-
-parameter_sets_to_rerun = [{'distance': 0.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 15.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 45.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 20.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 40.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 1},
- {'distance': 0.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 45.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 20.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 25.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 50.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 35.0,
-  'x_shift': 25.0,
-  'y_shift': 0.0,
-  'direction_of_linear_movement': 0},
- {'distance': 10.0,
-  'x_shift': 25.0,
-  'y_shift': 50.0,
-  'direction_of_linear_movement': 1}]
-
-parameter_dict_list_to_rerun = [
-    p for p in parameter_dict_list for q in parameter_sets_to_rerun 
-    if all([p[k] == q[k] for k in q.keys()])]
+#
