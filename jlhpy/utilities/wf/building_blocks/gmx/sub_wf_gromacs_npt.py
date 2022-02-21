@@ -221,7 +221,10 @@ class GromacsNPTEquilibrationMain(WorkflowGenerator):
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_queue_category'],
-            queueadapter=self.hpc_specs['four_nodes_job_queueadapter_defaults'])
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults'])
+        # For unknown reason, GROMACS 2019.3 (JUWELS) throws segmentation fault
+        # when spread across multiple nodes in NVT equilibration. Hence,
+        # run on single node here
 
         fw_list.append(fw_gmx_mdrun)
 

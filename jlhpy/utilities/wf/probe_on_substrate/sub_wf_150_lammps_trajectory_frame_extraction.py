@@ -92,6 +92,7 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
                 store_stdout=True,
                 store_stderr=True,
                 env='imteksimpy',
+                fork=True
             ),
 
             # format netcdf2data command line parameter, end frame is exclusive, hence +1
@@ -105,6 +106,7 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
                 outputs=[
                     'metadata->step_specific->frame_extraction->netcdf2data_frames_parameter'
                 ],
+                fork=True
             ),
 
             # netcdf2data.py writes file named frame_0.lammps ... frame_n.lammps
@@ -114,6 +116,7 @@ class LAMMPSTrajectoryFrameExtractionMain(WorkflowGenerator):
                      {'key': 'metadata->step_specific->frame_extraction->netcdf2data_frames_parameter'},
                      'default.lammps', 'default.nc'],
                 env='python',
+                fork=True,
                 stderr_file='std.err',
                 stdout_file='std.out',
                 stdlog_file='std.log',

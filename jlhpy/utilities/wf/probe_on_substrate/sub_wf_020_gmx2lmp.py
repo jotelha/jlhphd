@@ -182,6 +182,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                     'metadata->system->box->height',
                 ],
                 env='mdanalysis',
+                fork=True,
                 propagate=True,
             )
         ]
@@ -217,6 +218,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                      '-o', 'out.gro',
                      '-pbc', 'res'],
                 env='python',
+                fork=True,
                 stdin_key='stdin',
                 store_stdout=True,
                 store_stderr=True,
@@ -336,6 +338,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 stdlog_file='gxm2pdb.log',
                 store_stdout=True,
                 store_stderr=True,
+                fork=True,
             ),
             ScriptTask.from_str(
                 'tar -czf segments.tar.gz {:s}'.format(pdb_segment_chunk_glob_pattern),
@@ -474,6 +477,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 outputs=['run->psfgen->segments'],
                 env='imteksimpy',
                 propagate=False,
+                fork=True,
             ),
             TemplateWriterTask({  # TODO: more context
                 'context': static_context,
@@ -486,7 +490,8 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                 cmd='vmd',
                 opt=['-eofexit', '-e', 'default.tcl'],
                 env='python',
-                fizzle_bad_rc=True)
+                fizzle_bad_rc=True,
+                fork=True)
         ]
 
         fw_psfgen = self.build_fw(
@@ -577,6 +582,7 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                     'run->charmm2lammps->opts->lz',
                 ],
                 propagate=False,
+                fork=True
             ),
             CmdTask(  # run charm2lammps
                 cmd='charmm2lammps.pl',
@@ -589,7 +595,8 @@ class CHARMM36GMX2LMPMain(WorkflowGenerator):
                     {'key': 'run->charmm2lammps->opts->lz'},
                 ],
                 env='python',
-                fizzle_bad_rc=True)
+                fizzle_bad_rc=True,
+                fork=True)
         ]
 
         # outfile of charmm2lammps should be .data and .in

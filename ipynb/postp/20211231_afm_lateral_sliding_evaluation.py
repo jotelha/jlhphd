@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.13.7
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -2797,6 +2797,13 @@ columns_of_interest
 
 # %%
 res_df.sort_values(columns_of_interest, inplace=True)
+
+# %%
+res_pivot = res_df.pivot_table(
+            values='f_storeUnconstrainedForcesAve_x', index=['lateral_distance'], columns=('x_shift','y_shift'))
+
+# %%
+res_pivot
 
 # %%
 legend_pattern = '''initial $(x,y,z) = ({x_shift:},{y_shift:},{distance:}) \mathrm{{\AA}}$, {direction:} direction'''

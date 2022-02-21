@@ -52,6 +52,7 @@ class ForeachPushStub(DefaultPushMixin, WorkflowGenerator):
                 ],
                 propagate=True,
                 env='imteksimpy',
+                fork=True,
             ),
         ]
         fw_retrieve_metadata = self.build_fw(

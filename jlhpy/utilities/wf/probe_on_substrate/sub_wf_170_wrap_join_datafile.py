@@ -228,6 +228,7 @@ class WrapJoinDataFileMain(WorkflowGenerator):
                 func=func_str,
                 args=['default.lammps', 'bb.yaml'],
                 env='imteksimpy',
+                fork=True,  # necessary to avoid "polluting" environment for subsequent CmdTask
             ),
             CmdTask(
                 cmd='vmd',

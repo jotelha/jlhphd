@@ -184,6 +184,7 @@ class SplitDatafileMain(WorkflowGenerator):
             cmd='lmp',
             opt=['-in', 'default.input'],
             env='python',
+            fork=True,
             stderr_file='std.err',
             stdout_file='std.out',
             stdlog_file='std.log',
