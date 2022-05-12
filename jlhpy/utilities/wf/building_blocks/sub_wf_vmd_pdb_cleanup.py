@@ -55,6 +55,7 @@ class PDBCleanupMain(WorkflowGenerator):
                 inputs=[input],
                 outputs=[output],
                 propagate=False,
+                fork=True, # otherwise module environment polluted, subsequent CmdTask fails
             ) for input, output in zip(resname_inputs, opt_keys)]
 
         fts_pdb_selresname = [
@@ -65,7 +66,8 @@ class PDBCleanupMain(WorkflowGenerator):
                 stdin_file='in.pdb',
                 stdout_file=pdb_output,
                 store_stdout=False,
-                store_stderr=False
+                store_stderr=False,
+                fork=True,
             ) for input_key, pdb_output in zip(opt_keys, pdb_names)
         ]
 
@@ -87,16 +89,19 @@ class PDBCleanupMain(WorkflowGenerator):
                 cmd='sed',
                 opt=['-nE', '/^END/!p', '-i', pdb_names[0]],
                 env='python',
+                fork=True,
             ),
             *[CmdTask(
                 cmd='sed',
                 opt=['-nE', '/^(CRYST|END)/!p', '-i', pdb_name],
                 env='python',
+                fork=True,
             ) for pdb_name in pdb_names[1:-1]],
             CmdTask(
                 cmd='sed',
                 opt=['-nE', '/^CRYST/!p', '-i', pdb_names[-1]],
                 env='python',
+                fork=True,
             )
         ]
 
@@ -110,7 +115,8 @@ class PDBCleanupMain(WorkflowGenerator):
                 env='python',
                 stdout_file='merged.pdb',
                 store_stdout=False,
-                store_stderr=False),
+                store_stderr=False,
+                fork=True),
             CmdTask(
                 cmd='pdb_reatom_99999',
                 opt=['-0'],  # start numbering at atomid 0
@@ -118,7 +124,8 @@ class PDBCleanupMain(WorkflowGenerator):
                 stdin_file='merged.pdb',
                 stdout_file='reatom.pdb',
                 store_stdout=False,
-                store_stderr=False),
+                store_stderr=False,
+                fork=True),
             CmdTask(
                 cmd='pdb_reres_9999',
                 opt=['-0'],  # start numbering at resid 0
@@ -127,7 +134,8 @@ class PDBCleanupMain(WorkflowGenerator):
                 stdout_file='reres.pdb',
                 store_stdout=False,
                 store_stderr=False,
-                fizzle_bad_rc=True),
+                fizzle_bad_rc=True,
+                fork=True),
             CmdTask(
                 cmd='pdb_chain',
                 env='python',
@@ -135,7 +143,8 @@ class PDBCleanupMain(WorkflowGenerator):
                 stdout_file='default.pdb',
                 store_stdout=False,
                 store_stderr=False,
-                fizzle_bad_rc=True),
+                fizzle_bad_rc=True,
+                fork=True),
             ]
 
         fw_pdb_cleanup = self.build_fw(
