@@ -217,7 +217,10 @@ class GromacsRelaxationMain(WorkflowGenerator):
             files_in=files_in,
             files_out=files_out,
             category=self.hpc_specs['fw_queue_category'],
-            queueadapter=self.hpc_specs['four_nodes_job_queueadapter_defaults'])
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults'])
+        # For unknown reason, GROMACS 2019.3 (JUWELS) throws segmentation fault
+        # when spread across multiple nodes in NVT equilibration. Hence,
+        # run on single node here
 
         fw_list.append(fw_gmx_mdrun)
 
@@ -258,12 +261,13 @@ class GromacsRelaxationMain(WorkflowGenerator):
             fizzle_bad_rc=True)]
 
         # as many spec as possible derived from fizzled parent
-        fw_gmx_mdrun_restart = Firework(fts_gmx_mdrun_restart,
-                                name=self.get_fw_label(step_label),
-                                spec={
-                                    '_files_in':  files_in,
-                                    '_files_out': files_out,
-                                })
+        fw_gmx_mdrun_restart = self.build_fw(
+            fts_gmx_mdrun_restart, step_label,
+            files_in=files_in,
+            files_out=files_out,
+            category=self.hpc_specs['fw_queue_category'],
+            queueadapter=self.hpc_specs['single_node_job_queueadapter_defaults']
+        )
 
         restart_wf = Workflow([fw_gmx_mdrun_restart])
 
