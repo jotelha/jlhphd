@@ -215,6 +215,12 @@ HPC_SPECS = {
             'ntasks':   48,
             'ntasks_per_node': 48,
         },
+        'high_mem_no_smt_single_node_job_queueadapter_defaults': {
+            'queue':    'mem192',
+            'walltime': '24:00:00',
+            'ntasks':   48,
+            'ntasks_per_node': 48,
+        },
         'no_smt_job_queueadapter_defaults': {
             'queue':    'batch',
             'walltime': '24:00:00',

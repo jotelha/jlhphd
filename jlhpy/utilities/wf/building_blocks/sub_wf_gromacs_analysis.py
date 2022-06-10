@@ -201,12 +201,14 @@ class GromacsParallelTrajectoryAnalysis(GromacsTrajectoryAnalysis):
                 fizzle_bad_rc=True,
             ))
 
+        # sometimes, will even fail with 'no_smt_single_node_job_queueadapter_defaults', likely due to memory limits,
+        # reduce number of tasks further or run on high mem partition
         fw_rdf = Firework(fts_rdf,
             name=self.get_fw_label(step_label),
             spec={
                 '_category': self.hpc_specs['fw_queue_category'],
                 '_queueadapter': {
-                    **self.hpc_specs['no_smt_single_node_job_queueadapter_defaults']  # no smt means only half the number of tasks, here due to memory limits
+                    **self.hpc_specs['high_mem_no_smt_single_node_job_queueadapter_defaults']  # no smt means only half the number of tasks, here due to memory limits
                 },
                 '_files_in':  files_in,
                 '_files_out': files_out,
