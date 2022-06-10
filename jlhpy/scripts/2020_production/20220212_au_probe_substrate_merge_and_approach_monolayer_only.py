@@ -438,6 +438,15 @@ for p in parameter_dict_list:
     fp_files = wfg.push_infiles(fp)
     wf = wfg.build_wf()
     wf_list.append(wf)
+
+# In[]:
+
+try:
+    os.makedirs(project_id)
+    os.chdir(project_id)
+except:
+    pass
+
     
 # In[]:
 
@@ -451,3 +460,5 @@ for i, wf in enumerate(wf_list):
 # 2022-02-12: queued wf_list[0:10]
 # 2022-02-21: failed for good: concentration 0.75, 3.0, both x_, y_shiift 0,0 requeued wf_list[8], wf_list[0]
 # 2022-02-21: also queued 10:20
+
+# will all fail due to error with recover task 
