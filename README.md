@@ -24,6 +24,7 @@ MD parameters are based upon [CHARMM36 Jul17 package, modified](https://github.c
 * `ref`:        reference data extracted from other publications
 * `regex`:      useful regular expressions
 * `vmd`:        VMD-executable tcl scripts and templates
+* `wf/scripts`: scripts that generated FireWorks workflows
  
 ## Overview on initial configuration preparation
 
