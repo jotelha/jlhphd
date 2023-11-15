@@ -1,314 +1,38 @@
 # Surfactant Adsorption Workflow
 
-## Content
+This repository contains input files and workflows underlying 
 
-- [Surfactant Adsorption Workflow](#surfactant-adsorption-workflow)
-  * [Content](#content)
-  * [Tree](#tree)
-  * [TODO](#todo)
-  * [Guidelines](#guidelines)
-  * [Software requirements](#software-requirements)
-  * [Overview](#overview)
-    + [Selection of simulation parameters](#selection-of-simulation-parameters)
-    + [Initial configuration preparation](#initial-configuration-preparation)
-    + [Surfactant film MD](#surfactant-film-md)
-    + [Indenter on film MD](#indenter-on-film-md)
-    + [Realization as a FireWorks workflow](#realization-as-a-fireworks-workflow)
-  * [Detailed description of initial configuration preparation](#detailed-description-of-initial-configuration-preparation)
-    + [Surface sample preparation](#surface-sample-preparation)
-    + [Aggregate preassembly](#aggregate-preassembly)
-    + [Formatting: Preparation of PDB files to be read by GROMACS](#formatting--preparation-of-pdb-files-to-be-read-by-gromacs)
-    + [Solvation](#solvation)
-    + [Formatting: Convert GROMACS output back to PDB](#formatting--convert-gromacs-output-back-to-pdb)
-    + [Convert PDB to CHARMM  PSF](#convert-pdb-to-charmm--psf)
-    + [Create LAMMPS input](#create-lammps-input)
-    + [...  LAMMPS Fireworks ...](#--lammps-fireworks-)
-  * [AFM tip approach](#afm-tip-approach)
+J. L. Hörmann, C. (刘宸旭) Liu, Y. (孟永钢) Meng, and L. Pastewka, “Molecular simulations of sliding on SDS surfactant films,” The Journal of Chemical Physics, vol. 158, no. 24, p. 244703, Jun. 2023, doi: [10.1063/5.0153397](https://doi.org/10.1063/5.0153397).
 
-Tool scripts and template input files are to be found within the repository
+as well as an installable Python package `jlhpy`
 
-* [N_surfactant_on_substrate_template](https://github.com/jotelha/N_surfactant_on_substrate_template)
+MD parameters are based upon [CHARMM36 Jul17 package, modified](https://github.com/jotelha/jlh_toppar_c36_jul17).
 
-MD parameters are based upon
-
-* [CHARMM36 Jul17 package, modified](https://github.com/jotelha/jlh_toppar_c36_jul17)
-
-## Tree
+## Content overview
 
 * `bash`:       tiny bash tools
+* `dat`:        indenter and substrate coordinate files
 * `ff`:         force fields
-* `fw`:         FireWorks workflow descriptions (mainly .yaml)
 * `gmx_input`:  GROMACS input files
 * `ipynb`:      Jupyter notebooks
-* `lmp_input`:  LAMMPS input files
-* `packmol`:    packmol input scripts
+* `jlhpy`:      Python utilities
+* `lmp_input`:  LAMMPS input files and templates
+* `nco`:        NetCDF operators scripts
+* `packmol`:    PACKMOL input script templates
 * `pdb`:        pdb (protein database) format data files
-* `py`:         python scripst
-* `vmd`:        VMD-executable tcl scripts
-
-## TODO
-(from high to low priority):
-
-- [ ] Attach all simulation meta data and parameters available to workflows and
-      files in filepad.
-- [ ] Remove any absolute path dependency from `JobAdmin.py` and `job_admin.ipynb`.
-      Push and pull any relevant files to the data base.
-- [X] Make workflow environment-independent (i.e. nothing machine-dependent in
-      `JobAdmin.py` and `job_admin.ipynb`,
-      especially no `module load` commands). Using worker-specific parameters as
-      descibed within the
-      [FireWorks ducumentation](https://materialsproject.github.io/fireworks/worker_tutorial.html) should help.
-- [X] Make choice of *worker* and *queue* (i.e. bwCloud, NEMO or JUWELS) really
-      possible by single Fireworks option `category`, without further adaptions.
-      (For this, ssh has to work again between NEMO and bwCloud!)
-- [ ] Right now, the workflow technically decays into four subsequent, but
-      independent workflows: Substrate slab preparation, intital film
-      configuration preparation, quasi-equilibration MD, indenter MD.
-      I would like to have generic `push_datafile_to_db` and
-      `pull_datafile_from_db` to be applicable,
-      but never necessary, at any point of the workflow.
-- [ ] Transfer workflow from Python to a library of .yaml text files.
-
-These TODOs have been achieved (partially) for the latter part of workflows
-(AFM probe approach):
-
-- [X] Attach all simulation meta data and parameters available to workflows and
-      files in filepad.
-- [X] Remove any absolute path dependency from `JobAdmin.py` and `job_admin.ipynb`.
-      Push and pull any relevant files to the data base.
-- [X] Make workflow environment-independent (i.e. nothing machine-dependent in
-      `JobAdmin.py` and `job_admin.ipynb`,
-      especially no `module load` commands). Using worker-specific parameters as
-      descibed within the
-      [FireWorks ducumentation](https://materialsproject.github.io/fireworks/worker_tutorial.html) should help.
-- [X] Make choice of *worker* and *queue* (i.e. bwCloud, NEMO or JUWELS) really
-      possible by single Fireworks option `category`, without further adaptions.
-      (For this, ssh has to work again between NEMO and bwCloud!)
-- [X] Right now, the workflow technically decays into four subsequent, but
-      independent workflows: Substrate slab preparation, intital film
-      configuration preparation, quasi-equilibration MD, indenter MD.
-      I would like to have generic `push_datafile_to_db` and
-      `pull_datafile_from_db` to be applicable,
-      but never necessary, at any point of the workflow.
-- [X] Transfer workflow from Python to a library of .yaml text files.
-
-## Guidelines
-
-- Move all independent scripts from this repository into subfolder `jlh/bin` of
-  git repository [jotelha/mdtools-jlh](https://github.com/jotelha/mdtools-jlh)
-  on github.com (on bwCloud image in `$EBROOTMDTOOLS/jlh/bin`,
-  available after `module load MDTools`)
-- Move script and input file **templates** to be used by ScriptWriterTask
-  to the subfolder `fireworks/user_objects/firetasks/templates` of github
-  FireWorks fork [jotelha/fireworks](https://github.com/jotelha/fireworks).
-  (on bwCloud image in `$EBROOTFIREWORKS/git/fireworks`,
-  available after `module load FireWorks`)
- -Place all other modifications to official FireWorks distribution in
-  this fork as well.
-- Push independent input files (i.e. substrate unit cells, LAMMPS input, etc.)
-  to be accessible during FireWork execution to FilePad database with the
-  functionality of `fireworks.utilities.filepad.FilePad`,
-  using descriptive identifiers and meaningful meta data. Example:
-  ```python
-  from from fireworks.utilities.filepad import FilePad
-  fp = FilePad(
-    host=mongodb_host,
-    port=mongodb_port,
-    database=mongodb_name,
-    username=mongodb_user,
-    password=mongodb_pwd)
-  fp.add_file(
-    template_prefix + os.sep + 'indenter_insertion.tcl',
-    identifier='indenter_insertion.tcl',
-    metadata={
-        'type':     'template',
-        'language': 'tcl',
-        'usecase':  'indenter insertion in vmd'})
-  ```
-  FireWorks should access these files with the `GetFilesTask`, i.e.
-  ```python
-  from fireworks.user_objects.firetasks.filepad_tasks import GetFilesTask
-  get_data_file_ft = GetFilesTask( {
-    'identifiers': [ 'indenter_insertion.tcl' ],
-    'new_file_names': [ 'dummy.tcl' ] } )
-  ```
-  When pushing files to the data base, existing entries are not overwritten by default. This can be
-  achieved consecutive `DeleteFilesTask` and `AddFilesTask`:
-  ```python
-  from fireworks.user_objects.firetasks.filepad_tasks import AddFilesTask, DeleteFilesTask
-  sb_delete_ft = DeleteFilesTask( {
-    'identifiers': ['indenter_insertion.tcl']})
-  sb_store_ft =  AddFilesTask( {
-    'paths':       ['indenter_insertion.tcl'],
-    'identifiers': ['indenter_insertion.tcl']})
-  ```
-  This is illustrated in the `fw/utility/filepad_sample.ipynb` Jupyter notebook
-  within this repository.
-- Transform system preparation methods of class `JobAdmin` in `$EBROOTFWJLH/fwtools/JobAdmin.py`
-  (`$EBROOTFWJLH` is available after `module load FireWorks`) into independent functions
-  of a minimum set of parameters callable by FireWorks' `PyTask` .
-- Transition to `.yaml` files instead of `.ipynb` notebooks for job preparation.
-- Gradually make `JobAdmin`'s attribute pandas DataFrame `_sim_df` obsolete
-  by attaching parameters and metadata to FireWorks workflow.
-- Never rely on a system's name / identifier for any parametric information.
-- The execution environment for FireWorks services on the bwCloud image is set
-  up in a tiny wrapper script
-  `/usr/local/bin/wrafw`:
-  ```bash
-  #!/bin/bash
-  echo "wrafw called"
-  source /etc/profile
-  echo "source /etc/profile"
-  module load FireWorks/jlh-25Jan19
-  echo "module load FireWorks/jlh-25Jan19"
-
-  exec $@
-  ```
-  Modify only if absolutely necessary. Try to merge all modifications within
-  the framework outlined above.
-
-## Software requirements
-
-All required software is set up ready-to-use within the openstack image.
-
-List of relevant modules, loadbable with `module load ${MODULE}` within image
-as of 28th Jan 2019:
-
-```console
-$ module avail
-Atom/1.33.0-amd64
-FireWorks/1.8.7
-Fluxbox/1.3.7
-GROMACS-Top/jlh-2018.1
-GROMACS/2018.1-gnu-7.3-openmpi-2.1.1
-LAMMPS/22Aug18-gnu-7.3-openmpi-2.1.1-netcdf-4.6.1-pnetcdf-1.8.1-colvars-16Nov18
-MDTools/jlh-25Jan19-python-2.7
-MDTools/jlh-25Jan19
-NetCDF/4.6.1-gnu-7.3-openmpi-2.1.1-pnetcdf-1.8.1
-NetCDF/4.6.1-gnu-7.3-openmpi-2.1.1
-Ovito/3.0.0-dev301-x86_64
-Ovito/27Nov18-git-master-build
-PnetCDF/1.8.1-gnu-7.3-openmpi-2.1.1
-VMD/1.9.3-text
-```
-
-The packages `MDTools/jlh-25Jan19` and `MDTools/jlh-25Jan19-python-2.7`
-are maintained at [jotelha/mdtools-jlh](https://github.com/jotelha/mdtools-jlh)
-and contain
-* charmm2lammps (comes with LAMMPS 16Mar18 sources)
-* [packmol](http://m3g.iqm.unicamp.br/packmol/home.shtml)
-* pdb-tools, modified. forked from https://github.com/haddocking/pdb-tools
-* [pizza.py](https://pizza.sandia.gov) (
-* custom scripts `ncjoin.py`, `netcdf2data.py`, `pdb_packmol2gmx.sh`, `replicate.sh`
-amongst others. Except `Pizza.py`, all Python-based tools run on Python 3.
-For `Pizza.py`,it is necessary to load the module's Python 2 variant.
-
-`FireWorks/1.8.7` contains
-
-* Fireworks wrapper maintained at
-[jotelha/fw-hpc-worker-jlh](https://github.com/jotelha/fw-hpc-worker-jlh)
-
-Fireworks itself is available system-wide outside of the module framework.
-
-`GROMACS/2018.1-gnu-7.3-openmpi-2.1.1` contains a  modifed
-
-* GROMACS 2018.1 top folder including charmm36.ff, available at
-  [jlh_gmx_2018.1_top](https://github.com/jotelha/jlh_gmx_2018.1_top)
-
-overiding the `GROMACS/2018.1-gnu-7.3-openmpi-2.1.1` module's standard force
-field collection, when loaded afterwards.
-
-`VMD/1.9.3-text` contains
-
-* vmd-1.9.3 with psfgen plugin, pre-compiled distribution
-  [vmd-1.9.3.bin.LINUXAMD64.text.tar.gz](http://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD)
-
-## Overview
-
-### Selection of simulation parameters
-
-Simulation meta data and meaningful parameters are selected and cast into a pandas dataframe via some
-Jupyter notebook. TODO: details here.
-Columns and their types are
-```text
-box                                         object
-ci_initial_placement                        object
-counterion                                  object
-indenter                                    object
-indenter_pdb                                object
-pbc                                          int64
-pressure                                     int64
-sb_area                                    float64
-sb_area_per_sf_molecule                    float64
-sb_circular_area_per_sf_molecule_radius    float64
-sb_crystal_plane                             int64
-sb_measures                                 object
-sb_multiples                                object
-sb_name                                     object
-sb_normal                                    int64
-sb_square_area_per_sf_molecule_side        float64
-sb_thickness                               float64
-sb_unit_cell                                object
-sb_volume                                  float64
-sf_concentration                           float64
-sf_expected_aggregates                      object
-sf_nmolecules                                int64
-sf_preassembly                              object
-solvent                                     object
-substrate                                   object
-surfactant                                  object
-sv_density                                   int64
-sv_preassembly                              object
-temperature                                  int64  
-```
-(extensible)
-
-*sb* means substrated, *sf* surfactant, *sv* solvent and *ci* counter ion. Fields `box`, `sb_measures` and `sb_unit_cell` are 3-tuples (i.e. type `list`) of `float `, while `sb_multiples` is 3-tuple of `int`. Sample entry:
-```text
-> sim_df.loc['1010_CTAB_on_AU_111_63x36x2_bilayer']
-box                                        [1.82e-08, 1.8000000000000002e-08, 1.800000000...
-ci_initial_placement                                                                  random
-counterion                                                                                BR
-indenter                                                                                None
-indenter_pdb                                                                            None
-pbc                                                                                      111
-pressure                                                                                   1
-sb_area                                                                          3.26671e-16
-sb_area_per_sf_molecule                                                            3.233e-19
-sb_circular_area_per_sf_molecule_radius                                                2e-10
-sb_crystal_plane                                                                         111
-sb_measures                                [1.82e-08, 1.8000000000000002e-08, 1.400000000...
-sb_multiples                                                                     [63, 36, 2]
-sb_name                                                                       AU_111_63x36x2
-sb_normal                                                                                  2
-sb_square_area_per_sf_molecule_side                                                    6e-10
-sb_thickness                                                                         1.4e-09
-sb_unit_cell                                           [3e-10, 5e-10, 7.000000000000001e-10]
-sb_volume                                                                        4.61502e-25
-sf_concentration                                                                      0.0005
-sf_expected_aggregates                                                         intermmediate
-sf_nmolecules                                                                           1010
-sf_preassembly                                                                       bilayer
-solvent                                                                                  H2O
-substrate                                                                                 AU
-surfactant                                                                              CTAB
-sv_density                                                                               997
-sv_preassembly                                                                        random
-temperature                                                                              298
-Name: 1010_CTAB_on_AU_111_63x36x2_bilayer, dtype: object
-```
-
-The table is serialited (TODO: details) as `surfactant_on_AU_111.json` and pushed to FireWork's *FilePad* with identifier `surfactant_on_AU_111_df_json`.
-
-### Initial configuration preparation
+* `pymol`:      Pymol script templates 
+* `ref`:        reference data extracted from other publications
+* `regex`:      useful regular expressions
+* `vmd`:        VMD-executable tcl scripts and templates
+ 
+## Overview on initial configuration preparation
 
  1. Create GROMACS .hdb, .rtp for surfactants, dummy .rtp for ions
  2. Load system description from some stored pandas.Dataframe, e.g. from pickle.
     Should contain information on substrate measures, box size, etc.
-    TODO: ADD DETAILED DESCRIPTION OF EXPECTED VALUES.
  3. Identify all unique substrate slabs and create according .pdb files from multiples of unit cell with
     `gmx genconf`.
- 4. Create a subfolter for every system and copy (or links) some necessary files
+ 4. Create a subfolder for every system and copy (or links) some necessary files
  5. Use packmol to create bilayer on gold surface
  6. Use `pdb_packmol2gmx` to run sum simple renumbering on residues.
     This is mainly necessary because gmx needs each substrate atom to have its own residue number.
@@ -319,49 +43,6 @@ The table is serialited (TODO: details) as `surfactant_on_AU_111.json` and pushe
     The bash script suffixed `_gmx2pdb.sh` does this.
  9. Generate .psf with VMD's `psfgen`.
  10.Generate LAMMPS data from psfgen-generated .psf and .pdb with `charmm2lammps.pl`
-
-### Surfactant film MD
-
- 1. Minimization
- 2. NVT equilibration
- 3. NPT equilibration
- 4. 10 ns NPT run
-
-### Indenter on film MD
-
- 1. Indenter insertion
- 2. Minimization
- 3. NPT equilibration
- 4. Indenter approach
-
-### Realization as a FireWorks workflow
-
-A workflow contains fireworks suffixed as follows:
-
- 1. sb_replicate
- 2. packmol_fill_script_template, packmol, recover_packmol, store_packmol_files, forward_packmol_files
- 4. packmol2gmx, gmx_solvate, gmx2pdb
- 5. psfgen
- 6. ch2lmp
- 7. (pull_datafile_from_db) # TODO: make optional
- 8. (prepare_system_files) # TODO: make obsolete
- 9. minimization
-10. equilibration_nvt
-11. equilibration_npt
-12. 10ns_production_mixed
-13. (store_data_file) #TODO: make optional
-14. initiate_indenter_workflow, indenter_insertion, pizzapy_merge
-15. (pull_datafile_from_db)
-16. minimization
-17. equilibration_npt
-
-Several custom FireTasks are to be found within
-[`fireworks/user_objects/firetasks/jlh_tasks.py`](https://github.com/jotelha/fireworks-jlh/blob/master/lib/python3.6/site-packages/fireworks/user_objects/firetasks/jlh_tasks.py)
-and a python class
-[`JobAdmin.py`](https://github.com/jotelha/fireworks-jlh/blob/master/lib/python3.6/site-packages/fwtools/JobAdmin.py)
-within the [fireworks-jlh](https://github.com/jotelha/fireworks-jlh)
-repository helps to set up workflows, i.e. from within a Jupyter notebook such as
-[job_admin.ipynb](https://github.com/jotelha/fireworks-jlh/blob/master/examples/job_admin.ipynb).
 
 ## Detailed description of initial configuration preparation
 
@@ -609,37 +290,3 @@ converting the system into a set of PDB files with at most 9999 resiudues each. 
 
 ### Create LAMMPS input
 `ch2lmp` utilizes the Perl script `charmm2lammps.pl` in order to take PDB, PSF, RTF and PRM (four files) and converts it into LAMMPS .in and .data files (two files). Lateron in our workflow, .data is used. .in is obsolete.
-
-### ...  LAMMPS Fireworks ...
-TODO: Write documentaiton
-
-## AFM tip approach
-The subfolder `fw` constains samples for Fireworks workflows on different machines.
-
-The configuration & parameter file to be passed along subsequent
-LAMMPS Fireworks is referred to as `data_file` within the `_files_in`
-nd `_files_out` sections of the `.yaml` file workflow description.
-
-* `filepad_add.yaml` and
-* `filepad_get.yaml`
-
-push and pull such a file to and from Firework's underlying *Filepad* database. They can
-be inserted after or before any Fireworks yielding or expecting `data_file` as `_files_out`
-or `_files_in`. This might be necessary at intermmediate steps if workflow moves onto
-different filesystem.
-
-* `afm_probe_insertion_workflow.yaml` inserts the AFM probe into a readily prepared interfacial system.
-* `lmp_equilibration.nemo.yaml` runs minimization, nvt and npt equilibration for such as system on NEMO.
-* `lmp_production_constant_AFM_tip_velocity.nemo.yaml` drives the probe towards the substrate on NEMO.
-  If job fails (likely due to walltime), the latest restart file is retrieved and a subsequent continuation
-  run is submitted automatically.
-
-These (partial) workflows can be appended to their respective predecessor by
-
-    lpad add ${YAML_DESCRIPTION_OF_INITIAL_PARTIAL_WF}
-
-for the initial part and subsequent use of
-
-    lpad append_wflow -i ${FW_ID_OF_PREDECESSOR_FIREWORKS} -f ${YAML_DESCRIPTION_OF_SUBSEQUENT_PARTIAL_WF}
-
-for all following sections.
