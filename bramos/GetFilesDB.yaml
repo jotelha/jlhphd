@@ -1,9 +1,0 @@
-
-  name: "GetFilesDB"
-  spec:
-    _category: "bwcloud_noqueue"
-    _tasks:
-    - _fw_name: GetFilesTask
-      identifiers: 
-      - 646_SDS_on_AU_111_51x30x21_hemicylinders_with_counterion_psfgen.pdb
-
