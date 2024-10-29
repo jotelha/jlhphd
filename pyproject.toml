@@ -1,16 +1,17 @@
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm", "wheel"]
+requires = ["setuptools>=42", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "jlhpy"
+authors = [
+    { name = "Johannes Hörmann", email = "johannes.hoermann@imtek.uni-freiburg.de" }
+]
 description = "Nanotribology of surfactants"
 readme = "README.md"
 requires-python = ">=3.6.5"
 license = { text = "MIT" }
-authors = [
-    { name = "Johannes Hörmann", email = "johannes.hoermann@imtek.uni-freiburg.de" }
-]
+dynamic = ["version"]
 urls = { "Homepage" = "https://github.com/jotelha/jlhphd" }
 dependencies = [
     "fireworks>=1.9.5"
