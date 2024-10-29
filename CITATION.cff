@@ -1,15 +1,15 @@
 cff-version: 1.1.0
 message: >-
-  This repository contains input files and workflows underlying 
-
+  This repository contains input files and workflows underlying
   J. L. Hörmann, C. (刘宸旭) Liu, Y. (孟永钢) Meng, and L. Pastewka, 
-  “Molecular simulations of sliding on SDS surfactant films,” 
+  Molecular simulations of sliding on SDS surfactant films,
   The Journal of Chemical Physics, vol. 158, no. 24, p. 244703, 
-  Jun. 2023, doi: [10.1063/5.0153397](https://doi.org/10.1063/5.0153397).
+  Jun. 2023, doi: 10.1063/5.0153397.
 authors:
 - family-names: Hörmann
   given-names: Johannes Laurin
 orcid: https://orcid.org/0000-0001-5867-695X
-title:jlhphd: 0.2.1
+title: jlhphd
+version: 0.2.3
 date-released: 2024-10-29
                                 
