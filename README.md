@@ -6,7 +6,7 @@ J. L. Hörmann, C. (刘宸旭) Liu, Y. (孟永钢) Meng, and L. Pastewka, “Mol
 
 as well as an installable Python package `jlhpy`
 
-MD parameters are based upon [CHARMM36 Jul17 package, modified](https://github.com/jotelha/jlh_toppar_c36_jul17).
+MD parameters are based upon [CHARMM36 Jul17 package](http://mackerell.umaryland.edu/download.php?filename=CHARMM_ff_params_files/toppar_c36_jul17.tgz).
 
 ## Content overview
 
