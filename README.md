@@ -1,8 +1,10 @@
-# Surfactant Adsorption Workflow
+# Surfactant Adsorption Workflows
+
+[![DOI](https://zenodo.org/badge/145995562.svg)](https://doi.org/10.5281/zenodo.14007768)
 
 This repository contains input files and workflows underlying 
 
-J. L. Hörmann, C. (刘宸旭) Liu, Y. (孟永钢) Meng, and L. Pastewka, “Molecular simulations of sliding on SDS surfactant films,” The Journal of Chemical Physics, vol. 158, no. 24, p. 244703, Jun. 2023, doi: [10.1063/5.0153397](https://doi.org/10.1063/5.0153397).
+> J. L. Hörmann, C. (刘宸旭) Liu, Y. (孟永钢) Meng, and L. Pastewka, “Molecular simulations of sliding on SDS surfactant films,” The Journal of Chemical Physics, vol. 158, no. 24, p. 244703, Jun. 2023, doi: [10.1063/5.0153397](https://doi.org/10.1063/5.0153397).
 
 as well as an installable Python package `jlhpy`
 
