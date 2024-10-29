@@ -115,7 +115,7 @@ This step is performed as FireWorks `sb_replicate` for different sets of substra
 
 Second, aggregates of surfactant molecules are preassembled upon the substrate slab via
 [packmol](http://m3g.iqm.unicamp.br/packmol/home.shtml)
-For this purpose, a packmol input script template [packmol.inp](https://github.com/jotelha/N_surfactant_on_substrate_template/blob/master/packmol.inp) is filled by `packmol_fill_scipt_template`.
+For this purpose, a packmol input script template [packmol.inp](https://github.com/jotelha/jlhphd/blob/master/packmol.inp) is filled by `packmol_fill_scipt_template`.
 
 `recover_packmol` helps to get the latest packing configuration, even if `packmol` did not finish successfully.
 
