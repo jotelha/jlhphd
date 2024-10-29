@@ -8,8 +8,5 @@ message: >-
 authors:
 - family-names: Hörmann
   given-names: Johannes Laurin
-orcid: https://orcid.org/0000-0001-5867-695X
-title: jlhphd
-version: 0.2.3
-date-released: 2024-10-29
-                                
+orcid: 0000-0001-5867-695X
+title: jlhphd                                
