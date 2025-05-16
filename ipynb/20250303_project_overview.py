@@ -623,6 +623,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -720,11 +721,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dla.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -801,8 +801,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dla.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -1019,6 +1017,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -1099,8 +1098,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dla.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -1177,8 +1174,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -1932,8 +1927,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -2092,6 +2085,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -2331,8 +2325,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -2454,6 +2446,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -2694,8 +2687,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -3176,8 +3167,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -3537,8 +3526,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -3735,6 +3722,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -3895,8 +3883,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -4258,6 +4244,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -4571,6 +4558,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -4729,8 +4717,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination, page_size=50)
 
@@ -4817,8 +4803,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination, page_size=50)
@@ -5098,8 +5082,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -5548,8 +5530,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -6371,8 +6351,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -6450,8 +6428,6 @@ aggregation_pipeline = [
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -7317,6 +7293,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -7401,6 +7378,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -7479,6 +7457,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -7554,11 +7533,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -7760,6 +7738,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -7843,8 +7822,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -7916,11 +7893,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -8472,6 +8448,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -8555,6 +8532,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -8635,8 +8613,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -8710,11 +8686,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -8921,8 +8896,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -8996,6 +8969,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -9118,6 +9092,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -9201,6 +9176,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -9354,11 +9330,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -9584,6 +9559,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -9666,6 +9642,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -9749,8 +9726,6 @@ aggregation_pipeline = [
     }
 ]
 
-
-
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
@@ -9823,6 +9798,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -10028,6 +10004,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -10111,6 +10088,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -10264,11 +10242,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -10542,11 +10519,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -10665,6 +10641,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -10748,6 +10725,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -10903,6 +10881,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11033,6 +11012,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11116,6 +11096,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11191,6 +11172,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11270,6 +11252,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11420,6 +11403,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11503,6 +11487,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11578,6 +11563,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -11655,11 +11641,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -11924,6 +11909,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12008,6 +11994,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12086,6 +12073,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12161,11 +12149,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -12282,6 +12269,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12366,6 +12354,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12444,11 +12433,10 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
-
-
 
 # %%
 res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
@@ -12521,6 +12509,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12640,6 +12629,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12724,6 +12714,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12802,6 +12793,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12879,6 +12871,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -12998,6 +12991,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -13082,6 +13076,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -13160,6 +13155,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
@@ -13237,6 +13233,7 @@ aggregation_pipeline = [
     {  # sort by earliest date, descending
         "$sort": { 
             **{label: pymongo.DESCENDING for label in parameters.keys()},
+            "earliest": pymongo.DESCENDING,
         }
     }
 ]
