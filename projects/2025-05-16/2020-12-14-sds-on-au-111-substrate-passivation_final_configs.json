@@ -1,0 +1,116 @@
+[
+    {
+        "nmolecules": 675,
+        "concentration": 3.0,
+        "shape": "monolayer",
+        "uuid": "9ba917c9-9c0b-42f0-bf83-71ca1b10daa1"
+    },
+    {
+        "nmolecules": 619,
+        "concentration": 2.75,
+        "shape": "monolayer",
+        "uuid": "e96ff87c-7880-4d76-810e-e1a468d6b872"
+    },
+    {
+        "nmolecules": 562,
+        "concentration": 2.5,
+        "shape": "monolayer",
+        "uuid": "a9245caa-1439-4515-926f-c35b0476df44"
+    },
+    {
+        "nmolecules": 506,
+        "concentration": 2.25,
+        "shape": "monolayer",
+        "uuid": "9fb66e67-d08d-4686-972a-078bae8ef723"
+    },
+    {
+        "nmolecules": 450,
+        "concentration": 2.0,
+        "shape": "monolayer",
+        "uuid": "f0648f54-9a5d-488c-a913-ea53b88c99ce"
+    },
+    {
+        "nmolecules": 394,
+        "concentration": 1.75,
+        "shape": "monolayer",
+        "uuid": "90dbac16-9f05-4610-b765-484198116042"
+    },
+    {
+        "nmolecules": 394,
+        "concentration": 1.75,
+        "shape": "hemicylinders",
+        "uuid": "b5d0bbfe-9c69-4dfd-9189-417bfa367882"
+    },
+    {
+        "nmolecules": 338,
+        "concentration": 1.5,
+        "shape": "monolayer",
+        "uuid": "fe9bfb8d-d671-4c2d-bb1e-55dc1bfeec93"
+    },
+    {
+        "nmolecules": 338,
+        "concentration": 1.5,
+        "shape": "hemicylinders",
+        "uuid": "b14873d7-0bba-4c2d-9915-ac9ee99f43c7"
+    },
+    {
+        "nmolecules": 281,
+        "concentration": 1.25,
+        "shape": "monolayer",
+        "uuid": "cda86934-50f1-4c7d-bdb5-3782c9f39a5a"
+    },
+    {
+        "nmolecules": 281,
+        "concentration": 1.25,
+        "shape": "hemicylinders",
+        "uuid": "01339270-76df-40c2-bec6-c69072f5a5f7"
+    },
+    {
+        "nmolecules": 225,
+        "concentration": 1.0,
+        "shape": "monolayer",
+        "uuid": "e11c3cb7-f53e-4024-af1c-dadbc8a01119"
+    },
+    {
+        "nmolecules": 225,
+        "concentration": 1.0,
+        "shape": "hemicylinders",
+        "uuid": "0899dd47-5659-408c-8dc1-253980adc975"
+    },
+    {
+        "nmolecules": 169,
+        "concentration": 0.75,
+        "shape": "monolayer",
+        "uuid": "0537047b-04c0-42b7-8aac-8de900c9e357"
+    },
+    {
+        "nmolecules": 169,
+        "concentration": 0.75,
+        "shape": "hemicylinders",
+        "uuid": "fcc304df-219a-4170-a6e0-bee06eed14e2"
+    },
+    {
+        "nmolecules": 112,
+        "concentration": 0.5,
+        "shape": "monolayer",
+        "uuid": "13da3027-2a2f-45e7-bd8d-73bee135f24f"
+    },
+    {
+        "nmolecules": 112,
+        "concentration": 0.5,
+        "shape": "hemicylinders",
+        "uuid": "88c14189-f072-4df0-a04b-57bf27760b9d"
+    },
+    {
+        "nmolecules": 56,
+        "concentration": 0.25,
+        "shape": "monolayer",
+        "uuid": "e1766c11-ec23-488e-adfe-cbefc630ac68"
+    },
+    {
+        "nmolecules": 56,
+        "concentration": 0.25,
+        "shape": "hemicylinders",
+        "uuid": "e59c5239-4932-4c5a-81dc-aa8c2786bdf8"
+    }
+]

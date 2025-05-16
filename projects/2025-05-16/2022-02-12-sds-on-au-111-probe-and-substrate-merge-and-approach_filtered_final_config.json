@@ -1,0 +1,1199 @@
+[
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 50.0,
+        "uuid": "5309a249-93cb-434c-9f75-702f4e9bb323"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 45.0,
+        "uuid": "16273cef-89fb-4fc7-82e6-5a747c3f25c7"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 40.0,
+        "uuid": "61735b7a-8d5c-42c4-a2e4-6130ae731558"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 35.0,
+        "uuid": "18f723ee-6a1d-4c6a-944d-7a877f87adee"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 30.0,
+        "uuid": "ade91e72-6a9e-49fa-87c8-53f553cd39e9"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 25.0,
+        "uuid": "4215fd87-41db-43b0-aafe-1127774fe0ff"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 20.0,
+        "uuid": "b8da45d0-4af9-41ae-b02b-52524dc45ee0"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 15.0,
+        "uuid": "271ecac2-943b-4124-9609-063ee7e05a91"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 10.0,
+        "uuid": "418e5437-90f7-4787-9aaa-8f773a66742f"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 9.0,
+        "uuid": "ba958caa-7411-4705-85c5-4c84d4d3e7a9"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 8.0,
+        "uuid": "3d8cfb00-06f6-4c88-8d5e-aec5cebca47e"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 7.0,
+        "uuid": "95bb2646-7f44-4a05-996e-07af9583a1fc"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 6.0,
+        "uuid": "66fc8ff3-4dac-4b8b-b423-5ab39513a16b"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 5.0,
+        "uuid": "f3c04b30-4d03-4060-a16a-baf29e51f0e8"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 4.0,
+        "uuid": "1d874c8e-016f-4802-b658-0c46288c0251"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 3.0,
+        "uuid": "03ea1bac-d155-4d5d-9991-aaf87acf7b26"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 2.0,
+        "uuid": "6a0bc7d9-ad4c-4ad9-bce3-283a82520343"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 1.0,
+        "uuid": "373289e9-02c8-4d47-95bc-a3ff9979f277"
+    },
+    {
+        "concentration": 2.75,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 0.0,
+        "uuid": "e0340ddd-ccb2-41b4-8993-0dfa7aa420de"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 50.0,
+        "uuid": "fbe2beea-ebc0-4fc3-be4e-239be2f377a6"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 45.0,
+        "uuid": "ea50c8a3-d49d-45db-a4a3-a8de2391da93"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 40.0,
+        "uuid": "db3cea8f-9222-422d-9044-2207aaed6517"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 35.0,
+        "uuid": "5706f2f1-d8d6-47d3-b897-17d31a9e68bf"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 30.0,
+        "uuid": "8c953455-275b-4744-a759-4d1239397970"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 25.0,
+        "uuid": "7b2523c6-5d13-4f35-b520-456a1814caed"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 20.0,
+        "uuid": "4d555d5d-2c70-4dba-82eb-46cb54cbdbd3"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 15.0,
+        "uuid": "d0cfd565-d071-42a0-b3fd-e46314967319"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 10.0,
+        "uuid": "cd2d21aa-a458-40d2-ba91-08d838bcfc09"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 9.0,
+        "uuid": "f5263680-4df3-4fcb-88c6-ee02660d97fb"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 8.0,
+        "uuid": "37be3191-01d8-43d3-854c-a351eec6a9fb"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 7.0,
+        "uuid": "90b071db-f829-4a1b-8802-d4e690b3562f"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 6.0,
+        "uuid": "4903cefc-a35f-4eac-a03a-ed353e824e05"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 5.0,
+        "uuid": "0981ff41-5b8c-4715-aed0-68aad27a472f"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 4.0,
+        "uuid": "8d63a6f8-ae5c-43a9-b8be-7b0ad0e9a61d"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 3.0,
+        "uuid": "3a27a3c7-bcaa-4ddf-b6c8-989429dc910b"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 2.0,
+        "uuid": "ffe478c7-a93b-4de0-a261-1d6609cff51f"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 1.0,
+        "uuid": "89166fac-f6cf-4d31-a231-35731e5ac364"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 25.0,
+        "distance": 0.0,
+        "uuid": "c0cba31d-2c05-4dad-8a0b-099553392872"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "1f745581-1dbe-4a5a-8844-bd44f5da5813"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "5860d2d6-c0b0-4c0d-b6b0-cc668aac7c98"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "683c24cc-dd69-405c-8766-d733c5500710"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "406a7bac-ac47-408c-8c5a-bc9b5fe24734"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "dc188f26-381e-49c8-a3dd-9d34aee9acee"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "4e572357-b79f-419d-99cb-4eecda09f1cc"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "58feb6a6-21c2-463b-80fe-83d6a8c798c2"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "113d0e29-e218-44c0-b24b-499a419c4cfc"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "d4a37378-f618-4180-959e-1b7086fba01f"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "7be31e4c-aacf-450c-a299-f78bfd522925"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "049302e4-1dd2-4d74-94d6-3f6baccc3755"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "cd1bfd60-a3f6-4016-b4e6-23ad461cdb92"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "67efd1cf-ecbb-4ea1-b212-48932698d8a3"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "5ce17b59-74c4-4343-b374-c5dad9414e40"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "4fcb22dc-0b02-4716-8719-44d85ce851d0"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "27e00844-b996-4581-88df-efc2cf032b29"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "ef7ec755-05e5-40b5-8b5f-ffb2f273c723"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "abd96ff5-330c-4009-af44-5ed1626002d5"
+    },
+    {
+        "concentration": 2.25,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "48610264-b4dc-4acc-a8bf-b77121240548"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "f1ba7dc1-9fac-4133-9f14-4d8e2d6f5a9b"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "dd03236e-e17d-4222-856b-b83a50eac5af"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "7ebc787c-1638-4a60-99d3-3f800368555b"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "b9f34ddd-7455-48e2-aa33-a1a3723c5625"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "0e1726dc-bc9c-49d3-be38-e84ae0c98855"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "3136e7eb-e62d-40be-97a6-58e3526086d7"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "8a3581d0-6d88-4160-890c-d1804fb42364"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "998d4a85-e2dd-4c9d-8341-8217e5db8909"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "0ded4d3a-85bc-4aa6-a8e2-6a3f131c46b4"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "12d1ef19-2a00-47b9-9530-4969aee3a889"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "b5cea2ff-1c09-42b7-a4d2-12410dcddc1a"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "fdcdba25-6e1f-417d-a6a6-6fd3fd2b1468"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "2912fb93-c151-4510-ac5d-bb319d65cfa3"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "510ce1d4-e881-4295-9e62-6901fe43b253"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "1b84a574-838b-41b7-a850-58a55a919046"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "912b54ec-665f-49a9-b3c5-30d390a7ed4a"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "46b9d7a2-454d-461c-aa99-3ed5ab066c0e"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "189d6713-383b-4685-b857-06ef83e371d3"
+    },
+    {
+        "concentration": 2.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "5af204c8-acfc-45db-9522-9409aff002e7"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "17ba55bc-a9f7-4eab-b81e-528d610232d3"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "9cb7f103-76be-42b2-a218-969f5f768c4e"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "df58beee-3b2c-4c25-80d8-b2eb0da308c1"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "bef98199-4403-4fc5-99c9-921756c5e9c9"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "227bb990-5348-4742-9e44-194a71d2b8f8"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "871b7d21-1881-4482-b5ba-084b1f240028"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "3555a86c-ffd8-4181-94a2-27bf817d7aa5"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "e05a3773-662e-4117-a9d1-e894a4d14919"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "01da0407-096c-460b-8389-1005d4806d97"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "b0142cf2-6763-4621-83ab-2874a593593d"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "a65c1700-d6f7-497c-a323-019c40826666"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "edcda1ce-23e2-4c6c-bff4-aff1c961477d"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "92433e48-0e58-4ad9-a866-e6a0252756cd"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "a165d37e-61f0-4e42-9090-c278ddc18e72"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "9a9a53d9-c271-4041-b13f-591e762e9764"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "c5ee5b6c-253d-465c-a069-80a3b7f0f083"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "e0d38063-9f31-4ea9-b409-24860a2f6ced"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "583d6b97-9b52-4c19-9d42-862edc692746"
+    },
+    {
+        "concentration": 1.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "bdd388c9-6f05-4e4c-9d12-afcab1720d47"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "58200b54-abde-499c-a31a-1e10e94ec195"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "3b0f8223-b1f5-4e73-946c-5bad30e6ee76"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "f726d7f0-58d3-4a03-88e0-c30e644766b5"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "4a931d6f-c2f5-46bb-a3bc-4864a962138b"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "857aaec1-945c-429a-bf58-cb6967a67aa1"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "e125e2ae-bb10-4ed9-8cca-fec00d0c67ab"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "7cdb0d2e-ff75-40fd-ba71-aa7faef84716"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "3f5677af-4b50-4bde-9e89-3237f6ff7e7d"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "3ae56a64-f795-482c-adae-83fb4390ad69"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "7d29d548-5b56-4061-8ce8-965b02a439ca"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "e1cbeb45-3364-4412-89b6-9b8597ab7330"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "10bde280-b1d8-40de-9c16-62a51e0269a6"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "c4d18699-f0ef-4be1-9233-4dd15a347d49"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "ad685c81-f8b2-4e81-bd6a-ed9bdacd78c9"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "5e433fc6-432f-4302-814d-d7dcea8cb618"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "c255640a-d03a-4f5b-bf19-4f2e8072e850"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "3352dbb2-2840-4c45-b7bf-e8a701fb2dea"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "91bf6be1-c23f-446e-a9e5-3c9c1013c146"
+    },
+    {
+        "concentration": 1.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "42a4631d-5941-45bf-b264-6b522860246f"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "f1aa15c1-aee6-432f-8f35-120f2145c831"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "d7a0655d-ea03-4120-b7bc-a184bc015364"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "f9ec0503-a6bf-441a-9dd5-76616ebf35dd"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "c24c9bd7-61b8-4889-841c-c9a03aaa8595"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "9a576b5a-bd18-4430-aee9-72f47b1fa82b"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "4527216a-fd1c-467e-9f8d-bc01e91bbb42"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "633f9d8d-2b4c-489e-b706-ca3b51f22343"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "edc83332-f9cb-42f1-8823-2ca6d8e08942"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "14f52734-7c92-41f9-b44d-6de11cf91539"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "14fbc171-585c-4284-b529-1d338db9d46d"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "2b5d3db9-2ce3-435f-884b-b55dc0455162"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "26394986-8346-4977-aa53-67d4eff4c682"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "e22fc2ed-460d-4a5a-b3b1-878301f66585"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "edf71a60-e416-498c-b5e3-6eeb28f985a2"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "7993d8a0-3f8e-41f8-b18c-375a86b6bdcf"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "30cbb2ed-77d5-4faf-9d36-8dab182778d3"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "364ff935-8820-444a-ae64-ca4788a45bcc"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "679e2242-b2e3-4c0e-a11f-f678bbb0a360"
+    },
+    {
+        "concentration": 1.0,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "cdf9cefa-0088-480d-a5d3-18c5cedc43c1"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "c13523b6-5726-429e-b813-a3cec1364c07"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "cbe75b4c-0872-42bb-8192-592d47fea6c4"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "64614a50-6481-4dab-b4be-6fef99fde836"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "f4aa6f93-5d9b-4949-9745-89a075063c02"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "3a044578-2b4c-413e-9ed4-7cb766965623"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "a5ef4104-3526-492a-b1cb-01fff3c934b3"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "da744135-6205-4f0f-9218-40042b887744"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "d515819b-2ce6-4425-abf6-9c25873f716d"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "17ea514e-6c3a-4c1a-aeec-60b11df21b5c"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "9566c33e-3407-4422-bc4e-4ed465b1f40a"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "5ec7d78a-5ec9-4d21-a924-1d719855cc9b"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "59c5e31e-3157-4b9c-a60e-1245bc467f57"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "897ec419-98d3-467a-91a5-956004fa2cec"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "ed235ff9-2d12-48a0-9f32-c79e0bcfd9f3"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "b8c09f46-e5de-4d79-a337-8ed52dec2d53"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "9e289a9a-6f66-4573-b8cc-801c602da356"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "13a484dd-c8eb-422d-89b3-7f8160a3fc24"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "8e3f5463-2049-44c2-92f3-e38311da9f6c"
+    },
+    {
+        "concentration": 0.75,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "9b0c8396-f978-48f9-b012-48bb60e2e09b"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 50.0,
+        "uuid": "f3092f57-c0b7-4ea5-a5c1-561b0e1e2998"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "uuid": "c1849a52-10ab-47f4-a6f6-a27f89f46869"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "uuid": "b5ef8502-54a6-4271-9945-1efdd12756b8"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 35.0,
+        "uuid": "b87632d4-1f95-49cc-ba03-31b5b9f20d31"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "uuid": "ec26c176-1fcc-4f44-921d-3d45932c77a1"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "uuid": "315eabf2-0560-4e30-b93e-31282ba4f833"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "uuid": "b290fdae-8bc3-4183-88c3-956b68ec04af"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "uuid": "ab621a2f-f86f-4321-98a9-b0e37db340ef"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "uuid": "09e90571-2b09-42eb-96cd-81b83d93cebe"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 9.0,
+        "uuid": "8b87dda0-406d-4aa6-9bd1-821dcd34066b"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 8.0,
+        "uuid": "dd5864a2-bcfc-4561-9153-fc08e93355fd"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 7.0,
+        "uuid": "ffdb806f-4fce-4042-b79d-155b33512970"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 6.0,
+        "uuid": "b60f3500-f2e6-473e-8437-9eee003951ec"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "uuid": "410c70e5-cc60-493f-aec3-a66eb814aa86"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 4.0,
+        "uuid": "b1e19c88-9adc-482f-aabf-4a8247013b0d"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 3.0,
+        "uuid": "5c94588b-0719-4729-8f68-abced1c4a9ef"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 2.0,
+        "uuid": "31f3e3ac-da32-42d5-8205-fe1bd9439e1b"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 1.0,
+        "uuid": "d58bc794-ee81-47e1-991a-bfe93c4160a4"
+    },
+    {
+        "concentration": 0.5,
+        "x_shift": 0.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "uuid": "9ca7c2cb-1b3a-4611-bb41-67dd662526a8"
+    }
+]

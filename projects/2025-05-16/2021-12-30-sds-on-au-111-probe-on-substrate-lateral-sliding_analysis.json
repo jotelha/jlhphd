@@ -1,0 +1,90 @@
+[
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 45.0,
+        "direction": 0,
+        "uuid": "f2c0697d-ecb0-4b04-a8d2-3d1975ef2503"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 40.0,
+        "direction": 1,
+        "uuid": "bbaf153e-4631-427e-a22a-b4c864fe3260"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 30.0,
+        "direction": 1,
+        "uuid": "8599a78e-6d24-4a15-94e5-75dad8d0ad61"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 25.0,
+        "direction": 1,
+        "uuid": "c6e318d0-e106-4adc-bde3-209be2108340"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 20.0,
+        "direction": 1,
+        "uuid": "2d91e1db-3139-445a-bc61-4a627573c256"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 15.0,
+        "direction": 1,
+        "uuid": "0e8aa5a3-8b71-4568-af38-93c00411a835"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 10.0,
+        "direction": 1,
+        "uuid": "6472653f-68b1-4c76-838a-f445fee4e28e"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "direction": 1,
+        "uuid": "119825ee-8a5b-4842-b659-0b699805f825"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 5.0,
+        "direction": 0,
+        "uuid": "bc05b6c3-10bd-4c1c-8d04-6c672e9b820d"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "direction": 1,
+        "uuid": "9b77cf2d-044f-416e-bcd0-25587ab0ffef"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 25.0,
+        "y_shift": 0.0,
+        "distance": 0.0,
+        "direction": 0,
+        "uuid": "cac2f981-ede4-4d85-a1cd-d9612ca38825"
+    }
+]

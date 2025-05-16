@@ -1,0 +1,268 @@
+[
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 50.0,
+        "uuid": "4cebe67d-3664-4e84-9231-5777eca5d253"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 45.0,
+        "uuid": "6e896316-52cc-4d19-8d71-f97c81dcd688"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 40.0,
+        "uuid": "a3e649bc-a3fb-4ca5-8a1e-a7bd81791892"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 35.0,
+        "uuid": "420bc128-82ff-450c-a041-d798b1c70037"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 30.0,
+        "uuid": "badb232a-0657-4ca5-892a-945ce4efb39c"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 25.0,
+        "uuid": "6a220d4d-df47-4571-a207-10ab81cd5d6d"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 20.0,
+        "uuid": "f35f15e1-fadb-497d-92e5-88a72a215888"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 15.0,
+        "uuid": "9b010a32-e58d-43d1-9a19-b0dc3f7e3a7f"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 10.0,
+        "uuid": "49c34199-efc0-4f9a-9537-446533328f8b"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 9.0,
+        "uuid": "4468705b-d3f2-4794-813c-5cc53d1f5e46"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 8.0,
+        "uuid": "8bd3ae0d-a38e-4b4d-aa5c-d9df52883f21"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 7.0,
+        "uuid": "bafcce31-36a5-4238-92cb-4a586cb74d1e"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 6.0,
+        "uuid": "1dd10c3b-7c5d-4363-abfa-7c37e4435390"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 5.0,
+        "uuid": "7766acae-8a61-45c8-be46-bb4231ffb057"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 4.0,
+        "uuid": "f69914b7-c302-442f-8888-41ae3c023778"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 3.0,
+        "uuid": "0d236088-9b92-4a2d-916b-a49401dd9c1e"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 2.0,
+        "uuid": "d8e0937e-9ccc-4bb8-8d8b-a30a3a902f29"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 1.0,
+        "uuid": "52553860-8278-4557-8cff-0856c69e955e"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 37.5,
+        "distance": 0.0,
+        "uuid": "6d9e631a-8514-4f43-8b54-39a7cbc0f5b5"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 50.0,
+        "uuid": "c45a98a6-53fd-4dae-bc23-d2c7c13f8a89"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 45.0,
+        "uuid": "89d697b5-927c-4ed2-8453-15c0c4d0e76f"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 40.0,
+        "uuid": "938fd113-b22a-4f7a-a902-983e0dd59e44"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 35.0,
+        "uuid": "32e5cab2-126e-4d03-8fae-712ec8feffe2"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 30.0,
+        "uuid": "364240ee-63f1-4bfe-b66e-4b4945993d8a"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 25.0,
+        "uuid": "73a39575-ffb1-4eee-b4a2-fea0e3d0c16b"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 20.0,
+        "uuid": "5985f18a-5d03-4953-8b75-e12dfacad97c"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 15.0,
+        "uuid": "4105e1d6-ff3c-4372-89f5-afc7adfed88f"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 10.0,
+        "uuid": "9b70567e-3e21-4b86-b7b4-f1469e82d6fc"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 9.0,
+        "uuid": "70eab215-faf4-4b81-a453-48a42d337c67"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 8.0,
+        "uuid": "edd91661-b9a2-4a7a-82d7-dea188377fe3"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 7.0,
+        "uuid": "c49e188a-eb63-4670-acbc-12c1ce91e44e"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 6.0,
+        "uuid": "039338e3-4b87-4624-9cc5-719205fe55de"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 5.0,
+        "uuid": "d20f85ad-321c-42d0-b9f1-1565669bfea2"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 4.0,
+        "uuid": "88195028-ee73-4d34-a8a1-286122e50a56"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 3.0,
+        "uuid": "e241a5f0-8d17-4b4c-abad-31cf4f2a1c27"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 2.0,
+        "uuid": "d1ff8a6c-0809-4c3b-bd20-39f083577e68"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 1.0,
+        "uuid": "228579eb-71e7-4a4c-a9ea-97474d08ee54"
+    },
+    {
+        "nmolecules": 916,
+        "x_shift": 0.0,
+        "y_shift": 12.5,
+        "distance": 0.0,
+        "uuid": "bdf0e5e2-d32e-41ce-8cfe-6e3ebf78fb90"
+    }
+]

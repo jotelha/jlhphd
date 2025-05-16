@@ -1,0 +1,52 @@
+[
+    {
+        "nmolecules": 860,
+        "concentration": 0.0275,
+        "uuid": "d63dcb78-08c1-490c-bce8-18de71f72205"
+    },
+    {
+        "nmolecules": 703,
+        "concentration": 0.0225,
+        "uuid": "4d89c363-6738-45a6-97ac-46ac2eb10d0f"
+    },
+    {
+        "nmolecules": 625,
+        "concentration": 0.02,
+        "uuid": "3d8ea1b8-1f48-4b73-b706-f39a86b0c528"
+    },
+    {
+        "nmolecules": 547,
+        "concentration": 0.0175,
+        "uuid": "7d4f0d3a-16b7-4d9f-aba5-78a5938e34ad"
+    },
+    {
+        "nmolecules": 469,
+        "concentration": 0.015,
+        "uuid": "7be217fc-7ab0-4ab7-93e4-8a3aff3db6ac"
+    },
+    {
+        "nmolecules": 390,
+        "concentration": 0.0125,
+        "uuid": "097220aa-9ee7-4427-b718-bcad0c90572d"
+    },
+    {
+        "nmolecules": 313,
+        "concentration": 0.01,
+        "uuid": "c573fe1f-d90a-453d-a330-4b72408f13b2"
+    },
+    {
+        "nmolecules": 235,
+        "concentration": 0.0075,
+        "uuid": "009ca353-8217-42eb-a39e-9d64311c5b7e"
+    },
+    {
+        "nmolecules": 156,
+        "concentration": 0.005,
+        "uuid": "5b597394-314f-4dcc-a391-969f8bb182ba"
+    },
+    {
+        "nmolecules": 78,
+        "concentration": 0.0025,
+        "uuid": "9fa1a3f0-c357-4663-9da1-6128951e0a73"
+    }
+]

@@ -1,0 +1,32 @@
+[
+    {
+        "nmolecules": 703,
+        "concentration": 0.0225,
+        "uuid": "84b83688-8484-427c-9dfb-cd709b543820"
+    },
+    {
+        "nmolecules": 625,
+        "concentration": 0.02,
+        "uuid": "3412964c-85db-4626-8c62-e2af71132105"
+    },
+    {
+        "nmolecules": 390,
+        "concentration": 0.0125,
+        "uuid": "12109acd-d45f-4981-bfeb-ec52d894f1a9"
+    },
+    {
+        "nmolecules": 313,
+        "concentration": 0.01,
+        "uuid": "ad442a86-da5e-4d6d-bad1-ca2201c2f72e"
+    },
+    {
+        "nmolecules": 235,
+        "concentration": 0.0075,
+        "uuid": "e48d26d6-14b2-4b56-bcd3-43de2b4bf45f"
+    },
+    {
+        "nmolecules": 156,
+        "concentration": 0.005,
+        "uuid": "be4187f5-59e1-4867-b105-2bf9c9b969fa"
+    }
+]
