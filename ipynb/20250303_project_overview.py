@@ -11001,7 +11001,10 @@ query = make_query({
 query
 
 # %%
-len(await dl.query(query))
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
+
+# %%
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -11035,7 +11038,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -11058,13 +11069,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -11107,13 +11121,24 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
 
 # %%
-res_df.sort_values(by='nmolecules')
+sorted(list(parameters.keys()))
+
+# %%
+res_df.sort_values(by=sorted(list(parameters.keys())))
 
 # %%
 distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
@@ -11173,7 +11198,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -11244,7 +11277,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -11347,10 +11388,10 @@ query = make_query({
 })
 
 # %%
-query
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(await dl.query(query))
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -11384,7 +11425,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -11407,13 +11456,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -11456,13 +11508,24 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
 
 # %%
-res_df.sort_values(by='nmolecules')
+sorted(list(parameters.keys()))
+
+# %%
+res_df.sort_values(by=sorted(list(parameters.keys())))
 
 # %%
 distinct_parameter_values = {k: set(res_df[k].unique()) for k in parameters.keys()}
@@ -11519,10 +11582,16 @@ aggregation_pipeline = [
     }
 ]
 
-
+# %%
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -11593,7 +11662,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -11815,7 +11892,10 @@ query = make_query({
 query
 
 # %%
-len(await dl.query(query))
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
+
+# %%
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -11849,7 +11929,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -11872,13 +11960,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -11922,7 +12013,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -11991,10 +12090,16 @@ aggregation_pipeline = [
     }
 ]
 
-
+# %%
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12063,7 +12168,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12137,7 +12250,10 @@ query = make_query({
 query
 
 # %%
-len(await dl.query(query))
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
+
+# %%
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -12171,7 +12287,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -12194,13 +12318,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -12244,7 +12371,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12316,7 +12451,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12382,10 +12525,16 @@ aggregation_pipeline = [
     }
 ]
 
-
+# %%
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12442,8 +12591,6 @@ final_config_datasets
 with open(f"{project_id}_analysis.json", 'w') as f:
     json.dump(final_config_datasets, f, indent=4)
 
-# %%
-
 # %% [markdown]
 # ## Overview on lateral sliding (2022-01-31)
 # on hemicylinders, only at lateral offset 0,0
@@ -12461,7 +12608,10 @@ query = make_query({
 query
 
 # %%
-len(await dl.query(query))
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
+
+# %%
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -12495,7 +12645,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -12518,13 +12676,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -12568,7 +12729,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12640,7 +12809,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12706,10 +12883,16 @@ aggregation_pipeline = [
     }
 ]
 
-
+# %%
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12783,7 +12966,10 @@ query = make_query({
 query
 
 # %%
-len(await dl.query(query))
+datasets = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
+
+# %%
+pagination
 
 # %% [markdown]
 # ### Overview on steps in project
@@ -12817,7 +13003,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 columns = ['step', 'earliest', 'latest', 'object_count']
@@ -12840,13 +13034,16 @@ query = make_query({
 })
 
 # %%
-res = await dl.query(query)
+res = await dl.get_datasets_by_mongo_query(query=query, pagination=pagination)
 
 # %%
-len(res)
+pagination
 
 # %%
-readme = await dl.readme(res[-1]['uri'])
+readme_str = await dl.get_readme(res[-1]['uri'])
+
+# %%
+readme = yaml.safe_load(readme_str)
 
 # %%
 readme
@@ -12890,7 +13087,15 @@ aggregation_pipeline = [
 ]
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -12962,7 +13167,15 @@ aggregation_pipeline = [
 
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
+
+# %%
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -13028,10 +13241,16 @@ aggregation_pipeline = [
     }
 ]
 
-
+# %%
+res = await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, pagination=pagination)
 
 # %%
-res = await dl.aggregate(aggregation_pipeline)
+pagination
+
+# %%
+res = []
+for i in range(1, pagination['total_pages']+1):
+    res.extend(await dl.get_datasets_by_mongo_aggregation(aggregation_pipeline, page_number=i))
 
 # %%
 res_df = pd.DataFrame(res)
@@ -13087,7 +13306,3 @@ final_config_datasets
 # %%
 with open(f"{project_id}_analysis.json", 'w') as f:
     json.dump(final_config_datasets, f, indent=4)
-
-# %%
-
-# %%
